@@ -1,3 +1,10 @@
+# Ignore virtual environments
+pyenv-*
+
+# Ignore Sublime files
+*.sublime-project
+*.sublime-workspace
+
 credentials/*
 
 ####
