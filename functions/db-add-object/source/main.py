@@ -21,6 +21,7 @@ TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
                                                    id = PROJECT_ID,
                                                    topic = TOPIC)
 
+print(f"Neo4j credentials: {NEO4J_URL}, {NEO4J_USER}.")
 graph = Graph(
               NEO4J_URL,
               user=NEO4J_USER,
