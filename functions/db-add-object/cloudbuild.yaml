@@ -6,14 +6,15 @@ steps:
          'deploy',
          'wgs-35000-db-add-object-from-personalis',
          '--project=${PROJECT_ID}',
-         '--service-account=${_SERVICE_ACCOUNT}',
          '--source=source',
          '--memory=128MB',
          '--max-instances=20',
          '--entry-point=add_obj_to_db',
          '--runtime=python37',
          '--trigger-resource=${_TRIGGER_RESOURCE}',
-         '--trigger-event=google.storage.object.metadataUpdate']
+         '--trigger-event=google.storage.object.metadataUpdate'],
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
@@ -21,11 +22,12 @@ steps:
          'deploy',
          'wgs-35000-db-add-object-from-personalis-meta',
          '--project=${PROJECT_ID}',
-         '--service-account=${_SERVICE_ACCOUNT}',
          '--source=source',
          '--memory=128MB',
          '--max-instances=20',
          '--entry-point=add_obj_to_db',
          '--runtime=python37',
          '--trigger-resource=${_TRIGGER_RESOURCE}',
-         '--trigger-event=google.storage.object.metadataUpdate']
+         '--trigger-event=google.storage.object.metadataUpdate'],
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'
