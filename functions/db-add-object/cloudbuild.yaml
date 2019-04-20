@@ -12,10 +12,10 @@ steps:
          '--entry-point=add_obj_to_db',
          '--runtime=python37',
          '--trigger-resource=${_TRIGGER_RESOURCE}',
-         '--trigger-event=google.storage.object.metadataUpdate'],
+         '--trigger-event=google.storage.object.metadataUpdate',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'
-- name: 'gcr.io/cloud-builders/gcloud'
+- name: 'gcr.io/cloud-builders/gcloud']
   args: [
          'beta',
          'functions',
@@ -28,6 +28,6 @@ steps:
          '--entry-point=add_obj_to_db',
          '--runtime=python37',
          '--trigger-resource=${_TRIGGER_RESOURCE}',
-         '--trigger-event=google.storage.object.metadataUpdate'],
+         '--trigger-event=google.storage.object.metadataUpdate',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
-         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}']
