@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import yaml
 import importlib
 
 from google.cloud import storage
@@ -8,20 +9,27 @@ from google.cloud import pubsub
 
 from py2neo import Graph
 
+# Get environment variables from cloud storage bucket
+# https://www.sethvargo.com/secrets-in-serverless/
+vars_blob = storage.Client() \
+            .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+            .get_blob(os.environ['CREDENTIALS_BLOB']) \
+            .download_as_string()
+parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+
 # Environment variables
-NEO4J_URL = os.environ.get('NEO4J_URL')
-NEO4J_USER = os.environ.get('NEO4J_USER')
-NEO4J_PASSPHRASE = os.environ.get('NEO4J_PASSPHRASE')
-PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT', '')
-TOPIC = os.environ.get('NEW_DB_NODE_TOPIC', '')
-DATA_GROUP = os.environ.get('DATA_GROUP', '')
+NEO4J_URL = parsed_vars['NEO4J_URL']
+NEO4J_USER = parsed_vars['NEO4J_USER']
+NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
+PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+TOPIC = parsed_vars['NEW_DB_NODE_TOPIC']
+DATA_GROUP = parsed_vars['DATA_GROUP']
 
 PUBLISHER = pubsub.PublisherClient()
 TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
                                                    id = PROJECT_ID,
                                                    topic = TOPIC)
 
-print(f"Neo4j credentials: {NEO4J_URL}, {NEO4J_USER}.")
 graph = Graph(
               NEO4J_URL,
               user=NEO4J_USER,
