@@ -14,8 +14,8 @@ steps:
          '--trigger-resource=${_TRIGGER_RESOURCE}',
          '--trigger-event=google.storage.object.metadataUpdate',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
-         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'
-- name: 'gcr.io/cloud-builders/gcloud']
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}']
+- name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
          'functions',
