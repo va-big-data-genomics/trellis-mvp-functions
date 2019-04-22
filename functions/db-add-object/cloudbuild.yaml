@@ -14,9 +14,10 @@ steps:
          '--trigger-resource=${_TRIGGER_RESOURCE}',
          '--trigger-event=google.storage.object.metadataUpdate',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
-         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'],
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-labels=data-group=wgs-35000',
-         '--update-labels=functional-group=database-connector'
+         '--update-labels=functional-group=database-connector',
+  ]
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
@@ -32,6 +33,7 @@ steps:
          '--trigger-resource=${_TRIGGER_RESOURCE}',
          '--trigger-event=google.storage.object.metadataUpdate',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
-         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'],
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-labels=data-group=wgs-35000',
-         '--update-labels=functional-group=database-connector'
+         '--update-labels=functional-group=database-connector',
+  ]
