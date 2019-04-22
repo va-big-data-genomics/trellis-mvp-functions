@@ -1,27 +1,12 @@
 steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
-         #'beta',
+         'beta',
          'functions',
          'deploy',
          'wgs-35000-db-add-object-from-personalis',
          '--project=${PROJECT_ID}',
          '--source=functions/db-add-object',
-         '--memory=128MB',
-         #'--max-instances=20',
-         '--entry-point=add_obj_to_db',
-         '--runtime=python37',
-         '--trigger-resource=${_TRIGGER_RESOURCE}',
-         '--trigger-event=google.storage.object.metadataUpdate',
-         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
-         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}']
-- name: 'gcr.io/cloud-builders/gcloud'
-  args: [
-         'beta',
-         'functions',
-         'deploy',
-         'wgs-35000-db-add-object-from-personalis-meta',
-         '--project=${PROJECT_ID}',
          '--memory=128MB',
          '--max-instances=20',
          '--entry-point=add_obj_to_db',
@@ -29,4 +14,24 @@ steps:
          '--trigger-resource=${_TRIGGER_RESOURCE}',
          '--trigger-event=google.storage.object.metadataUpdate',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
-         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}']
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'],
+         '--update-labels=data-group=wgs-35000',
+         '--update-labels=functional-group=database-connector'
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'wgs-35000-db-add-object-from-personalis-meta',
+         '--project=${PROJECT_ID}',
+         '--source=functions/db-add-object',
+         '--memory=128MB',
+         '--max-instances=20',
+         '--entry-point=add_obj_to_db',
+         '--runtime=python37',
+         '--trigger-resource=${_TRIGGER_RESOURCE}',
+         '--trigger-event=google.storage.object.metadataUpdate',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}'],
+         '--update-labels=data-group=wgs-35000',
+         '--update-labels=functional-group=database-connector'
