@@ -139,6 +139,10 @@ def sample_path_0(db_dict):
     sample = db_dict['path'].split('/')[0] 
     return {'sample': str(sample)}
 
+def sample_path_2(db_dict):
+    sample = db_dict['path'].split('/')[2] 
+    return {'sample': str(sample)}
+
 def chromosome_name_2(db_dict):
     """Used for bam and bai
     """
@@ -231,51 +235,21 @@ class NodeKinds:
         self.global_labels = ['Blob']
 
         self.match_patterns = {
-                               "Sample_tar": [".*/SHIP\\d+\\.tar$"], 
-                               "Bam": [".*/Alignments/.*\\.bam$"], 
-                               "Bai": [".*/Alignments/.*bam\\.bai$"], 
-                               "Fastq": [
-                                         ".*/FASTQ/.*\\.fastq\\.gz", 
-                                         "va_mvp_phase2/.*/.*/FASTQ/.*\\.fastq.gz$"], 
-                               "Vcf": [".*/Variants/.*\\.vcf\\.gz$"], 
-                               "Cnv_report": [
-                                              ".*/Annotated_CopyNumber_Reports/tsv/.*\\.tsv", 
-                                              ".*/Variants/.*\\.genomeCNV\\.gff"], 
-                               "Small_variant_report": [".*/Annotated_SmallVariant_Reports/.*/tsv/.*\\.tsv"], 
-                               "Personalis_qc": [
-                                                 ".*/QC_REPORT/.*_statistics\\.tsv", 
-                                                 ".*/QC_REPORT/.*_statistics\\.html"],
-                               "Personalis_qc_static": [".*/QC_REPORT/static/.*"], 
-                               "Bed": [".*/BED/.*\\.bed$"], 
+                               "Fastq": ["va_mvp_phase2/.*/.*/FASTQ/.*\\.fastq.gz$"], 
                                "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
                                "Json": [".*\\.json$"], 
                                "Checksum": [".*checksum.txt"], 
-                               "WGS_9000": ["^SHIP.*"], 
                                "WGS_2019": ["^va_mvp_phase2/.*"]
         }
 
         self.label_functions = {
-                                "Sample_tar": [sample_path_0], 
-                                "Bam": [
-                                        sample_path_0, 
-                                        chromosome_name_2], 
-                                "Bai": [
-                                        sample_path_0, 
-                                        chromosome_name_2], 
-                                "Cnv_report": [sample_path_0], 
-                                "Small_variant_report": [
-                                                         sample_path_0, 
-                                                         category_dirname_2],
-                                "Bed": [
-                                        sample_path_0, 
-                                        category_extension_0],
                                 "Fastq": [
-                                          sample_path_0, 
+                                          sample_path_2, 
                                           mate_pair_name_0, 
                                           index_name_1],
-                                "Personalis_qc": [sample_path_0],
-                                "Personalis_qc_static": [sample_path_0],
-                                "Vcf": [sample_path_0]
+                                "Microarray": [sample_path_2],
+                                "Json": [sample_path_2], 
+                                "Checksum": [sample_path_2]
         }
 
     def get_label_functions(self, labels):
