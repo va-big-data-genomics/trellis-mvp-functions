@@ -1,14 +1,14 @@
 steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
-         'beta',
+         #'beta',
          'functions',
          'deploy',
          'wgs-35000-db-add-object-from-personalis',
          '--project=${PROJECT_ID}',
          '--source=functions/db-add-object',
          '--memory=128MB',
-         '--max-instances=20',
+         #'--max-instances=20',
          '--entry-point=add_obj_to_db',
          '--runtime=python37',
          '--trigger-resource=${_TRIGGER_RESOURCE}',
