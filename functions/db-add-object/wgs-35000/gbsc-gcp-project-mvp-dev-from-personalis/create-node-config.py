@@ -239,7 +239,7 @@ class NodeKinds:
                                "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
                                "Json": [".*\\.json$"], 
                                "Checksum": [".*checksum.txt"], 
-                               "WGS_2019": ["^va_mvp_phase2/.*"]
+                               "WGS_35000": ["^va_mvp_phase2/.*"]
         }
 
         self.label_functions = {
