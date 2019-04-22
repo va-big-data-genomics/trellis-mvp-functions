@@ -6,6 +6,7 @@ steps:
          'deploy',
          'wgs-35000-db-add-object-from-personalis',
          '--project=${PROJECT_ID}',
+         '--source=functions/db-add-object',
          '--memory=128MB',
          '--max-instances=20',
          '--entry-point=add_obj_to_db',
