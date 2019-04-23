@@ -9,7 +9,7 @@ from google.cloud import pubsub
 
 # Get runtime variables from cloud storage bucket
 # https://www.sethvargo.com/secrets-in-serverless/
-ENVIRONMENT = os.environ.get('_ENVIRONMENT', '')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -31,9 +31,19 @@ if ENVIRONMENT == 'google-cloud':
 def create_node_query(db_entry, dry_run=False):
     labels_str = ':'.join(db_entry['labels'])
 
+    # Create database entry string
+    entry_strings = []
+    for key, value in db_entry.items():
+        if isinstance(value, str):
+            entry_strings.append(f'{key}: "{value}"')
+        else:
+            entry_strings.append(f'{key}: {value}')
+    entry_string = ', '.join(entry_strings)
+
+    # Format as cypher query
     query = (
              f"CREATE (node:{labels_str} " +
-              "{entry}) " +
+              "{" + f"{entry_string}" +"}) " +
               "RETURN node")
     return query
 
@@ -88,11 +98,16 @@ def gen_new_blob_query(event, context):
 
     print(f"> Generating database query for node: {node_dict}.")
     db_query = create_node_query(node_dict)
+    print(f"> Database query: \"{db_query}\".")
 
     message = {
                "resource": "query",
-               "cypher": db_query
+               "neo4j-metadata": {
+                                    "cypher": db_query, 
+                                    "result": "data",
+               }
     }
+    print(f"> Pubsub message: {message}.")
 
     message = json.dumps(message).encode('utf-8')
     result = PUBLISHER.publish(TOPIC_PATH, data=message).result()
@@ -173,3 +188,6 @@ if __name__ == "__main__":
     except:
         print(f"Node labels ({summary['labels']}) " +
               f"do not match expected ({expected_labels}).")
+
+    # Test database query
+    # Test pubsub message
