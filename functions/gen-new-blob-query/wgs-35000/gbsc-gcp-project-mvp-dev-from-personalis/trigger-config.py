@@ -16,7 +16,7 @@ class NodeTriggers:
         self.node = node
 
     def get_triggers(self):
-        node_labels = self.node['node']['labels']
+        node_labels = self.node['labels']
 
         triggers = {
                     'Json': self.trigger_fastq_to_ubam
