@@ -173,7 +173,7 @@ def index_name_1(db_dict):
     index = db_dict['name'].split('_')[1]
     return {'index': int(index)}  
 
-class DatabaseNode:
+class NodeEntry:
 
     def __init__(self, event, context, labels, label_functions=[]):
         """
@@ -187,27 +187,21 @@ class DatabaseNode:
 
         """
         db_dict = clean_metadata_dict(event)
-        #trellis_metadata = {}
 
         name_fields = get_standard_name_fields(event['name'])
         time_fields = get_standard_time_fields(event)
 
-        #trellis_metadata.update(name_fields)
-        #trellis_metadata.update(time_fields)
         db_dict.update(name_fields)
         db_dict.update(time_fields)
 
         # This custom metadata field gets added to all nodes
-        #trellis_metadata['labels'] = labels
         db_dict['labels'] = labels
 
-        print(f'Label functions: {label_functions}.')
+        print(f'>> Label functions: {label_functions}.')
         for function in label_functions:
             custom_fields = function(db_dict)
-            #trellis_metadata.update(custom_fields)
             db_dict.update(custom_fields)
 
-        #db_dict.update(trellis_metadata)
         self.db_dict = db_dict
         self.gcp_metadata = event
 
@@ -239,7 +233,8 @@ class NodeKinds:
                                "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
                                "Json": [".*\\.json$"], 
                                "Checksum": [".*checksum.txt"], 
-                               "WGS_35000": ["^va_mvp_phase2/.*"]
+                               "WGS_35000": ["^va_mvp_phase2/.*"],
+                               "Blob": [".*"],
         }
 
         self.label_functions = {
