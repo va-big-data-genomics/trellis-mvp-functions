@@ -39,7 +39,7 @@ def query_db(event, context):
     print(data)
 
     # Check that resource is request
-    if data['resource'] != 'request':
+    if data['resource'] != 'query':
         print(f"Error: Expected resource type 'request', " +
               f"got '{data['resource']}.'")
         return
