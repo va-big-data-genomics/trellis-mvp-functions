@@ -126,10 +126,10 @@ def get_standard_time_fields(event):
     time_updated_iso = datetime_updated.isoformat()
 
     time_fields = {
-                   'time-created-epoch': time_created_epoch,
-                   'time-updated-epoch': time_updated_epoch,
-                   'time-created-iso': time_created_iso,
-                   'time-updated-iso': time_updated_iso
+                   'timeCreatedEpoch': time_created_epoch,
+                   'timeUpdatedEpoch': time_updated_epoch,
+                   'timeCreatedIso': time_created_iso,
+                   'timeUpdatedIso': time_updated_iso
     }
     return time_fields
 
@@ -167,7 +167,7 @@ def mate_pair_name_0(db_dict):
                           pattern = "_R(\\d)$", 
                           group = 1, 
                           req_type = int)
-    return {'mate-pair': mate_pair}
+    return {'matePair': mate_pair}
 
 def index_name_1(db_dict):
     index = db_dict['name'].split('_')[1]
