@@ -1,18 +1,29 @@
 import os
 import sys
 import json
+import yaml
 import base64
+
+from google.cloud import storage
 
 from datetime import datetime
 
 from dsub.commands import dsub
 
-project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', '')
-zones = os.environ.get('ZONES', '')
-out_bucket = os.environ.get('DSUB_OUT_BUCKET', '')
-log_bucket = os.environ.get('DSUB_LOG_BUCKET', '')
-out_root = os.environ.get('DSUB_OUT_ROOT', '')
-DSUB_USER = os.environ.get('DSUB_USER', '')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+
+    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    ZONES = parsed_vars['DSUB_ZONES']
+    OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
+    LOB_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
+    OUT_ROOT = parsed_vars['DSUB_OUT_ROOT']
+    DSUB_USER = parsed_vars['DSUB_USER']
 
 def launch_dsub_task(dsub_args):
     try:
@@ -33,7 +44,7 @@ def get_datestamp():
     datestamp = now.strftime("%Y%m%d")
     return datestamp
 
-def launch_fastqc(event, context):
+def launch_fastq_to_ubam(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
 
@@ -46,63 +57,74 @@ def launch_fastqc(event, context):
     data = json.loads(pubsub_message)
     print(data)
 
-    resource_type = 'node'
+    resource_type = 'nodes'
     if data['resource'] != resource_type:
         print(f"Error: Expected resource type '{resource_type}', " +
               f"got '{data['resource']}.'")
         return
 
-    node = data['neo4j-metadata']['node']
+    nodes = data['neo4j-metadata']['nodes']
 
-    if not 'Bam' in node['labels']:
-        print(f"Info: Not a Bam object. Ignoring. {node}.")
-        return 
+    if len(nodes) != 2:
+        print(f:"Error: Need 2 fastqs; {len(nodes)} provided.")
+        return
+    #if not 'Fast' in node['labels']:
+    #    print(f"Info: Not a Bam object. Ignoring. {node}.")
+    #    return
 
     # Dsub data
-    task_name = 'fastqc'
-    task_group = 'fastqc-bam'
+    task_name = 'fastq-to-ubam'
+    task_group = 'gatk-5-dollar'
+
+    # TODO: Implement QC checking to make sure fastqs match
+    fastqs = {}
+    for node in nodes:
+        sample = node['sample']
+        read_group = node['readGroup']
+        mate_pair = node['matePair']
+
+        bucket = node['bucket']
+        path = node['path']
+
+        fastq_name = f'FASTQ_{mate_pair}'
+        fastqs[fastq_name] = f"gs://{bucket}/{path}" 
 
     datestamp = get_datestamp()
-
-    # Database entry variables
-    in_bucket = node['bucket']
-    in_path = node['path']
-    
-    sample = node['sample']
-    basename = node['basename']
-    chromosome = node['chromosome']
 
     dsub_args = [
         "--provider", "google-v2", 
         "--user", DSUB_USER, 
-        "--zones", zones, 
-        "--project", project_id, 
-        "--logging", 
-            f"gs://{log_bucket}/{out_root}/{task_group}/{task_name}/logs/{datestamp}",
+        "--zones", ZONES, 
+        "--project", PROJECT_ID,
+        "--min-cores", 1, 
+        "--min-ram", 7.5,
+        "--preemptible",
+        "--boot-disk-size", 20, 
         "--image", 
-            f"gcr.io/{project_id}/fastqc:1.01", 
-        "--disk-size", "1000", 
-        "--script", "lib/fastqc.sh", 
-        "--input", 
-            f"INPUT=gs://{in_bucket}/{in_path}",
+            f"gcr.io/{PROJECT_ID}/***REMOVED***/wdl_runner:latest", 
+        "--logging", 
+            f"gs://{LOG_BUCKET}/{OUT_ROOT}/{task_group}/{task_name}/{sample}/logs",
+        "--disk-size", "1000",
+        "--env", f"RG={read_group}",
+        "--env", f"SM={sample}",
+        "--env",  "PL=illumina",
+        "--command", '/gatk/gatk --java-options "-Xmx8G -Djava.io.tmpdir=bla" FastqToSam -F1 ${FASTQ_1} -F2 ${FASTQ_2} -O ${UBAM} -RG ${RG} -SM ${SM} -PL ${PL}',
         "--output", 
-            f"OUTPUT=gs://{out_bucket}/{out_root}/{task_group}/{task_name}/objects/{basename}.fastqc_data.txt",
-        "--env", f"SAMPLE_ID={sample}"
+            f"UBAM=gs://{OUT_BUCKET}/{OUT_ROOT}/{task_group}/{task_name}/{sample}/objects/{sample}_{index}.ubam",
     ]
+    # Add fastqs as inputs
+    for name, path in fastqs.items():
+        dsub_args.extend(["--input", f"{name}={path}"])
+
     print(f"Launching dsub with args: {dsub_args}.")
     launch_dsub_task(dsub_args)
 
 # For local testing
 if __name__ == "__main__":
-    project_id = "***REMOVED***-dev"
-    zones =  "us-west1*"
-    out_bucket = "***REMOVED***-dev-from-personalis-qc"
-    out_root = "dsub"
+    PROJECT_ID = "***REMOVED***-dev"
+    ZONES =  "us-west1*"
+    OUT_BUCKET = "***REMOVED***-dev-from-personalis-qc"
+    OUT_ROOT = "dsub"
 
-    data = {"resource": "blob", "gcp-metadata": {"bucket": "***REMOVED***-dev-from-personalis", "contentLanguage": "en", "contentType": "application/octet-stream", "crc32c": "XPwmhA==", "etag": "CMTx8Y/t8+ACEAE=", "generation": "1552093034608836", "id": "***REMOVED***-dev-from-personalis/SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam/1552093034608836", "kind": "storage#object", "md5Hash": "qm+p+AbPhpyXwmXtAQ/fkA==", "mediaLink": "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/SHIP4420818%2FAlignments%2FSHIP4420818_chromosome_Y.recal.bam?generation=1552093034608836&alt=media", "metadata": {"goog-reserved-file-mtime": "1527072114"}, "metageneration": "1", "name": "SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam", "selfLink": "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/SHIP4420818%2FAlignments%2FSHIP4420818_chromosome_Y.recal.bam", "size": "921001444", "storageClass": "REGIONAL", "timeCreated": "2019-03-09T00:57:14.607Z", "timeStorageClassUpdated": "2019-03-09T00:57:14.607Z", "updated": "2019-03-09T00:57:14.607Z"}, "trellis-metadata": {"path": "SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam", "dirname": "SHIP4420818/Alignments", "basename": "SHIP4420818_chromosome_Y.recal.bam", "extension": "recal.bam", "time-created-epoch": 1552093034.607, "time-updated-epoch": 1552093034.607, "time-created-iso": "2019-03-09T00:57:14.607000+00:00", "time-updated-iso": "2019-03-09T00:57:14.607000+00:00", "labels": ["Bam", "WGS_9000", "Blob"], "sample": "SHIP4420818", "chromosome": "Y"}}
-    data = json.dumps(data)
-    data = data.encode('utf-8')
-    
-    event = {'data': base64.b64encode(data)}
 
-    launch_fastqc(event, context=None)
+    launch_fastq_to_ubam(event, context=None)
