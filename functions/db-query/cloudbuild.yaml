@@ -6,7 +6,6 @@ steps:
          'deploy',
          'wgs-35000-db-query',
          '--project=${PROJECT_ID}',
-         '--service-account=${_SERVICE_ACCOUNT}',
          '--source=functions/db-query',
          '--memory=128MB',
          '--max-instances=100',
