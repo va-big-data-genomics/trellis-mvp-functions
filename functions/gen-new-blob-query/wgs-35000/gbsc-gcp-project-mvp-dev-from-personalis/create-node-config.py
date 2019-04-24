@@ -171,7 +171,7 @@ def mate_pair_name_0(db_dict):
 
 def index_name_1(db_dict):
     index = db_dict['name'].split('_')[1]
-    return {'index': int(index)}  
+    return {'readGroup': int(index)}  
 
 class NodeEntry:
 
