@@ -66,7 +66,7 @@ def launch_fastq_to_ubam(event, context):
     nodes = data['neo4j-metadata']['nodes']
 
     if len(nodes) != 2:
-        print(f:"Error: Need 2 fastqs; {len(nodes)} provided.")
+        print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
         return
     #if not 'Fast' in node['labels']:
     #    print(f"Info: Not a Bam object. Ignoring. {node}.")
