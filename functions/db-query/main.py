@@ -67,6 +67,8 @@ def query_db(event, context):
     trellis_metadata = data.get('trellis-metadata')
     if trellis_metadata:
         topic = trellis_metadata.get('publish_topic')
+    else:
+        topic = None
 
     print(f"> Running db query: {query}.")
     if neo4j_metadata['result'] == 'stats':
