@@ -113,7 +113,7 @@ def gen_new_blob_query(event, context):
     message = json.dumps(message).encode('utf-8')
     result = PUBLISHER.publish(TOPIC_PATH, data=message).result()
     print(f"> Published query to {TOPIC_PATH}. {result}.")
-    #return
+    return
 
     # Execute node triggers (DEV)
     # TODO: Test in dev
