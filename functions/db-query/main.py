@@ -63,6 +63,7 @@ def query_db(event, context):
     
     neo4j_metadata = data['neo4j-metadata']
     query = neo4j_metadata['cypher']
+    result_mode = neo4j_metadata.get('result')
     
     trellis_metadata = data.get('trellis-metadata')
     if trellis_metadata:
@@ -71,14 +72,14 @@ def query_db(event, context):
         topic = None
 
     print(f"> Running db query: {query}.")
-    if neo4j_metadata['result'] == 'stats':
+    if result_mode == 'stats':
         result = GRAPH.run(query).stats()
         print(f"> Result: {result}.")
 
         if topic:
             publish_to_topic(topic, result)
 
-    elif neo4j_metadata['result'] == 'data':
+    elif result_mode == 'data':
         result = GRAPH.run(query).data()
         print(f"> Result count: {len(result)}.")
     
@@ -91,7 +92,8 @@ def query_db(event, context):
                 }
                 publish_to_topic(topic, message)
     else:
-        return RuntimeError(f"! Invalid result type: {trellis_metadata['result']}.")
+        GRAPH.run(query)
+        result = None
     return result
 
 
@@ -105,6 +107,11 @@ if __name__ == "__main__":
                   NEO4J_URL, 
                   user=NEO4J_USER, 
                   password=NEO4J_PASSPHRASE)
+
+    expected = {
+                'path': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz',
+                'sample': 'SHIP4946367'
+    }
 
     try:
         # Create blob node
@@ -122,9 +129,46 @@ if __name__ == "__main__":
 
         node = result[0]['node']
         assert len(node.keys()) == 29
-        assert node['path'] == 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz'
-        assert node['sample'] == 'SHIP4946367'
+        assert node['path'] == expected['path']
+        assert node['sample'] == expected['sample']
         print("> Blob node creation test: Pass")
+    except:
+        print(f"! Error: blob node did not match expected values. {node}.")
+
+    try:
+        # Create blob node without trellis-metadata
+        data = {
+                "resource": "query", 
+                "neo4j-metadata": {
+                                   "cypher": 'CREATE (node:Fastq:WGS_35000:Blob {bucket: "***REMOVED***-dev-from-personalis", componentCount: 32, contentType: "application/octet-stream", crc32c: "ftNG8w==", etag: "CL3nyPj80uECEBE=", generation: "1555361455813565", id: "***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565", kind: "storage#object", mediaLink: "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media", metageneration: "17", name: "SHIP4946367_0_R1", selfLink: "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz", size: 5955984357, storageClass: "REGIONAL", timeCreated: "2019-04-15T20:50:55.813Z", timeStorageClassUpdated: "2019-04-15T20:50:55.813Z", updated: "2019-04-23T19:17:53.205Z", path: "va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz", dirname: "va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ", basename: "SHIP4946367_0_R1.fastq.gz", extension: "fastq.gz", timeCreatedEpoch: 1555361455.813, timeUpdatedEpoch: 1556047073.205, timeCreatedIso: "2019-04-15T20:50:55.813000+00:00", timeUpdatedIso: "2019-04-23T19:17:53.205000+00:00", labels: [\'Fastq\', \'WGS_35000\', \'Blob\'], sample: "SHIP4946367", matePair: 1, index: 0}) RETURN node',
+                                   "result": "data",
+                },
+        }
+        data = json.dumps(data).encode('utf-8')
+        event = {'data': base64.b64encode(data)}
+        result = query_db(event, context=None)
+
+        node = result[0]['node']
+        assert len(node.keys()) == 29
+        assert node['path'] == expected['path']
+        assert node['sample'] == expected['sample']
+        print("> No trellis metadata test: Pass")
+    except:
+        print(f"! Error: blob node did not match expected values. {node}.")
+
+    try:
+        # Create blob node no trellis-metadata
+        data = {
+                "resource": "query", 
+                "neo4j-metadata": {
+                                   "cypher": 'CREATE (node:Fastq:WGS_35000:Blob {bucket: "***REMOVED***-dev-from-personalis", componentCount: 32, contentType: "application/octet-stream", crc32c: "ftNG8w==", etag: "CL3nyPj80uECEBE=", generation: "1555361455813565", id: "***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565", kind: "storage#object", mediaLink: "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media", metageneration: "17", name: "SHIP4946367_0_R1", selfLink: "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz", size: 5955984357, storageClass: "REGIONAL", timeCreated: "2019-04-15T20:50:55.813Z", timeStorageClassUpdated: "2019-04-15T20:50:55.813Z", updated: "2019-04-23T19:17:53.205Z", path: "va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz", dirname: "va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ", basename: "SHIP4946367_0_R1.fastq.gz", extension: "fastq.gz", timeCreatedEpoch: 1555361455.813, timeUpdatedEpoch: 1556047073.205, timeCreatedIso: "2019-04-15T20:50:55.813000+00:00", timeUpdatedIso: "2019-04-23T19:17:53.205000+00:00", labels: [\'Fastq\', \'WGS_35000\', \'Blob\'], sample: "SHIP4946367", matePair: 1, index: 0}) RETURN node',
+                },
+        }
+        data = json.dumps(data).encode('utf-8')
+        event = {'data': base64.b64encode(data)}
+        result = query_db(event, context=None)
+        assert result == None
+        print("> No result test: Pass")
     except:
         print(f"! Error: blob node did not match expected values. {node}.")
 
