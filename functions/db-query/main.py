@@ -52,7 +52,7 @@ def query_db(event, context):
     """
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    context = base64.b64decode(context).decode('uft-8')
+    #context = base64.b64decode(context).decode('uft-8')
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
