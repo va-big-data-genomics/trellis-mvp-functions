@@ -52,8 +52,10 @@ def query_db(event, context):
     """
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+    context = base64.b64decode(context).decode('uft-8')
     data = json.loads(pubsub_message)
-    print(data)
+    print(f"> Context: {context}.")
+    print(f"> Data: {data}.")
 
     # Check that resource is query
     if data['resource'] != 'query':
@@ -77,6 +79,7 @@ def query_db(event, context):
         print(f"> Result: {result}.")
 
         if topic:
+            print(f">Publishing nodes to {topic}.")
             publish_to_topic(topic, result)
 
     elif result_mode == 'data':
