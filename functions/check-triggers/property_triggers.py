@@ -1,14 +1,5 @@
 import json
 
-from google.cloud import pubsub
-
-PUBLISHER = pubsub.PublisherClient()
-
-def publish_message(topic_path, message):
-    message = json.dumps(message).encode('utf-8')
-    result = PUBLISHER.publish(topic_path, data=message).result()
-    print(f"Published message to {topic_path}: {result}.")   
-
 class PropertyTriggers:
 
     def __init__(self, project_id, properties):
@@ -19,7 +10,7 @@ class PropertyTriggers:
         self.changed = {}
         self.nodes = {}
 
-        for key, value in properties.items()
+        for key, value in properties.items():
             elements = key.split('_')
             if len(elements) > 2:
                 printf("ERROR")
@@ -45,7 +36,7 @@ class PropertyTriggers:
         }
 
         trigger_functions = []
-        for function, conditions in triggers:
+        for function, conditions in triggers.items():
             if set(conditions) == {True}:
                 trigger_functions.append(function)
         self.unique_functions = set(trigger_functions)
@@ -56,7 +47,7 @@ class PropertyTriggers:
         topic = "wgs35-db-queries"
         topic_path = f"projects/{self.project_id}/topics/{topic}"
 
-        sample = self.node['node']['sample']
+        sample = self.nodes['sample']
 
         message = {
                    "resource": "query", 
@@ -76,10 +67,5 @@ class PropertyTriggers:
                                         "split": "True"
                    }
         }
-        publish_message(topic_path, message)
+        return(topic_path, message)
 
-    def execute_triggers(self):
-        for trigger in self.unique_functions:
-            # Execute trigger
-            print(f"Executing trigger: {trigger}.")
-            trigger()
