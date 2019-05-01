@@ -2,13 +2,11 @@ import os
 import re
 import json
 import yaml
+import base64
 import importlib
 
 from google.cloud import storage
 from google.cloud import pubsub
-
-# Local module
-import trigger_config
 
 # Get runtime variables from cloud storage bucket
 # https://www.sethvargo.com/secrets-in-serverless/
@@ -31,6 +29,12 @@ if ENVIRONMENT == 'google-cloud':
     TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
                                                        id = PROJECT_ID,
                                                        topic = TOPIC)
+def publish_message(topic_path, message):
+    message = json.dumps(message).encode('utf-8')
+    print(f'> Publishing message "{message}".')
+    result = PUBLISHER.publish(topic_path, data=message).result()
+    print(f'> Message published to {topic_path}: {result}.')   
+
 
 def check_triggers(event, context):
     """When object created in bucket, add metadata to database.
@@ -39,16 +43,13 @@ def check_triggers(event, context):
         context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    print(f"> Processing new object event: {event['name']}.")
-    print(f"> Event: {event}).")
-    print(f"> Context: {context}.")
-
     # Trellis config data
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
+    print(f"> Processing pubsub message: {data}.")
     result = data['result']
 
-    trigger_module_name = f"triggers/{TRIGGER}_triggers"
+    trigger_module_name = f"{TRIGGER}_triggers"
     trigger_module = importlib.import_module(trigger_module_name)
 
     if TRIGGER == 'node':
@@ -56,23 +57,28 @@ def check_triggers(event, context):
                                                      project_id = PROJECT_ID,
                                                      node = result) #????
     elif TRIGGER == 'property':
+        properties = json.loads(result)
+        print(f"Properties: {properties}.")
         trigger_config = trigger_module.PropertyTriggers(
                                                          project_id = PROJECT_ID,
-                                                         properties = result)
+                                                         properties = properties)
 
     triggers = trigger_config.get_triggers()
-    print(f"> Node triggers: {triggers}.")
-    trigger_config.execute_triggers()
+    #trigger_config.execute_triggers()
+    for trigger in triggers:
+        print(f'> Executing trigger: {triggers}.')
+        topic_path, message = trigger()
+        publish_message(topic_path, message)
 
-    summary = {
-               "name": name, 
-               "bucket": bucket_name, 
-               "node-module-name": node_module_name, 
-               "trigger-module-name": trigger_module_name, 
-               "labels": labels, 
-               "db-query": db_query,
-    }
-    return(summary)
+    #summary = {
+    #           "name": name, 
+    #           "bucket": bucket_name, 
+    #           "node-module-name": node_module_name, 
+    #           "trigger-module-name": trigger_module_name, 
+    #           "labels": labels, 
+    #           "db-query": db_query,
+    #}
+    #return(summary)
 
 
 if __name__ == "__main__":
@@ -80,17 +86,20 @@ if __name__ == "__main__":
     PROJECT_ID = "***REMOVED***-dev"
     TOPIC = "wgs-35000-db-queries"
     DATA_GROUP = 'wgs-35000'
+    TRIGGER = 'property'
 
     PUBLISHER = pubsub.PublisherClient()
     TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
                                                        id = PROJECT_ID,
                                                        topic = TOPIC)
 
-    event = {
+    data = {
              "resource": "query-result",
              "query": "<SOME QUERY>",
-             "result": "<SOME RESULT>" 
+             "result": '{"added_setSize": 16, "nodes_sample": "SHIP4946367", "nodes_labels": ["Fastq", "WGS_35000", "Blob"]}' 
 
     }
+    data = json.dumps(data).encode('utf-8')
+    event = {'data': base64.b64encode(data)}
     context = None
-    check_triggers(event, context)
+    result = check_triggers(event, context)
