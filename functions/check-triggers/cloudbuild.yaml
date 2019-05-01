@@ -4,7 +4,7 @@ steps:
          'beta',
          'functions',
          'deploy',
-         'wgs35-${_TRIGGER_TYPE}-triggers',
+         '${_DATA_GROUP}-${_TRIGGER_TYPE}-triggers',
          '--project=${PROJECT_ID}',
          '--source=functions/check-triggers',
          '--memory=128MB',
