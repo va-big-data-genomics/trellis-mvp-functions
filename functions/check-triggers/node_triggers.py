@@ -1,14 +1,5 @@
 import json
 
-from google.cloud import pubsub
-
-PUBLISHER = pubsub.PublisherClient()
-
-def publish_message(topic_path, message):
-    message = json.dumps(message).encode('utf-8')
-    result = PUBLISHER.publish(topic_path, data=message).result()
-    print(f"Published message to {topic_path}: {result}.")   
-
 class NodeTriggers:
 
     def __init__(self, project_id, node):
@@ -60,7 +51,7 @@ class NodeTriggers:
                                        "result-split": "True"
                    }
         }
-        publish_message(topic_path, message)
+        return(topic_path, message)
 
 
     def check_ubam_count(self):
@@ -92,10 +83,5 @@ class NodeTriggers:
                                         "split": "False"
                    }
         }
-        publish_message(topic_path, message)
+        return(topic_path, message)
 
-    def execute_triggers(self):
-        for trigger in self.unique_functions:
-            # Execute trigger
-            print(f"Executing trigger: {trigger}.")
-            trigger()
