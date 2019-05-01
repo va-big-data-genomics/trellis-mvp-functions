@@ -48,8 +48,8 @@ def check_triggers(event, context):
     data = json.loads(pubsub_message)
     result = data['result']
 
-    trigger_module_name = f"triggers/{TRIGGER}_trigger_config"
-    trigger_module = importlib.import_module(node_module_name)
+    trigger_module_name = f"triggers/{TRIGGER}_triggers"
+    trigger_module = importlib.import_module(trigger_module_name)
 
     if TRIGGER == 'node':
         trigger_config = trigger_module.NodeTriggers(
