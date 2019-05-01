@@ -67,12 +67,12 @@ def query_db(event, context):
     query = neo4j_metadata['cypher']
     result_mode = neo4j_metadata.get('result')
     
-    trellis_metadata = data.get('trellis-metadata')
-    if trellis_metadata:
-        topic = trellis_metadata.get('publish_topic')
-    else:
-        topic = None
+    trellis_metadata = data['trellis-metadata']
+    topic = trellis_metadata.get('publish_topic')
+    result_structure = trellis_metadata.get('result-structure')
+    result_split = trellis_metadata.get('result-split')
 
+    """
     print(f"> Running db query: {query}.")
     if result_mode == 'stats':
         result = GRAPH.run(query).stats()
@@ -80,24 +80,78 @@ def query_db(event, context):
 
         if topic:
             print(f">Publishing nodes to {topic}.")
-            publish_to_topic(topic, result)
+            message = {
+                       "resource": "query-stats",
+                       #"neo4j-metadata": result,
+                       "query": query,
+                       "result": result
+            }
+            publish_to_topic(topic, message)
 
     elif result_mode == 'data':
         result = GRAPH.run(query).data()
         print(f"> Result count: {len(result)}.")
+
+        # Split list of results into individual entries & send to topic
+        if result_structure == 'list' and result_split == 'True':
+            for entry in result:
+                if topic:
+                print(f"> Publishing nodes to {topic}.")
+                for datum in result:
+                    message = {
+                            #"resource": trellis_metadata['result-resource'], 
+                            "resource": "query-data",
+                            #"neo4j-metadata": node
+                            "query": query,
+                            "result": result,
+                    }
+                    publish_to_topic(topic, message)
     
         if topic:
             print(f"> Publishing nodes to {topic}.")
             for datum in result:
                 message = {
-                        "resource": trellis_metadata['result-resource'], 
-                        "neo4j-metadata": node
+                        #"resource": trellis_metadata['result-resource'], 
+                        "resource": "query-data",
+                        #"neo4j-metadata": node
+                        "query": query,
+                        "result": result,
                 }
                 publish_to_topic(topic, message)
     else:
         GRAPH.run(query)
         result = None
-    return result
+    """
+    
+    #### RESTRUCTURED
+    print(f"> Running db query: {query}.")
+    if result_mode == 'stats':
+        results = GRAPH.run(query).stats()
+    elif result_mode == 'data':
+        results = GRAPH.run(query).data()
+    else:
+        GRAPH.run(query)
+        results = None
+
+    # Return if not pubsub topic
+    if not topic:
+        return results
+
+    if result_split == 'True':
+        for result in results:
+            message = {
+                    "resource": "query-result",
+                    "query": query,
+                    "result": result,
+            }
+            publish_to_topic(topic, message)
+    else:
+        message = {
+            "resource": "query-result",
+            "query": query,
+            "result": results,
+        }
+        publish_to_topic(topic, message)
 
 
 if __name__ == "__main__": 
