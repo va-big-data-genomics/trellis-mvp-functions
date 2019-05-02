@@ -11,8 +11,6 @@ from google.cloud import pubsub
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
-    DATA_GROUP = os.environ.get('DATA_GROUP', '')
-    
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
@@ -22,6 +20,7 @@ if ENVIRONMENT == 'google-cloud':
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT', '')
     TOPIC = parsed_vars.get('DB_QUERY_TOPIC', '')
+    DATA_GROUP = parsed_vars.get('DATA_GROUP', '')
 
 
     PUBLISHER = pubsub.PublisherClient()
