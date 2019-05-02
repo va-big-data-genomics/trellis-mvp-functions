@@ -1,5 +1,6 @@
 import os
 import re
+import pdb
 import json
 import yaml
 import importlib
@@ -118,25 +119,11 @@ def gen_new_blob_query(event, context):
     message = json.dumps(message).encode('utf-8')
     result = PUBLISHER.publish(TOPIC_PATH, data=message).result()
     print(f"> Published query to {TOPIC_PATH}. {result}.")
-    return
-
-    # Execute node triggers (DEV)
-    # TODO: Test in dev
-    trigger_module_name = f"{DATA_GROUP}.{bucket_name}.trigger-config"
-    trigger_module = importlib.import_module(trigger_module_name)
-
-    trigger_config = trigger_module.NodeTriggers(
-                                                 project_id = PROJECT_ID,
-                                                 node = node_dict)
-    triggers = trigger_config.get_triggers()
-    print(f"> Node triggers: {triggers}.")
-    trigger_config.execute_triggers()
 
     summary = {
                "name": name, 
                "bucket": bucket_name, 
                "node-module-name": node_module_name, 
-               "trigger-module-name": trigger_module_name, 
                "labels": labels, 
                "db-query": db_query,
     }
@@ -146,8 +133,8 @@ def gen_new_blob_query(event, context):
 if __name__ == "__main__":
     # Run unit tests in local
     PROJECT_ID = "gbsc-gcp-project-mvp-dev"
-    TOPIC = "wgs-35000-db-queries"
-    DATA_GROUP = 'wgs-35000'
+    TOPIC = "wgs35-db-queries"
+    DATA_GROUP = 'wgs35'
 
     PUBLISHER = pubsub.PublisherClient()
     TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
@@ -183,8 +170,7 @@ if __name__ == "__main__":
     assert summary['bucket'] == event['bucket']
     
     # Test node and trigger modules
-    assert summary['node-module-name'] == f"wgs-35000.{event['bucket']}.create-node-config"
-    assert summary['trigger-module-name'] == f"wgs-35000.{event['bucket']}.trigger-config"
+    assert summary['node-module-name'] == f"{DATA_GROUP}.{event['bucket']}.create-node-config"
     
     # Test labels
     try:
@@ -197,9 +183,10 @@ if __name__ == "__main__":
 
     # Test database query
     try:
-        expected_query = 'CREATE (node:Fastq:WGS_35000:Blob {bucket: "gbsc-gcp-project-mvp-dev-from-personalis", componentCount: 32, contentType: "application/octet-stream", crc32c: "ftNG8w==", etag: "CL3nyPj80uECEBE=", generation: "1555361455813565", id: "gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565", kind: "storage#object", mediaLink: "https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media", metageneration: "17", name: "SHIP4946367_0_R1", selfLink: "https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz", size: 5955984357, storageClass: "REGIONAL", timeCreated: "2019-04-15T20:50:55.813Z", timeStorageClassUpdated: "2019-04-15T20:50:55.813Z", updated: "2019-04-23T19:17:53.205Z", path: "va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz", dirname: "va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ", basename: "SHIP4946367_0_R1.fastq.gz", extension: "fastq.gz", timeCreatedEpoch: 1555361455.813, timeUpdatedEpoch: 1556047073.205, timeCreatedIso: "2019-04-15T20:50:55.813000+00:00", timeUpdatedIso: "2019-04-23T19:17:53.205000+00:00", labels: [\'Fastq\', \'WGS_35000\', \'Blob\'], sample: "SHIP4946367", matePair: 1, index: 0}) RETURN node'
+        expected_query = 'CREATE (node:Fastq:WGS_35000:Blob {bucket: "gbsc-gcp-project-mvp-dev-from-personalis", componentCount: 32, contentType: "application/octet-stream", crc32c: "ftNG8w==", etag: "CL3nyPj80uECEBE=", generation: "1555361455813565", id: "gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565", kind: "storage#object", mediaLink: "https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media", metageneration: "17", name: "SHIP4946367_0_R1", selfLink: "https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz", size: 5955984357, storageClass: "REGIONAL", timeCreated: "2019-04-15T20:50:55.813Z", timeStorageClassUpdated: "2019-04-15T20:50:55.813Z", updated: "2019-04-23T19:17:53.205Z", path: "va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz", dirname: "va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ", basename: "SHIP4946367_0_R1.fastq.gz", extension: "fastq.gz", timeCreatedEpoch: 1555361455.813, timeUpdatedEpoch: 1556047073.205, timeCreatedIso: "2019-04-15T20:50:55.813000+00:00", timeUpdatedIso: "2019-04-23T19:17:53.205000+00:00", labels: [\'Fastq\', \'WGS_35000\', \'Blob\'], sample: "SHIP4946367", matePair: 1, readGroup: 0}) RETURN node'
         assert summary['db-query'] == expected_query
         print("> Query test: Pass.")
     except:
         print("! Error: database query does not match expected.")
+        pdb.set_trace()
     # Test pubsub message
