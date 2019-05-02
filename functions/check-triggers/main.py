@@ -47,7 +47,7 @@ def check_triggers(event, context):
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
     print(f"> Processing pubsub message: {data}.")
-    result = data['result']
+    result = json.loads(data['result'])
 
     trigger_module_name = f"{TRIGGER}_triggers"
     trigger_module = importlib.import_module(trigger_module_name)
@@ -57,11 +57,9 @@ def check_triggers(event, context):
                                                      project_id = PROJECT_ID,
                                                      node = result) #????
     elif TRIGGER == 'property':
-        properties = json.loads(result)
-        print(f"Properties: {properties}.")
         trigger_config = trigger_module.PropertyTriggers(
                                                          project_id = PROJECT_ID,
-                                                         properties = properties)
+                                                         properties = result)
 
     triggers = trigger_config.get_triggers()
     #trigger_config.execute_triggers()
