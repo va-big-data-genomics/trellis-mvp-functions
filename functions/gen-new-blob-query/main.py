@@ -104,9 +104,13 @@ def gen_new_blob_query(event, context):
                "resource": "query",
                "neo4j-metadata": {
                                     "cypher": db_query, 
-                                    "result": "data",
+                                    "result-mode": "data",
                },
-               "trellis-metadata": {"resout-resource": "node"},
+               "trellis-metadata": {
+                                    "publish-topic": f"{DATA_GROUP}-new-node", 
+                                    "result-structure": "list",
+                                    "result-split": "True"
+               },
     }
     print(f"> Pubsub message: {message}.")
 
