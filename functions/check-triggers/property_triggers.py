@@ -54,7 +54,7 @@ class PropertyTriggers:
                    "neo4j-metadata": {
                                         "cypher": (
                                                   "MATCH (n:Fastq) " + 
-                                                  f"WHERE n.sample={sample} " + 
+                                                  f"WHERE n.sample=\"{sample}\" " + 
                                                   "WITH n.read_group AS read_group, " +
                                                   "collect(n) AS nodes " +
                                                   "WHERE size(nodes) = 2 " +
