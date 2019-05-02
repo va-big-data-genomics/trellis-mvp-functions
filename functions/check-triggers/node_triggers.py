@@ -46,7 +46,7 @@ class NodeTriggers:
                                     "result": "data"
                    },
                    "trellis-metadata": {
-                                       "publish-topic": "wgs35-property-triggers",
+                                       "publish-topic": "wgs35-property-updates",
                                        "result-structure": "list",
                                        "result-split": "True"
                    }
