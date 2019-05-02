@@ -10,12 +10,12 @@ from google.cloud import pubsub
 
 # Get runtime variables from cloud storage bucket
 # https://www.sethvargo.com/secrets-in-serverless/
-ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
-    TRIGGER = os.environ['TRIGGER', '']
+    TRIGGER = os.environ['TRIGGER']
     vars_blob = storage.Client() \
-                .get_bucket(os.environ['CREDENTIALS_BUCKET', '']) \
-                .get_blob(os.environ['CREDENTIALS_BLOB', '']) \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
