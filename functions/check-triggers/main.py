@@ -12,13 +12,12 @@ from google.cloud import pubsub
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
+    TRIGGER = os.environ['TRIGGER', '']
     vars_blob = storage.Client() \
-                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET', '']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB', '']) \
                 .download_as_string()
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
-
-    TRIGGER = os.environ['TRIGGER']
 
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
