@@ -66,7 +66,7 @@ def query_db(event, context):
     result_mode = neo4j_metadata.get('result-mode')
     
     trellis_metadata = data['trellis-metadata']
-    topic = trellis_metadata.get('publish_topic')
+    topic = trellis_metadata.get('publish-topic')
     result_structure = trellis_metadata.get('result-structure')
     result_split = trellis_metadata.get('result-split')
     
