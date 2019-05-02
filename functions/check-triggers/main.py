@@ -21,13 +21,12 @@ if ENVIRONMENT == 'google-cloud':
     TRIGGER = os.environ['TRIGGER']
 
     # Runtime variables
-    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT', '')
-    TOPIC = parsed_vars.get('DB_QUERY_TOPIC', '')
+    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
+    TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
 
     PUBLISHER = pubsub.PublisherClient()
-    TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
-                                                       id = PROJECT_ID,
-                                                       topic = TOPIC)
+
+
 def publish_message(topic_path, message):
     message = json.dumps(message).encode('utf-8')
     print(f'> Publishing message "{message}".')
@@ -79,16 +78,12 @@ def check_triggers(event, context):
 
 
 if __name__ == "__main__":
-    # Run unit tests in local
+    # Property test
     PROJECT_ID = "***REMOVED***-dev"
-    TOPIC = "wgs-35000-db-queries"
-    DATA_GROUP = 'wgs-35000'
+    TOPIC = "wgs35-db-queries"
     TRIGGER = 'property'
 
     PUBLISHER = pubsub.PublisherClient()
-    TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
-                                                       id = PROJECT_ID,
-                                                       topic = TOPIC)
 
     data = {
              "resource": "query-result",
@@ -100,3 +95,11 @@ if __name__ == "__main__":
     event = {'data': base64.b64encode(data)}
     context = None
     result = check_triggers(event, context)
+
+    # Node test
+    TRIGGER = 'node'
+    data = {
+            "resource": "query-result", 
+            "query": "<SOME QUERY>"
+    }
+
