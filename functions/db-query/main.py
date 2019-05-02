@@ -23,8 +23,6 @@ if ENVIRONMENT == 'google-cloud':
     NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_USER = parsed_vars['NEO4J_USER']
     NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
-    TOPIC = parsed_vars['DB_QUERY_TOPIC']
-    DATA_GROUP = parsed_vars['DATA_GROUP']
 
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
