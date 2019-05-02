@@ -65,63 +65,12 @@ def query_db(event, context):
     
     neo4j_metadata = data['neo4j-metadata']
     query = neo4j_metadata['cypher']
-    result_mode = neo4j_metadata.get('result')
+    result_mode = neo4j_metadata.get('result-mode')
     
     trellis_metadata = data['trellis-metadata']
     topic = trellis_metadata.get('publish_topic')
     result_structure = trellis_metadata.get('result-structure')
     result_split = trellis_metadata.get('result-split')
-
-    """
-    print(f"> Running db query: {query}.")
-    if result_mode == 'stats':
-        result = GRAPH.run(query).stats()
-        print(f"> Result: {result}.")
-
-        if topic:
-            print(f">Publishing nodes to {topic}.")
-            message = {
-                       "resource": "query-stats",
-                       #"neo4j-metadata": result,
-                       "query": query,
-                       "result": result
-            }
-            publish_to_topic(topic, message)
-
-    elif result_mode == 'data':
-        result = GRAPH.run(query).data()
-        print(f"> Result count: {len(result)}.")
-
-        # Split list of results into individual entries & send to topic
-        if result_structure == 'list' and result_split == 'True':
-            for entry in result:
-                if topic:
-                print(f"> Publishing nodes to {topic}.")
-                for datum in result:
-                    message = {
-                            #"resource": trellis_metadata['result-resource'], 
-                            "resource": "query-data",
-                            #"neo4j-metadata": node
-                            "query": query,
-                            "result": result,
-                    }
-                    publish_to_topic(topic, message)
-    
-        if topic:
-            print(f"> Publishing nodes to {topic}.")
-            for datum in result:
-                message = {
-                        #"resource": trellis_metadata['result-resource'], 
-                        "resource": "query-data",
-                        #"neo4j-metadata": node
-                        "query": query,
-                        "result": result,
-                }
-                publish_to_topic(topic, message)
-    else:
-        GRAPH.run(query)
-        result = None
-    """
     
     #### RESTRUCTURED
     print(f"> Running db query: {query}.")
@@ -176,7 +125,7 @@ if __name__ == "__main__":
                 "resource": "query", 
                 "neo4j-metadata": {
                                    "cypher": 'CREATE (node:Fastq:WGS_35000:Blob {bucket: "gbsc-gcp-project-mvp-dev-from-personalis", componentCount: 32, contentType: "application/octet-stream", crc32c: "ftNG8w==", etag: "CL3nyPj80uECEBE=", generation: "1555361455813565", id: "gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565", kind: "storage#object", mediaLink: "https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media", metageneration: "17", name: "SHIP4946367_0_R1", selfLink: "https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz", size: 5955984357, storageClass: "REGIONAL", timeCreated: "2019-04-15T20:50:55.813Z", timeStorageClassUpdated: "2019-04-15T20:50:55.813Z", updated: "2019-04-23T19:17:53.205Z", path: "va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz", dirname: "va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ", basename: "SHIP4946367_0_R1.fastq.gz", extension: "fastq.gz", timeCreatedEpoch: 1555361455.813, timeUpdatedEpoch: 1556047073.205, timeCreatedIso: "2019-04-15T20:50:55.813000+00:00", timeUpdatedIso: "2019-04-23T19:17:53.205000+00:00", labels: [\'Fastq\', \'WGS_35000\', \'Blob\'], sample: "SHIP4946367", matePair: 1, index: 0}) RETURN node',
-                                   "result": "data",
+                                   "result-mode": "data",
                 },
                 "trellis-metadata": {"result-resource": "node"}
         }
