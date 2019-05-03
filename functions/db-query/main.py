@@ -93,6 +93,7 @@ def query_db(event, context):
                     "result": result,
             }
             publish_to_topic(topic, message)
+            print(f"> Published following message to {topic}: {message}.")
     else:
         message = {
             "resource": "query-result",
@@ -100,6 +101,7 @@ def query_db(event, context):
             "result": results,
         }
         publish_to_topic(topic, message)
+        print(f"> Published following message to {topic}: {message}.")
 
 
 if __name__ == "__main__": 
