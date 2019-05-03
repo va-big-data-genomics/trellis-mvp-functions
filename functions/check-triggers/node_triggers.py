@@ -34,7 +34,7 @@ class NodeTriggers:
                    "neo4j-metadata": {
                                       "cypher": (
                                                  "MATCH (n:Fastq) " +
-                                                f"WHERE n.sample={sample} " +
+                                                f"WHERE n.sample=\"{sample}\" " +
                                                  "WITH n.sample AS sample, " +
                                                  "COLLECT(n) AS nodes " +
                                                  "UNWIND nodes AS node " +
@@ -67,7 +67,7 @@ class NodeTriggers:
                    "neo4j-metadata": {
                                       "cypher": (
                                                  "MATCH (n:Ubam) " +
-                                                f"WHERE n.sample={sample} " +
+                                                f"WHERE n.sample=\"{sample}\" " +
                                                  "WITH n.sample AS sample, " +
                                                  "COLLECT(n) as ubams " +
                                                  "RETURN " +
