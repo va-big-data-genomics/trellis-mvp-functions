@@ -75,7 +75,7 @@ class NodeTriggers:
                                                  "WHEN size(ubams) = {set_size} " +
                                                  "THEN nodes " +
                                                  "ELSE NULL" +
-                                                 "END"
+                                                 "END")
                    }, 
                    "trellis-metadata": {
                                         "publish-topic": "wgs35-tasks-gatk-5-dollar", 
