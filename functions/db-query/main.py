@@ -72,10 +72,10 @@ def query_db(event, context):
     
     #### RESTRUCTURED
     if result_mode == 'stats':
-        print(f"> Running stats query: {query}.")
+        print(f"> Running stats query: '{query}'.")
         results = GRAPH.run(query).stats()
     elif result_mode == 'data':
-        print(f"> Running data query: {query}.")
+        print(f"> Running data query: '{query}'.")
         results = GRAPH.run(query).data()
     else:
         GRAPH.run(query)
@@ -92,6 +92,7 @@ def query_db(event, context):
                     "resource": "query-result",
                     "query": query,
                     "result": result,
+                    "trellis-metadata": {"sent-from": "db-query"}
             }
             publish_to_topic(topic, message)
             print(f"> Published following message to {topic}: {message}.")
