@@ -62,9 +62,9 @@ class PropertyTriggers:
                                         "result-mode": "data",                
                    },
                    "trellis-metadata": {
-                                        "publish_topic": "wgs35-tasks-fastq-to-ubam",
-                                        "structure": "list",
-                                        "split": "True"
+                                        "publish-topic": "wgs35-tasks-fastq-to-ubam",
+                                        "result-structure": "list",
+                                        "result-split": "True"
                    }
         }
         return(topic_path, message)
