@@ -61,7 +61,7 @@ def check_triggers(event, context):
     if TRIGGER == 'node':
         trigger_config = trigger_module.NodeTriggers(
                                                      project_id = PROJECT_ID,
-                                                     node = result) #????
+                                                     node = result['node']) #????
     elif TRIGGER == 'property':
         trigger_config = trigger_module.PropertyTriggers(
                                                          project_id = PROJECT_ID,
