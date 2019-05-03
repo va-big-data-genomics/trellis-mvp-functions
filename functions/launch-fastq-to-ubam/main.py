@@ -98,7 +98,7 @@ def launch_fastq_to_ubam(event, context):
         "--preemptible",
         "--boot-disk-size", "20", 
         "--image", 
-            f"gcr.io/{PROJECT_ID}/***REMOVED***/wdl_runner:latest", 
+            f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0", 
         "--logging", 
             f"gs://{LOG_BUCKET}/{sample}/{workflow_name}/{task_name}/logs",
         "--disk-size", "1000",
