@@ -70,11 +70,13 @@ def check_triggers(event, context):
                                                          properties = result)
 
     triggers = trigger_config.get_triggers()
-    #trigger_config.execute_triggers()
-    for trigger in triggers:
-        print(f'> Executing trigger: {triggers}.')
-        topic_path, message = trigger()
-        publish_message(topic_path, message)
+    if triggers:
+        for trigger in triggers:
+            print(f'> Executing trigger: {triggers}.')
+            topic_path, message = trigger()
+            publish_message(topic_path, message)
+    else:
+        print(f'> No triggers executed.')
 
     #summary = {
     #           "name": name, 
