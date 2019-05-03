@@ -57,13 +57,13 @@ def launch_fastq_to_ubam(event, context):
     data = json.loads(pubsub_message)
     print(data)
 
-    resource_type = 'nodes'
-    if data['resource'] != resource_type:
-        print(f"Error: Expected resource type '{resource_type}', " +
-              f"got '{data['resource']}.'")
-        return
+    #resource_type = 'nodes'
+    #if data['resource'] != resource_type:
+    #    print(f"Error: Expected resource type '{resource_type}', " +
+    #          f"got '{data['resource']}.'")
+    #    return
 
-    nodes = data['neo4j-metadata']['nodes']
+    nodes = data['results']
 
     if len(nodes) != 2:
         print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
@@ -74,7 +74,7 @@ def launch_fastq_to_ubam(event, context):
 
     # Dsub data
     task_name = 'fastq-to-ubam'
-    task_group = 'gatk-5-dollar'
+    workflow_name = 'fastq-to-vcf'
 
     # TODO: Implement QC checking to make sure fastqs match
     fastqs = {}
@@ -103,14 +103,16 @@ def launch_fastq_to_ubam(event, context):
         "--image", 
             f"gcr.io/{PROJECT_ID}/***REMOVED***/wdl_runner:latest", 
         "--logging", 
-            f"gs://{LOG_BUCKET}/{OUT_ROOT}/{task_group}/{task_name}/{sample}/logs",
+            f"gs://{LOG_BUCKET}/{sample}/{workflow_name}/{task_name}/logs",
         "--disk-size", "1000",
         "--env", f"RG={read_group}",
         "--env", f"SM={sample}",
         "--env",  "PL=illumina",
         "--command", '/gatk/gatk --java-options "-Xmx8G -Djava.io.tmpdir=bla" FastqToSam -F1 ${FASTQ_1} -F2 ${FASTQ_2} -O ${UBAM} -RG ${RG} -SM ${SM} -PL ${PL}',
         "--output", 
-            f"UBAM=gs://{OUT_BUCKET}/{OUT_ROOT}/{task_group}/{task_name}/{sample}/objects/{sample}_{index}.ubam",
+            #f"UBAM=gs://{OUT_BUCKET}/{OUT_ROOT}/{task_group}/{task_name}/{sample}/objects/{sample}_{index}.ubam", 
+            f"UBAM=gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/objects/{sample}_{index}.ubam",
+    ]
     ]
     # Add fastqs as inputs
     for name, path in fastqs.items():
@@ -126,5 +128,8 @@ if __name__ == "__main__":
     OUT_BUCKET = "***REMOVED***-dev-from-personalis-qc"
     OUT_ROOT = "dsub"
 
+    data = {'resource': 'query-result', 'query': 'MATCH (n:Fastq) WHERE n.sample="SHIP4946367" WITH n.readGroup AS read_group, collect(n) AS nodes WHERE size(nodes) = 2 RETURN [n in nodes] AS nodes', 'result': {'nodes': [(_151:Blob:Fastq:WGS_35000 {basename: 'SHIP4946367_0_R1.fastq.gz', bucket: '***REMOVED***-dev-from-personalis', componentCount: 32, contentType: 'application/octet-stream', crc32c: 'ftNG8w==', dirname: 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ', etag: 'CL3nyPj80uECEC4=', extension: 'fastq.gz', generation: '1555361455813565', id: '***REMOVED***-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565', kind: 'storage#object', labels: ['Fastq', 'WGS_35000', 'Blob'], matePair: 1, mediaLink: 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media', metageneration: '46', name: 'SHIP4946367_0_R1', path: 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz', readGroup: 0, sample: 'SHIP4946367', selfLink: 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz', setSize: 8, size: 5955984357, storageClass: 'REGIONAL', timeCreated: '2019-04-15T20:50:55.813Z', timeCreatedEpoch: 1555361455.813, timeCreatedIso: '2019-04-15T20:50:55.813000+00:00', timeStorageClassUpdated: '2019-04-15T20:50:55.813Z', timeUpdatedEpoch: 1556919952.482, timeUpdatedIso: '2019-05-03T21:45:52.482000+00:00', updated: '2019-05-03T21:45:52.482Z'}), (_242:Blob:Fastq:WGS_35000 {basename: 'SHIP4946367_0_R2.fastq.gz', bucket: '***REMOVED***-dev-from-personalis', componentCount: 32, contentType: 'application/octet-stream', crc32c: 'aV17ew==', dirname: 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ', etag: 'CKqJ2/j80uECEBA=', extension: 'fastq.gz', generation: '1555361456112810', id: '***REMOVED***-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R2.fastq.gz/1555361456112810', kind: 'storage#object', labels: ['Fastq', 'WGS_35000', 'Blob'], matePair: 2, mediaLink: 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R2.fastq.gz?generation=1555361456112810&alt=media', metageneration: '16', name: 'SHIP4946367_0_R2', path: 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R2.fastq.gz', readGroup: 0, sample: 'SHIP4946367', selfLink: 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R2.fastq.gz', setSize: 8, size: 6141826914, storageClass: 'REGIONAL', timeCreated: '2019-04-15T20:50:56.112Z', timeCreatedEpoch: 1555361456.112, timeCreatedIso: '2019-04-15T20:50:56.112000+00:00', timeStorageClassUpdated: '2019-04-15T20:50:56.112Z', timeUpdatedEpoch: 1556920219.608, timeUpdatedIso: '2019-05-03T21:50:19.608000+00:00', updated: '2019-05-03T21:50:19.608Z'})]}, 'trellis-metadata': {'sent-from': 'db-query'}}
+    data = json.dumps(data).encode('utf-8')
+    event = {'data': base64.b64encode(data)}
 
-    launch_fastq_to_ubam(event, context=None)
+    result = launch_fastq_to_ubam(event, context=None)
