@@ -80,6 +80,7 @@ def query_db(event, context):
     else:
         GRAPH.run(query)
         results = None
+    print(f"Query results: {results}.")
 
     # Return if not pubsub topic
     if not topic:
@@ -200,3 +201,5 @@ if __name__ == "__main__":
     data = json.dumps(data).encode('utf-8')
     event = {'data': base64.b64encode(data)}
     result = query_db(event, context=None)
+
+    # 
