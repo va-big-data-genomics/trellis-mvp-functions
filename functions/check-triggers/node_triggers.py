@@ -2,9 +2,9 @@ import json
 
 class NodeTriggers:
 
-    def __init__(self, project_id, node):
+    def __init__(self, project_id, result):
         self.project_id = project_id
-        self.node = node
+        self.node = result['node']
 
     def get_triggers(self):
         node_labels = self.node['labels']
