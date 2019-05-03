@@ -80,8 +80,8 @@ class NodeTriggers:
                    }, 
                    "trellis-metadata": {
                                         "publish-topic": "wgs35-tasks-gatk-5-dollar", 
-                                        "structure": "list",
-                                        "split": "False"
+                                        "result-structure": "list",
+                                        "result-split": "False"
                    }
         }
         return(topic_path, message)
