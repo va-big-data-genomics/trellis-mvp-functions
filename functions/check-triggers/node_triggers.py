@@ -32,18 +32,18 @@ class NodeTriggers:
         message = {
                    "resource": "query",
                    "neo4j-metadata": {
-                                     "cypher": (
-                                                "MATCH (n:Fastq) " +
-                                               f"WHERE n.sample={sample} " +
-                                                "WITH n.sample AS sample, " +
-                                                "COLLECT(n) AS nodes " +
-                                                "UNWIND nodes AS node " +
-                                                "SET node.setSize = size(nodes)" +
-                                                "RETURN DISTINCT " +
-                                                "node.setSize AS `added_setSize`, " +
-                                                "node.sample AS `nodes_sample`, " + 
-                                                "node.labels AS `nodes_labels`")
-                                    "result": "data"
+                                      "cypher": (
+                                                 "MATCH (n:Fastq) " +
+                                                f"WHERE n.sample={sample} " +
+                                                 "WITH n.sample AS sample, " +
+                                                 "COLLECT(n) AS nodes " +
+                                                 "UNWIND nodes AS node " +
+                                                 "SET node.setSize = size(nodes)" +
+                                                 "RETURN DISTINCT " +
+                                                 "node.setSize AS `added_setSize`, " +
+                                                 "node.sample AS `nodes_sample`, " + 
+                                                 "node.labels AS `nodes_labels`"),
+                                      "result": "data",
                    },
                    "trellis-metadata": {
                                         "publish-topic": "wgs35-property-updates",
