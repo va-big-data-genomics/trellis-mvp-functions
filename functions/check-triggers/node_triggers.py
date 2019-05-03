@@ -10,7 +10,7 @@ class NodeTriggers:
         node_labels = self.node['labels']
 
         triggers = {
-                    'Json': self.fastq_to_ubam,
+                    'Json': self.add_fastq_set_size,
                     'Ubam': self.check_ubam_count
         }
 
@@ -23,7 +23,7 @@ class NodeTriggers:
         self.unique_functions = set(trigger_functions)
         return self.unique_functions
 
-    def set_fastq_set_size(self):
+    def add_fastq_set_size(self):
         topic = "wgs35-db-queries"
         topic_path = f"project/{self.project_id}/topics/{topic}"
 
