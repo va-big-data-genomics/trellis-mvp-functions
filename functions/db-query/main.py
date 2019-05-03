@@ -92,7 +92,7 @@ def query_db(event, context):
             message = {
                     "resource": "query-result",
                     "query": query,
-                    "result": result,
+                    "results": result,
                     "trellis-metadata": {"sent-from": "db-query"}
             }
             publish_to_topic(topic, message)
@@ -101,7 +101,7 @@ def query_db(event, context):
         message = {
             "resource": "query-result",
             "query": query,
-            "result": results,
+            "results": results,
         }
         publish_to_topic(topic, message)
         print(f"> Published following message to {topic}: {message}.")
