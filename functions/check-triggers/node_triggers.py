@@ -43,7 +43,7 @@ class NodeTriggers:
                                                  "node.setSize AS `added_setSize`, " +
                                                  "node.sample AS `nodes_sample`, " + 
                                                  "node.labels AS `nodes_labels`"),
-                                      "result": "data",
+                                      "result-mode": "data",
                    },
                    "trellis-metadata": {
                                         "publish-topic": "wgs35-property-updates",
@@ -76,7 +76,7 @@ class NodeTriggers:
                                                  "THEN nodes " +
                                                  "ELSE NULL " +
                                                  "END"),
-                                      "result": "data",
+                                      "result-mode": "data",
                    }, 
                    "trellis-metadata": {
                                         "publish-topic": "wgs35-tasks-gatk-5-dollar", 
