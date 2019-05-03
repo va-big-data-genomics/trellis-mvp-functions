@@ -71,10 +71,11 @@ def query_db(event, context):
     result_split = trellis_metadata.get('result-split')
     
     #### RESTRUCTURED
-    print(f"> Running db query: {query}.")
     if result_mode == 'stats':
+        print(f"> Running stats query: {query}.")
         results = GRAPH.run(query).stats()
     elif result_mode == 'data':
+        print(f"> Running data query: {query}.")
         results = GRAPH.run(query).data()
     else:
         GRAPH.run(query)
@@ -116,6 +117,9 @@ if __name__ == "__main__":
                 'path': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz',
                 'sample': 'SHIP4946367'
     }
+
+    # Pubsub client
+    PUBLISHER = pubsub.PublisherClient()
 
     try:
         # Create blob node
@@ -176,3 +180,19 @@ if __name__ == "__main__":
     except:
         print(f"! Error: blob node did not match expected values. {node}.")
 
+    # Query fastqs and add set property
+    data = {
+            'resource': 'query', 
+            'neo4j-metadata': {
+                               'cypher': 'MATCH (n:Fastq) WHERE n.sample="SHIP4946367" WITH n.sample AS sample, COLLECT(n) AS nodes UNWIND nodes AS node SET node.setSize = size(nodes)RETURN DISTINCT node.setSize AS `added_setSize`, node.sample AS `nodes_sample`, node.labels AS `nodes_labels`', 
+                               'result-mode': 'data'
+            }, 
+            'trellis-metadata': {
+                                 'publish-topic': 'wgs35-property-updates', 
+                                 'result-structure': 'list', 
+                                 'result-split': 'True'
+            }
+    }
+    data = json.dumps(data).encode('utf-8')
+    event = {'data': base64.b64encode(data)}
+    result = query_db(event, context=None)
