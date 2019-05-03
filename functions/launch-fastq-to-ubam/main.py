@@ -21,8 +21,7 @@ if ENVIRONMENT == 'google-cloud':
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     ZONES = parsed_vars['DSUB_ZONES']
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
-    LOB_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
-    OUT_ROOT = parsed_vars['DSUB_OUT_ROOT']
+    LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
 
 def launch_dsub_task(dsub_args):
@@ -55,7 +54,8 @@ def launch_fastq_to_ubam(event, context):
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
-    print(data)
+    print(f"> Context: {context}.")
+    print(f"> Data: {data}.")
 
     #resource_type = 'nodes'
     #if data['resource'] != resource_type:
@@ -63,14 +63,11 @@ def launch_fastq_to_ubam(event, context):
     #          f"got '{data['resource']}.'")
     #    return
 
-    nodes = data['results']
+    nodes = data['results']['nodes']
 
     if len(nodes) != 2:
         print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
         return
-    #if not 'Fast' in node['labels']:
-    #    print(f"Info: Not a Bam object. Ignoring. {node}.")
-    #    return
 
     # Dsub data
     task_name = 'fastq-to-ubam'
@@ -96,10 +93,10 @@ def launch_fastq_to_ubam(event, context):
         "--user", DSUB_USER, 
         "--zones", ZONES, 
         "--project", PROJECT_ID,
-        "--min-cores", 1, 
-        "--min-ram", 7.5,
+        "--min-cores", "1", 
+        "--min-ram", "7.5",
         "--preemptible",
-        "--boot-disk-size", 20, 
+        "--boot-disk-size", "20", 
         "--image", 
             f"gcr.io/{PROJECT_ID}/jinasong/wdl_runner:latest", 
         "--logging", 
@@ -111,7 +108,7 @@ def launch_fastq_to_ubam(event, context):
         "--command", '/gatk/gatk --java-options "-Xmx8G -Djava.io.tmpdir=bla" FastqToSam -F1 ${FASTQ_1} -F2 ${FASTQ_2} -O ${UBAM} -RG ${RG} -SM ${SM} -PL ${PL}',
         "--output", 
             #f"UBAM=gs://{OUT_BUCKET}/{OUT_ROOT}/{task_group}/{task_name}/{sample}/objects/{sample}_{index}.ubam", 
-            f"UBAM=gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/objects/{sample}_{index}.ubam",
+            f"UBAM=gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/objects/{sample}_{read_group}.ubam",
     ]
 
     # Add fastqs as inputs
@@ -119,17 +116,19 @@ def launch_fastq_to_ubam(event, context):
         dsub_args.extend(["--input", f"{name}={path}"])
 
     print(f"Launching dsub with args: {dsub_args}.")
-    launch_dsub_task(dsub_args)
+    result = launch_dsub_task(dsub_args)
+    print(f"Dsub result: '{result}'.")
 
 # For local testing
 if __name__ == "__main__":
     PROJECT_ID = "gbsc-gcp-project-mvp-dev"
     ZONES =  "us-west1*"
-    OUT_BUCKET = "gbsc-gcp-project-mvp-dev-from-personalis-qc"
-    OUT_ROOT = "dsub"
+    OUT_BUCKET = "gbsc-gcp-project-mvp-dev-from-personalis-gatk"
+    LOG_BUCKET = "gbsc-gcp-project-mvp-dev-from-personalis-gatk-logs"
+    DSUB_USER = "trellis"
 
-    #data = {'resource': 'query-result', 'query': 'MATCH (n:Fastq) WHERE n.sample="SHIP4946367" WITH n.readGroup AS read_group, collect(n) AS nodes WHERE size(nodes) = 2 RETURN [n in nodes] AS nodes', 'result': {'nodes': [(_151:Blob:Fastq:WGS_35000 {basename: 'SHIP4946367_0_R1.fastq.gz', bucket: 'gbsc-gcp-project-mvp-dev-from-personalis', componentCount: 32, contentType: 'application/octet-stream', crc32c: 'ftNG8w==', dirname: 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ', etag: 'CL3nyPj80uECEC4=', extension: 'fastq.gz', generation: '1555361455813565', id: 'gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565', kind: 'storage#object', labels: ['Fastq', 'WGS_35000', 'Blob'], matePair: 1, mediaLink: 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media', metageneration: '46', name: 'SHIP4946367_0_R1', path: 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz', readGroup: 0, sample: 'SHIP4946367', selfLink: 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz', setSize: 8, size: 5955984357, storageClass: 'REGIONAL', timeCreated: '2019-04-15T20:50:55.813Z', timeCreatedEpoch: 1555361455.813, timeCreatedIso: '2019-04-15T20:50:55.813000+00:00', timeStorageClassUpdated: '2019-04-15T20:50:55.813Z', timeUpdatedEpoch: 1556919952.482, timeUpdatedIso: '2019-05-03T21:45:52.482000+00:00', updated: '2019-05-03T21:45:52.482Z'}), (_242:Blob:Fastq:WGS_35000 {basename: 'SHIP4946367_0_R2.fastq.gz', bucket: 'gbsc-gcp-project-mvp-dev-from-personalis', componentCount: 32, contentType: 'application/octet-stream', crc32c: 'aV17ew==', dirname: 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ', etag: 'CKqJ2/j80uECEBA=', extension: 'fastq.gz', generation: '1555361456112810', id: 'gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R2.fastq.gz/1555361456112810', kind: 'storage#object', labels: ['Fastq', 'WGS_35000', 'Blob'], matePair: 2, mediaLink: 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R2.fastq.gz?generation=1555361456112810&alt=media', metageneration: '16', name: 'SHIP4946367_0_R2', path: 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R2.fastq.gz', readGroup: 0, sample: 'SHIP4946367', selfLink: 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R2.fastq.gz', setSize: 8, size: 6141826914, storageClass: 'REGIONAL', timeCreated: '2019-04-15T20:50:56.112Z', timeCreatedEpoch: 1555361456.112, timeCreatedIso: '2019-04-15T20:50:56.112000+00:00', timeStorageClassUpdated: '2019-04-15T20:50:56.112Z', timeUpdatedEpoch: 1556920219.608, timeUpdatedIso: '2019-05-03T21:50:19.608000+00:00', updated: '2019-05-03T21:50:19.608Z'})]}, 'trellis-metadata': {'sent-from': 'db-query'}}
-    #data = json.dumps(data).encode('utf-8')
-    #event = {'data': base64.b64encode(data)}
+    data = {'resource': 'query-result', 'query': 'MATCH (n:Fastq) WHERE n.sample="SHIP4946367" WITH n.readGroup AS read_group, collect(n) AS nodes WHERE size(nodes) = 2 RETURN [n in nodes] AS nodes', 'results': {'nodes': [{'extension': 'fastq.gz', 'readGroup': 0, 'dirname': 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ', 'path': 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz', 'storageClass': 'REGIONAL', 'setSize': 9, 'timeCreatedEpoch': 1555361455.813, 'timeUpdatedEpoch': 1556919952.482, 'timeCreated': '2019-04-15T20:50:55.813Z', 'id': 'gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565', 'contentType': 'application/octet-stream', 'generation': '1555361455813565', 'metageneration': '46', 'kind': 'storage#object', 'timeUpdatedIso': '2019-05-03T21:45:52.482000+00:00', 'sample': 'SHIP4946367', 'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz', 'labels': ['Fastq', 'WGS_35000', 'Blob'], 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media', 'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis', 'componentCount': 32, 'basename': 'SHIP4946367_0_R1.fastq.gz', 'crc32c': 'ftNG8w==', 'size': 5955984357, 'timeStorageClassUpdated': '2019-04-15T20:50:55.813Z', 'name': 'SHIP4946367_0_R1', 'etag': 'CL3nyPj80uECEC4=', 'timeCreatedIso': '2019-04-15T20:50:55.813000+00:00', 'matePair': 1, 'updated': '2019-05-03T21:45:52.482Z'}, {'extension': 'fastq.gz', 'readGroup': 0, 'dirname': 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ', 'path': 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R2.fastq.gz', 'storageClass': 'REGIONAL', 'setSize': 9, 'timeCreatedEpoch': 1555361456.112, 'timeUpdatedEpoch': 1556920219.608, 'timeCreated': '2019-04-15T20:50:56.112Z', 'id': 'gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R2.fastq.gz/1555361456112810', 'contentType': 'application/octet-stream', 'generation': '1555361456112810', 'metageneration': '16', 'kind': 'storage#object', 'timeUpdatedIso': '2019-05-03T21:50:19.608000+00:00', 'sample': 'SHIP4946367', 'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R2.fastq.gz', 'labels': ['Fastq', 'WGS_35000', 'Blob'], 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R2.fastq.gz?generation=1555361456112810&alt=media', 'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis', 'componentCount': 32, 'basename': 'SHIP4946367_0_R2.fastq.gz', 'crc32c': 'aV17ew==', 'size': 6141826914, 'timeStorageClassUpdated': '2019-04-15T20:50:56.112Z', 'name': 'SHIP4946367_0_R2', 'etag': 'CKqJ2/j80uECEBA=', 'timeCreatedIso': '2019-04-15T20:50:56.112000+00:00', 'matePair': 2, 'updated': '2019-05-03T21:50:19.608Z'}]}, 'trellis-metadata': {'sent-from': 'db-query'}}
+    data = json.dumps(data).encode('utf-8')
+    event = {'data': base64.b64encode(data)}
 
-    #result = launch_fastq_to_ubam(event, context=None)
+    result = launch_fastq_to_ubam(event, context=None)
