@@ -19,9 +19,9 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     # Runtime variables
-    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT', '')
-    TOPIC = parsed_vars.get('DB_QUERY_TOPIC', '')
-    DATA_GROUP = parsed_vars.get('DATA_GROUP', '')
+    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
+    TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
 
     PUBLISHER = pubsub.PublisherClient()
