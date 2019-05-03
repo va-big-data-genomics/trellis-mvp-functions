@@ -25,9 +25,9 @@ class NodeTriggers:
 
     def add_fastq_set_size(self):
         topic = "wgs35-db-queries"
-        topic_path = f"project/{self.project_id}/topics/{topic}"
+        topic_path = f"projects/{self.project_id}/topics/{topic}"
 
-        sample = self.node['node']['sample']
+        sample = self.node['sample']
 
         message = {
                    "resource": "query",
@@ -57,10 +57,10 @@ class NodeTriggers:
     def check_ubam_count(self):
         """Send full set of ubams to GATK task"""
         topic = "wgs35-db-queries"
-        topic_path = f"project/{self.project_id}/topics/{topic}"
+        topic_path = f"projects/{self.project_id}/topics/{topic}"
 
-        sample = self.node['node']['sample']
-        set_size = self.node['node']['setSize']
+        sample = self.node['sample']
+        set_size = self.node['setSize']
 
         message = {
                    "resource": "query", 
