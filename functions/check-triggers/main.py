@@ -44,7 +44,16 @@ def check_triggers(event, context):
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
     print(f"> Processing pubsub message: {data}.")
-    result = json.loads(data['result'])
+    resource = data['resource']
+    query = data['query']
+    result = data['result']
+
+
+    # Check that resource is query
+    if resource != 'query-result':
+        print(f"Error: Expected resource type 'request', " +
+              f"got '{data['resource']}.'")
+        return
 
     trigger_module_name = f"{TRIGGER}_triggers"
     trigger_module = importlib.import_module(trigger_module_name)
