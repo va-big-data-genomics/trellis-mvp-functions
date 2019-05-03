@@ -83,6 +83,7 @@ def query_db(event, context):
 
     # Return if not pubsub topic
     if not topic:
+        print("No Pub/Sub topic specified; result not published.")
         return results
 
     if result_split == 'True':
