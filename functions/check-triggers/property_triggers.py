@@ -59,7 +59,7 @@ class PropertyTriggers:
                                                   "collect(n) AS nodes " +
                                                   "WHERE size(nodes) = 2 " +
                                                   "RETURN [n in nodes] AS nodes"), 
-                                        "result": "data",                
+                                        "result-mode": "data",                
                    },
                    "trellis-metadata": {
                                         "publish_topic": "wgs35-tasks-fastq-to-ubam",
