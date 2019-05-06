@@ -1,8 +1,12 @@
 import re
+import pdb
+import json
 import pytz
 import iso8601
 
 from datetime import datetime
+
+from google.cloud import storage
 
 def clean_metadata_dict(raw_dict):
     """Remove dict entries where the value is of type dict"""
@@ -173,6 +177,21 @@ def read_group_name_1(db_dict):
     index = db_dict['name'].split('_')[1]
     return {'readGroup': int(index)}  
 
+def get_metadata_from_all_json(db_dict):
+
+    meta_bucket = db_dict['bucket']
+
+    meta_blob_path = db_dict['dirname'].split('/')[:-1]
+    meta_blob_path.extend(['metadata', 'all-objects.json'])
+    meta_blob_path = '/'.join(meta_blob_path)
+
+    metadata_str = storage.Client() \
+        .get_bucket(meta_bucket) \
+        .blob(meta_blob_path) \
+        .download_as_string()
+    metadata = json.loads(metadata_str)
+    return metadata
+
 
 class NodeEntry:
 
@@ -238,7 +257,8 @@ class NodeKinds:
         self.label_functions = {
                                 "Ubam": [
                                           sample_path_0, 
-                                          read_group_name_1,
+                                          read_group_name_1, 
+                                          get_metadata_from_all_json
                                 ],
         }
 
