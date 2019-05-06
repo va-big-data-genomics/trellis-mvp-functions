@@ -66,11 +66,11 @@ def launch_gatk_5_dollar(event, context):
 
     metadata = {}
     nodes = parse_case_results(data['results'])
-    for result_name in data['results']:
-        elements = result_name.split('_')
-        if elements[0] == 'metadata':
-            key = elements[1]
-            metadata[key] = data['results'][result_name]
+    #for result_name in data['results']:
+    #    elements = result_name.split('_')
+    #    if elements[0] == 'metadata':
+    #        key = elements[1]
+    #        metadata[key] = data['results'][result_name]
 
     #if len(nodes) != 2:
     #    print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
