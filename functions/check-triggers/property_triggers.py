@@ -56,9 +56,11 @@ class PropertyTriggers:
                                                   "MATCH (n:Fastq) " + 
                                                   f"WHERE n.sample=\"{sample}\" " + 
                                                   "WITH n.readGroup AS read_group, " +
-                                                  "collect(n) AS nodes " +
-                                                  "WHERE size(nodes) = 2 " +
-                                                  "RETURN [n in nodes] AS nodes"), 
+                                                  "n.setSize AS set_size, " +
+                                                  "COLLECT(n) AS nodes " +
+                                                  "WHERE size(nodes) = 2 " + 
+                                                  "RETURN [n IN nodes] AS nodes, "
+                                                  "set_size AS metadata_setSize"), 
                                         "result-mode": "data",                
                    },
                    "trellis-metadata": {
