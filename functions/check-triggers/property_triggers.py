@@ -60,7 +60,7 @@ class PropertyTriggers:
                                                   "COLLECT(n) AS nodes " +
                                                   "WHERE size(nodes) = 2 " + 
                                                   "RETURN [n IN nodes] AS nodes, "
-                                                  "set_size AS metadata_setSize"), 
+                                                  "set_size/2 AS metadata_setSize"), 
                                         "result-mode": "data",                
                    },
                    "trellis-metadata": {
