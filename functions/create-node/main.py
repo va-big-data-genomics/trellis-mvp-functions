@@ -30,7 +30,7 @@ if ENVIRONMENT == 'google-cloud':
                                                        topic = TOPIC)
 
 
-def create_node_query(db_entry, dry_run=False):
+def format_query(db_entry, dry_run=False):
     labels_str = ':'.join(db_entry['labels'])
 
     # Create database entry string
@@ -61,7 +61,7 @@ def get_node_labels(name, label_patterns):
     return labels
 
 
-def gen_new_blob_query(event, context):
+def create_node_query(event, context):
     """When object created in bucket, add metadata to database.
     Args:
         event (dict): Event payload.
@@ -99,7 +99,7 @@ def gen_new_blob_query(event, context):
     node_dict = node_obj.get_db_dict()
 
     print(f"> Generating database query for node: {node_dict}.")
-    db_query = create_node_query(node_dict)
+    db_query = format_query(node_dict)
     print(f"> Database query: \"{db_query}\".")
 
     message = {
