@@ -45,6 +45,11 @@ def get_datestamp():
     datestamp = now.strftime("%Y%m%d")
     return datestamp
 
+def parse_case_results(results):
+    #'results': [{'CASE WHEN ': [{node_metadata}]}]
+    results = results[0]
+    return list(results.values())[0]
+
 def launch_gatk_5_dollar(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
@@ -60,7 +65,7 @@ def launch_gatk_5_dollar(event, context):
     print(f"> Data: {data}.")
 
     metadata = {}
-    nodes = data['results']['nodes']
+    nodes = parse_case_results(data['results'])
     for result_name in data['results']:
         elements = result_name.split('_')
         if elements[0] == 'metadata':
