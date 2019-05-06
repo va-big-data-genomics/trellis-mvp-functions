@@ -24,7 +24,7 @@ if ENVIRONMENT == 'google-cloud':
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
     TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
-    GATK_INPUTS_PATH = parsed_Vars['GATK_HG38_INPUTS']
+    GATK_INPUTS_PATH = parsed_vars['GATK_HG38_INPUTS']
 
 def launch_dsub_task(dsub_args):
     try:
