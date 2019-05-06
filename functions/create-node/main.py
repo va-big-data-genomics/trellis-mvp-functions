@@ -141,6 +141,7 @@ if __name__ == "__main__":
                                                        id = PROJECT_ID,
                                                        topic = TOPIC)
 
+    # fastq
     event = {
              'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis', 
              'componentCount': 32, 
@@ -163,7 +164,7 @@ if __name__ == "__main__":
     }
     context = None
 
-    summary = gen_new_blob_query(event, context)
+    summary = create_node_query(event, context)
     
     # Test event attributes
     assert summary['name'] == event['name']
@@ -190,3 +191,9 @@ if __name__ == "__main__":
         print("! Error: database query does not match expected.")
         pdb.set_trace()
     # Test pubsub message
+
+    # ubam
+    event = {'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis-gatk', 'contentType': 'application/octet-stream', 'crc32c': 'ZaJM+g==', 'etag': 'CPiFjqbVgOICEAI=', 'generation': '1556931361866488', 'id': 'gbsc-gcp-project-mvp-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/objects/SHIP4946367_0.ubam/1556931361866488', 'kind': 'storage#object', 'md5Hash': 'Tgh+eyIiKe8TRWV6vohGJQ==', 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Fobjects%2FSHIP4946367_0.ubam?generation=1556931361866488&alt=media', 'metadata': {'test': '20190506:1148'}, 'metageneration': '2', 'name': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/objects/SHIP4946367_0.ubam', 'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Fobjects%2FSHIP4946367_0.ubam', 'size': '16871102587', 'storageClass': 'REGIONAL', 'timeCreated': '2019-05-04T00:56:01.866Z', 'timeStorageClassUpdated': '2019-05-04T00:56:01.866Z', 'updated': '2019-05-06T18:48:06.711Z'}
+    context = None
+    summary = create_node_query(event, context)
+
