@@ -69,10 +69,10 @@ class NodeTriggers:
                                                  "MATCH (n:Ubam) " +
                                                 f"WHERE n.sample=\"{sample}\" " +
                                                  "WITH n.sample AS sample, " +
-                                                 "COLLECT(n) as ubams " +
+                                                 "COLLECT(n) as nodes " +
                                                  "RETURN " +
                                                  "CASE " +
-                                                 "WHEN size(ubams) = {set_size} " +
+                                                f"WHEN size(nodes) = {set_size} " +
                                                  "THEN nodes " +
                                                  "ELSE NULL " +
                                                  "END"),
