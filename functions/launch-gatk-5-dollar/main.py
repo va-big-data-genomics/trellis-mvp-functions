@@ -133,11 +133,11 @@ def launch_gatk_5_dollar(event, context):
         "--logging", 
             f"gs://{LOG_BUCKET}/{sample}/{workflow_name}/{task_name}/logs",
         "--disk-size", "1000",
-        "--input", "CFG=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/google-adc.conf",
-        "--input", "OPTION=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp-pipeline/generic.google-papi.options.json",
-        "--input", "WDL=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl",
-        "--input", "SUBWDL=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp-pipeline/tasks_pipeline/*.wdl"
-        "--input", "INPUT=gs://{OUT_BUCKET}/{gatk_inputs_path}"
+        "--input", f"CFG=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/google-adc.conf",
+        "--input", f"OPTION=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp-pipeline/generic.google-papi.options.json",
+        "--input", f"WDL=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl",
+        "--input", f"SUBWDL=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp-pipeline/tasks_pipeline/*.wdl",
+        "--input", f"INPUT=gs://{OUT_BUCKET}/{gatk_inputs_path}",
         "--env", f"MYproject={PROJECT_ID}",
         "--env", f"ROOT=gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/output",
         "--command", "java -Dconfig.file=${CFG} -Dbackend.providers.JES.config.project=${MYproject} -Dbackend.providers.JES.config.root=${ROOT} -jar /cromwell/cromwell.jar run ${WDL} --inputs ${INPUT} --options ${OPTION}",
