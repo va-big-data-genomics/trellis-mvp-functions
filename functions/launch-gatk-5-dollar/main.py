@@ -119,6 +119,7 @@ def launch_gatk_5_dollar(event, context):
         .upload_from_string(json.dumps(gatk_inputs))
     print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
+    workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
     dsub_args = [
         "--provider", "google-v2", 
         "--user", DSUB_USER, 
@@ -133,10 +134,10 @@ def launch_gatk_5_dollar(event, context):
         "--logging", 
             f"gs://{LOG_BUCKET}/{sample}/{workflow_name}/{task_name}/logs",
         "--disk-size", "1000",
-        "--input", f"CFG=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp/gatk-mvp/gatk-mvp-pipeline/google-adc.conf",
-        "--input", f"OPTION=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/generic.google-papi.options.json",
-        "--input", f"WDL=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl",
-        "--input", f"SUBWDL=gs://{TRELLIS_BUCKET}/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/tasks_pipelines/*.wdl",
+        "--input", f"CFG=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/google-adc.conf",
+        "--input", f"OPTION=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/generic.google-papi.options.json",
+        "--input", f"WDL=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/fc_germline_single_sample_workflow.wdl",
+        "--input", f"SUBWDL=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/tasks_pipelines/*.wdl",
         "--input", f"INPUT=gs://{OUT_BUCKET}/{gatk_inputs_path}",
         "--env", f"MYproject={PROJECT_ID}",
         "--env", f"ROOT=gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/output",
