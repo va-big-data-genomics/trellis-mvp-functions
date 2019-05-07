@@ -144,22 +144,22 @@ def launch_gatk_5_dollar(event, context):
     ]
 
     # Add fastqs as inputs
-    for name, path in fastqs.items():
-        dsub_args.extend(["--input", f"{name}={path}"])
+    #for ubam in ubams:
+    #    dsub_args.extend(["--input", f"{name}={path}"])
 
     print(f"Launching dsub with args: {dsub_args}.")
     result = launch_dsub_task(dsub_args)
     print(f"Dsub result: '{result}'.")
 
-    if result == 1 and metadata:
-        print(f"Metadata passed to output blobs: {metadata}.")
-        # Dump metadata into GCS blob
-        meta_blob_path = f"{sample}/{workflow_name}/{task_name}/metadata/all-objects.json"
-        meta_blob = storage.Client(project=PROJECT_ID) \
-            .get_bucket(OUT_BUCKET) \
-            .blob(meta_blob_path) \
-            .upload_from_string(json.dumps(metadata))
-        print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
+    #if result == 1 and metadata:
+    #    print(f"Metadata passed to output blobs: {metadata}.")
+    #    # Dump metadata into GCS blob
+    #    meta_blob_path = f"{sample}/{workflow_name}/{task_name}/metadata/all-objects.json"
+    #    meta_blob = storage.Client(project=PROJECT_ID) \
+    #        .get_bucket(OUT_BUCKET) \
+    #        .blob(meta_blob_path) \
+    #        .upload_from_string(json.dumps(metadata))
+    #    print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
 
 # For local testing
 if __name__ == "__main__":
