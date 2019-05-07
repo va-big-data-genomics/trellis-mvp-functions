@@ -103,7 +103,7 @@ def launch_gatk_5_dollar(event, context):
         .get_bucket(TRELLIS_BUCKET) \
         .blob(GATK_INPUTS_PATH) \
         .download_as_string()
-    gatk_inputs = json.loads(gatk_inputs)
+    gatk_inputs = json.loads(gatk_input_template)
 
     # Add key/values
     gatk_inputs['germline_single_sample_workflow.sample_name'] = sample
