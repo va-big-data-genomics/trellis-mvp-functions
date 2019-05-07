@@ -117,7 +117,7 @@ def launch_gatk_5_dollar(event, context):
         .get_bucket(OUT_BUCKET) \
         .blob(gatk_inputs_path) \
         .upload_from_string(json.dumps(gatk_inputs))
-    print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_sample_path}.")
+    print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
     dsub_args = [
         "--provider", "google-v2", 
