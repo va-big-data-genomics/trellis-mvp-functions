@@ -112,7 +112,7 @@ def launch_gatk_5_dollar(event, context):
     gatk_inputs['germline_single_sample_workflow.final_vcf_base_name'] = sample
 
     # Write JSON to GCS
-    gatk_inputs_path = f"{sample}/{workflow_name/{task_name}/inputs/inputs.json"
+    gatk_inputs_path = f"{sample}/{workflow_name}/{task_name}/inputs/inputs.json"
     gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
         .get_bucket(OUT_BUCKET) \
         .blob(gatk_inputs_path) \
