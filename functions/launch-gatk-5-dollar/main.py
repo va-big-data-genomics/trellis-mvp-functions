@@ -107,7 +107,7 @@ def launch_gatk_5_dollar(event, context):
 
     # Add key/values
     gatk_inputs['germline_single_sample_workflow.sample_name'] = sample
-    gatk_inputs['germline_single_sample_workflow.sample_name'] = sample
+    gatk_inputs['germline_single_sample_workflow.base_file_name'] = sample
     gatk_inputs['germline_single_sample_workflow.flowcell_unmapped_bams'] = ubams
     gatk_inputs['germline_single_sample_workflow.final_vcf_base_name'] = sample
 
