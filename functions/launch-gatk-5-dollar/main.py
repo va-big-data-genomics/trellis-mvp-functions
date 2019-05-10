@@ -66,21 +66,11 @@ def launch_gatk_5_dollar(event, context):
 
     metadata = {}
     nodes = parse_case_results(data['results'])
-    #for result_name in data['results']:
-    #    elements = result_name.split('_')
-    #    if elements[0] == 'metadata':
-    #        key = elements[1]
-    #        metadata[key] = data['results'][result_name]
-
-    #if len(nodes) != 2:
-    #    print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
-    #    return
 
     # Dsub data
     task_name = 'gatk-5-dollar'
     workflow_name = 'fastq-to-vcf'
 
-    # TODO: Implement QC checking to make sure fastqs match
     ubams = []
     for node in nodes:
         if 'Ubam' not in node['labels']:
@@ -116,7 +106,7 @@ def launch_gatk_5_dollar(event, context):
     gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
         .get_bucket(OUT_BUCKET) \
         .blob(gatk_inputs_path) \
-        .upload_from_string(json.dumps(gatk_inputs, indent=4, sort_keys=True))
+        .upload_from_string(json.dumps(gatk_inputs, indent=4))
     print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
     workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
