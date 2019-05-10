@@ -116,7 +116,7 @@ def launch_gatk_5_dollar(event, context):
     gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
         .get_bucket(OUT_BUCKET) \
         .blob(gatk_inputs_path) \
-        .upload_from_string(json.dumps(gatk_inputs))
+        .upload_from_string(json.dumps(gatk_inputs, indent=4, sort_keys=True))
     print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
     workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
@@ -138,7 +138,7 @@ def launch_gatk_5_dollar(event, context):
         "--input", f"OPTION=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/generic.google-papi.options.json",
         "--input", f"WDL=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/fc_germline_single_sample_workflow.wdl",
         "--input", f"SUBWDL=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/tasks_pipelines/*.wdl",
-        "--input", f"INPUT=gs://{OUT_BUCKET}/{gatk_inputs_path}",
+        "--input", f"INPUT=gs://{gatk_inputs_path}",
         "--env", f"MYproject={PROJECT_ID}",
         "--env", f"ROOT=gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/output",
         "--command", "java -Dconfig.file=${CFG} -Dbackend.providers.JES.config.project=${MYproject} -Dbackend.providers.JES.config.root=${ROOT} -jar /cromwell/cromwell.jar run ${WDL} --inputs ${INPUT} --options ${OPTION}",
