@@ -143,38 +143,24 @@ def sample_path_0(db_dict):
     sample = db_dict['path'].split('/')[0] 
     return {'sample': str(sample)}
 
-def sample_path_2(db_dict):
+def trellis_workflow_path_1(db_dict):
+    sample = db_dict['path'].split('/')[1] 
+    return {'trellis-workflow': str(sample)}
+
+def trellis_task_path_2(db_dict):
     sample = db_dict['path'].split('/')[2] 
-    return {'sample': str(sample)}
+    return {'trellis-task': str(sample)}
 
-def chromosome_name_2(db_dict):
-    """Used for bam and bai
-    """
-    chromosome = split_string(
-                              string = db_dict['name'], 
-                              delimiter = "_", 
-                              index = 2, 
-                              req_type = str) 
-    return {'chromosome': str(chromosome)}
+def workflow_path_5(db_dict):
+    sample = db_dict['path'].split('/')[5] 
+    return {'workflow': str(sample)}
 
-def category_dirname_2(db_dict):
-    category = db_dict['dirname'].split('/')[2]
-    return {'category': str(category)}
+def task_path_6(db_dict):
+    sample = db_dict['path'].split('/')[6] 
+    return {'task': str(sample)}
 
-def category_extension_0(db_dict):
-    category = db_dict['extension'].split('.')[0]
-    return {'category': str(category)}
-
-def mate_pair_name_0(db_dict):
-    mate_pair = search_string(
-                          string = db_dict['name'], 
-                          pattern = "_R(\\d)$", 
-                          group = 1, 
-                          req_type = int)
-    return {'matePair': mate_pair}
-
-def read_group_name_1(db_dict):
-    index = db_dict['name'].split('_')[1]
+def shard_index_name_1(db_dict):
+    index = db_dict['name'].split('-')[1]
     return {'readGroup': int(index)}  
 
 def get_metadata_from_all_json(db_dict):
@@ -249,17 +235,58 @@ class NodeKinds:
         self.global_labels = ['Blob']
 
         self.match_patterns = {
-            "Ubam": [".*/fastq-to-vcf/fastq-to-ubam/objects/.*\\.ubam"], 
             "WGS35": [".*"],
-            "Blob": [".*"],
+            "Blob": ["(?P<sample>.*)/(?Pworkflow.*)/(?Ptask.*)/output/.*"],
+            "Vcf": [".*\\.vcf.gz$", ".*\\.vcf$"],
+            "Tbi": [".*\\.tbi$"],
+            "Gzipped": [".*\\.gz$"],
+            "Shard": [".*/shard-(?P<shard-index>\d+)"],
+            "Cram": [".*\\.cram$"], 
+            "Crai": [".*\\.crai$"],
+            "Bam": [".*\\.bam$"], 
+            "Bai": [".*\\.bai$"],
+            "Aligned": [".*\\.aligned\\..*"],
+            "Filtered": [".*\\.filtered\\..*"],
+            "MarkedDuplicates": [".*\\.duplicates_marked\\..*"],
+            "Recalibrated": [".*\\.recalibrated\\..*", ".*\\.recal_.*"],
+            "Structured": [
+                           ".*\\.recal_data\\.csv$", 
+                           ".*\\.preBqsr.selfSM$", 
+                           ".*\\/sequence_grouping.*",
+                           ".*\\.duplicate_metrics$"],
+            "Text": [
+                     ".*\\.recal_data\\.csv$", 
+                     ".*\\.preBqsr.selfSM$", 
+                     ".*\\.txt$", 
+                     ".*\\.duplicate_metrics$",
+                     ".*\\.validation_report$"],
+            "Log": [".*\\.log$"],
+            "Stderr": [".*\\/stderr$"],
+            "Stdout": [".*\\/stdout$"],
+            "Script": [".*\\/script$"],
+            "Index": [".*\\.bai$", ".*\\.tbi$", ".*\\.crai$"],
+            "Data": [
+                     ".*_data\\..*",
+                     ".*\\.recal_data\\.csv$", 
+                     ".*\\.preBqsr.selfSM$", 
+                     ".*\\/sequence_grouping.*",
+                     ".*\\.duplicate_metrics$",
+                     ".*\\.validation_report$"],
+            "Unsorted": [".*\\.unsorted\\..*"],
+            "Sorted": [".*\\.sorted\\..*"],
+            "IntervalList": [".*\\.interval_list$"],
+            ""
         }
 
         self.label_functions = {
-                                "Ubam": [
+                                "Blob": [
                                           sample_path_0, 
-                                          read_group_name_1, 
-                                          get_metadata_from_all_json
+                                          trellis_workflow_path_1, 
+                                          trellis_task_path_2,
+                                          workflow_path_5,
+                                          task_path_6,
                                 ],
+                                "Shard": [shard_index_name_1],
         }
 
     def get_label_functions(self, labels):
