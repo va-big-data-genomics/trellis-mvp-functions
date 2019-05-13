@@ -9,7 +9,7 @@ steps:
          '--source=functions/update-metadata',
          '--memory=128MB',
          '--max-instances=200',
-         '--entry-point=',
+         '--entry-point=update_metadata',
          '--runtime=python37',
          '--trigger-topic=${_TRIGGER_TOPIC}',
          '--update-env-vars=PROJECT_ID=${PROJECT_ID}'
