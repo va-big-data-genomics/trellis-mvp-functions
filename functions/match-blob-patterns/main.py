@@ -15,7 +15,7 @@ WRITE_PREFIX = os.environ.get('MATCHED_BLOBS_PREFIX')
 client = storage.Client(project=PROJECT_ID)
 read_bucket = client.get_bucket(READ_BUCKET_NAME)
 
-def main(event, context):
+def match_blob_patterns(event, context):
     """Check whether object paths match any node patterns.
 
     Check whether object paths match any regex patterns for
