@@ -12,6 +12,6 @@ steps:
          '--entry-point=update_metadata',
          '--runtime=python37',
          '--trigger-topic=${_TRIGGER_TOPIC}',
-         '--update-env-vars=PROJECT_ID=${PROJECT_ID}'
+         '--update-env-vars=PROJECT_ID=${PROJECT_ID}',
          '--update-labels=data-group=${_DATA_GROUP},task=database-import',
   ]
