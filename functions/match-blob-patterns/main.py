@@ -20,7 +20,7 @@ if ENVIRONMENT == 'google-cloud':
     READ_PREFIX = parsed_vars['BUCKET_PAGE_PREFIX']
     WRITE_BUCKET_NAME = parsed_vars['TRELLIS_BUCKET']
     WRITE_PREFIX = parsed_vars['MATCHED_BLOBS_PREFIX']
-    DATA_GROUP = parsed_Vars['DATA_GROUP']
+    DATA_GROUP = parsed_vars['DATA_GROUP']
 
     client = storage.Client(project=PROJECT_ID)
     read_bucket = client.get_bucket(READ_BUCKET_NAME)
