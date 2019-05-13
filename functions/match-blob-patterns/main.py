@@ -6,14 +6,22 @@ import importlib
 from google.cloud import storage
 
 # Get environment variables
-PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT')
-READ_BUCKET_NAME = os.environ.get('TRELLIS_BUCKET')
-READ_PREFIX = os.environ.get('BUCKET_PAGE_PREFIX')
-WRITE_BUCKET_NAME = os.environ.get('TRELLIS_BUCKET')
-WRITE_PREFIX = os.environ.get('MATCHED_BLOBS_PREFIX')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
-client = storage.Client(project=PROJECT_ID)
-read_bucket = client.get_bucket(READ_BUCKET_NAME)
+    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    READ_BUCKET_NAME = parsed_vars['TRELLIS_BUCKET']
+    READ_PREFIX = parsed_vars['BUCKET_PAGE_PREFIX']
+    WRITE_BUCKET_NAME = parsed_vars['TRELLIS_BUCKET']
+    WRITE_PREFIX = parsed_vars['MATCHED_BLOBS_PREFIX']
+
+    client = storage.Client(project=PROJECT_ID)
+    read_bucket = client.get_bucket(READ_BUCKET_NAME)
 
 def match_blob_patterns(event, context):
     """Check whether object paths match any node patterns.
