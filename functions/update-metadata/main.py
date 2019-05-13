@@ -4,11 +4,13 @@ import base64
 
 from google.cloud import storage
 
-PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    PROJECT_ID = os.environ.get('PROJECT_ID')
 
-CLIENT = storage.Client(project=PROJECT_ID)
+    CLIENT = storage.Client(project=PROJECT_ID)
 
-def main(event, context):
+def update_metadata(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
     
     Update the metadata of a Blob specified by PubSub message.
