@@ -237,7 +237,10 @@ class NodeKinds:
         self.match_patterns = {
             "WGS35": [".*"],
             "Blob": ["(?P<sample>.*)/(?Pworkflow.*)/(?Ptask.*)/output/.*"],
-            "Vcf": [".*\\.vcf.gz$", ".*\\.vcf$"],
+            "Vcf": [
+                    ".*\\.vcf.gz$", 
+                    ".*\\.vcf$",
+            ],
             "Tbi": [".*\\.tbi$"],
             "Gzipped": [".*\\.gz$"],
             "Shard": [".*/shard-(?P<shard-index>\d+)"],
@@ -253,29 +256,35 @@ class NodeKinds:
                            ".*\\.recal_data\\.csv$", 
                            ".*\\.preBqsr.selfSM$", 
                            ".*\\/sequence_grouping.*",
-                           ".*\\.duplicate_metrics$"],
+                           ".*\\.duplicate_metrics$",
+            ],
             "Text": [
                      ".*\\.recal_data\\.csv$", 
                      ".*\\.preBqsr.selfSM$", 
                      ".*\\.txt$", 
                      ".*\\.duplicate_metrics$",
-                     ".*\\.validation_report$"],
+                     ".*\\.validation_report$",
+            ],
             "Log": [".*\\.log$"],
             "Stderr": [".*\\/stderr$"],
             "Stdout": [".*\\/stdout$"],
             "Script": [".*\\/script$"],
-            "Index": [".*\\.bai$", ".*\\.tbi$", ".*\\.crai$"],
+            "Index": [
+                      ".*\\.bai$",
+                      ".*\\.tbi$",
+                      ".*\\.crai$",
+            ],
             "Data": [
                      ".*_data\\..*",
                      ".*\\.recal_data\\.csv$", 
                      ".*\\.preBqsr.selfSM$", 
                      ".*\\/sequence_grouping.*",
                      ".*\\.duplicate_metrics$",
-                     ".*\\.validation_report$"],
+                     ".*\\.validation_report$",
+            ],
             "Unsorted": [".*\\.unsorted\\..*"],
             "Sorted": [".*\\.sorted\\..*"],
             "IntervalList": [".*\\.interval_list$"],
-            ""
         }
 
         self.label_functions = {
