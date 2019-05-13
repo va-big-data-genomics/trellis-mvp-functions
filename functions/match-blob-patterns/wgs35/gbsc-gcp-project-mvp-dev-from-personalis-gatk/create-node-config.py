@@ -236,14 +236,14 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": ["(?P<sample>.*)/(?Pworkflow.*)/(?Ptask.*)/output/.*"],
+            "Blob": [".*/.*/.*/output/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
             ],
             "Tbi": [".*\\.tbi$"],
             "Gzipped": [".*\\.gz$"],
-            "Shard": [".*/shard-(?P<shard-index>\d+)"],
+            "Shard": [".*/shard-\d+\\/.*"],
             "Cram": [".*\\.cram$"], 
             "Crai": [".*\\.crai$"],
             "Bam": [".*\\.bam$"], 
