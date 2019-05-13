@@ -19,6 +19,7 @@ if ENVIRONMENT == 'google-cloud':
     READ_PREFIX = parsed_vars['BUCKET_PAGE_PREFIX']
     WRITE_BUCKET_NAME = parsed_vars['TRELLIS_BUCKET']
     WRITE_PREFIX = parsed_vars['MATCHED_BLOBS_PREFIX']
+    DATA_GROUP = parsed_Vars['DATA_GROUP']
 
     client = storage.Client(project=PROJECT_ID)
     read_bucket = client.get_bucket(READ_BUCKET_NAME)
@@ -61,7 +62,7 @@ def match_blob_patterns(event, context):
     list_blobs = json.loads(list_blobs_page)
 
     # Import the config module that corresponds to listed-objects bucket
-    meta_module_name = 'lib.{}.create-node-config'.format(list_bucket_name)
+    meta_module_name = f'{DATA_GROUP}.{list_bucket_name}.create-node-config'
     meta_module = importlib.import_module(meta_module_name)
 
     node_kinds = meta_module.NodeKinds()
