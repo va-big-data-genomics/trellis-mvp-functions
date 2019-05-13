@@ -21,7 +21,7 @@ if ENVIRONMENT == 'google-cloud':
     READ_BUCKET_NAME = parsed_vars['TRELLIS_BUCKET']
     READ_PREFIX = parsed_vars['MATCHED_BLOBS_PREFIX']
     DATA_BUCKETS = parsed_vars['DATA_BUCKETS']
-    PUBLISH_TOPIC = parsed_vars'UNTRACKED_TOPIC']
+    PUBLISH_TOPIC = parsed_vars['UNTRACKED_TOPIC']
 
     NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_USER = parsed_vars['NEO4J_USER']
