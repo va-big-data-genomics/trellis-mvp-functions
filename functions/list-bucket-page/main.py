@@ -27,7 +27,7 @@ def get_timestamp():
     timestamp = now.strftime("%Y%m%d-%H%M")
     return timestamp
 
-def main(event, context):
+def list_bucket_page(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
     Args:
          event (dict): Event payload.
