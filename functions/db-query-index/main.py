@@ -9,27 +9,35 @@ from google.cloud import storage
 from google.cloud import pubsub
 
 # Get environment variables
-PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT')
-READ_BUCKET_NAME = os.environ.get('TRELLIS_BUCKET')
-READ_PREFIX = os.environ.get('MATCHED_BLOBS_PREFIX')
-DATA_BUCKETS = os.environ.get('DATA_BUCKETS')
-PUBLISH_TOPIC = os.environ.get('UNTRACKED_TOPIC')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+  
+    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    READ_BUCKET_NAME = parsed_vars['TRELLIS_BUCKET']
+    READ_PREFIX = parsed_vars['MATCHED_BLOBS_PREFIX']
+    DATA_BUCKETS = parsed_vars['DATA_BUCKETS']
+    PUBLISH_TOPIC = parsed_vars'UNTRACKED_TOPIC']
 
-NEO4J_URL = os.environ.get('NEO4J_URL')
-NEO4J_USER = os.environ.get('NEO4J_USER')
-NEO4J_PASS = os.environ.get('NEO4J_PASSPHRASE')
+    NEO4J_URL = parsed_vars['NEO4J_URL']
+    NEO4J_USER = parsed_vars['NEO4J_USER']
+    NEO4J_PASS = parsed_vars['NEO4J_PASSPHRASE']
 
-# Establish Graph connection
-GRAPH = Graph(
-              NEO4J_URL, 
-              user = NEO4J_USER, 
-              password = NEO4J_PASS)
+    # Establish Graph connection
+    GRAPH = Graph(
+                  NEO4J_URL, 
+                  user = NEO4J_USER, 
+                  password = NEO4J_PASS)
 
-# Establish PubSub connection
-PUBLISHER = pubsub.PublisherClient()
-TOPIC_PATH = PUBLISHER.topic_path(PROJECT_ID, PUBLISH_TOPIC)
+    # Establish PubSub connection
+    PUBLISHER = pubsub.PublisherClient()
+    TOPIC_PATH = PUBLISHER.topic_path(PROJECT_ID, PUBLISH_TOPIC)
 
-def main(event, context):
+def query_db_index(event, context):
     """Triggered by a change to a Cloud Storage bucket.
     Args:
          event (dict): Event payload.
