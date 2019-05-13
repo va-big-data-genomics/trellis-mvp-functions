@@ -1,0 +1,17 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         '${_DATA_GROUP}-update-metadata',
+         '--project=${PROJECT_ID}',
+         '--source=functions/update-metadata',
+         '--memory=128MB',
+         '--max-instances=200',
+         '--entry-point=',
+         '--runtime=python37',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
+         '--update-env-vars=PROJECT_ID=${PROJECT_ID}'
+         '--update-labels=data-group=${_DATA_GROUP},task=database-import',
+  ]
