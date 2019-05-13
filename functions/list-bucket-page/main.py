@@ -59,6 +59,7 @@ def list_bucket_page(event, context):
     # Check that bucket is approved for reading
     approved_buckets = approved_buckets_str.split(',')
     if not read_bucket_name in approved_buckets:
+        # TODO: Raise this as an error
         print(f"Error: Bucket {read_bucket_name} is not approved for reading.'")
         return
     
