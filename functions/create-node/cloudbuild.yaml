@@ -1,4 +1,11 @@
 steps:
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: [
+         'cp',
+         '-r',
+         'gs://${_TRELLIS_BUCKET}/trellis/${_DATA_GROUP}/config',
+         'functions/create-node/',
+  ]
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
