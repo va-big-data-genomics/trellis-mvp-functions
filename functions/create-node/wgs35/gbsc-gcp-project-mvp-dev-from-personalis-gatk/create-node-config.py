@@ -160,9 +160,9 @@ def task_path_6(db_dict):
     task = value.split('-')[1]
     return {'task': str(task)}
 
-def shard_index_name_1(db_dict):
-    index = db_dict['name'].split('-')[1]
-    return {'readGroup': int(index)}  
+#def shard_index_name_1(db_dict):
+#    index = db_dict['name'].split('-')[1]
+#    return {'shard': int(index)}  
 
 def get_metadata_from_all_json(db_dict):
 
@@ -298,7 +298,7 @@ class NodeKinds:
                                           workflow_path_5,
                                           task_path_6,
                                 ],
-                                "Shard": [shard_index_name_1],
+                               #"Shard": [shard_index_name_1],
         }
 
     def get_label_functions(self, labels):
