@@ -236,11 +236,14 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": ["(?P<sample>.*)/(?Pworkflow.*)/(?Ptask.*)/output/.*"],
-            "Vcf": [".*\\.vcf.gz$", ".*\\.vcf$"],
+            "Blob": [".*/.*/.*/output/.*"],
+            "Vcf": [
+                    ".*\\.vcf.gz$", 
+                    ".*\\.vcf$",
+            ],
             "Tbi": [".*\\.tbi$"],
             "Gzipped": [".*\\.gz$"],
-            "Shard": [".*/shard-(?P<shard-index>\d+)"],
+            "Shard": [".*/shard-\d+"],
             "Cram": [".*\\.cram$"], 
             "Crai": [".*\\.crai$"],
             "Bam": [".*\\.bam$"], 
@@ -248,34 +251,43 @@ class NodeKinds:
             "Aligned": [".*\\.aligned\\..*"],
             "Filtered": [".*\\.filtered\\..*"],
             "MarkedDuplicates": [".*\\.duplicates_marked\\..*"],
-            "Recalibrated": [".*\\.recalibrated\\..*", ".*\\.recal_.*"],
+            "Recalibrated": [
+                             ".*\\.recalibrated\\..*", 
+                             ".*\\.recal_.*",
+            ],
             "Structured": [
                            ".*\\.recal_data\\.csv$", 
                            ".*\\.preBqsr.selfSM$", 
                            ".*\\/sequence_grouping.*",
-                           ".*\\.duplicate_metrics$"],
+                           ".*\\.duplicate_metrics$",
+            ],
             "Text": [
                      ".*\\.recal_data\\.csv$", 
                      ".*\\.preBqsr.selfSM$", 
                      ".*\\.txt$", 
                      ".*\\.duplicate_metrics$",
-                     ".*\\.validation_report$"],
+                     ".*\\.validation_report$",
+            ],
             "Log": [".*\\.log$"],
             "Stderr": [".*\\/stderr$"],
             "Stdout": [".*\\/stdout$"],
             "Script": [".*\\/script$"],
-            "Index": [".*\\.bai$", ".*\\.tbi$", ".*\\.crai$"],
+            "Index": [
+                      ".*\\.bai$", 
+                      ".*\\.tbi$", 
+                      ".*\\.crai$",
+            ],
             "Data": [
                      ".*_data\\..*",
                      ".*\\.recal_data\\.csv$", 
                      ".*\\.preBqsr.selfSM$", 
                      ".*\\/sequence_grouping.*",
                      ".*\\.duplicate_metrics$",
-                     ".*\\.validation_report$"],
+                     ".*\\.validation_report$",
+            ],
             "Unsorted": [".*\\.unsorted\\..*"],
             "Sorted": [".*\\.sorted\\..*"],
             "IntervalList": [".*\\.interval_list$"],
-            ""
         }
 
         self.label_functions = {
