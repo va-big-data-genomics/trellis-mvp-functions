@@ -286,6 +286,7 @@ class NodeKinds:
             "Unsorted": [".*\\.unsorted\\..*"],
             "Sorted": [".*\\.sorted\\..*"],
             "IntervalList": [".*\\.interval_list$"],
+            "Json": [".*\\.json$"],
         }
 
         self.label_functions = {
