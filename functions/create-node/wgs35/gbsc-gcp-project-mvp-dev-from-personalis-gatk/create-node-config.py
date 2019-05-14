@@ -248,6 +248,7 @@ class NodeKinds:
             "Crai": [".*\\.crai$"],
             "Bam": [".*\\.bam$"], 
             "Bai": [".*\\.bai$"],
+            "Ubam": [".*\\.ubam$"],
             "Aligned": [".*\\.aligned\\..*"],
             "Filtered": [".*\\.filtered\\..*"],
             "MarkedDuplicates": [".*\\.duplicates_marked\\..*"],
@@ -288,6 +289,7 @@ class NodeKinds:
             "Unsorted": [".*\\.unsorted\\..*"],
             "Sorted": [".*\\.sorted\\..*"],
             "IntervalList": [".*\\.interval_list$"],
+            "Json": [".*\\.json$"],
         }
 
         self.label_functions = {
