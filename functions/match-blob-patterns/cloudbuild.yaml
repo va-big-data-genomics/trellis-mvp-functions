@@ -1,4 +1,11 @@
 steps:
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: [
+         'cp',
+         '-r',
+         'gs://${_TRELLIS_BUCKET}/config/${_DATA_GROUP}/',
+         'functions/match-blob-patterns/',
+  ]
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
