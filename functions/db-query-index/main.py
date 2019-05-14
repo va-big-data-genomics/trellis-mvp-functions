@@ -58,7 +58,7 @@ def query_db_index(event, context):
         return None
     
     # Check whether bucket in read path is tracked by this db
-    approved_buckets = DATA_BUCKETS.split(',')
+    approved_buckets = DATA_BUCKETS
     
     name_suffix = re.split(READ_PREFIX, object_name)[1]
     data_bucket_name = name_suffix.split('/')[1]
