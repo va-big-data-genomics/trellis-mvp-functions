@@ -140,24 +140,25 @@ def get_standard_time_fields(event):
 ## Functions for paring custom metadata from blob metadata
 
 def sample_path_0(db_dict):
-    sample = db_dict['path'].split('/')[0] 
-    return {'sample': str(sample)}
+    value = db_dict['path'].split('/')[0] 
+    return {'sample': str(value)}
 
 def trellis_workflow_path_1(db_dict):
-    sample = db_dict['path'].split('/')[1] 
-    return {'trellisWorkflow': str(sample)}
+    value = db_dict['path'].split('/')[1] 
+    return {'trellis-workflow': str(value)}
 
 def trellis_task_path_2(db_dict):
-    sample = db_dict['path'].split('/')[2] 
-    return {'trellisTask': str(sample)}
+    value = db_dict['path'].split('/')[2] 
+    return {'trellis-task': str(value)}
 
 def workflow_path_5(db_dict):
-    sample = db_dict['path'].split('/')[5] 
-    return {'workflow': str(sample)}
+    value = db_dict['path'].split('/')[5] 
+    return {'workflow': str(value)}
 
 def task_path_6(db_dict):
-    sample = db_dict['path'].split('/')[6] 
-    return {'task': str(sample)}
+    value = db_dict['path'].split('/')[6] 
+    task = value.split('-')[1]
+    return {'task': str(task)}
 
 def shard_index_name_1(db_dict):
     index = db_dict['name'].split('-')[1]
@@ -243,7 +244,7 @@ class NodeKinds:
             ],
             "Tbi": [".*\\.tbi$"],
             "Gzipped": [".*\\.gz$"],
-            "Shard": [".*/shard-\d+"],
+            "Shard": [".*\\/shard-\d+\\/.*"],
             "Cram": [".*\\.cram$"], 
             "Crai": [".*\\.crai$"],
             "Bam": [".*\\.bam$"], 
@@ -252,10 +253,7 @@ class NodeKinds:
             "Aligned": [".*\\.aligned\\..*"],
             "Filtered": [".*\\.filtered\\..*"],
             "MarkedDuplicates": [".*\\.duplicates_marked\\..*"],
-            "Recalibrated": [
-                             ".*\\.recalibrated\\..*", 
-                             ".*\\.recal_.*",
-            ],
+            "Recalibrated": [".*\\.recalibrated\\..*", ".*\\.recal_.*"],
             "Structured": [
                            ".*\\.recal_data\\.csv$", 
                            ".*\\.preBqsr.selfSM$", 
@@ -274,8 +272,8 @@ class NodeKinds:
             "Stdout": [".*\\/stdout$"],
             "Script": [".*\\/script$"],
             "Index": [
-                      ".*\\.bai$", 
-                      ".*\\.tbi$", 
+                      ".*\\.bai$",
+                      ".*\\.tbi$",
                       ".*\\.crai$",
             ],
             "Data": [
