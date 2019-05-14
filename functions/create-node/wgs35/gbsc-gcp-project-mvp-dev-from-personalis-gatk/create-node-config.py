@@ -145,11 +145,11 @@ def sample_path_0(db_dict):
 
 def trellis_workflow_path_1(db_dict):
     value = db_dict['path'].split('/')[1] 
-    return {'trellis-workflow': str(value)}
+    return {'trellisWorkflow': str(value)}
 
 def trellis_task_path_2(db_dict):
     value = db_dict['path'].split('/')[2] 
-    return {'trellis-task': str(value)}
+    return {'trellisTask': str(value)}
 
 def workflow_path_5(db_dict):
     value = db_dict['path'].split('/')[5] 
