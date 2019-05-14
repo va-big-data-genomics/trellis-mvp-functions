@@ -3,7 +3,7 @@ steps:
   args: [
          'cp',
          '-r',
-         'gs://${_TRELLIS_BUCKET}/trellis/${_DATA_GROUP}/config',
+         'gs://${_TRELLIS_BUCKET}/config${_DATA_GROUP}/',
          'functions/create-node/',
   ]
 - name: 'gcr.io/cloud-builders/gcloud'
