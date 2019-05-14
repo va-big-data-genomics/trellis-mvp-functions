@@ -3,6 +3,6 @@ steps:
   args: [
          'cp',
          '-r',
-         'config/${_DATA_GROUP}',
-         'gs://${_TRELLIS_BUCKET}/trellis/${_DATA_GROUP}/config/'
+         'config/${_DATA_GROUP}/',
+         'gs://${_TRELLIS_BUCKET}/${_DATA_GROUP}/config/'
   ]
