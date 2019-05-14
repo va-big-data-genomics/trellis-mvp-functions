@@ -248,6 +248,7 @@ class NodeKinds:
             "Crai": [".*\\.crai$"],
             "Bam": [".*\\.bam$"], 
             "Bai": [".*\\.bai$"],
+            "Ubam": [".*\\.ubam$"],
             "Aligned": [".*\\.aligned\\..*"],
             "Filtered": [".*\\.filtered\\..*"],
             "MarkedDuplicates": [".*\\.duplicates_marked\\..*"],
