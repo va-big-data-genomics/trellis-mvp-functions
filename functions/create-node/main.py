@@ -30,6 +30,94 @@ if ENVIRONMENT == 'google-cloud':
                                                        topic = TOPIC)
 
 
+def clean_metadata_dict(raw_dict):
+    """Remove dict entries where the value is of type dict"""
+    clean_dict = dict(raw_dict)
+
+    # Remove values that are dicts
+    delete_keys = []
+    for key, value in clean_dict.items():
+        if isinstance(value, dict):
+            #del clean_dict[key]
+            delete_keys.append(key)
+
+    for key in delete_keys:
+        del clean_dict[key]
+
+    # Convert size field from str to int
+    clean_dict['size'] = int(clean_dict['size'])
+
+    return clean_dict
+
+
+def get_standard_name_fields(event_name):
+    path_elements = event_name.split('/')
+    name_elements = path_elements[-1].split('.')
+    name_fields = {
+                   "path": event_name,
+                   "dirname": '/'.join(path_elements[:-1]),
+                   "basename": path_elements[-1],
+                   "name": name_elements[0],
+                   "extension": '.'.join(name_elements[1:])
+    }
+    return name_fields
+
+
+def get_standard_time_fields(event):
+    """
+    Args:
+        event (dict): Metadata properties stored as strings
+    Return
+        (dict): Times in iso (str) and from-epoch (int) formats
+    """
+    datetime_created = get_datetime_iso8601(event['timeCreated'])
+    datetime_updated = get_datetime_iso8601(event['updated'])
+
+
+    time_created_epoch = get_seconds_from_epoch(datetime_created)
+    time_created_iso = datetime_created.isoformat()
+
+    time_updated_epoch = get_seconds_from_epoch(datetime_updated)
+    time_updated_iso = datetime_updated.isoformat()
+
+    time_fields = {
+                   'timeCreatedEpoch': time_created_epoch,
+                   'timeUpdatedEpoch': time_updated_epoch,
+                   'timeCreatedIso': time_created_iso,
+                   'timeUpdatedIso': time_updated_iso
+    }
+    return time_fields
+
+
+def get_seconds_from_epoch(datetime_obj):
+    """Get datetime as total seconds from epoch.
+
+    Provides datetime in easily sortable format
+
+    Args:
+        datetime_obj (datetime): Datetime.
+    Returns:
+        (float): Seconds from epoch
+    """
+    from_epoch = datetime_obj - datetime(1970, 1, 1, tzinfo=pytz.UTC)
+    from_epoch_seconds = from_epoch.total_seconds()
+    return from_epoch_seconds
+
+
+def get_datetime_iso8601(date_string):
+    """ Convert ISO 86801 date strings to datetime objects.
+
+    Google datetime format: https://tools.ietf.org/html/rfc3339
+    ISO 8601 standard format: https://en.wikipedia.org/wiki/ISO_8601
+    
+    Args:
+        date_string (str): Date in ISO 8601 format
+    Returns
+        (datetime.datetime): Datetime objects
+    """
+    return iso8601.parse_date(date_string)
+
+
 def format_query(db_entry, dry_run=False):
     labels_str = ':'.join(db_entry['labels'])
 
@@ -48,17 +136,6 @@ def format_query(db_entry, dry_run=False):
               "{" + f"{entry_string}" +"}) " +
               "RETURN node")
     return query
-
-
-def get_node_labels(name, label_patterns):
-    labels = []
-    for key, values in label_patterns.items():
-        for pattern in values:
-            match = re.fullmatch(pattern, name)
-            if match:
-                labels.append(key)
-                break
-    return labels
 
 
 def create_node_query(event, context):
@@ -81,25 +158,40 @@ def create_node_query(event, context):
     node_module = importlib.import_module(node_module_name)
 
     node_kinds = node_module.NodeKinds()
-    label_patterns = node_kinds.get_match_patterns()
+    label_patterns = node_kinds.match_patterns
 
-    # Determine which label patterns match the blob name
-    labels = get_node_labels(name, label_patterns)
-    if not labels:
-        raise RuntimeError(f"Blob '{name}' does not match any label patterns.")
+    # Create dict of metadata to add to database node
+    gcp_metadata = event
+    db_dict = clean_metadata_dict(event)
 
-    # Get label-specific metadata functions
-    label_functions = node_kinds.get_label_functions(labels)
+    # Add standard fields
+    name_fields = get_standard_name_fields(event['name'])
+    time_fields = get_standard_time_fields(event)
 
-    node_obj = node_module.NodeEntry(
-                                       event,
-                                       context,
-                                       labels,
-                                       label_functions)
-    node_dict = node_obj.get_db_dict()
+    db_dict.update(name_fields)
+    db_dict.update(time_fields)
 
-    print(f"> Generating database query for node: {node_dict}.")
-    db_query = format_query(node_dict)
+    # NEW method of getting labels
+    db_dict['labels'] = []
+    for label, patterns in label_patterns.items():
+        for pattern in patterns:
+            match = re.fullmatch(pattern, name)
+            if match:
+                db_dict['labels'].append(label)
+                label_functions = node_kinds.label_functions[label]
+                for function in label_function:
+                    custom_fields = function(db_dict, match.groupdict())
+                    db_dict.update(custom_fields)
+                break
+
+    # Key, value pairs unique to db_dict are trellis metadata
+    trellis_metadata = {}
+    for key, value in db_dict.items():
+        if not key in gcp_metadata.keys():
+            trellis_metadata[key] = value
+
+    print(f"> Generating database query for node: {db_dict}.")
+    db_query = format_query(db_dict)
     print(f"> Database query: \"{db_query}\".")
 
     message = {
