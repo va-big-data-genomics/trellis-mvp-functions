@@ -183,9 +183,11 @@ def create_node_query(event, context):
             if match:
                 db_dict['labels'].append(label)
                 label_functions = node_kinds.label_functions.get(label)
-                for function in label_functions:
-                    custom_fields = function(db_dict, match.groupdict())
-                    db_dict.update(custom_fields)
+                if label_functions:
+                    for function in label_functions:
+                        custom_fields = function(db_dict, match.groupdict())
+                        db_dict.update(custom_fields)
+                # Break after a single pattern per label has been matched
                 break
 
     # Key, value pairs unique to db_dict are trellis metadata
