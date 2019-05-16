@@ -67,6 +67,7 @@ class NodeKinds:
         self.match_patterns = {
             "WGS35": [".*"],
             "Blob": [r"(?P<sample>\w+)/(?P<trellis_workflow>.*)/(?P<trellis_task>.*)/output/.*"],
+            "Gatk": ["\w+/.*/gatk-5-dollar/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
@@ -122,8 +123,10 @@ class NodeKinds:
         self.label_functions = {
                                 "Blob": [
                                          trellis_metadata_groupdict,
-                                         workflow_path_5,
-                                         task_path_6,
                                 ],
                                 "Shard": [shard_index_name_1],
+                                "Gatk": [
+                                         workflow_path_5,
+                                         task_path_6,
+                                ]
         }
