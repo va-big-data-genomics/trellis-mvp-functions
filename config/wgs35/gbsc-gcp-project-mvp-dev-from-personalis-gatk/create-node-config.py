@@ -25,8 +25,8 @@ from google.cloud import storage
 def trellis_metadata_groupdict(db_dict, groupdict):
     return {
             'sample': groupdict['sample'],
-            'trellis_workflow': groupdict['trellis_workflow'],
-            'trellis_task': groupdict['trellis_task']
+            'trellisWorkflow': groupdict['trellis_workflow'],
+            'trellisTask': groupdict['trellis_task']
     }
 
 def workflow_path_5(db_dict, groupdict):
