@@ -1,11 +1,6 @@
 steps:
-- name: 'gcr.io/cloud-builders/gsutil'
-  args: [
-         'cp',
-         '-r',
-         'gs://${_TRELLIS_BUCKET}/config/${_DATA_GROUP}/',
-         'functions/create-node/',
-  ]
+- name: 'ubuntu'
+  args: ['bash', 'functions/create-node/cp-wgs35.sh']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
