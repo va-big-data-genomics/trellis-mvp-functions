@@ -218,14 +218,14 @@ def create_node_query(event, context):
     result = PUBLISHER.publish(TOPIC_PATH, data=message).result()
     print(f"> Published query to {TOPIC_PATH}. {result}.")
 
-    summary = {
-               "name": name, 
-               "bucket": bucket_name, 
-               "node-module-name": node_module_name, 
-               "labels": labels, 
-               "db-query": db_query,
-    }
-    return(summary)
+    #summary = {
+    #           "name": name, 
+    #           "bucket": bucket_name, 
+    #           "node-module-name": node_module_name, 
+    #           "labels": db_dict
+    #           "db-query": db_query,
+    #}
+    #return(summary)
 
 
 if __name__ == "__main__":
