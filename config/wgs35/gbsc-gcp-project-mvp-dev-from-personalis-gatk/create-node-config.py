@@ -10,17 +10,24 @@ from google.cloud import storage
 
 ## Functions for paring custom metadata from blob metadata
 
-def sample_path_0(db_dict, groupdict):
-    value = db_dict['path'].split('/')[0] 
-    return {'sample': str(value)}
+#def sample_path_0(db_dict, groupdict):
+#    value = db_dict['path'].split('/')[0] 
+#    return {'sample': str(value)}
 
-def trellis_workflow_path_1(db_dict, groupdict):
-    value = db_dict['path'].split('/')[1] 
-    return {'trellisWorkflow': str(value)}
+#def trellis_workflow_path_1(db_dict, groupdict):
+#    value = db_dict['path'].split('/')[1] 
+#    return {'trellisWorkflow': str(value)}
 
-def trellis_task_path_2(db_dict, groupdict):
-    value = db_dict['path'].split('/')[2] 
-    return {'trellisTask': str(value)}
+#def trellis_task_path_2(db_dict, groupdict):
+#    value = db_dict['path'].split('/')[2] 
+#    return {'trellisTask': str(value)}
+
+def trellis_metadata_groupdict(db_dict, groupdict):
+    return {
+            'sample' = groupdict['sample'],
+            'trellis_workflow' = groupdict['trellis_workflow'],
+            'trellis_task' = groupdict['trellis_task']
+    }
 
 def workflow_path_5(db_dict, groupdict):
     value = db_dict['path'].split('/')[5] 
@@ -59,14 +66,14 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": ["(?P<sample>\w+)/(?P<trellis-workflow>.*)/(?P<trellis-task>.*)/output/.*"],
+            "Blob": ["(?P<sample>\w+)/(?P<trellis_workflow>.*)/(?P<trellis_task>.*)/output/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
             ],
             "Tbi": [".*\\.tbi$"],
             "Gzipped": [".*\\.gz$"],
-            "Shard": [".*\\/shard-(?P<shard-index>\d+)\\/.*"],
+            "Shard": [".*\\/shard-(?P<shard_index>\d+)\\/.*"],
             "Cram": [".*\\.cram$"], 
             "Crai": [".*\\.crai$"],
             "Bam": [".*\\.bam$"], 
@@ -114,11 +121,9 @@ class NodeKinds:
 
         self.label_functions = {
                                 "Blob": [
-                                          sample_path_0, 
-                                          trellis_workflow_path_1, 
-                                          trellis_task_path_2,
-                                          workflow_path_5,
-                                          task_path_6,
+                                         trellis_metadata_groupdict,
+                                         workflow_path_5,
+                                         task_path_6,
                                 ],
                                 "Shard": [shard_index_name_1],
         }
