@@ -66,7 +66,7 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": ["(?P<sample>\w+)/(?P<trellis_workflow>.*)/(?P<trellis_task>.*)/output/.*"],
+            "Blob": ["(?P<sample>\w+)\\/(?P<trellis_workflow>.*)\\/(?P<trellis_task>.*)\\/output\\/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
