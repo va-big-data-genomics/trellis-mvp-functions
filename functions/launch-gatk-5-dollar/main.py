@@ -25,6 +25,19 @@ if ENVIRONMENT == 'google-cloud':
     DSUB_USER = parsed_vars['DSUB_USER']
     TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
     GATK_INPUTS_PATH = parsed_vars['GATK_HG38_INPUTS']
+    # TODO: Create this
+    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+
+    # Establish PubSub connection
+    PUBLISHER = pubsub.PublisherClient()
+    #TOPIC_PATH = f"projects/{PROJECT_ID}/topics/{TOPIC}"
+
+
+def publish_to_topic(publish_topic, data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, publish_topic)
+    data = json.dumps(data).encode('utf-8')
+    PUBLISHER.publish(topic_path, data=data)
+
 
 def launch_dsub_task(dsub_args):
     try:
@@ -207,35 +220,35 @@ def launch_gatk_5_dollar(event, context):
     print(f"Dsub result: '{result}'.")
 
     # Add additional job metadata
-    job_dict['labels'] = ['Task', 'CromwellWorkflow']
+    job_dict['labels'] = ['Job', 'Cromwell']
 
-    # TODO
-    # for input in inputs:
-    #   specially format for Neo4j
-    # for env in envs:
-    #   specially format for Neo4j
+    # Reformat dict values as separate key/value pairs
+    # to be compatible with Neo4j
+    for key, value in job_dict["inputs"].items():
+        job_input[f"input_{key}"] = value
+    for key, value in job_dict["envs"].items():
+        job_input[f"env_{key}"] = value
 
-    # Create the job node
-    labels_str = job_dict['labels']
-    query = f"CREATE (job:{labels_str} \{{entry_string}\}), "
-
-    CREATE (node:{labels_str} {entry_string})
-    
-    # Create relationships to input nodes
-    for i, ubam in enumerate(nodes, 1):
-        match = f'MATCH (ubam{i}:Ubam) WHERE ubam{i}.id = {ubam["id"]}, '
-        connect = f'(ubam{i}-[:INPUT_TO]->(job), '
-        query += match
-
-    #if result == 1 and metadata:
-    #    print(f"Metadata passed to output blobs: {metadata}.")
-    #    # Dump metadata into GCS blob
-    #    meta_blob_path = f"{sample}/{workflow_name}/{task_name}/metadata/all-objects.json"
-    #    meta_blob = storage.Client(project=PROJECT_ID) \
-    #        .get_bucket(OUT_BUCKET) \
-    #        .blob(meta_blob_path) \
-    #        .upload_from_string(json.dumps(metadata))
-    #    print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
+    # Package job node and inputs into JSON message
+    message = {
+        "header": {
+            # I don't really know what I'm doing with this section.
+            "method": "POST",
+            "labels": ["Job", "Cromwell", "Command", "Args", "Inputs"],
+            "resource": "job-metadata",
+        },
+        "body": {
+            "node": job_dict,
+            "perpetuate": {
+                "relationships": {
+                    "to-node": {
+                        "INPUT_TO": nodes
+                    }
+                }
+            }
+        }
+    }
+    publish_to_topic(NEW_JOBS_TOPIC, message)  
 
 
 # For local testing
