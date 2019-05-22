@@ -87,22 +87,24 @@ def query_db(event, context):
         print("No Pub/Sub topic specified; result not published.")
         return results
 
+    message = {
+               "resource": "query-result",
+               "query": query,
+               "trellis": {"sent-from": "db-query"},
+    }
+
+    # Perpetuate metadata in specified by "perpetuate" key
+    perpetuate = data.get('perpetuate')
+    if perpetuate:
+        message.update(perpetuate)
+
     if result_split == 'True':
         for result in results:
-            message = {
-                    "resource": "query-result",
-                    "query": query,
-                    "results": result,
-                    "trellis-metadata": {"sent-from": "db-query"}
-            }
+            message['results'] = result
             publish_to_topic(topic, message)
             print(f"> Published following message to {topic}: {message}.")
     else:
-        message = {
-            "resource": "query-result",
-            "query": query,
-            "results": results,
-        }
+        message['results'] = results
         publish_to_topic(topic, message)
         print(f"> Published following message to {topic}: {message}.")
 
