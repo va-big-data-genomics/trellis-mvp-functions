@@ -40,15 +40,38 @@ def launch_dsub_task(dsub_args):
         return(sys.exc_info())
     return(1)
 
+
 def get_datestamp():
     now = datetime.now()
     datestamp = now.strftime("%Y%m%d")
     return datestamp
 
+
 def parse_case_results(results):
     #'results': [{'CASE WHEN ': [{node_metadata}]}]
     results = results[0]
     return list(results.values())[0]
+
+
+def format_create_node_query(db_entry, dry_run=False):
+    labels_str = ':'.join(db_entry['labels'])
+
+    # Create database entry string
+    entry_strings = []
+    for key, value in db_entry.items():
+        if isinstance(value, str):
+            entry_strings.append(f'{key}: "{value}"')
+        else:
+            entry_strings.append(f'{key}: {value}')
+    entry_string = ', '.join(entry_strings)
+
+    # Format as cypher query
+    query = (
+             f"CREATE (node:{labels_str} " +
+              "{" + f"{entry_string}" +"}) " +
+              "RETURN node")
+    return query
+
 
 def launch_gatk_5_dollar(event, context):
     """When an object node is added to the database, launch any
@@ -110,37 +133,99 @@ def launch_gatk_5_dollar(event, context):
     print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
     workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
+    job_dict = {
+                "provider": "google-v2",
+                "user": DSUB_USER,
+                "zones": ZONES,
+                "project": PROJECT_ID,
+                "min_cores": 1,
+                "min_ram": 6.5,
+                "preemptible": True,
+                "boot_disk_size": 20,
+                "image": f"gcr.io/{PROJECT_ID}/jinasong/wdl_runner:latest",
+                "logging": f"gs://{LOG_BUCKET}/{sample}/{workflow_name}/{task_name}/logs",
+                "disk-size": 1000,
+                "command": ("java " +
+                            f"-Dconfig.file=${CFG} " +
+                            f"-Dbackend.providers.JES.config.project=${MYproject} " +
+                            f"-Dbackend.providers.JES.config.root=${ROOT} " +
+                            "-jar /cromwell/cromwell.jar " +
+                            f"run ${WDL} " +
+                            f"--inputs ${INPUT} " +
+                            f"--options ${OPTION}"
+                ),
+                "inputs": {
+                           "CFG": f"gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/google-adc.conf", 
+                           "OPTION": f"gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/generic.google-papi.options.json",
+                           "WDL": f"gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/fc_germline_single_sample_workflow.wdl",
+                           "SUBWDL": f"gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/tasks_pipelines/*.wdl",
+                           "INPUT": f"gs://{OUT_BUCKET}/{gatk_inputs_path}",
+                },
+                "envs": {
+                         "MYproject": PROJECT_ID,
+                         "ROOT": f"gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/output",
+                }
+    }
+
     dsub_args = [
-        "--provider", "google-v2", 
-        "--user", DSUB_USER, 
-        "--zones", ZONES, 
-        "--project", PROJECT_ID,
-        "--min-cores", "1", 
-        "--min-ram", "6.5",
-        "--preemptible",
-        "--boot-disk-size", "20", 
-        "--image", 
-            f"gcr.io/{PROJECT_ID}/jinasong/wdl_runner:latest", 
-        "--logging", 
-            f"gs://{LOG_BUCKET}/{sample}/{workflow_name}/{task_name}/logs",
-        "--disk-size", "1000",
-        "--input", f"CFG=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/google-adc.conf",
-        "--input", f"OPTION=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/generic.google-papi.options.json",
-        "--input", f"WDL=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/fc_germline_single_sample_workflow.wdl",
-        "--input", f"SUBWDL=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/tasks_pipelines/*.wdl",
-        "--input", f"INPUT=gs://{OUT_BUCKET}/{gatk_inputs_path}",
-        "--env", f"MYproject={PROJECT_ID}",
-        "--env", f"ROOT=gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/output",
-        "--command", "java -Dconfig.file=${CFG} -Dbackend.providers.JES.config.project=${MYproject} -Dbackend.providers.JES.config.root=${ROOT} -jar /cromwell/cromwell.jar run ${WDL} --inputs ${INPUT} --options ${OPTION}",
+                 "--provider", job_dict["provider"], 
+                 "--user", job_dict["user"], 
+                 "--zones", job_dict["zones"], 
+                 "--project", job_dict["project"],
+                 "--min-cores", str(job_dict["min_cores"]), 
+                 "--min-ram", str(job_dict["min_ram"]),
+                 #"--preemptible",
+                 "--boot-disk-size", str(job_dict["boot_disk_size"]), 
+                 "--image", job_dict["image"], 
+                 "--logging", job_dict["logging"],
+                 "--disk-size", str(job_dict["disk-size"]),
+                 #"--input", f"CFG=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/google-adc.conf",
+                 #"--input", f"OPTION=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/generic.google-papi.options.json",
+                 #"--input", f"WDL=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/fc_germline_single_sample_workflow.wdl",
+                 #"--input", f"SUBWDL=gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/tasks_pipelines/*.wdl",
+                 #"--input", f"INPUT=gs://{OUT_BUCKET}/{gatk_inputs_path}",
+                 #"--env", f"MYproject={PROJECT_ID}",
+                 #"--env", f"ROOT=gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/output",
+                 "--command", job_dict["command"],
     ]
 
-    # Add fastqs as inputs
-    #for ubam in ubams:
-    #    dsub_args.extend(["--input", f"{name}={path}"])
+    for key, value in job_dict['inputs'].items():
+        dsub_args.extend([
+                          "--input",
+                          f"{key}={value}"]
+        )
+    for key, value in job_dict['envs'].items()
+        dsub_args.extend([
+                          "--env",
+                          f"{key}={value}"]
+        )
+    if preemtible:
+        dsub_args.append("--preemtible")
 
     print(f"Launching dsub with args: {dsub_args}.")
     result = launch_dsub_task(dsub_args)
     print(f"Dsub result: '{result}'.")
+
+    # Add additional job metadata
+    job_dict['labels'] = ['Task', 'CromwellWorkflow']
+
+    # TODO
+    # for input in inputs:
+    #   specially format for Neo4j
+    # for env in envs:
+    #   specially format for Neo4j
+
+    # Create the job node
+    labels_str = job_dict['labels']
+    query = f"CREATE (job:{labels_str} \{{entry_string}\}), "
+
+    CREATE (node:{labels_str} {entry_string})
+    
+    # Create relationships to input nodes
+    for i, ubam in enumerate(nodes, 1):
+        match = f'MATCH (ubam{i}:Ubam) WHERE ubam{i}.id = {ubam["id"]}, '
+        connect = f'(ubam{i}-[:INPUT_TO]->(job), '
+        query += match
 
     #if result == 1 and metadata:
     #    print(f"Metadata passed to output blobs: {metadata}.")
@@ -151,6 +236,7 @@ def launch_gatk_5_dollar(event, context):
     #        .blob(meta_blob_path) \
     #        .upload_from_string(json.dumps(metadata))
     #    print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
+
 
 # For local testing
 if __name__ == "__main__":
