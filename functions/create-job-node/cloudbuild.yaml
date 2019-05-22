@@ -1,0 +1,41 @@
+steps:
+- name: 'ubuntu'
+  args: ['bash', 'functions/create-node/cp-wgs35.sh']
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         '${_DATA_GROUP}-create-node-${_BUCKET_SHORT_NAME}',
+         '--project=${PROJECT_ID}',
+         '--source=functions/create-node',
+         '--memory=128MB',
+         '--max-instances=100',
+         '--entry-point=create_node_query',
+         '--runtime=python37',
+         '--trigger-resource=${_TRIGGER_RESOURCE}',
+         '--trigger-event=google.storage.object.finalize',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=data-group=${_DATA_GROUP}',
+  ]
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         '${_DATA_GROUP}-create-node-${_BUCKET_SHORT_NAME}-meta',
+         '--project=${PROJECT_ID}',
+         '--source=functions/create-node',
+         '--memory=128MB',
+         '--max-instances=100',
+         '--entry-point=create_node_query',
+         '--runtime=python37',
+         '--trigger-resource=${_TRIGGER_RESOURCE}',
+         '--trigger-event=google.storage.object.metadataUpdate',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=data-group=${_DATA_GROUP}',
+  ]
