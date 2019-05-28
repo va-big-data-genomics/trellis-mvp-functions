@@ -34,6 +34,11 @@ def shard_index_name_1(db_dict, groupdict):
     return {'shardIndex': int(index)}  
 
 
+def read_group_name_1(db_dict):
+    index = db_dict['name'].split('_')[1]
+    return {'readGroup': int(index)} 
+
+
 def get_metadata_from_all_json(db_dict, groupdict):
 
     meta_bucket = db_dict['bucket']
@@ -120,5 +125,6 @@ class NodeKinds:
                                 "Gatk": [
                                          workflow_path_5,
                                          task_path_6,
-                                ]
+                                ],
+                                "Ubam": [read_group_name_1],
         }
