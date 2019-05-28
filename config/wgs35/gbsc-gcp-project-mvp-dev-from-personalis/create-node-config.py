@@ -169,7 +169,7 @@ def mate_pair_name_0(db_dict):
                           req_type = int)
     return {'matePair': mate_pair}
 
-def index_name_1(db_dict):
+def read_group_name_1(db_dict):
     index = db_dict['name'].split('_')[1]
     return {'readGroup': int(index)}  
 
@@ -241,7 +241,7 @@ class NodeKinds:
                                 "Fastq": [
                                           sample_path_2, 
                                           mate_pair_name_0, 
-                                          index_name_1],
+                                          read_group_name_1],
                                 "Microarray": [sample_path_2],
                                 "Json": [sample_path_2], 
                                 "Checksum": [sample_path_2]
