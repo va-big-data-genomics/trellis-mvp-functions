@@ -50,7 +50,10 @@ class PropertyTriggers:
         sample = self.nodes['sample']
 
         message = {
-                   "resource": "query", 
+                   "header": {
+                              "resource": "query", 
+                   }
+
                    "neo4j-metadata": {
                                         "cypher": (
                                                   "MATCH (n:Fastq) " + 

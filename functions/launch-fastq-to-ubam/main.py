@@ -56,10 +56,12 @@ def launch_fastq_to_ubam(event, context):
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
+    header = data['header']
+    body = data['body']
 
     metadata = {}
-    nodes = data['results']['nodes']
-    for result_name in data['results']:
+    nodes = body['results']['nodes']
+    for result_name in body['results']:
         elements = result_name.split('_')
         if elements[0] == 'metadata':
             key = elements[1]
