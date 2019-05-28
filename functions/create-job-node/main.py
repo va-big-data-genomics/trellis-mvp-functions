@@ -4,6 +4,7 @@ import pdb
 import json
 import pytz
 import yaml
+import base64
 import iso8601
 import importlib
 
@@ -49,7 +50,8 @@ def clean_metadata_dict(raw_dict):
         del clean_dict[key]
 
     # Convert size field from str to int
-    clean_dict['size'] = int(clean_dict['size'])
+    if clean_dict.get('size'):
+        clead_dict['size'] = int(clean_dict['size'])
 
     return clean_dict
 
@@ -122,7 +124,7 @@ def format_query(db_entry, dry_run=False):
     return query
 
 
-def create_node_query(event, context):
+def write_job_node_query(event, context):
     """When object created in bucket, add metadata to database.
     Args:
         event (dict): Event payload.
@@ -135,8 +137,11 @@ def create_node_query(event, context):
     data = json.loads(pubsub_message)
     print(f"> Data: {data}.")
 
+    header = data['header']
+    body = data['body']
+
     # Create dict of metadata to add to database node
-    db_dict = clean_metadata_dict(data['node'])
+    db_dict = clean_metadata_dict(body['node'])
 
     # Add standard fields
     time_fields = get_standard_time_fields(event)
@@ -147,21 +152,28 @@ def create_node_query(event, context):
     print(f"> Database query: \"{db_query}\".")
 
     message = {
-               "resource": "query",
-               "neo4j-metadata": {
-                                    "cypher": db_query, 
-                                    "result-mode": "data",
+               "header": {
+                          "method": "POST", 
+                          "labels": ['Job', 'Create', 'Node', 'Query', 'Cypher'], 
+                          "resource": "query",
                },
-               "trellis-metadata": {
-                                    "publish-topic": f"{DATA_GROUP}-add-relationships", 
-                                    "result-structure": "list",
-                                    "result-split": "False"
-               },
-               "perpetuate": {"relationships": data["relationships"]}
+               #"resource": "query",
+               "body": {
+                    #"neo4j-metadata": {
+                                       "cypher": db_query, 
+                                       "result-mode": "data",
+                    #},
+                    #"trellis-metadata": {
+                                         "publish-topic": f"{DATA_GROUP}-add-relationships", 
+                                         "result-structure": "list",
+                                         "result-split": "False",
+                    #},
+                    "perpetuate": body["perpetuate"],
+                }
     }
-    print(f"> Pubsub message: {message}.")
-
+    
     message = json.dumps(message).encode('utf-8')
+    print(f"> Pubsub message: {message}.")
     result = PUBLISHER.publish(TOPIC_PATH, data=message).result()
     print(f"> Published query to {TOPIC_PATH}. {result}.")
 
@@ -169,7 +181,7 @@ def create_node_query(event, context):
 if __name__ == "__main__":
     # Run unit tests in local
     PROJECT_ID = "***REMOVED***-dev"
-    TOPIC = "wgs35-db-queries"
+    TOPIC = "function-test"
     DATA_GROUP = 'wgs35'
 
     PUBLISHER = pubsub.PublisherClient()
@@ -177,59 +189,66 @@ if __name__ == "__main__":
                                                        id = PROJECT_ID,
                                                        topic = TOPIC)
 
-    # fastq
-    event = {
-             'bucket': '***REMOVED***-dev-from-personalis', 
-             'componentCount': 32, 
-             'contentType': 'application/octet-stream', 
-             'crc32c': 'ftNG8w==', 
-             'etag': 'CL3nyPj80uECEBE=', 
-             'generation': '1555361455813565', 
-             'id': '***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565', 
-             'kind': 'storage#object', 
-             'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media', 
-             'metadata': {'function-testing': '20190423:1217', 'gcf-update-metadata': '510893936442804'}, 
-             'metageneration': '17', 
-             'name': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz', 
-             'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz', 
-             'size': '5955984357', 
-             'storageClass': 'REGIONAL', 
-             'timeCreated': '2019-04-15T20:50:55.813Z', 
-             'timeStorageClassUpdated': '2019-04-15T20:50:55.813Z', 
-             'updated': '2019-04-23T19:17:53.205Z'
-    }
-    context = None
+    # gatk-5-dollar job
+    """
+    data = {
+            "header": {
+                       "method": "POST", 
+                       "labels": ["Job", "Cromwell", "Command", "Args", "Inputs"], 
+                       "resource": "job-metadata"
+                      }, 
+                      "body": {
+                               "node": {
+                                        "provider": "google-v2", 
+                                        "user": "trellis", 
+                                        "zones": "us-west1*", 
+                                        "project": "***REMOVED***-dev", 
+                                        "min_cores": 1, 
+                                        "min_ram": 6.5, 
+                                        "preemptible": true, 
+                                        "boot_disk_size": 20, 
+                                        "image": "gcr.io/***REMOVED***-dev/***REMOVED***/wdl_runner:latest", 
+                                        "logging": "gs://***REMOVED***-dev-from-personalis-gatk-logs/SHIP4946367/fastq-to-vcf/gatk-5-dollar/logs", 
+                                        "disk-size": 1000, 
+                                        "command": "java -Dconfig.file=${CFG} -Dbackend.providers.JES.config.project=${MYproject} -Dbackend.providers.JES.config.root=${ROOT} -jar /cromwell/cromwell.jar run ${WDL} --inputs ${INPUT} --options ${OPTION}", 
+                                        "inputs": {
+                                                   "CFG": "gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/google-adc.conf", 
+                                                   "OPTION": "gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/generic.google-papi.options.json", 
+                                                   "WDL": "gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl", 
+                                                   "SUBWDL": "gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/tasks_pipelines/*.wdl", 
+                                                   "INPUT": "gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/inputs/inputs.json"
+                                                  }, 
+                                        "envs": {
+                                                 "MYproject": "***REMOVED***-dev", 
+                                                 "ROOT": "gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/output"
+                                                }, 
+                                        "dry-run": True, 
+                                        "labels": ["Job", "Cromwell"], 
+                                        "input_CFG": "gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/google-adc.conf", 
+                                        "input_OPTION": "gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/generic.google-papi.options.json", 
+                                        "input_WDL": "gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl", 
+                                        "input_SUBWDL": "gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/tasks_pipelines/*.wdl", 
+                                        "input_INPUT": "gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/inputs/inputs.json", 
+                                        "env_MYproject": "***REMOVED***-dev", 
+                                        "env_ROOT": "gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/output"
+                               }, 
+                               "perpetuate": {
+                                              "relationships": {
+                                                                "to-node": {
+                                                                            "INPUT_TO": [
+                                                                                         {"basename": "SHIP4946367_2.ubam", "bucket": "***REMOVED***-dev-from-personalis-gatk", "contentType": "application/octet-stream", "crc32c": "ojStVg==", "dirname": "SHIP4946367/fastq-to-vcf/fastq-to-ubam/output", "etag": "CJTpxe3ynuICEAM=", "extension": "ubam", "generation": "1557970088457364", "id": "***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam/1557970088457364", "kind": "storage#object", "labels": ["WGS35", "Blob", "Ubam"], "md5Hash": "opGAi0f9olAu4DKzvYiayg==", "mediaLink": "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam?generation=1557970088457364&alt=media", "metageneration": "3", "name": "SHIP4946367_2", "path": "SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam", "sample": "SHIP4946367", "selfLink": "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam", "size": 16886179620, "storageClass": "REGIONAL", "timeCreated": "2019-05-16T01:28:08.455Z", "timeCreatedEpoch": 1557970088.455, "timeCreatedIso": "2019-05-16T01:28:08.455000+00:00", "timeStorageClassUpdated": "2019-05-16T01:28:08.455Z", "timeUpdatedEpoch": 1558045261.522, "timeUpdatedIso": "2019-05-16T22:21:01.522000+00:00", "trellisTask": "fastq-to-ubam", "trellisWorkflow": "fastq-to-vcf", "updated": "2019-05-16T22:21:01.522Z"}, 
+                                                                                         {"basename": "SHIP4946367_0.ubam", "bucket": "***REMOVED***-dev-from-personalis-gatk", "contentType": "application/octet-stream", "crc32c": "ZaJM+g==", "dirname": "SHIP4946367/fastq-to-vcf/fastq-to-ubam/output", "etag": "CM+sxKDynuICEAY=", "extension": "ubam", "generation": "1557969926952527", "id": "***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam/1557969926952527", "kind": "storage#object", "labels": ["WGS35", "Blob", "Ubam"], "md5Hash": "Tgh+eyIiKe8TRWV6vohGJQ==", "mediaLink": "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam?generation=1557969926952527&alt=media", "metageneration": "6", "name": "SHIP4946367_0", "path": "SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam", "sample": "SHIP4946367", "selfLink": "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam", "size": 16871102587, "storageClass": "REGIONAL", "timeCreated": "2019-05-16T01:25:26.952Z", "timeCreatedEpoch": 1557969926.952, "timeCreatedIso": "2019-05-16T01:25:26.952000+00:00", "timeStorageClassUpdated": "2019-05-16T01:25:26.952Z", "timeUpdatedEpoch": 1558045265.901, "timeUpdatedIso": "2019-05-16T22:21:05.901000+00:00", "trellisTask": "fastq-to-ubam", "trellisWorkflow": "fastq-to-vcf", "updated": "2019-05-16T22:21:05.901Z"}
+                                                                            ]
+                                                                }
+                                              }
+                               }
+                      }
+            }
+    """
+    data = {'header': {'method': 'POST', 'labels': ['Job', 'Cromwell', 'Command', 'Args', 'Inputs'], 'resource': 'job-metadata'}, 'body': {'node': {'provider': 'google-v2', 'user': 'trellis', 'zones': 'us-west1*', 'project': '***REMOVED***-dev', 'minCores': 1, 'minRam': 6.5, 'preemptible': True, 'bootDiskSize': 20, 'image': 'gcr.io/***REMOVED***-dev/***REMOVED***/wdl_runner:latest', 'logging': 'gs://***REMOVED***-dev-from-personalis-gatk-logs/SHIP4946367/fastq-to-vcf/gatk-5-dollar/logs', 'diskSize': 1000, 'command': 'java -Dconfig.file=${CFG} -Dbackend.providers.JES.config.project=${MYproject} -Dbackend.providers.JES.config.root=${ROOT} -jar /cromwell/cromwell.jar run ${WDL} --inputs ${INPUT} --options ${OPTION}', 'inputs': {'CFG': 'gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/google-adc.conf', 'OPTION': 'gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/generic.google-papi.options.json', 'WDL': 'gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl', 'SUBWDL': 'gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/tasks_pipelines/*.wdl', 'INPUT': 'gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/inputs/inputs.json'}, 'envs': {'MYproject': '***REMOVED***-dev', 'ROOT': 'gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/output'}, 'dryRun': True, 'labels': ['Job', 'Cromwell'], 'input_CFG': 'gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/google-adc.conf', 'input_OPTION': 'gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/generic.google-papi.options.json', 'input_WDL': 'gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl', 'input_SUBWDL': 'gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/tasks_pipelines/*.wdl', 'input_INPUT': 'gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/inputs/inputs.json', 'env_MYproject': '***REMOVED***-dev', 'env_ROOT': 'gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/output'}, 'perpetuate': {'relationships': {'to-node': {'INPUT_TO': [{'basename': 'SHIP4946367_2.ubam', 'bucket': '***REMOVED***-dev-from-personalis-gatk', 'contentType': 'application/octet-stream', 'crc32c': 'ojStVg==', 'dirname': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/output', 'etag': 'CJTpxe3ynuICEAM=', 'extension': 'ubam', 'generation': '1557970088457364', 'id': '***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam/1557970088457364', 'kind': 'storage#object', 'labels': ['WGS35', 'Blob', 'Ubam'], 'md5Hash': 'opGAi0f9olAu4DKzvYiayg==', 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam?generation=1557970088457364&alt=media', 'metageneration': '3', 'name': 'SHIP4946367_2', 'path': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam', 'sample': 'SHIP4946367', 'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam', 'size': 16886179620, 'storageClass': 'REGIONAL', 'timeCreated': '2019-05-16T01:28:08.455Z', 'timeCreatedEpoch': 1557970088.455, 'timeCreatedIso': '2019-05-16T01:28:08.455000+00:00', 'timeStorageClassUpdated': '2019-05-16T01:28:08.455Z', 'timeUpdatedEpoch': 1558045261.522, 'timeUpdatedIso': '2019-05-16T22:21:01.522000+00:00', 'trellisTask': 'fastq-to-ubam', 'trellisWorkflow': 'fastq-to-vcf', 'updated': '2019-05-16T22:21:01.522Z'}, {'basename': 'SHIP4946367_0.ubam', 'bucket': '***REMOVED***-dev-from-personalis-gatk', 'contentType': 'application/octet-stream', 'crc32c': 'ZaJM+g==', 'dirname': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/output', 'etag': 'CM+sxKDynuICEAY=', 'extension': 'ubam', 'generation': '1557969926952527', 'id': '***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam/1557969926952527', 'kind': 'storage#object', 'labels': ['WGS35', 'Blob', 'Ubam'], 'md5Hash': 'Tgh+eyIiKe8TRWV6vohGJQ==', 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam?generation=1557969926952527&alt=media', 'metageneration': '6', 'name': 'SHIP4946367_0', 'path': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam', 'sample': 'SHIP4946367', 'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam', 'size': 16871102587, 'storageClass': 'REGIONAL', 'timeCreated': '2019-05-16T01:25:26.952Z', 'timeCreatedEpoch': 1557969926.952, 'timeCreatedIso': '2019-05-16T01:25:26.952000+00:00', 'timeStorageClassUpdated': '2019-05-16T01:25:26.952Z', 'timeUpdatedEpoch': 1558045265.901, 'timeUpdatedIso': '2019-05-16T22:21:05.901000+00:00', 'trellisTask': 'fastq-to-ubam', 'trellisWorkflow': 'fastq-to-vcf', 'updated': '2019-05-16T22:21:05.901Z'}]}}}}}
+    data = json.dumps(data).encode('utf-8')
+    event = {'data': base64.b64encode(data)}   
+    context = {'event_id': 'Test'}
 
-    summary = create_node_query(event, context)
-    
-    # Test event attributes
-    assert summary['name'] == event['name']
-    assert summary['bucket'] == event['bucket']
-    
-    # Test node and trigger modules
-    assert summary['node-module-name'] == f"{DATA_GROUP}.{event['bucket']}.create-node-config"
-    
-    # Test labels
-    try:
-        expected_labels = ['Blob', 'WGS_35000', 'Fastq']
-        assert sorted(summary['labels']) == sorted(expected_labels)
-        print("> Labels test: Pass.")
-    except:
-        print(f"! Error: Node labels ({summary['labels']}) " +
-              f"do not match expected ({expected_labels}).")
-
-    # Test database query
-    try:
-        expected_query = 'CREATE (node:Fastq:WGS_35000:Blob {bucket: "***REMOVED***-dev-from-personalis", componentCount: 32, contentType: "application/octet-stream", crc32c: "ftNG8w==", etag: "CL3nyPj80uECEBE=", generation: "1555361455813565", id: "***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565", kind: "storage#object", mediaLink: "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media", metageneration: "17", name: "SHIP4946367_0_R1", selfLink: "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz", size: 5955984357, storageClass: "REGIONAL", timeCreated: "2019-04-15T20:50:55.813Z", timeStorageClassUpdated: "2019-04-15T20:50:55.813Z", updated: "2019-04-23T19:17:53.205Z", path: "va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz", dirname: "va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ", basename: "SHIP4946367_0_R1.fastq.gz", extension: "fastq.gz", timeCreatedEpoch: 1555361455.813, timeUpdatedEpoch: 1556047073.205, timeCreatedIso: "2019-04-15T20:50:55.813000+00:00", timeUpdatedIso: "2019-04-23T19:17:53.205000+00:00", labels: [\'Fastq\', \'WGS_35000\', \'Blob\'], sample: "SHIP4946367", matePair: 1, readGroup: 0}) RETURN node'
-        assert summary['db-query'] == expected_query
-        print("> Query test: Pass.")
-    except:
-        print("! Error: database query does not match expected.")
-        pdb.set_trace()
-    # Test pubsub message
-
-    # ubam
-    event = {'bucket': '***REMOVED***-dev-from-personalis-gatk', 'contentType': 'application/octet-stream', 'crc32c': 'ZaJM+g==', 'etag': 'CPiFjqbVgOICEAI=', 'generation': '1556931361866488', 'id': '***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/objects/SHIP4946367_0.ubam/1556931361866488', 'kind': 'storage#object', 'md5Hash': 'Tgh+eyIiKe8TRWV6vohGJQ==', 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Fobjects%2FSHIP4946367_0.ubam?generation=1556931361866488&alt=media', 'metadata': {'test': '20190506:1148'}, 'metageneration': '2', 'name': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/objects/SHIP4946367_0.ubam', 'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Fobjects%2FSHIP4946367_0.ubam', 'size': '16871102587', 'storageClass': 'REGIONAL', 'timeCreated': '2019-05-04T00:56:01.866Z', 'timeStorageClassUpdated': '2019-05-04T00:56:01.866Z', 'updated': '2019-05-06T18:48:06.711Z'}
-    context = None
-    summary = create_node_query(event, context)
+    write_job_node_query(event, context)
 
