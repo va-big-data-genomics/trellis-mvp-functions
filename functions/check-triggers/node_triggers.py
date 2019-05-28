@@ -30,25 +30,27 @@ class NodeTriggers:
         sample = self.node['sample']
 
         message = {
-                   "resource": "query",
-                   "neo4j-metadata": {
-                                      "cypher": (
-                                                 "MATCH (n:Fastq) " +
-                                                f"WHERE n.sample=\"{sample}\" " +
-                                                 "WITH n.sample AS sample, " +
-                                                 "COLLECT(n) AS nodes " +
-                                                 "UNWIND nodes AS node " +
-                                                 "SET node.setSize = size(nodes)" +
-                                                 "RETURN DISTINCT " +
-                                                 "node.setSize AS `added_setSize`, " +
-                                                 "node.sample AS `nodes_sample`, " + 
-                                                 "node.labels AS `nodes_labels`"),
-                                      "result-mode": "data",
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Cypher", "Query", "Set"],
                    },
-                   "trellis-metadata": {
-                                        "publish-topic": "wgs35-property-updates",
-                                        "result-structure": "list",
-                                        "result-split": "True",
+                   "body": {
+                          "cypher": (
+                                     "MATCH (n:Fastq) " +
+                                    f"WHERE n.sample=\"{sample}\" " +
+                                     "WITH n.sample AS sample, " +
+                                     "COLLECT(n) AS nodes " +
+                                     "UNWIND nodes AS node " +
+                                     "SET node.setSize = size(nodes)" +
+                                     "RETURN DISTINCT " +
+                                     "node.setSize AS `added_setSize`, " +
+                                     "node.sample AS `nodes_sample`, " + 
+                                     "node.labels AS `nodes_labels`"),
+                          "result-mode": "data",
+                          "publish-topic": "wgs35-property-updates",
+                          "result-structure": "list",
+                          "result-split": "True",
                    }
         }
         return(topic_path, message)
@@ -63,25 +65,27 @@ class NodeTriggers:
         set_size = self.node['setSize']
 
         message = {
-                   "resource": "query", 
-                   "neo4j-metadata": {
-                                      "cypher": (
-                                                 "MATCH (n:Ubam) " +
-                                                f"WHERE n.sample=\"{sample}\" " +
-                                                 "WITH n.sample AS sample, " +
-                                                 "COLLECT(n) as nodes " +
-                                                 "RETURN " +
-                                                 "CASE " +
-                                                f"WHEN size(nodes) = {set_size} " +
-                                                 "THEN nodes " +
-                                                 "ELSE NULL " +
-                                                 "END"),
-                                      "result-mode": "data",
-                   }, 
-                   "trellis-metadata": {
-                                        "publish-topic": "wgs35-tasks-gatk-5-dollar", 
-                                        "result-structure": "list",
-                                        "result-split": "False"
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Case"]
+                   },
+                   "body": {
+                        "cypher": (
+                                 "MATCH (n:Ubam) " +
+                                f"WHERE n.sample=\"{sample}\" " +
+                                 "WITH n.sample AS sample, " +
+                                 "COLLECT(n) as nodes " +
+                                 "RETURN " +
+                                 "CASE " +
+                                f"WHEN size(nodes) = {set_size} " +
+                                 "THEN nodes " +
+                                 "ELSE NULL " +
+                                 "END"),
+                        "result-mode": "data",
+                        "publish-topic": "wgs35-tasks-gatk-5-dollar", 
+                        "result-structure": "list",
+                        "result-split": "False",
                    }
         }
         return(topic_path, message)

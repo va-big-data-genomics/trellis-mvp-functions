@@ -201,15 +201,17 @@ def create_node_query(event, context):
     print(f"> Database query: \"{db_query}\".")
 
     message = {
-               "resource": "query",
-               "neo4j-metadata": {
-                                    "cypher": db_query, 
-                                    "result-mode": "data",
+               "header": {
+                          "resource": "query",
+                          "method": "POST",
+                          "labels": ["Create", "Node", "Cypher", "Query"],
                },
-               "trellis-metadata": {
-                                    "publish-topic": f"{DATA_GROUP}-new-node", 
-                                    "result-structure": "list",
-                                    "result-split": "True"
+               "body": {
+                        "cypher": db_query, 
+                        "result-mode": "data",
+                        "publish-topic": f"{DATA_GROUP}-new-node", 
+                        "result-structure": "list",
+                        "result-split": "True",
                },
     }
     print(f"> Pubsub message: {message}.")
