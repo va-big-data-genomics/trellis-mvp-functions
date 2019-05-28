@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import yaml
 import base64
@@ -19,6 +20,7 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     # Runtime variables
+    DATA_GROUP = parsed_vars['DATA_GROUP']
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_USER = parsed_vars['NEO4J_USER']
@@ -34,10 +36,11 @@ if ENVIRONMENT == 'google-cloud':
                   password=NEO4J_PASSPHRASE)
 
 
-def publish_to_topic(publish_topic, data):
-    topic_path = PUBLISHER.topic_path(PROJECT_ID, publish_topic)
-    data = json.dumps(data).encode('utf-8')
-    PUBLISHER.publish(topic_path, data=data)
+def publish_to_topic(topic, data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    message = json.dumps(data).encode('utf-8')
+    PUBLISHER.publish(topic_path, data=message)
+    print(f"> Published following message to {topic}: {message}.")
 
 
 def query_db(event, context):
@@ -54,21 +57,28 @@ def query_db(event, context):
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
+    header = data['header']
+    body = data['body']
 
     # Check that resource is query
-    if data['resource'] != 'query':
+    if header['resource'] != 'query':
         print(f"Error: Expected resource type 'request', " +
               f"got '{data['resource']}.'")
         return
     
-    neo4j_metadata = data['neo4j-metadata']
-    query = neo4j_metadata['cypher']
-    result_mode = neo4j_metadata.get('result-mode')
-    
-    trellis_metadata = data['trellis-metadata']
-    topic = trellis_metadata.get('publish-topic')
-    result_structure = trellis_metadata.get('result-structure')
-    result_split = trellis_metadata.get('result-split')
+    #neo4j_metadata = data['neo4j-metadata']
+    #query = neo4j_metadata['cypher']
+    query = body['cypher']
+    #result_mode = neo4j_metadata.get('result-mode')
+    result_mode = body.get('result-mode')
+
+    #trellis_metadata = data['trellis-metadata']
+    #topic = trellis_metadata.get('publish-topic')
+    topic = body.get('publish-topic')
+    #result_structure = trellis_metadata.get('result-structure')
+    #result_split = trellis_metadata.get('result-split')
+    result_structure = body.get('result-structure')
+    result_split = body.get('result-split')
     
     #### RESTRUCTURED
     if result_mode == 'stats':
@@ -88,29 +98,38 @@ def query_db(event, context):
         return results
 
     message = {
-               "resource": "query-result",
-               "query": query,
-               "trellis": {"sent-from": "db-query"},
+               "header": {
+                          "method": "VIEW",
+                          "resource": "query-result",
+                          "labels": ["Cypher", "Query", "Result"],
+               },
+               "body": {
+                        "query": query, 
+                        "sent-from": f"{DATA_GROUP}-db-query",
+               }
+               #"query": query,
+               #"trellis": {"sent-from": "db-query"},
     }
 
     # Perpetuate metadata in specified by "perpetuate" key
-    perpetuate = data.get('perpetuate')
+    perpetuate = body.get('perpetuate')
     if perpetuate:
-        message.update(perpetuate)
+        message['body'].update(perpetuate)
 
     if result_split == 'True':
         for result in results:
-            message['results'] = result
+            message['body']['results'] = result
             publish_to_topic(topic, message)
-            print(f"> Published following message to {topic}: {message}.")
+            #print(f"> Published following message to {topic}: {message}.")
     else:
-        message['results'] = results
+        message['body']['results'] = results
         publish_to_topic(topic, message)
-        print(f"> Published following message to {topic}: {message}.")
+        #print(f"> Published following message to {topic}: {message}.")
 
 
 if __name__ == "__main__": 
     PROJECT_ID = "***REMOVED***-dev"
+    DATA_GROUP = "wgs35"
     NEO4J_URL = "https://35.247.31.130:7473"
     NEO4J_USER = "neo4j"
     NEO4J_PASSPHRASE = "IxH3JD_LNPBQq398xSrPifatw7Ha_SSX"
@@ -127,6 +146,17 @@ if __name__ == "__main__":
 
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
+
+    # Create gatk-5-dollar job node
+    data = b'{"header": {"method": "POST", "labels": ["Job", "Create", "Node", "Query", "Cypher"], "resource": "query"}, "body": {"cypher": "CREATE (node:Job:Cromwell {provider: \\"google-v2\\", user: \\"trellis\\", zones: \\"us-west1*\\", project: \\"***REMOVED***-dev\\", minCores: 1, minRam: 6.5, preemptible: True, bootDiskSize: 20, image: \\"gcr.io/***REMOVED***-dev/***REMOVED***/wdl_runner:latest\\", logging: \\"gs://***REMOVED***-dev-from-personalis-gatk-logs/SHIP4946367/fastq-to-vcf/gatk-5-dollar/logs\\", diskSize: 1000, command: \\"java -Dconfig.file=${CFG} -Dbackend.providers.JES.config.project=${MYproject} -Dbackend.providers.JES.config.root=${ROOT} -jar /cromwell/cromwell.jar run ${WDL} --inputs ${INPUT} --options ${OPTION}\\", dryRun: True, labels: [\'Job\', \'Cromwell\'], input_CFG: \\"gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/google-adc.conf\\", input_OPTION: \\"gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/generic.google-papi.options.json\\", input_WDL: \\"gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl\\", input_SUBWDL: \\"gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/tasks_pipelines/*.wdl\\", input_INPUT: \\"gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/inputs/inputs.json\\", env_MYproject: \\"***REMOVED***-dev\\", env_ROOT: \\"gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/output\\", timeCreatedEpoch: 1559080699.59893, timeCreatedIso: \\"2019-05-28T21:58:19.598930+00:00\\"}) RETURN node", "result-mode": "data", "publish-topic": "wgs35-add-relationships", "result-structure": "list", "result-split": "False", "perpetuate": {"relationships": {"to-node": {"INPUT_TO": [{"basename": "SHIP4946367_2.ubam", "bucket": "***REMOVED***-dev-from-personalis-gatk", "contentType": "application/octet-stream", "crc32c": "ojStVg==", "dirname": "SHIP4946367/fastq-to-vcf/fastq-to-ubam/output", "etag": "CJTpxe3ynuICEAM=", "extension": "ubam", "generation": "1557970088457364", "id": "***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam/1557970088457364", "kind": "storage#object", "labels": ["WGS35", "Blob", "Ubam"], "md5Hash": "opGAi0f9olAu4DKzvYiayg==", "mediaLink": "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam?generation=1557970088457364&alt=media", "metageneration": "3", "name": "SHIP4946367_2", "path": "SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam", "sample": "SHIP4946367", "selfLink": "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam", "size": 16886179620, "storageClass": "REGIONAL", "timeCreated": "2019-05-16T01:28:08.455Z", "timeCreatedEpoch": 1557970088.455, "timeCreatedIso": "2019-05-16T01:28:08.455000+00:00", "timeStorageClassUpdated": "2019-05-16T01:28:08.455Z", "timeUpdatedEpoch": 1558045261.522, "timeUpdatedIso": "2019-05-16T22:21:01.522000+00:00", "trellisTask": "fastq-to-ubam", "trellisWorkflow": "fastq-to-vcf", "updated": "2019-05-16T22:21:01.522Z"}, {"basename": "SHIP4946367_0.ubam", "bucket": "***REMOVED***-dev-from-personalis-gatk", "contentType": "application/octet-stream", "crc32c": "ZaJM+g==", "dirname": "SHIP4946367/fastq-to-vcf/fastq-to-ubam/output", "etag": "CM+sxKDynuICEAY=", "extension": "ubam", "generation": "1557969926952527", "id": "***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam/1557969926952527", "kind": "storage#object", "labels": ["WGS35", "Blob", "Ubam"], "md5Hash": "Tgh+eyIiKe8TRWV6vohGJQ==", "mediaLink": "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam?generation=1557969926952527&alt=media", "metageneration": "6", "name": "SHIP4946367_0", "path": "SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam", "sample": "SHIP4946367", "selfLink": "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam", "size": 16871102587, "storageClass": "REGIONAL", "timeCreated": "2019-05-16T01:25:26.952Z", "timeCreatedEpoch": 1557969926.952, "timeCreatedIso": "2019-05-16T01:25:26.952000+00:00", "timeStorageClassUpdated": "2019-05-16T01:25:26.952Z", "timeUpdatedEpoch": 1558045265.901, "timeUpdatedIso": "2019-05-16T22:21:05.901000+00:00", "trellisTask": "fastq-to-ubam", "trellisWorkflow": "fastq-to-vcf", "updated": "2019-05-16T22:21:05.901Z"}]}}}}}'
+    event = {'data': base64.b64encode(data)}
+    result = query_db(event, context=None)
+
+    # Create gatk-5-dollar relationship to ubam
+    data = b'{"header": {"resource": "query", "method": "POST", "labels": ["Cypher", "Query", "Relationship", "Create"]}, "body": {"cypher": "\\n                            MATCH (related_node { basename: \\"SHIP4946367_0.ubam\\", bucket: \\"***REMOVED***-dev-from-personalis-gatk\\", contentType: \\"application/octet-stream\\", crc32c: \\"ZaJM+g==\\", dirname: \\"SHIP4946367/fastq-to-vcf/fastq-to-ubam/output\\", etag: \\"CM+sxKDynuICEAY=\\", extension: \\"ubam\\", generation: \\"1557969926952527\\", id: \\"***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam/1557969926952527\\", kind: \\"storage#object\\", labels: [\'WGS35\', \'Blob\', \'Ubam\'], md5Hash: \\"Tgh+eyIiKe8TRWV6vohGJQ==\\", mediaLink: \\"https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam?generation=1557969926952527&alt=media\\", metageneration: \\"6\\", name: \\"SHIP4946367_0\\", path: \\"SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam\\", sample: \\"SHIP4946367\\", selfLink: \\"https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam\\", size: 16871102587, storageClass: \\"REGIONAL\\", timeCreated: \\"2019-05-16T01:25:26.952Z\\", timeCreatedEpoch: 1557969926.952, timeCreatedIso: \\"2019-05-16T01:25:26.952000+00:00\\", timeStorageClassUpdated: \\"2019-05-16T01:25:26.952Z\\", timeUpdatedEpoch: 1558045265.901, timeUpdatedIso: \\"2019-05-16T22:21:05.901000+00:00\\", trellisTask: \\"fastq-to-ubam\\", trellisWorkflow: \\"fastq-to-vcf\\", updated: \\"2019-05-16T22:21:05.901Z\\" }), \\n                                  (node { image: \\"gcr.io/***REMOVED***-dev/***REMOVED***/wdl_runner:latest\\", dryRun: True, minCores: 1, input_SUBWDL: \\"gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/tasks_pipelines/*.wdl\\", input_WDL: \\"gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/fc_germline_single_sample_workflow.wdl\\", project: \\"***REMOVED***-dev\\", zones: \\"us-west1*\\", input_CFG: \\"gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/google-adc.conf\\", command: \\"java -Dconfig.file=${CFG} -Dbackend.providers.JES.config.project=${MYproject} -Dbackend.providers.JES.config.root=${ROOT} -jar /cromwell/cromwell.jar run ${WDL} --inputs ${INPUT} --options ${OPTION}\\", labels: [\'Job\', \'Cromwell\'], diskSize: 1000, preemptible: True, provider: \\"google-v2\\", input_OPTION: \\"gs://***REMOVED***-dev-trellis/workflow-inputs/gatk-mvp/gatk-mvp-pipeline/generic.google-papi.options.json\\", env_ROOT: \\"gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/output\\", timeCreatedEpoch: 1559080699.59893, minRam: 6.5, logging: \\"gs://***REMOVED***-dev-from-personalis-gatk-logs/SHIP4946367/fastq-to-vcf/gatk-5-dollar/logs\\", timeCreatedIso: \\"2019-05-28T21:58:19.598930+00:00\\", env_MYproject: \\"***REMOVED***-dev\\", input_INPUT: \\"gs://***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/gatk-5-dollar/inputs/inputs.json\\", bootDiskSize: 20, user: \\"trellis\\" })\\n                            CREATE (related_node)-[:INPUT_TO]->(node)\\n                            ", "sent-from": "{DATA_GROUP}-add-relationships"}}'
+    event = {'data': base64.b64encode(data)}
+    result = query_db(event, context=None)
+    sys.exit()
 
     try:
         # Create blob node
