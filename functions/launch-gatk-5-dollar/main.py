@@ -34,8 +34,8 @@ if ENVIRONMENT == 'google-cloud':
     #TOPIC_PATH = f"projects/{PROJECT_ID}/topics/{TOPIC}"
 
 
-def publish_to_topic(publish_topic, data):
-    topic_path = PUBLISHER.topic_path(PROJECT_ID, publish_topic)
+def publish_to_topic(topic, data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     data = json.dumps(data).encode('utf-8')
     PUBLISHER.publish(topic_path, data=data)
 
