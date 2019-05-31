@@ -195,6 +195,7 @@ def launch_gatk_5_dollar(event, context):
                  "--image", job_dict["image"], 
                  "--logging", job_dict["logging"],
                  "--disk-size", str(job_dict["diskSize"]),
+                 "--command", job_dict["command"],
     ]
 
     # Argument lists
@@ -349,6 +350,10 @@ if __name__ == "__main__":
                 'trellis-metadata': {'sent-from': 'db-query'}
             }
     }
+
+    with open('test-inputs.json', 'w') as fh:
+        fh.write(json.dumps(data))
+
     data = json.dumps(data).encode('utf-8')
     event = {'data': base64.b64encode(data)}
 
