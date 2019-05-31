@@ -27,7 +27,7 @@ if ENVIRONMENT == 'google-cloud':
     TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
     GATK_INPUTS_PATH = parsed_vars['GATK_HG38_INPUTS']
     # TODO: Create this
-    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+    NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
     # Establish PubSub connection
     PUBLISHER = pubsub.PublisherClient()
