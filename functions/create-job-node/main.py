@@ -131,7 +131,7 @@ def write_job_node_query(event, context):
         context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    print(f"> Processing new Pub/Sub message: {context['event_id']}.")
+    #print(f"> Processing new Pub/Sub message: {context['event_id']}.")
     print(f"> Context: {context}.")
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
