@@ -13,10 +13,10 @@ from google.cloud import storage
 def trellis_metadata_groupdict(db_dict, groupdict):
     return {
             'sample': groupdict['sample'],
-            'trellisWorkflow': groupdict['trellis_workflow'],
-            'trellisTask': groupdict['trellis_task']
+            'trellisTask': groupdict['trellis_task'],
+            'taskId': groupdict['task_id'],
     }
-
+    
 
 def workflow_path_5(db_dict, groupdict):
     value = db_dict['path'].split('/')[5] 
@@ -63,7 +63,7 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": [r"(?P<sample>\w+)/(?P<trellis_workflow>.*)/(?P<trellis_task>.*)/output/.*"],
+            "Blob": [r"(?P<sample>\w+)/(?P<trellis_task>.*)/(?P<task_id>.*)/output/.*"],
             "Gatk": ["\w+/.*/gatk-5-dollar/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
