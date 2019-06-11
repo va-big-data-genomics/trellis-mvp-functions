@@ -58,7 +58,7 @@ def launch_dsub_task(dsub_args):
 
 def get_datetime_stamp():
     now = datetime.now()
-    datestamp = now.strftime("%y%m%d%H%M%S")
+    datestamp = now.strftime("%y%m%d-%H%M%S")
     return datestamp
 
 
@@ -104,7 +104,7 @@ def launch_gatk_5_dollar(event, context):
     header = data['header']
     body = data['body']
 
-    dry_run = header.get('dry-run')
+    dry_run = header.get('dryRun')
     if not dry_run:
         dry_run = False
 
@@ -227,42 +227,44 @@ def launch_gatk_5_dollar(event, context):
     result = launch_dsub_task(dsub_args)
     print(f"Dsub result: '{result}'.")
 
-    # Add additional job metadata
-    job_dict['labels'] = ['Job', 'Cromwell']
+    # If job launch is successful, add job to database
+    if result == 1:
+        # Add additional job metadata
+        job_dict['labels'] = ['Job', 'Cromwell']
 
-    # Reformat dict values as separate key/value pairs
-    # to be compatible with Neo4j
-    for key, value in job_dict["inputs"].items():
-        job_dict[f"input_{key}"] = value
-    for key, value in job_dict["envs"].items():
-        job_dict[f"env_{key}"] = value
+        # Reformat dict values as separate key/value pairs
+        # to be compatible with Neo4j
+        for key, value in job_dict["inputs"].items():
+            job_dict[f"input_{key}"] = value
+        for key, value in job_dict["envs"].items():
+            job_dict[f"env_{key}"] = value
 
-    # Package job node and inputs into JSON message
-    message = {
-        "header": {
-            "method": "POST",
-            "labels": ["Job", "Cromwell", "Command", "Args", "Inputs"],
-            "resource": "job-metadata",
-        },
-        "body": {
-            "node": job_dict,
-            "perpetuate": {
-                "relationships": {
-                    "to-node": {
-                        "INPUT_TO": nodes
+        # Package job node and inputs into JSON message
+        message = {
+            "header": {
+                "method": "POST",
+                "labels": ["Job", "Cromwell", "Command", "Args", "Inputs"],
+                "resource": "job-metadata",
+            },
+            "body": {
+                "node": job_dict,
+                "perpetuate": {
+                    "relationships": {
+                        "to-node": {
+                            "INPUT_TO": nodes
+                        }
                     }
                 }
             }
         }
-    }
-    publish_to_topic(NEW_JOBS_TOPIC, message)  
+        publish_to_topic(NEW_JOBS_TOPIC, message)  
 
-    # Write message to blob
-    storage.Client(project=PROJECT_ID) \
-        .get_bucket(TRELLIS_BUCKET) \
-        .blob('launch-gatk-5-dollar-message.out') \
-        .upload_from_string(json.dumps(message))
-    #gatk_inputs = json.loads(gatk_input_template)
+        # Write message to blob
+        storage.Client(project=PROJECT_ID) \
+            .get_bucket(TRELLIS_BUCKET) \
+            .blob('launch-gatk-5-dollar-message.out') \
+            .upload_from_string(json.dumps(message))
+        #gatk_inputs = json.loads(gatk_input_template)
 
 
 # For local testing
@@ -283,8 +285,8 @@ if __name__ == "__main__":
                 'method': 'VIEW',
                 'labels': ['Ubam', 'Nodes'],
                 'resource': 'query-result',
-                'sent-from': 'db-query',
-                'dry-run': 'True',
+                'sentFrom': 'db-query',
+                'dryRun': 'True',
             },
             'body': {
                 'query': 'MATCH (n:Ubam) WHERE n.sample="SHIP4946367" WITH n.sample AS sample, COLLECT(n) as nodes RETURN CASE WHEN size(nodes) = 4 THEN nodes ELSE NULL END', 
