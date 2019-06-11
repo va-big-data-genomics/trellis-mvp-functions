@@ -122,7 +122,8 @@ def get_datetime_iso8601(date_string):
     return iso8601.parse_date(date_string)
 
 
-def format_query(db_entry, dry_run=False):
+def format_output_node_query(db_entry, dry_run=False):
+    # Create label string
     labels_str = ':'.join(db_entry['labels'])
 
     # Create database entry string
@@ -136,10 +137,56 @@ def format_query(db_entry, dry_run=False):
 
     # Format as cypher query
     query = (
-             f"CREATE (node:{labels_str} " +
-              "{" + f"{entry_string}" +"}) " +
+             f"MATCH (jobNode) WHERE jobNode.taskId={db_entry['taskId']}" +
+             f"CREATE (jobNode)-[:OUTPUT]-> " +
+             f"(node:{labels_str} {{ {entry_string} }}) " +
               "RETURN node")
     return query
+
+
+def format_input_node_query(db_entry, dry_run=False):
+    # Create label string
+    labels_str = ':'.join(db_entry['labels'])
+
+    # Create database entry string
+    entry_strings = []
+    for key, value in db_entry.items():
+        if isinstance(value, str):
+            entry_strings.append(f'{key}: "{value}"')
+        else:
+            entry_strings.append(f'{key}: {value}')
+    entry_string = ', '.join(entry_strings)
+
+    # Format as cypher query
+    query = (
+             f"CREATE (node:{labels_str} {{ {entry_string} }}) " +
+              "RETURN node")
+    return query
+
+
+def format_relationship_query(node1, node2, name, orientation, properties):
+    """NOT CURRENTLY IN USE
+    Format cypher query to create relationship between nodes
+
+    node1 (dict): Properties of node to match in db
+    node2 (dict): Properties of node to match in db
+    name (str): Name of relationship
+    orientation (str): Orientation of relationship ["-", "->"]
+
+    relationship example:
+        {
+            "name": "INPUT_TO",
+            "direction": "to",
+            "properties": {}
+        }
+    """
+
+    query = (
+             f"MATCH (a {{ {node1} }}), " +
+             f"(b {{ {node2} }}) " + 
+             f"CREATE (a)-[:{name} {{ {properties} }}]{orientation}(b)")
+    return query
+
 
 
 def create_node_query(event, context):
@@ -175,7 +222,7 @@ def create_node_query(event, context):
     db_dict.update(name_fields)
     db_dict.update(time_fields)
 
-    # NEW method of getting labels
+    # Check db_dict with metadata about object
     db_dict['labels'] = []
     for label, patterns in label_patterns.items():
         for pattern in patterns:
@@ -197,7 +244,11 @@ def create_node_query(event, context):
             trellis_metadata[key] = value
 
     print(f"> Generating database query for node: {db_dict}.")
-    db_query = format_query(db_dict)
+    if db_dict.get('taskId'):
+        db_query = format_output_node_query(db_dict)
+    else:
+        db_query = format_input_node_query(db_dict)
+    #db_query = format_query(db_dict)
     print(f"> Database query: \"{db_query}\".")
 
     message = {
