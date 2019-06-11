@@ -16,17 +16,17 @@ def trellis_metadata_groupdict(db_dict, groupdict):
             'trellisTask': groupdict['trellis_task'],
             'taskId': groupdict['task_id'],
     }
-    
 
-def workflow_path_5(db_dict, groupdict):
+
+def workflow_path_4(db_dict, groupdict):
+    value = db_dict['path'].split('/')[4] 
+    return {'gatkWorkflow': str(value)}
+
+
+def task_path_5(db_dict, groupdict):
     value = db_dict['path'].split('/')[5] 
-    return {'workflow': str(value)}
-
-
-def task_path_6(db_dict, groupdict):
-    value = db_dict['path'].split('/')[6] 
     task = value.split('-')[1]
-    return {'task': str(task)}
+    return {'gatkTask': str(task)}
 
 
 def shard_index_name_1(db_dict, groupdict):
@@ -64,7 +64,7 @@ class NodeKinds:
         self.match_patterns = {
             "WGS35": [".*"],
             "Blob": [r"(?P<sample>\w+)/(?P<trellis_task>.*)/(?P<task_id>.*)/output/.*"],
-            "Gatk": ["\w+/.*/gatk-5-dollar/.*"],
+            "Gatk": ["\w+/gatk-5-dollar/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
@@ -123,8 +123,8 @@ class NodeKinds:
                                 ],
                                 "Shard": [shard_index_name_1],
                                 "Gatk": [
-                                         workflow_path_5,
-                                         task_path_6,
+                                         workflow_path_4,
+                                         task_path_5,
                                 ],
                                 "Ubam": [read_group_name_1],
         }
