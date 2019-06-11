@@ -188,6 +188,7 @@ def launch_gatk_5_dollar(event, context):
                 },
                 "preemptible": True,
                 "dryRun": dry_run,
+                "taskId": task_id,
     }
 
     dsub_args = [
