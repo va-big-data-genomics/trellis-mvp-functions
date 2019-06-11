@@ -137,7 +137,7 @@ def format_output_node_query(db_entry, dry_run=False):
 
     # Format as cypher query
     query = (
-             f"MATCH (jobNode) WHERE jobNode.taskId={db_entry['taskId']}" +
+             f"MATCH (jobNode) WHERE jobNode.taskId=\"{db_entry['taskId']}\" " +
              f"CREATE (jobNode)-[:OUTPUT]-> " +
              f"(node:{labels_str} {{ {entry_string} }}) " +
               "RETURN node")
@@ -186,7 +186,6 @@ def format_relationship_query(node1, node2, name, orientation, properties):
              f"(b {{ {node2} }}) " + 
              f"CREATE (a)-[:{name} {{ {properties} }}]{orientation}(b)")
     return query
-
 
 
 def create_node_query(event, context):
