@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import uuid
 import yaml
 import base64
 
@@ -55,9 +56,9 @@ def launch_dsub_task(dsub_args):
     return(1)
 
 
-def get_datestamp():
+def get_datetime_stamp():
     now = datetime.now()
-    datestamp = now.strftime("%Y%m%d")
+    datestamp = now.strftime("%y%m%d%H%M%S")
     return datestamp
 
 
@@ -103,12 +104,19 @@ def launch_gatk_5_dollar(event, context):
     header = data['header']
     body = data['body']
 
+    dry_run = header.get('dry-run')
+    if not dry_run:
+        dry_run = False
+
     metadata = {}
     nodes = parse_case_results(body['results'])
 
     # Dsub data
     task_name = 'gatk-5-dollar'
-    workflow_name = 'fastq-to-vcf'
+    # Create unique task ID
+    datetime_stamp = get_datetime_stamp()
+    mac_address = hex(uuid.getnode())
+    task_id = f"{mac_address}-{datetime_stamp}"
 
     ubams = []
     for node in nodes:
@@ -124,8 +132,6 @@ def launch_gatk_5_dollar(event, context):
         ubam_path = f"gs://{bucket}/{path}"
         ubams.append(ubam_path)
 
-    datestamp = get_datestamp()
-
     # Load inputs JSON from GCS
     gatk_input_template = storage.Client(project=PROJECT_ID) \
         .get_bucket(TRELLIS_BUCKET) \
@@ -140,7 +146,7 @@ def launch_gatk_5_dollar(event, context):
     gatk_inputs['germline_single_sample_workflow.final_vcf_base_name'] = sample
 
     # Write JSON to GCS
-    gatk_inputs_path = f"{sample}/{workflow_name}/{task_name}/inputs/inputs.json"
+    gatk_inputs_path = f"{sample}/{task_name}/{task_id}/inputs/inputs.json"
     gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
         .get_bucket(OUT_BUCKET) \
         .blob(gatk_inputs_path) \
@@ -158,7 +164,7 @@ def launch_gatk_5_dollar(event, context):
                 "preemptible": True,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/***REMOVED***/wdl_runner:latest",
-                "logging": f"gs://{LOG_BUCKET}/{sample}/{workflow_name}/{task_name}/logs",
+                "logging": f"gs://{LOG_BUCKET}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 1000,
                 "command": ("java " +
                             "-Dconfig.file=${CFG} " +
@@ -178,10 +184,10 @@ def launch_gatk_5_dollar(event, context):
                 },
                 "envs": {
                          "MYproject": PROJECT_ID,
-                         "ROOT": f"gs://{OUT_BUCKET}/{sample}/{workflow_name}/{task_name}/output",
+                         "ROOT": f"gs://{OUT_BUCKET}/{sample}/{task_name}/{task_id}/output",
                 },
                 "preemptible": True,
-                "dryRun": True
+                "dryRun": dry_run,
     }
 
     dsub_args = [
@@ -275,10 +281,11 @@ if __name__ == "__main__":
             'header': {
                 'method': 'VIEW',
                 'labels': ['Ubam', 'Nodes'],
-                'resource': 'query-result'
+                'resource': 'query-result',
+                'sent-from': 'db-query',
+                'dry-run': 'True',
             },
             'body': {
-                'resource': 'query-result', 
                 'query': 'MATCH (n:Ubam) WHERE n.sample="SHIP4946367" WITH n.sample AS sample, COLLECT(n) as nodes RETURN CASE WHEN size(nodes) = 4 THEN nodes ELSE NULL END', 
                 'results': [{
                              'CASE \nWHEN size(nodes) = 4 \nTHEN nodes \nELSE NULL \nEND': [
@@ -345,9 +352,7 @@ if __name__ == "__main__":
                                  'updated': '2019-05-16T22:21:05.901Z'
                                 }
                              ]
-                            }
-                ],
-                'trellis-metadata': {'sent-from': 'db-query'}
+                }],
             }
     }
 
