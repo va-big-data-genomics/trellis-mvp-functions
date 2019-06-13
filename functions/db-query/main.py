@@ -36,6 +36,21 @@ if ENVIRONMENT == 'google-cloud':
                   password=NEO4J_PASSPHRASE)
 
 
+def format_pubsub_message(query, results, perpetuate=None):
+    message = {
+               "header": {
+                          "method": "VIEW",
+                          "resource": "queryResult",
+                          "labels": ["Cypher", "Database", "Result"],
+                          "sentFrom": "db-query"
+               },
+               "body": {
+                        "query": query, 
+               }
+    }
+    return message
+
+
 def publish_to_topic(topic, data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     message = json.dumps(data).encode('utf-8')
@@ -66,20 +81,14 @@ def query_db(event, context):
               f"got '{data['resource']}.'")
         return
     
-    #neo4j_metadata = data['neo4j-metadata']
-    #query = neo4j_metadata['cypher']
     query = body['cypher']
-    #result_mode = neo4j_metadata.get('result-mode')
     result_mode = body.get('result-mode')
 
-    #trellis_metadata = data['trellis-metadata']
-    #topic = trellis_metadata.get('publish-topic')
     topic = body.get('publish-topic')
-    #result_structure = trellis_metadata.get('result-structure')
-    #result_split = trellis_metadata.get('result-split')
     result_structure = body.get('result-structure')
     result_split = body.get('result-split')
     
+    # TODO: Add handling for ConnectionResetError
     #### RESTRUCTURED
     if result_mode == 'stats':
         print(f"> Running stats query: '{query}'.")
@@ -97,34 +106,24 @@ def query_db(event, context):
         print("No Pub/Sub topic specified; result not published.")
         return results
 
-    message = {
-               "header": {
-                          "method": "VIEW",
-                          "resource": "query-result",
-                          "labels": ["Cypher", "Query", "Result"],
-               },
-               "body": {
-                        "query": query, 
-                        "sent-from": f"{DATA_GROUP}-db-query",
-               }
-               #"query": query,
-               #"trellis": {"sent-from": "db-query"},
-    }
-
     # Perpetuate metadata in specified by "perpetuate" key
     perpetuate = body.get('perpetuate')
-    if perpetuate:
-        message['body'].update(perpetuate)
+    #if perpetuate:
+    #    message['body'].update(perpetuate)
 
     if result_split == 'True':
         for result in results:
-            message['body']['results'] = result
-            publish_to_topic(topic, message)
-            #print(f"> Published following message to {topic}: {message}.")
+            #message['body']['results'] = result
+            message = format_pubsub_message(query, results, perpetuate)
+            print(f"> Pubsub message: {message}.")
+            result = publish_to_topic(topic, message)
+            print(f"> Published message to {topic} with result: {result}.")
     else:
-        message['body']['results'] = results
-        publish_to_topic(topic, message)
-        #print(f"> Published following message to {topic}: {message}.")
+        #message['body']['results'] = results
+        message = format_pubsub_message(query, results, perpetuate)
+        print(f"> Pubsub message: {message}.")
+        result = publish_to_topic(topic, message)
+        print(f"> Published message to {topic} with result: {result}.")
 
 
 if __name__ == "__main__": 
