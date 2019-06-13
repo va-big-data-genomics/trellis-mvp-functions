@@ -27,20 +27,27 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
-def publish_message(topic, query):
+def format_pubsub_message(query):
     message = {
-               "resource": "query",
-               "query": query,
-               "trellis": {"sent-from": "add-relationships"},
+               "header": {
+                          "resource": "query", 
+                          "method": "POST",
+                          "labels": ["Cypher", "Query", "Relationship", "Create"],
+                          "sentFrom": f"{DATA_GROUP}-add-relationships",
+                          "publishTo": f"{DATA_GROUP}-node-triggers",
+               },
+               "body": {
+                        "cypher": query,     
+               }
     }
-    publish_to_topic(topic, message)
-    print(f"> Published following message to {topic}: {message}.")
+    return message
+
 
 def publish_to_topic(topic, data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     message = json.dumps(data).encode('utf-8')
-    PUBLISHER.publish(topic_path, data=message)
-    print(f"> Published following message to {topic}: {message}.")
+    result = PUBLISHER.publish(topic_path, data=message).result()
+    return result
 
 
 def add_relationships(event, context):
@@ -65,11 +72,36 @@ def add_relationships(event, context):
         return
 
     node = body['results'][0]['node']
-    relationships = body['relationships']
-    
-    # Get node labels
-    #labels = node['labels']
-    #print(f"Node labels: {labels}.\n")
+
+    # Check relationship rules
+    # Import the config modules that corresponds to event-trigger bucket
+    bucket_name = node['bucket']
+    config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
+    config_module = importlib.import_module(node_module_name)
+
+    # Add provided relationships
+    relationship_rules = config_module.RelationshipKinds()
+    shipping_properties = relationship_rules.shipping_properties
+
+    # Generate relationship queries for node property triggers
+    ship_queries = []
+    for property_name, functions in shipping_properties.items()
+        if property_name in node.keys():
+            for function in functions:
+                ship_query = function(node)
+                ship_queries.append(ship_query)
+
+    for query in ship_queries:
+        message = format_pubsub_message(query)
+        result = publish_to_topic(TOPIC, message)
+        print(
+              f"> Published following message to {TOPIC} with " + 
+              f"result {result}: {message}.")
+
+    # Create additional relationships written directly to message
+    relationships = body.get('relationships')
+    if not relationships:
+        return
 
     # Write a generic relationship query
     for orientation in relationships:
@@ -112,21 +144,12 @@ def add_relationships(event, context):
                                   (node {{ {node_string} }})
                             CREATE (node)-[:{relationship_name}]-(related_node)
                             """
-                # Compose query
-                # CREATE (node)-[:{relationship_name}]->(related_node {related_node})
 
-                message = {
-                           "header": {
-                                      "resource": "query", 
-                                      "method": "POST",
-                                      "labels": ["Cypher", "Query", "Relationship", "Create"],
-                           },
-                           "body": {
-                                    "cypher": query,
-                                    "sent-from": "{DATA_GROUP}-add-relationships",
-                           }
-                }
+                message = format_pubsub_message(query)
                 publish_to_topic(TOPIC, message)
+                print(
+                      f"> Published following message to {TOPIC} with " + 
+                      f"result {result}: {message}.")
 
 
 # For local testing
