@@ -39,8 +39,8 @@ def format_pubsub_message(query, perpetuate=None):
                           "resource": "query",
                           "method": "POST", 
                           "labels": ['Job', 'Create', 'Node', 'Query', 'Cypher'], 
-                          "sent-from": f"{FUNCTION_NAME}",
-                          "publish-to": f"{DATA_GROUP}-add-relationships",
+                          "sentFrom": f"{FUNCTION_NAME}",
+                          "publishTo": f"{DATA_GROUP}-add-relationships",
                },
                "body": {
                         "cypher": db_query, 
@@ -181,7 +181,7 @@ def write_job_node_query(event, context):
     message = format_pubsub_message(db_query, body['perpetuate'])
     print(f"> Pubsub message: {message}.")
     result = publish_to_topic(TOPIC, message)
-    print(f"> Published query to {TOPIC} with result: {result}.")
+    print(f"> Published message to {TOPIC} with result: {result}.")
     
 
 if __name__ == "__main__":

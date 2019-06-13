@@ -38,8 +38,8 @@ def format_pubsub_message(query):
                           "resource": "query", 
                           "method": "POST",
                           "labels": ["Cypher", "Query", "Node", "Create"],
-                          "sent-from": f"{FUNCTION_NAME}",
-                          "publish-to": f"{DATA_GROUP}-add-relationships",
+                          "sentFrom": f"{FUNCTION_NAME}",
+                          "publishTo": f"{DATA_GROUP}-add-relationships",
                },
                "body": {
                         "cypher": query,
