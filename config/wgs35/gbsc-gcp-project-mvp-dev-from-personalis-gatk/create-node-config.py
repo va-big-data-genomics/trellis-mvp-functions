@@ -54,6 +54,17 @@ def get_metadata_from_all_json(db_dict, groupdict):
     metadata = json.loads(metadata_str)
     return metadata
 
+# Relationship functions
+def ship_job_to_output(db_dict):
+
+    query = (
+             f"MATCH (j:Job {{taskId:\"{db_dict['taskId']}\"}), " +
+             f"(b:Blob {{taskID:\"{db_dict['taskId']}\", " +
+                        "id:\"{db_dict['id']\"}})" +
+             f"CREATE (j)-[:OUTPUT]->(b) " +
+              "RETURN b"
+    return query
+
 
 class NodeKinds:
 
@@ -127,4 +138,12 @@ class NodeKinds:
                                          task_path_5,
                                 ],
                                 "Ubam": [read_group_name_1],
+        }
+
+class RelationshipKinds:
+
+    def __init__(self):
+
+        self.shipping_properties = {
+                                 "taskId": [ship_job_to_output],
         }
