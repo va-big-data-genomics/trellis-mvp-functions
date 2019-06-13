@@ -17,6 +17,8 @@ from google.cloud import pubsub
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
@@ -28,11 +30,36 @@ if ENVIRONMENT == 'google-cloud':
     TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
-
     PUBLISHER = pubsub.PublisherClient()
-    TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
-                                                       id = PROJECT_ID,
-                                                       topic = TOPIC)
+
+
+def format_pubsub_message(query, perpetuate=None):
+    message = {
+               "header": {
+                          "resource": "query",
+                          "method": "POST", 
+                          "labels": ['Job', 'Create', 'Node', 'Query', 'Cypher'], 
+                          "sent-from": f"{FUNCTION_NAME}",
+                          "publish-to": f"{DATA_GROUP}-add-relationships",
+               },
+               "body": {
+                        "cypher": db_query, 
+                        "result-mode": "data",
+                        "result-structure": "list",
+                        "result-split": "False",
+                },
+    }
+    if perpetuate:
+        extension = {"perpetuate": perpetuate}
+        message['body'].update(extension)
+    return message
+
+
+def publish_to_topic(topic, data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    message = json.dumps(data).encode('utf-8')
+    result = PUBLISHER.publish(topic_path, data=message).result()
+    return result
 
 
 def clean_metadata_dict(raw_dict):
@@ -151,32 +178,11 @@ def write_job_node_query(event, context):
     db_query = format_query(db_dict)
     print(f"> Database query: \"{db_query}\".")
 
-    message = {
-               "header": {
-                          "method": "POST", 
-                          "labels": ['Job', 'Create', 'Node', 'Query', 'Cypher'], 
-                          "resource": "query",
-               },
-               #"resource": "query",
-               "body": {
-                    #"neo4j-metadata": {
-                                       "cypher": db_query, 
-                                       "result-mode": "data",
-                    #},
-                    #"trellis-metadata": {
-                                         "publish-topic": f"{DATA_GROUP}-add-relationships", 
-                                         "result-structure": "list",
-                                         "result-split": "False",
-                    #},
-                    "perpetuate": body["perpetuate"],
-                }
-    }
-    
-    message = json.dumps(message).encode('utf-8')
+    message = format_pubsub_message(db_query, body['perpetuate'])
     print(f"> Pubsub message: {message}.")
-    result = PUBLISHER.publish(TOPIC_PATH, data=message).result()
-    print(f"> Published query to {TOPIC_PATH}. {result}.")
-
+    result = publish_to_topic(TOPIC, message)
+    print(f"> Published query to {TOPIC} with result: {result}.")
+    
 
 if __name__ == "__main__":
     # Run unit tests in local

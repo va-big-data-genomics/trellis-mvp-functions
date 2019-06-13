@@ -16,6 +16,8 @@ from google.cloud import pubsub
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
@@ -27,11 +29,33 @@ if ENVIRONMENT == 'google-cloud':
     TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
-
     PUBLISHER = pubsub.PublisherClient()
-    TOPIC_PATH = 'projects/{id}/topics/{topic}'.format(
-                                                       id = PROJECT_ID,
-                                                       topic = TOPIC)
+
+
+def format_pubsub_message(query):
+    message = {
+               "header": {
+                          "resource": "query", 
+                          "method": "POST",
+                          "labels": ["Cypher", "Query", "Node", "Create"],
+                          "sent-from": f"{FUNCTION_NAME}",
+                          "publish-to": f"{DATA_GROUP}-add-relationships",
+               },
+               "body": {
+                        "cypher": query,
+                        "result-mode": "data",
+                        "result-structure": "list",
+                        "result-split": "True",
+               },
+    }
+    return message
+
+
+def publish_to_topic(topic, data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    message = json.dumps(data).encode('utf-8')
+    result = PUBLISHER.publish(topic_path, data=message).result()
+    return result
 
 
 def clean_metadata_dict(raw_dict):
@@ -123,6 +147,8 @@ def get_datetime_iso8601(date_string):
 
 
 def format_output_node_query(db_entry, dry_run=False):
+    """DEPRECATED since relationship logic moved to own function.
+    """
     # Create label string
     labels_str = ':'.join(db_entry['labels'])
 
@@ -144,7 +170,7 @@ def format_output_node_query(db_entry, dry_run=False):
     return query
 
 
-def format_input_node_query(db_entry, dry_run=False):
+def format_node_query(db_entry, dry_run=False):
     # Create label string
     labels_str = ':'.join(db_entry['labels'])
 
@@ -243,32 +269,13 @@ def create_node_query(event, context):
             trellis_metadata[key] = value
 
     print(f"> Generating database query for node: {db_dict}.")
-    if db_dict.get('taskId'):
-        db_query = format_output_node_query(db_dict)
-    else:
-        db_query = format_input_node_query(db_dict)
-    #db_query = format_query(db_dict)
+    db_query = format_node_query(db_dict)
     print(f"> Database query: \"{db_query}\".")
 
-    message = {
-               "header": {
-                          "resource": "query",
-                          "method": "POST",
-                          "labels": ["Create", "Node", "Cypher", "Query"],
-               },
-               "body": {
-                        "cypher": db_query, 
-                        "result-mode": "data",
-                        "publish-topic": f"{DATA_GROUP}-new-node", 
-                        "result-structure": "list",
-                        "result-split": "True",
-               },
-    }
+    message = format_pubsub_message(db_query)
     print(f"> Pubsub message: {message}.")
-
-    message = json.dumps(message).encode('utf-8')
-    result = PUBLISHER.publish(TOPIC_PATH, data=message).result()
-    print(f"> Published query to {TOPIC_PATH}. {result}.")
+    result = publish_to_topic(TOPIC, message)
+    print(f"> Published message to {TOPIC_PATH} with result: {result}.")
 
     #summary = {
     #           "name": name, 
