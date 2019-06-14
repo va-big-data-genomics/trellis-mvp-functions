@@ -43,7 +43,7 @@ def format_pubsub_message(query, perpetuate=None):
                           "publishTo": f"{DATA_GROUP}-add-relationships",
                },
                "body": {
-                        "cypher": db_query, 
+                        "cypher": query, 
                         "result-mode": "data",
                         "result-structure": "list",
                         "result-split": "False",
