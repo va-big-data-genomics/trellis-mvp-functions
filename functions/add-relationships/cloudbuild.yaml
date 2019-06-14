@@ -2,7 +2,7 @@ steps:
 steps:
 - name: 'ubuntu'
   #args: ['bash', 'functions/create-node/cp-wgs35.sh']
-  args: ['bash', 'cp', '-r', 'config/wgs35', 'functions/add-relationships/']
+  args: ['cp', '-r', 'config/wgs35', 'functions/add-relationships/']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
