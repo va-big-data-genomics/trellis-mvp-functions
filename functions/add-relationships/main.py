@@ -81,7 +81,7 @@ def add_relationships(event, context):
     bucket_name = node.get('bucket')
     if bucket_name:
         config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
-        config_module = importlib.import_module(node_module_name)
+        config_module = importlib.import_module(config_module_name)
 
         # Add provided relationships
         relationship_rules = config_module.RelationshipKinds()
