@@ -1,4 +1,7 @@
 steps:
+steps:
+- name: 'ubuntu'
+  args: ['bash', 'functions/create-node/cp-wgs35.sh']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
