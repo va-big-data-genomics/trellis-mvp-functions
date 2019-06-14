@@ -34,7 +34,7 @@ def shard_index_name_1(db_dict, groupdict):
     return {'shardIndex': int(index)}  
 
 
-def read_group_name_1(db_dict):
+def read_group_name_1(db_dict, groupdict):
     index = db_dict['name'].split('_')[1]
     return {'readGroup': int(index)} 
 

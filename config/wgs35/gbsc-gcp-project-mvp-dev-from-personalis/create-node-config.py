@@ -135,15 +135,15 @@ def get_standard_time_fields(event):
 
 ## Functions for paring custom metadata from blob metadata
 
-def sample_path_0(db_dict):
+def sample_path_0(db_dict, groupdict):
     sample = db_dict['path'].split('/')[0] 
     return {'sample': str(sample)}
 
-def sample_path_2(db_dict):
+def sample_path_2(db_dict, groupdict):
     sample = db_dict['path'].split('/')[2] 
     return {'sample': str(sample)}
 
-def chromosome_name_2(db_dict):
+def chromosome_name_2(db_dict, groupdict):
     """Used for bam and bai
     """
     chromosome = split_string(
@@ -153,15 +153,15 @@ def chromosome_name_2(db_dict):
                               req_type = str) 
     return {'chromosome': str(chromosome)}
 
-def category_dirname_2(db_dict):
+def category_dirname_2(db_dict, groupdict):
     category = db_dict['dirname'].split('/')[2]
     return {'category': str(category)}
 
-def category_extension_0(db_dict):
+def category_extension_0(db_dict, groupdict):
     category = db_dict['extension'].split('.')[0]
     return {'category': str(category)}
 
-def mate_pair_name_0(db_dict):
+def mate_pair_name_0(db_dict, groupdict):
     mate_pair = search_string(
                           string = db_dict['name'], 
                           pattern = "_R(\\d)$", 
@@ -169,7 +169,7 @@ def mate_pair_name_0(db_dict):
                           req_type = int)
     return {'matePair': mate_pair}
 
-def read_group_name_1(db_dict):
+def read_group_name_1(db_dict, groupdict):
     index = db_dict['name'].split('_')[1]
     return {'readGroup': int(index)}  
 
