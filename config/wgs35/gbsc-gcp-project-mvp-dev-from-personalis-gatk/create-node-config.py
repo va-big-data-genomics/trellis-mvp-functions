@@ -59,7 +59,7 @@ def relate_job_to_output(db_dict):
 
     query = (
              f"MATCH (j:Job {{ taskId:\"{db_dict['taskId']}\" }} ), " +
-             f"(b:Blob {{taskID:\"{db_dict['taskId']}\", " +
+             f"(b:Blob {{taskId:\"{db_dict['taskId']}\", " +
                        f"id:\"{db_dict['id']}\" }})" +
              f"CREATE (j)-[:OUTPUT]->(b) " +
               "RETURN b")
@@ -75,7 +75,7 @@ class NodeKinds:
         self.match_patterns = {
             "WGS35": [".*"],
             "Blob": [r"(?P<sample>\w+)/(?P<trellis_task>.*)/(?P<task_id>.*)/output/.*"],
-            "Gatk": ["\w+/gatk-5-dollar/.*/output/.*"],
+            "Gatk": ["\w+/gatk-5-dollar/.*\\/output\\/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
