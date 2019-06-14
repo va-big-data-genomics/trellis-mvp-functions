@@ -47,9 +47,12 @@ def format_pubsub_message(query, results, perpetuate=None):
                           "sentFrom": FUNCTION_NAME
                },
                "body": {
-                        "query": query, 
+                        "query": query,
+                        "results": results,
                }
     }
+    if perpetuate:
+        message['body'].update(perpetuate)
     return message
 
 
