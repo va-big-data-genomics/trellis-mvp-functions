@@ -275,7 +275,7 @@ def create_node_query(event, context):
     message = format_pubsub_message(db_query)
     print(f"> Pubsub message: {message}.")
     result = publish_to_topic(TOPIC, message)
-    print(f"> Published message to {TOPIC_PATH} with result: {result}.")
+    print(f"> Published message to {TOPIC} with result: {result}.")
 
     #summary = {
     #           "name": name, 
