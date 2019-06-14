@@ -14,7 +14,7 @@ from google.cloud import storage
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
-    
+
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
@@ -44,7 +44,7 @@ def format_pubsub_message(query, results, perpetuate=None):
                           "method": "VIEW",
                           "resource": "queryResult",
                           "labels": ["Cypher", "Database", "Result"],
-                          "sentFrom": "db-query"
+                          "sentFrom": FUNCTION_NAME
                },
                "body": {
                         "query": query, 
@@ -83,10 +83,10 @@ def query_db(event, context):
               f"got '{data['resource']}.'")
         return
     
+    topic = header.get('publishTo')
+
     query = body['cypher']
     result_mode = body.get('result-mode')
-
-    topic = body.get('publish-topic')
     result_structure = body.get('result-structure')
     result_split = body.get('result-split')
     
