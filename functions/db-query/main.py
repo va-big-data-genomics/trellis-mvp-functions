@@ -13,6 +13,8 @@ from google.cloud import storage
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
