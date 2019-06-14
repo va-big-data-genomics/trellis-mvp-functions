@@ -23,8 +23,8 @@ def workflow_path_4(db_dict, groupdict):
     return {'gatkWorkflow': str(value)}
 
 
-def task_path_5(db_dict, groupdict):
-    value = db_dict['path'].split('/')[5] 
+def task_path_6(db_dict, groupdict):
+    value = db_dict['path'].split('/')[6] 
     task = value.split('-')[1]
     return {'gatkTask': str(task)}
 
