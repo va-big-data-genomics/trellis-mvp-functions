@@ -13,6 +13,8 @@ from google.cloud import storage
 # Environment variables
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+
     vars_blob = storage.Client() \
             .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
             .get_blob(os.environ['CREDENTIALS_BLOB']) \
@@ -33,7 +35,7 @@ def format_pubsub_message(query):
                           "resource": "query", 
                           "method": "POST",
                           "labels": ["Cypher", "Query", "Relationship", "Create"],
-                          "sentFrom": f"{DATA_GROUP}-add-relationships",
+                          "sentFrom": f"{FUNCTION_NAME}",
                           "publishTo": f"{DATA_GROUP}-node-triggers",
                },
                "body": {
@@ -73,31 +75,34 @@ def add_relationships(event, context):
 
     node = body['results'][0]['node']
 
-    # Check relationship rules
+    # If node has 'bucket' property; get relationship rules
     # Import the config modules that corresponds to event-trigger bucket
-    bucket_name = node['bucket']
-    config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
-    config_module = importlib.import_module(node_module_name)
+    bucket_name = node.get('bucket')
+    if bucket_name:
+        config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
+        config_module = importlib.import_module(node_module_name)
 
-    # Add provided relationships
-    relationship_rules = config_module.RelationshipKinds()
-    shipping_properties = relationship_rules.shipping_properties
+        # Add provided relationships
+        relationship_rules = config_module.RelationshipKinds()
+        shipping_properties = relationship_rules.shipping_properties
 
-    # Generate relationship queries for node property triggers
-    ship_queries = []
-    for property_name, functions in shipping_properties.items()
-        if property_name in node.keys():
-            for function in functions:
-                ship_query = function(node)
-                ship_queries.append(ship_query)
+        # Generate relationship queries for node property triggers
+        ship_queries = []
+        for property_name, functions in shipping_properties.items():
+            if property_name in node.keys():
+                for function in functions:
+                    ship_query = function(node)
+                    ship_queries.append(ship_query)
 
-    for query in ship_queries:
-        message = format_pubsub_message(query)
-        result = publish_to_topic(TOPIC, message)
-        print(
-              f"> Published following message to {TOPIC} with " + 
-              f"result {result}: {message}.")
+        for query in ship_queries:
+            message = format_pubsub_message(query)
+            result = publish_to_topic(TOPIC, message)
+            print(
+                  f"> Published following message to {TOPIC} with " + 
+                  f"result {result}: {message}.")
 
+    # For nodes that do not have bucket property (i.e. jobs), 
+    #   relationships must be specified manually
     # Create additional relationships written directly to message
     relationships = body.get('relationships')
     if not relationships:
@@ -146,7 +151,7 @@ def add_relationships(event, context):
                             """
 
                 message = format_pubsub_message(query)
-                publish_to_topic(TOPIC, message)
+                result = publish_to_topic(TOPIC, message)
                 print(
                       f"> Published following message to {TOPIC} with " + 
                       f"result {result}: {message}.")
@@ -157,6 +162,8 @@ if __name__ == "__main__":
     PROJECT_ID = "***REMOVED***-dev"
     TOPIC = "wgs35-db-queries"
     TOPIC_PATH = f"projects/{PROJECT_ID}/topics/{TOPIC}"
+    FUNCTION_NAME = "add-relationships"
+    DATA_GROUP = "wgs35"
 
     PUBLISHER = pubsub.PublisherClient()
 
