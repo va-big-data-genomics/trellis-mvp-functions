@@ -173,6 +173,20 @@ def read_group_name_1(db_dict, groupdict):
     index = db_dict['name'].split('_')[1]
     return {'readGroup': int(index)}  
 
+
+# Relationship functions
+def relate_job_to_output(db_dict):
+
+    query = (
+             f"MATCH (j:Job {{ taskId:\"{db_dict['taskId']}\" }} ), " +
+             f"(b:Blob {{taskId:\"{db_dict['taskId']}\", " +
+                       f"id:\"{db_dict['id']}\" }})" +
+             f"CREATE (j)-[:OUTPUT]->(b) " +
+              "RETURN b")
+    return query
+
+
+
 class NodeEntry:
 
     def __init__(self, event, context, labels, label_functions=[]):
@@ -266,3 +280,10 @@ class NodeKinds:
         """Return class whose name matches input string.
         """
         return self.kind_classes[name]
+
+class RelationshipKinds:
+
+    def __init__(self):
+
+        self.shipping_properties = {}
+        
