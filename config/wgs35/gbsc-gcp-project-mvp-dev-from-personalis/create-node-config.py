@@ -247,7 +247,7 @@ class NodeKinds:
                                "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
                                "Json": [".*\\.json$"], 
                                "Checksum": [".*checksum.txt"], 
-                               "WGS_35000": ["^va_mvp_phase2/.*"],
+                               "WGS35": ["^va_mvp_phase2/.*"],
                                "Blob": [".*"],
         }
 
@@ -286,4 +286,3 @@ class RelationshipKinds:
     def __init__(self):
 
         self.shipping_properties = {}
-        
