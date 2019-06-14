@@ -58,9 +58,9 @@ def get_metadata_from_all_json(db_dict, groupdict):
 def relate_job_to_output(db_dict):
 
     query = (
-             f"MATCH (j:Job {{taskId:\"{db_dict['taskId']}\"}), " +
+             f"MATCH (j:Job {{ taskId:\"{db_dict['taskId']}\" }} ), " +
              f"(b:Blob {{taskID:\"{db_dict['taskId']}\", " +
-                        "id:\"{db_dict['id']\"}})" +
+                       f"id:\"{db_dict['id']\"}})" +
              f"CREATE (j)-[:OUTPUT]->(b) " +
               "RETURN b")
     return query
