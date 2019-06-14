@@ -35,7 +35,7 @@ def format_pubsub_message(query):
                           "resource": "query", 
                           "method": "POST",
                           "labels": ["Cypher", "Query", "Relationship", "Create"],
-                          "sentFrom": f"{FUNCTION_NAME}",
+                          "sentFrom": FUNCTION_NAME,
                           "publishTo": f"{DATA_GROUP}-node-triggers",
                },
                "body": {
@@ -68,9 +68,9 @@ def add_relationships(event, context):
     header = data['header']
     body = data['body']
 
-    if header['resource'] != 'query-result':
+    if header['resource'] != 'queryResult':
         print(f"Error: Expected resource type 'blob', " +
-              f"got '{data['resource']}.'")
+              f"got '{header['resource']}.'")
         return
 
     node = body['results'][0]['node']
