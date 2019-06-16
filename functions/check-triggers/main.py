@@ -64,8 +64,8 @@ def check_triggers(event, context):
         results = json.loads(results)
 
     # Check that resource is query
-    if resource != 'query-result':
-        print(f"Error: Expected resource type 'request', " +
+    if resource != 'queryResult':
+        print(f"Error: Expected resource type 'queryResult', " +
               f"got '{header['resource']}.'")
         return
 
