@@ -75,7 +75,7 @@ def check_triggers(event, context):
     if triggers:
         for trigger in triggers:
             print(f'> Executing trigger: {triggers}.')
-            topic_path, message = trigger()
+            topic_path, message = trigger(FUNCTION_NAME)
             message['trellis-metadata']['sent-from'] = f"{TRIGGER}_triggers"
             publish_message(topic_path, message)
     else:

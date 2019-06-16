@@ -43,7 +43,7 @@ class PropertyTriggers:
         return self.unique_functions
 
 
-    def fastq_to_ubam(self):
+    def fastq_to_ubam(self, function_name):
         topic = "wgs35-db-queries"
         topic_path = f"projects/{self.project_id}/topics/{topic}"
 
@@ -51,25 +51,26 @@ class PropertyTriggers:
 
         message = {
                    "header": {
-                              "resource": "query", 
-                   }
-
-                   "neo4j-metadata": {
-                                        "cypher": (
-                                                  "MATCH (n:Fastq) " + 
-                                                  f"WHERE n.sample=\"{sample}\" " + 
-                                                  "WITH n.readGroup AS read_group, " +
-                                                  "n.setSize AS set_size, " +
-                                                  "COLLECT(n) AS nodes " +
-                                                  "WHERE size(nodes) = 2 " + 
-                                                  "RETURN [n IN nodes] AS nodes, "
-                                                  "set_size/2 AS metadata_setSize"), 
-                                        "result-mode": "data",                
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Nodes"]
+                              "sentFrom": function_name,
+                              "publishTo": "wgs35-tasks-fastq-to-ubam"
                    },
-                   "trellis-metadata": {
-                                        "publish-topic": "wgs35-tasks-fastq-to-ubam",
-                                        "result-structure": "list",
-                                        "result-split": "True"
+                   "body": {
+                            "cypher": (
+                                       "MATCH (n:Fastq) " + 
+                                       f"WHERE n.sample=\"{sample}\" " + 
+                                       "WITH n.readGroup AS read_group, " +
+                                       "n.setSize AS set_size, " +
+                                       "COLLECT(n) AS nodes " +
+                                       "WHERE size(nodes) = 2 " + 
+                                       "RETURN [n IN nodes] AS nodes, "
+                                       "set_size/2 AS metadata_setSize"
+                            ), 
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
                    }
         }
         return(topic_path, message)
