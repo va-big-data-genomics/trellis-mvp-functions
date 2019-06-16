@@ -150,7 +150,7 @@ def launch_fastq_to_ubam(event, context):
                 "command": (
                             '/gatk/gatk ' +
                             '--java-options ' +
-                            '\\"-Xmx8G -Djava.io.tmpdir=bla\\" ' +
+                            '\'-Xmx8G -Djava.io.tmpdir=bla\' ' +
                             'FastqToSam ' +
                             '-F1 ${FASTQ_1} ' +
                             '-F2 ${FASTQ_2} ' +
