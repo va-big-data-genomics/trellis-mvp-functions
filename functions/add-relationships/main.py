@@ -86,6 +86,7 @@ def add_relationships(event, context):
 
     # If node has 'bucket' property; get relationship rules
     # Import the config modules that corresponds to event-trigger bucket
+    result = None
     bucket_name = node.get('bucket')
     if bucket_name:
         config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
