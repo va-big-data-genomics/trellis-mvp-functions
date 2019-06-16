@@ -25,7 +25,8 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    TOPIC = parsed_vars['DB_QUERY_TOPIC']
+    QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
+    PUSH_TOPIC = parsed_vars['NODE_TRIGGERS_TOPIC']
     DATA_GROUP = parsed_vars['DATA_GROUP']
 
     # Establish PubSub connection
@@ -46,6 +47,11 @@ def format_pubsub_message(query):
                }
     }
     return message
+
+
+def format_push_message(node):
+    """If no relationships to add push message to node triggers
+    """
 
 
 def publish_to_topic(topic, data):
@@ -99,17 +105,19 @@ def add_relationships(event, context):
 
         for query in ship_queries:
             message = format_pubsub_message(query)
-            result = publish_to_topic(TOPIC, message)
+            result = publish_to_topic(QUERY_TOPIC, message)
             print(
-                  f"> Published following message to {TOPIC} with " + 
+                  f"> Published following message to {QUERY_TOPIC} with " + 
                   f"result {result}: {message}.")
 
     # For nodes that do not have bucket property (i.e. jobs), 
     #   relationships must be specified manually
+    
     # Create additional relationships written directly to message
     relationships = body.get('relationships')
+    # If no relationships included, push message to node triggers
     if not relationships:
-        return
+        result = publish_to_topic(PUSH_TOPIC, data)
 
     # Write a generic relationship query
     for orientation in relationships:
@@ -154,17 +162,17 @@ def add_relationships(event, context):
                             """
 
                 message = format_pubsub_message(query)
-                result = publish_to_topic(TOPIC, message)
+                result = publish_to_topic(QUERY_TOPIC, message)
                 print(
-                      f"> Published following message to {TOPIC} with " + 
+                      f"> Published following message to {QUERY_TOPIC} with " + 
                       f"result {result}: {message}.")
 
 
 # For local testing
 if __name__ == "__main__":
     PROJECT_ID = "***REMOVED***-dev"
-    TOPIC = "wgs35-db-queries"
-    TOPIC_PATH = f"projects/{PROJECT_ID}/topics/{TOPIC}"
+    QUERY_TOPIC = "wgs35-db-queries"
+    PUSH_TOPIC = "wgs35-node-triggers"
     FUNCTION_NAME = "add-relationships"
     DATA_GROUP = "wgs35"
 
