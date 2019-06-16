@@ -28,11 +28,18 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
-def publish_message(topic_path, message):
-    message = json.dumps(message).encode('utf-8')
-    print(f'> Publishing message "{message}".')
+def publish_to_topic(topic, data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    message = json.dumps(data).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
-    print(f'> Message published to {topic_path}: {result}.')   
+    return result
+
+
+#def publish_message(topic_path, message):
+#    message = json.dumps(message).encode('utf-8')
+#    print(f'> Publishing message "{message}".')
+#    result = PUBLISHER.publish(topic_path, data=message).result()
+#    print(f'> Message published to {topic_path}: {result}.')   
 
 
 def check_triggers(event, context):
@@ -45,10 +52,13 @@ def check_triggers(event, context):
     # Trellis config data
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
-    print(f"> Processing pubsub message: {data}.")
-    resource = data['resource']
-    query = data['query']
-    results = data['results']
+    print(f"> Received pubsub message: {data}.")
+    header = data['header']
+    body = data['body']
+
+    resource = header['resource']
+    query = body['query']
+    results = body['results']
 
     if isinstance(results, str):
         results = json.loads(results)
@@ -56,7 +66,7 @@ def check_triggers(event, context):
     # Check that resource is query
     if resource != 'query-result':
         print(f"Error: Expected resource type 'request', " +
-              f"got '{data['resource']}.'")
+              f"got '{header['resource']}.'")
         return
 
     trigger_module_name = f"{TRIGGER}_triggers"
@@ -75,9 +85,10 @@ def check_triggers(event, context):
     if triggers:
         for trigger in triggers:
             print(f'> Executing trigger: {triggers}.')
-            topic_path, message = trigger(FUNCTION_NAME)
-            message['trellis-metadata']['sent-from'] = f"{TRIGGER}_triggers"
-            publish_message(topic_path, message)
+            topic, message = trigger(FUNCTION_NAME)
+            print(f"> Publishing message: {message}.")
+            result = publish_to_topic(topic, message)
+            print(f"> Published message to {topic} with result: {result}.")
     else:
         print(f'> No triggers executed.')
 
