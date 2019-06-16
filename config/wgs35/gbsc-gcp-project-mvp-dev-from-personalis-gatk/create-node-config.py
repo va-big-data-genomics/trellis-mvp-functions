@@ -135,7 +135,7 @@ class NodeKinds:
                                 "Shard": [shard_index_name_1],
                                 "Gatk": [
                                          workflow_path_4,
-                                         task_path_5,
+                                         task_path_6,
                                 ],
                                 "Ubam": [read_group_name_1],
         }
