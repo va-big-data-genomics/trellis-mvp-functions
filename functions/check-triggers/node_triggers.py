@@ -23,6 +23,7 @@ class NodeTriggers:
         self.unique_functions = set(trigger_functions)
         return self.unique_functions
 
+
     def add_fastq_set_size(self, function_name):
         topic = "wgs35-db-queries"
         #topic_path = f"projects/{self.project_id}/topics/{topic}"
