@@ -23,7 +23,7 @@ class NodeTriggers:
         self.unique_functions = set(trigger_functions)
         return self.unique_functions
 
-    def add_fastq_set_size(self):
+    def add_fastq_set_size(self, function_name):
         topic = "wgs35-db-queries"
         topic_path = f"projects/{self.project_id}/topics/{topic}"
 
@@ -33,7 +33,9 @@ class NodeTriggers:
                    "header": {
                               "resource": "query",
                               "method": "UPDATE",
-                              "labels": ["Cypher", "Query", "Set"],
+                              "labels": ["Cypher", "Query", "Set", "Properties"], 
+                              "sentFrom": function_name,
+                              "publishTo": "wgs35-property-updates",
                    },
                    "body": {
                           "cypher": (
@@ -48,7 +50,6 @@ class NodeTriggers:
                                      "node.sample AS `nodes_sample`, " + 
                                      "node.labels AS `nodes_labels`"),
                           "result-mode": "data",
-                          "publish-topic": "wgs35-property-updates",
                           "result-structure": "list",
                           "result-split": "True",
                    }
@@ -56,7 +57,7 @@ class NodeTriggers:
         return(topic_path, message)
 
 
-    def check_ubam_count(self):
+    def check_ubam_count(self, function_name):
         """Send full set of ubams to GATK task"""
         topic = "wgs35-db-queries"
         topic_path = f"projects/{self.project_id}/topics/{topic}"
@@ -68,7 +69,9 @@ class NodeTriggers:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Case"]
+                              "labels": ["Cypher", "Query", "Case", "Nodes"],
+                              "sentFrom": function_name,
+                              "publishTo": "wgs35-tasks-gatk-5-dollar",
                    },
                    "body": {
                         "cypher": (
@@ -82,8 +85,7 @@ class NodeTriggers:
                                  "THEN nodes " +
                                  "ELSE NULL " +
                                  "END"),
-                        "result-mode": "data",
-                        "publish-topic": "wgs35-tasks-gatk-5-dollar", 
+                        "result-mode": "data", 
                         "result-structure": "list",
                         "result-split": "False",
                    }
