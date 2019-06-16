@@ -112,12 +112,16 @@ def add_relationships(event, context):
 
     # For nodes that do not have bucket property (i.e. jobs), 
     #   relationships must be specified manually
-    
+
     # Create additional relationships written directly to message
     relationships = body.get('relationships')
     # If no relationships included, push message to node triggers
-    if not relationships:
+    if not relationships and not result:
+        print(f"> No relationships, pushing data to node triggers.")
+        print(f"> Pubsub message: {data}.")
         result = publish_to_topic(PUSH_TOPIC, data)
+        print(f"> Published message to {PUSH_TOPIC} with result: {result}.")
+        return
 
     # Write a generic relationship query
     for orientation in relationships:
