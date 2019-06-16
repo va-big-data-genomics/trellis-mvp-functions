@@ -45,7 +45,7 @@ class PropertyTriggers:
 
     def fastq_to_ubam(self, function_name):
         topic = "wgs35-db-queries"
-        topic_path = f"projects/{self.project_id}/topics/{topic}"
+        #topic_path = f"projects/{self.project_id}/topics/{topic}"
 
         sample = self.nodes['sample']
 
@@ -73,5 +73,5 @@ class PropertyTriggers:
                             "result-split": "True"
                    }
         }
-        return(topic_path, message)
+        return(topic, message)
 
