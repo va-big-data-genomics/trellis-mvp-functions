@@ -113,6 +113,10 @@ def launch_gatk_5_dollar(event, context):
 
     metadata = {}
     nodes = parse_case_results(body['results'])
+    # If not all Ubams present in database, results will be NoneType
+    if not nodes:
+        print("> No nodes provided; exiting.")
+        return
 
     # Dsub data
     task_name = 'gatk-5-dollar'
