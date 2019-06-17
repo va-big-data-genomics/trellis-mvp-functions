@@ -249,6 +249,7 @@ class NodeKinds:
                                "Checksum": [".*checksum.txt"], 
                                "WGS35": ["^va_mvp_phase2/.*"],
                                "Blob": [".*"],
+                               "FromPersonalis": [".*"],
         }
 
         self.label_functions = {
