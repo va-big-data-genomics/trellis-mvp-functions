@@ -79,7 +79,7 @@ def check_triggers(event, context):
     elif TRIGGER == 'property':
         trigger_config = trigger_module.PropertyTriggers(
                                                          project_id = PROJECT_ID,
-                                                         properties = results)
+                                                         properties = results[0])
 
     triggers = trigger_config.get_triggers()
     if triggers:
