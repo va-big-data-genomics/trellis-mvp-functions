@@ -137,7 +137,9 @@ class NodeKinds:
                                          workflow_path_4,
                                          task_path_6,
                                 ],
-                                "Ubam": [read_group_name_1],
+                                "Ubam": [
+                                         read_group_name_1,
+                                         get_metadata_from_all_json],
         }
 
 class RelationshipKinds:
