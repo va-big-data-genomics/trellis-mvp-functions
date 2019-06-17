@@ -77,7 +77,7 @@ def add_relationships(event, context):
               f"got '{header['resource']}.'")
         return
 
-    node = body['results'][0]['node']
+    node = body['results']['node']
 
     # If node has 'bucket' property; get relationship rules
     # Import the config modules that corresponds to event-trigger bucket
