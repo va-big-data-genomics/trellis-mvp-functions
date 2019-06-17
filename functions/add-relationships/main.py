@@ -26,32 +26,27 @@ if ENVIRONMENT == 'google-cloud':
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
-    PUSH_TOPIC = parsed_vars['NODE_TRIGGERS_TOPIC']
+    NODE_TRIGGERS_TOPIC = parsed_vars['NODE_TRIGGERS_TOPIC']
     DATA_GROUP = parsed_vars['DATA_GROUP']
 
     # Establish PubSub connection
     PUBLISHER = pubsub.PublisherClient()
 
 
-def format_pubsub_message(query):
+def format_pubsub_message(query, topic=None):
     message = {
                "header": {
                           "resource": "query", 
                           "method": "POST",
                           "labels": ["Cypher", "Query", "Relationship", "Create"],
                           "sentFrom": FUNCTION_NAME,
-                          "publishTo": f"{DATA_GROUP}-node-triggers",
+                          "publishTo": topic,
                },
                "body": {
                         "cypher": query,     
                }
     }
     return message
-
-
-def format_push_message(node):
-    """If no relationships to add push message to node triggers
-    """
 
 
 def publish_to_topic(topic, data):
@@ -105,7 +100,7 @@ def add_relationships(event, context):
                     ship_queries.append(ship_query)
 
         for query in ship_queries:
-            message = format_pubsub_message(query)
+            message = format_pubsub_message(query, NODE_TRIGGERS_TOPIC)
             result = publish_to_topic(QUERY_TOPIC, message)
             print(
                   f"> Published following message to {QUERY_TOPIC} with " + 
@@ -120,8 +115,8 @@ def add_relationships(event, context):
     if not relationships and not result:
         print(f"> No relationships, pushing data to node triggers.")
         print(f"> Pubsub message: {data}.")
-        result = publish_to_topic(PUSH_TOPIC, data)
-        print(f"> Published message to {PUSH_TOPIC} with result: {result}.")
+        result = publish_to_topic(NODE_TRIGGERS_TOPIC, data)
+        print(f"> Published message to {NODE_TRIGGERS_TOPIC} with result: {result}.")
         return
 
     # Write a generic relationship query
@@ -166,7 +161,7 @@ def add_relationships(event, context):
                             CREATE (node)-[:{relationship_name}]-(related_node)
                             """
 
-                message = format_pubsub_message(query)
+                message = format_pubsub_message(query, None)
                 result = publish_to_topic(QUERY_TOPIC, message)
                 print(
                       f"> Published following message to {QUERY_TOPIC} with " + 
@@ -177,7 +172,7 @@ def add_relationships(event, context):
 if __name__ == "__main__":
     PROJECT_ID = "gbsc-gcp-project-mvp-dev"
     QUERY_TOPIC = "wgs35-db-queries"
-    PUSH_TOPIC = "wgs35-node-triggers"
+    NODE_TRIGGERS_TOPIC = "wgs35-node-triggers"
     FUNCTION_NAME = "add-relationships"
     DATA_GROUP = "wgs35"
 
