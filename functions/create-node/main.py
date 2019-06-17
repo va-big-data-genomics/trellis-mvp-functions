@@ -170,6 +170,28 @@ def format_output_node_query(db_entry, dry_run=False):
     return query
 
 
+def format_node_merge_query(db_entry, dry_run=False):
+    # Create label string 
+    labels_str = ':'.join(db_entry['labels'])
+
+    # Create database entry string
+    entry_strings = []
+    for key, value in db_entry.items():
+        if isinstance(value, str):
+            entry_strings.append(f'{key} = "{value}"')
+        else entry_strings.append(f'{key} = {value}')
+    entry_string = ', '.join(entry_strings)
+
+    query = (
+             f"MERGE (node:{labels_str} {{ " +
+                                         f"bucket: {db_dict['bucket']}, " +
+                                         f"path: {db_dict['path']} }}) " +
+              "ON CREATE SET node.nodeCreated = timestamp, " + 
+              f"{entry_string} " + 
+              "RETURN node")
+    return query
+
+
 def format_node_query(db_entry, dry_run=False):
     # Create label string
     labels_str = ':'.join(db_entry['labels'])
@@ -269,7 +291,7 @@ def create_node_query(event, context):
             trellis_metadata[key] = value
 
     print(f"> Generating database query for node: {db_dict}.")
-    db_query = format_node_query(db_dict)
+    db_query = format_node_merge_query(db_dict)
     print(f"> Database query: \"{db_query}\".")
 
     message = format_pubsub_message(db_query)
