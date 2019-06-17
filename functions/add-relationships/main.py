@@ -43,7 +43,10 @@ def format_pubsub_message(query, topic=None):
                           "publishTo": topic,
                },
                "body": {
-                        "cypher": query,     
+                        "cypher": query,
+                        "result-mode": "data",
+                        "result-structure": "list",
+                        "result-split": "True", 
                }
     }
     return message
