@@ -109,7 +109,7 @@ def launch_fastq_to_ubam(event, context):
         elements = result_name.split('_')
         if elements[0] == 'metadata':
             key = elements[1]
-            metadata[key] = data['results'][result_name]
+            metadata[key] = body['results'][result_name]
 
     if len(nodes) != 2:
         print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
