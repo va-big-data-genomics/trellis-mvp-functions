@@ -125,6 +125,8 @@ def add_relationships(event, context):
 
     # Write a generic relationship query
     # Logic for new jobs
+    if not relationships:
+        return
     for orientation in relationships:
         for relationship_name in relationships[orientation]:
             for related_node in relationships[orientation][relationship_name]:
