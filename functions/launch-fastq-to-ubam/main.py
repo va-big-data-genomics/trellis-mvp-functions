@@ -101,16 +101,15 @@ def launch_fastq_to_ubam(event, context):
     if not dry_run:
         dry_run = False
 
-    # What does this do? 
-    #   This is supposed to check that setSize matches...
-    #   but it doesn't.
-    #metadata = {}
     nodes = body['results']['nodes']
-    #for result_name in body['results']:
-    #    elements = result_name.split('_')
-    #    if elements[0] == 'metadata':
-    #        key = elements[1]
-    #        metadata[key] = data['results'][result_name]
+    
+    # Get metadata to be perpetuated to Ubams
+    metadata = {}
+    for result_name in body['results']:
+        elements = result_name.split('_')
+        if elements[0] == 'metadata':
+            key = elements[1]
+            metadata[key] = data['results'][result_name]
 
     if len(nodes) != 2:
         print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
