@@ -197,7 +197,7 @@ def launch_gatk_5_dollar(event, context):
 
     dsub_args = [
                  "--name", "gatk-germline-caller",
-                 "--label", f"sample={sample}",
+                 "--label", f"sample={sample.lower()}",
                  "--provider", job_dict["provider"], 
                  "--user", job_dict["user"], 
                  "--zones", job_dict["zones"], 
