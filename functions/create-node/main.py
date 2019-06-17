@@ -174,20 +174,45 @@ def format_node_merge_query(db_entry, dry_run=False):
     # Create label string 
     labels_str = ':'.join(db_entry['labels'])
 
-    # Create database entry string
-    entry_strings = []
+    # Create database ON CREATE string
+    create_strings = []
     for key, value in db_entry.items():
         if isinstance(value, str):
-            entry_strings.append(f'{key} = "{value}"')
-        else entry_strings.append(f'{key} = {value}')
-    entry_string = ', '.join(entry_strings)
+            create_strings.append(f'{key} = "{value}"')
+        else:
+            create_strings.append(f'{key} = {value}')
+    create_string = ', '.join(create_strings)
+
+    # Create database ON MATCH string
+    merge_keys = [
+                  'md5Hash',
+                  'size',
+                  'timeUpdatedEpoch',
+                  'timeUpdatedIso',
+                  'timeStorageClassUpdated',
+                  'updated',
+                  'id',
+                  'crc32c',
+                  'generation']
+                  
+    merge_strings = []
+    for key in merge_keys:
+        value = db_entry.get(key)
+        if value:
+            if isinstance(value, str):
+                merge_strings.append(f'{key} = "{value"')
+            else:
+                merge_strings.append(f'{key} = {value}')
+    merge_string = ', '.join(merge_strings)
 
     query = (
              f"MERGE (node:{labels_str} {{ " +
                                          f"bucket: {db_dict['bucket']}, " +
                                          f"path: {db_dict['path']} }}) " +
-              "ON CREATE SET node.nodeCreated = timestamp, " + 
-              f"{entry_string} " + 
+              "ON CREATE SET node.nodeCreated = timestamp(), " + 
+              f"{create_string} " + 
+              f"ON MATCH SET node.nodeCreated = timestamp(), " +
+              f"{merge_string} " + 
               "RETURN node")
     return query
 
