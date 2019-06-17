@@ -46,7 +46,7 @@ def format_pubsub_message(query, perpetuate=None):
                         "cypher": query, 
                         "result-mode": "data",
                         "result-structure": "list",
-                        "result-split": "False",
+                        "result-split": "True",
                 },
     }
     if perpetuate:
