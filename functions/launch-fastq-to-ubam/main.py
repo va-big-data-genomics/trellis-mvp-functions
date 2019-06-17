@@ -104,7 +104,7 @@ def launch_fastq_to_ubam(event, context):
     #   This is supposed to check that setSize matches...
     #   but it doesn't.
     #metadata = {}
-    nodes = body['results'][0]['nodes']
+    nodes = body['results']['nodes']
     #for result_name in body['results']:
     #    elements = result_name.split('_')
     #    if elements[0] == 'metadata':
