@@ -207,8 +207,8 @@ def format_node_merge_query(db_dict, dry_run=False):
 
     query = (
              f"MERGE (node:{labels_str} {{ " +
-                                         f'bucket: \"{db_dict["bucket"]\"}, ' +
-                                         f'path: \"{db_dict["path"]}\" }}) ' +
+                                         f'bucket: "{db_dict["bucket"]}", ' +
+                                         f'path: "{db_dict["path"]}" }}) ' +
               "ON CREATE SET node.nodeCreated = timestamp(), " + 
               f"{create_string} " + 
               f"ON MATCH SET node.nodeCreated = timestamp(), " +
