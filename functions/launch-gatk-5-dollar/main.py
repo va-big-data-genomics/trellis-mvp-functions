@@ -192,9 +192,12 @@ def launch_gatk_5_dollar(event, context):
                 "preemptible": False,
                 "dryRun": dry_run,
                 "taskId": task_id,
+                "sample": sample,
     }
 
     dsub_args = [
+                 "--name", "gatk-germline-caller",
+                 "--label", f"sample={sample}",
                  "--provider", job_dict["provider"], 
                  "--user", job_dict["user"], 
                  "--zones", job_dict["zones"], 
