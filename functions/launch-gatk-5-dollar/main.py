@@ -189,7 +189,7 @@ def launch_gatk_5_dollar(event, context):
                          "MYproject": PROJECT_ID,
                          "ROOT": f"gs://{OUT_BUCKET}/{sample}/{task_name}/{task_id}/output",
                 },
-                "preemptible": True,
+                "preemptible": False,
                 "dryRun": dry_run,
                 "taskId": task_id,
     }
