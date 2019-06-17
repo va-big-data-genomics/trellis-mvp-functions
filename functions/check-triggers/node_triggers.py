@@ -19,6 +19,7 @@ class NodeTriggers:
                     'Ubam': self.check_ubam_count,
         }
 
+        trigger_functions = []
         for label_set in triggers.keys():
             labels = set(label_set.split(','))
             if labels.issubset(set(node_labels)):
