@@ -143,7 +143,6 @@ def launch_fastq_to_ubam(event, context):
                 "project": PROJECT_ID,
                 "minCores": 1,
                 "minRam": 7.5,
-                "preemptible": False,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
                 "logging": f"gs://{LOG_BUCKET}/{sample}/{task_name}/{task_id}/logs",
@@ -170,6 +169,7 @@ def launch_fastq_to_ubam(event, context):
                 },
                 "taskId": task_id,
                 "dryRun": dry_run,
+                "preemptible": False,
     }
 
     dsub_args = [
