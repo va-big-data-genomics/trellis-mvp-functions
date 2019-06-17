@@ -119,7 +119,7 @@ def query_db(event, context):
     if result_split == 'True':
         for result in results:
             #message['body']['results'] = result
-            message = format_pubsub_message(query, results, perpetuate)
+            message = format_pubsub_message(query, result, perpetuate)
             print(f"> Pubsub message: {message}.")
             result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {result}.")
