@@ -169,9 +169,14 @@ def launch_fastq_to_ubam(event, context):
                 "taskId": task_id,
                 "dryRun": dry_run,
                 "preemptible": False,
+                "sample": sample,
+                "readGroup": read_group,
     }
 
     dsub_args = [
+        "--name", "fastq-to-ubam",
+        "--label", f"read-group={read_group}",
+        "--label", f"sample={sample}",
         "--provider", job_dict["provider"], 
         "--user", job_dict["user"], 
         "--zones", job_dict["zones"], 
