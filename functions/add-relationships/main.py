@@ -81,6 +81,7 @@ def add_relationships(event, context):
 
     # If node has 'bucket' property; get relationship rules
     # Import the config modules that corresponds to event-trigger bucket
+    # Logic for new blobs
     result = None
     bucket_name = node.get('bucket')
     if bucket_name:
@@ -120,6 +121,7 @@ def add_relationships(event, context):
         return
 
     # Write a generic relationship query
+    # Logic for new jobs
     for orientation in relationships:
         for relationship_name in relationships[orientation]:
             for related_node in relationships[orientation][relationship_name]:
