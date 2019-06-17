@@ -53,9 +53,9 @@ class PropertyTriggers:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Nodes"]
+                              "labels": ["Cypher", "Query", "Nodes"],
                               "sentFrom": function_name,
-                              "publishTo": "wgs35-tasks-fastq-to-ubam"
+                              "publishTo": "wgs35-tasks-fastq-to-ubam",
                    },
                    "body": {
                             "cypher": (
