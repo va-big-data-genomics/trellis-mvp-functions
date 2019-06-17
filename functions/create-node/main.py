@@ -170,13 +170,13 @@ def format_output_node_query(db_entry, dry_run=False):
     return query
 
 
-def format_node_merge_query(db_entry, dry_run=False):
+def format_node_merge_query(db_dict, dry_run=False):
     # Create label string 
-    labels_str = ':'.join(db_entry['labels'])
+    labels_str = ':'.join(db_dict['labels'])
 
     # Create database ON CREATE string
     create_strings = []
-    for key, value in db_entry.items():
+    for key, value in db_dict.items():
         if isinstance(value, str):
             create_strings.append(f'{key} = "{value}"')
         else:
@@ -197,7 +197,7 @@ def format_node_merge_query(db_entry, dry_run=False):
 
     merge_strings = []
     for key in merge_keys:
-        value = db_entry.get(key)
+        value = db_dict.get(key)
         if value:
             if isinstance(value, str):
                 merge_strings.append(f'{key} = "{value}"')
