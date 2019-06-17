@@ -164,7 +164,7 @@ def launch_gatk_5_dollar(event, context):
                 "project": PROJECT_ID,
                 "minCores": 1,
                 "minRam": 6.5,
-                "preemptible": True,
+                "preemptible": False,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/jinasong/wdl_runner:latest",
                 "logging": f"gs://{LOG_BUCKET}/{sample}/{task_name}/{task_id}/logs",
