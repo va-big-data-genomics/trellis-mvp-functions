@@ -210,9 +210,21 @@ def launch_fastq_to_ubam(event, context):
     result = launch_dsub_task(dsub_args)
     print(f"Dsub result: '{result}'.")
 
-    if result == 1:
+    # Metadata to be perpetuated to ubams is written to file
+    if result == 1 and metadata:
+        print(f"Metadata passed to output blobs: {metadata}.")
+        # Dump metadata into GCS blob
+        meta_blob_path = f"{sample}/{task_name}/{task_id}/metadata/all-objects.json"
+        meta_blob = storage.Client(project=PROJECT_ID) \
+            .get_bucket(OUT_BUCKET) \
+            .blob(meta_blob_path) \
+            .upload_from_string(json.dumps(metadata))
+        print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
+
         job_dict['labels'] = ["Job", "Dsub", "FastqToUbam"]
 
+    # Job metadata is formatted for neo4j & published
+    if result == 1:
         for key, value in job_dict["inputs"].items():
             job_dict[f"input_{key}"] = value
         for key, value in job_dict["envs"].items():
