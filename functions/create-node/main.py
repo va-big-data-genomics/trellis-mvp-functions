@@ -194,13 +194,13 @@ def format_node_merge_query(db_entry, dry_run=False):
                   'id',
                   'crc32c',
                   'generation']
-                  
+
     merge_strings = []
     for key in merge_keys:
         value = db_entry.get(key)
         if value:
             if isinstance(value, str):
-                merge_strings.append(f'{key} = "{value"')
+                merge_strings.append(f'{key} = "{value}"')
             else:
                 merge_strings.append(f'{key} = {value}')
     merge_string = ', '.join(merge_strings)
