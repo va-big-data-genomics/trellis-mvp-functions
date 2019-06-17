@@ -178,9 +178,9 @@ def format_node_merge_query(db_dict, dry_run=False):
     create_strings = []
     for key, value in db_dict.items():
         if isinstance(value, str):
-            create_strings.append(f'{key} = "{value}"')
+            create_strings.append(f'node.{key} = "{value}"')
         else:
-            create_strings.append(f'{key} = {value}')
+            create_strings.append(f'node.{key} = {value}')
     create_string = ', '.join(create_strings)
 
     # Create database ON MATCH string
@@ -200,9 +200,9 @@ def format_node_merge_query(db_dict, dry_run=False):
         value = db_dict.get(key)
         if value:
             if isinstance(value, str):
-                merge_strings.append(f'{key} = "{value}"')
+                merge_strings.append(f'node.{key} = "{value}"')
             else:
-                merge_strings.append(f'{key} = {value}')
+                merge_strings.append(f'node.{key} = {value}')
     merge_string = ', '.join(merge_strings)
 
     query = (
