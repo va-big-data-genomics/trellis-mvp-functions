@@ -55,14 +55,14 @@ def get_metadata_from_all_json(db_dict, groupdict):
     return metadata
 
 # Relationship functions
-def relate_job_to_output(db_dict):
+def relate_output_to_job(db_dict):
 
     query = (
              f"MATCH (j:Job {{ taskId:\"{db_dict['taskId']}\" }} ), " +
-             f"(b:Blob {{taskId:\"{db_dict['taskId']}\", " +
+             f"(node:Blob {{taskId:\"{db_dict['taskId']}\", " +
                        f"id:\"{db_dict['id']}\" }})" +
-             f"CREATE (j)-[:OUTPUT]->(b) " +
-              "RETURN b")
+             f"CREATE (j)-[:OUTPUT]->(node) " +
+              "RETURN node")
     return query
 
 
@@ -145,5 +145,5 @@ class RelationshipKinds:
     def __init__(self):
 
         self.shipping_properties = {
-                                 "taskId": [relate_job_to_output],
+                                 "taskId": [relate_output_to_job],
         }
