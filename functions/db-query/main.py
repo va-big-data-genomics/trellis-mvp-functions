@@ -84,7 +84,7 @@ def query_db(event, context):
     # Check that resource is query
     if header['resource'] != 'query':
         print(f"Error: Expected resource type 'request', " +
-              f"got '{data['resource']}.'")
+              f"got '{header['resource']}.'")
         return
     
     topic = header.get('publishTo')
