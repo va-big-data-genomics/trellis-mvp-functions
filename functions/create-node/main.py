@@ -212,10 +212,10 @@ def format_node_merge_query(db_dict, dry_run=False):
               "ON CREATE SET node.nodeCreated = timestamp(), " +
                 'node.nodeIteration = "initial" ' +
                 f"{create_string} " + 
-              f"ON MATCH SET {merge_string} " +
+              f"ON MATCH SET " +
                 'node.nodeIteration = "merged" ' +
                 f"{merge_string} " + 
-              "RETURN" + 
+              "RETURN " + 
               "CASE node.nodeIteration " +
               "WHEN 'initial' THEN node " +
               "ELSE null END")
