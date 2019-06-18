@@ -23,6 +23,7 @@ def clean_metadata_dict(raw_dict):
 
     return clean_dict
 
+
 def get_seconds_from_epoch(datetime_obj):
     """Get datetime as total seconds from epoch.
 
@@ -36,6 +37,7 @@ def get_seconds_from_epoch(datetime_obj):
     from_epoch = datetime_obj - datetime(1970, 1, 1, tzinfo=pytz.UTC)
     from_epoch_seconds = from_epoch.total_seconds()
     return from_epoch_seconds
+
 
 def search_string(string, pattern, group, req_type):
     # kwargs: [pattern, string, group, req_type]
@@ -64,6 +66,7 @@ def search_string(string, pattern, group, req_type):
 
     return(typed_value)
 
+
 def split_string(string, delimiter, index, req_type):
     """Calls split function on string.
 
@@ -83,6 +86,7 @@ def split_string(string, delimiter, index, req_type):
 
     return(typed_value)
 
+
 def get_datetime_iso8601(date_string):
     """ Convert ISO 86801 date strings to datetime objects.
 
@@ -96,6 +100,7 @@ def get_datetime_iso8601(date_string):
     """
     return iso8601.parse_date(date_string)
 
+
 def get_standard_name_fields(event_name):
     path_elements = event_name.split('/')
     name_elements = path_elements[-1].split('.')
@@ -107,6 +112,7 @@ def get_standard_name_fields(event_name):
                    "extension": '.'.join(name_elements[1:])
     }
     return name_fields
+
 
 def get_standard_time_fields(event):
     """
@@ -135,13 +141,22 @@ def get_standard_time_fields(event):
 
 ## Functions for paring custom metadata from blob metadata
 
+def trellis_metadata_groupdict(db_dict, groupdict):
+    return {
+            'plate': groupdict['plate'],
+            'sample': groupdict['sample'],
+    }
+
+
 def sample_path_0(db_dict, groupdict):
     sample = db_dict['path'].split('/')[0] 
     return {'sample': str(sample)}
 
+
 def sample_path_2(db_dict, groupdict):
     sample = db_dict['path'].split('/')[2] 
     return {'sample': str(sample)}
+
 
 def chromosome_name_2(db_dict, groupdict):
     """Used for bam and bai
@@ -153,13 +168,16 @@ def chromosome_name_2(db_dict, groupdict):
                               req_type = str) 
     return {'chromosome': str(chromosome)}
 
+
 def category_dirname_2(db_dict, groupdict):
     category = db_dict['dirname'].split('/')[2]
     return {'category': str(category)}
 
+
 def category_extension_0(db_dict, groupdict):
     category = db_dict['extension'].split('.')[0]
     return {'category': str(category)}
+
 
 def mate_pair_name_0(db_dict, groupdict):
     mate_pair = search_string(
@@ -168,6 +186,7 @@ def mate_pair_name_0(db_dict, groupdict):
                           group = 1, 
                           req_type = int)
     return {'matePair': mate_pair}
+
 
 def read_group_name_1(db_dict, groupdict):
     index = db_dict['name'].split('_')[1]
@@ -240,26 +259,21 @@ class NodeKinds:
         """Use to determine which kind of database node should be created.
         """
 
-        self.global_labels = ['Blob']
-
         self.match_patterns = {
+                                "Blob": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*"],
                                "Fastq": ["va_mvp_phase2/.*/.*/FASTQ/.*\\.fastq.gz$"], 
                                "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
-                               "Json": [".*\\.json$"], 
-                               "Checksum": [".*checksum.txt"], 
+                               "Json": ["^va_mvp_phase2/.*\\.json$"], 
+                               "Checksum": ["^va_mvp_phase2/.*checksum.txt"], 
                                "WGS35": ["^va_mvp_phase2/.*"],
-                               "Blob": [".*"],
-                               "FromPersonalis": [".*"],
+                               "FromPersonalis": ["^va_mvp_phase2/.*"],
         }
 
         self.label_functions = {
+                                "Blob": [trellis_metadata_groupdict]
                                 "Fastq": [
-                                          sample_path_2, 
                                           mate_pair_name_0, 
                                           read_group_name_1],
-                                "Microarray": [sample_path_2],
-                                "Json": [sample_path_2], 
-                                "Checksum": [sample_path_2]
         }
 
     def get_label_functions(self, labels):

@@ -131,6 +131,7 @@ def launch_gatk_5_dollar(event, context):
             print(f"Error: inputs must be ubams.")
             return
 
+        plate = node['sample']
         sample = node['sample']
 
         bucket = node['bucket']
@@ -153,7 +154,7 @@ def launch_gatk_5_dollar(event, context):
     gatk_inputs['germline_single_sample_workflow.final_vcf_base_name'] = sample
 
     # Write JSON to GCS
-    gatk_inputs_path = f"{sample}/{task_name}/{task_id}/inputs/inputs.json"
+    gatk_inputs_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/inputs.json"
     gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
         .get_bucket(OUT_BUCKET) \
         .blob(gatk_inputs_path) \
@@ -171,7 +172,7 @@ def launch_gatk_5_dollar(event, context):
                 "preemptible": False,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/***REMOVED***/wdl_runner:latest",
-                "logging": f"gs://{LOG_BUCKET}/{sample}/{task_name}/{task_id}/logs",
+                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 1000,
                 "command": ("java " +
                             "-Dconfig.file=${CFG} " +
@@ -191,12 +192,13 @@ def launch_gatk_5_dollar(event, context):
                 },
                 "envs": {
                          "MYproject": PROJECT_ID,
-                         "ROOT": f"gs://{OUT_BUCKET}/{sample}/{task_name}/{task_id}/output",
+                         "ROOT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output",
                 },
                 "preemptible": False,
                 "dryRun": dry_run,
                 "taskId": task_id,
                 "sample": sample,
+                "plate": plate,
     }
 
     dsub_args = [
