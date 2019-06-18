@@ -210,10 +210,10 @@ def format_node_merge_query(db_dict, dry_run=False):
                                          f'bucket: "{db_dict["bucket"]}", ' +
                                          f'path: "{db_dict["path"]}" }}) ' +
               "ON CREATE SET node.nodeCreated = timestamp(), " +
-                'node.nodeIteration = "initial" ' +
+                'node.nodeIteration = "initial", ' +
                 f"{create_string} " + 
               f"ON MATCH SET " +
-                'node.nodeIteration = "merged" ' +
+                'node.nodeIteration = "merged", ' +
                 f"{merge_string} " + 
               "RETURN " + 
               "CASE node.nodeIteration " +
