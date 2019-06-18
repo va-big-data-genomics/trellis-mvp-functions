@@ -131,7 +131,7 @@ def launch_gatk_5_dollar(event, context):
             print(f"Error: inputs must be ubams.")
             return
 
-        plate = node['sample']
+        plate = node['plate']
         sample = node['sample']
 
         bucket = node['bucket']
