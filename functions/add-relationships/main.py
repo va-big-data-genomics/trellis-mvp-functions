@@ -80,16 +80,17 @@ def add_relationships(event, context):
               f"got '{header['resource']}.'")
         return
 
-    #try:
-    #    node = body['results']['node']
-    #except:
-    #    print(f"> Warning: could not get node. Skipping.")
     case_str = "CASE node.nodeIteration WHEN 'initial' THEN node ELSE null END"
     if "node" in body['results'].keys():
         node = body['results']['node']
     elif case_str in body['results'].keys():
         node = body['results'][case_str]
     else:
+        print("No node provided; exiting.")
+        return
+
+    # Node provided by CASE can still be null
+    if not node:
         print("No node provided; exiting.")
         return
 
