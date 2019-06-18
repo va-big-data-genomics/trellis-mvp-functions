@@ -30,7 +30,7 @@ class PropertyTriggers:
 
     def get_triggers(self):
         triggers = {
-                   self.fastq_to_ubam: [
+                    self.fastq_to_ubam: [
                         True if(self.added.get('setSize')) else False,
                         True if(self.nodes.get('sample')) else False]
         }
