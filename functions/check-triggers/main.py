@@ -73,9 +73,19 @@ def check_triggers(event, context):
     trigger_module = importlib.import_module(trigger_module_name)
 
     if TRIGGER == 'node':
+        # Support CASE formatting
+        case_str = "CASE node.nodeIteration WHEN 'initial' THEN node ELSE null END"
+        if "node" in body['results'].keys():
+            node = body['results']['node']
+        elif case_str in body['results'].keys():
+            node = body['results'][case_str]
+        else:
+            print("No node provided; exiting.")
+            return
+
         trigger_config = trigger_module.NodeTriggers(
                                                      project_id = PROJECT_ID,
-                                                     node = results['node']) #????
+                                                     node = node) #????
     elif TRIGGER == 'property':
         trigger_config = trigger_module.PropertyTriggers(
                                                          project_id = PROJECT_ID,
