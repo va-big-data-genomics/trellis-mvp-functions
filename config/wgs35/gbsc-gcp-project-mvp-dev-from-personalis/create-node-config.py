@@ -270,7 +270,7 @@ class NodeKinds:
         }
 
         self.label_functions = {
-                                "Blob": [trellis_metadata_groupdict]
+                                "Blob": [trellis_metadata_groupdict],
                                 "Fastq": [
                                           mate_pair_name_0, 
                                           read_group_name_1],
