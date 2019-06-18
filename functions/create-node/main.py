@@ -209,11 +209,16 @@ def format_node_merge_query(db_dict, dry_run=False):
              f"MERGE (node:{labels_str} {{ " +
                                          f'bucket: "{db_dict["bucket"]}", ' +
                                          f'path: "{db_dict["path"]}" }}) ' +
-              "ON CREATE SET node.nodeCreated = timestamp(), " + 
-              f"{create_string} " + 
-              f"ON MATCH SET node.nodeCreated = timestamp(), " +
-              f"{merge_string} " + 
-              "RETURN node")
+              "ON CREATE SET node.nodeCreated = timestamp(), " +
+                'node.nodeIteration = "initial" ' +
+                f"{create_string} " + 
+              f"ON MATCH SET {merge_string} " +
+                'node.nodeIteration = "merged" ' +
+                f"{merge_string} " + 
+              "RETURN" + 
+              "CASE node.nodeIteration " +
+              "WHEN 'initial' THEN node " +
+              "ELSE null END")
     return query
 
 
