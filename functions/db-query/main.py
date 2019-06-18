@@ -59,7 +59,7 @@ def format_pubsub_message(query, results, perpetuate=None):
 def publish_to_topic(topic, data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     message = json.dumps(data).encode('utf-8')
-    result = PUBLISHER.publish(topic_path, data=message)
+    result = PUBLISHER.publish(topic_path, data=message).result()
     return result
 
 
