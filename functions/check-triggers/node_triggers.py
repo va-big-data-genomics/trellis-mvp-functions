@@ -15,7 +15,7 @@ class NodeTriggers:
         #}
 
         triggers = {
-                    'Json,FromPersonalis': self.add_fastq_set_size,
+                    'Json,FromPersonalis,Marker': self.add_fastq_set_size,
                     'Ubam': self.check_ubam_count,
         }
 
