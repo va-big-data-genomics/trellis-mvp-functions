@@ -83,7 +83,7 @@ def add_relationships(event, context):
     try:
         node = body['results']['node']
     except:
-        printf("> Warning: could not get node. Skipping.")
+        print(f"> Warning: could not get node. Skipping.")
 
     # If node has 'bucket' property; get relationship rules
     # Import the config modules that corresponds to event-trigger bucket
