@@ -15,6 +15,7 @@ def trellis_metadata_groupdict(db_dict, groupdict):
             'sample': groupdict['sample'],
             'trellisTask': groupdict['trellis_task'],
             'taskId': groupdict['task_id'],
+            'plate': groupdict['plate'],
     }
 
 
@@ -54,6 +55,7 @@ def get_metadata_from_all_json(db_dict, groupdict):
     metadata = json.loads(metadata_str)
     return metadata
 
+
 # Relationship functions
 def relate_output_to_job(db_dict):
 
@@ -74,7 +76,7 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": [r"(?P<sample>\w+)/(?P<trellis_task>\w+(?:-\w+)+)/(?P<task_id>\w+(?:-\w+)+)/.*"],
+            "Blob": [r"(?P<plate>\w+)/(?P<sample>\w+)/(?P<trellis_task>\w+(?:-\w+)+)/(?P<task_id>\w+(?:-\w+)+)/.*"],
             "Gatk": ["\w+/gatk-5-dollar/.*\\/output\\/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 

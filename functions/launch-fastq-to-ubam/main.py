@@ -125,6 +125,7 @@ def launch_fastq_to_ubam(event, context):
     # TODO: Implement QC checking to make sure fastqs match
     fastqs = {}
     for node in nodes:
+        plate = node['plate']
         sample = node['sample']
         read_group = node['readGroup']
         mate_pair = node['matePair']
@@ -144,7 +145,7 @@ def launch_fastq_to_ubam(event, context):
                 "minRam": 7.5,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
-                "logging": f"gs://{LOG_BUCKET}/{sample}/{task_name}/{task_id}/logs",
+                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 1000,
                 "command": (
                             '/gatk/gatk ' +
@@ -164,12 +165,13 @@ def launch_fastq_to_ubam(event, context):
                 },
                 "inputs": fastqs,
                 "outputs": {
-                            "UBAM": f"gs://{OUT_BUCKET}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
+                            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
                 },
                 "taskId": task_id,
                 "dryRun": dry_run,
                 "preemptible": False,
                 "sample": sample,
+                "plate": plate,
                 "readGroup": read_group,
     }
 
@@ -218,7 +220,7 @@ def launch_fastq_to_ubam(event, context):
     if result == 1 and metadata:
         print(f"Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
-        meta_blob_path = f"{sample}/{task_name}/{task_id}/metadata/all-objects.json"
+        meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
         meta_blob = storage.Client(project=PROJECT_ID) \
             .get_bucket(OUT_BUCKET) \
             .blob(meta_blob_path) \
@@ -263,7 +265,7 @@ if __name__ == "__main__":
                        'labels': ['Fastq', 'Nodes'],
                        'resource': 'query-result',
                        'sentFrom': 'wgs35-db-query',
-                       'dryRun': False,
+                       'dryRun': True,
             },
             'body': {
                      'query': 'MATCH (n:Fastq) WHERE n.sample="SHIP4946367" WITH n.readGroup AS read_group, collect(n) AS nodes WHERE size(nodes) = 2 RETURN [n in nodes] AS nodes', 
