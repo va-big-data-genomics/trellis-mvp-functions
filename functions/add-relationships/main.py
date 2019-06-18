@@ -80,10 +80,18 @@ def add_relationships(event, context):
               f"got '{header['resource']}.'")
         return
 
-    try:
+    #try:
+    #    node = body['results']['node']
+    #except:
+    #    print(f"> Warning: could not get node. Skipping.")
+    case_str = "CASE node.nodeIteration WHEN 'initial' THEN node ELSE null END"
+    if "node" in body['results'].keys():
         node = body['results']['node']
-    except:
-        print(f"> Warning: could not get node. Skipping.")
+    elif case_str in body['results'].keys():
+        node = body['results'][case_str]
+    else:
+        print("No node provided; exiting.")
+        return
 
     # If node has 'bucket' property; get relationship rules
     # Import the config modules that corresponds to event-trigger bucket
