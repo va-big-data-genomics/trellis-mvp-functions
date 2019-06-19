@@ -123,7 +123,7 @@ def launch_gatk_5_dollar(event, context):
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
     mac_address = hex(uuid.getnode())
-    task_id = f"{mac_address}-{datetime_stamp}"
+    task_id = f"{datetime_stamp}-{mac_address}"
 
     ubams = []
     for node in nodes:
