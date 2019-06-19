@@ -128,7 +128,7 @@ class NodeKinds:
             "Sorted": [".*\\.sorted\\..*"],
             "IntervalList": [".*\\.interval_list$"],
             "Json": [".*\\.json$"],
-            "Merged": ".*/call-MergeVCFs/.*",
+            "Merged": [".*/call-MergeVCFs/.*"],
         }
 
         self.label_functions = {
