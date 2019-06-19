@@ -77,7 +77,7 @@ class NodeKinds:
         self.match_patterns = {
             "WGS35": [".*"],
             "Blob": [r"(?P<plate>\w+)/(?P<sample>\w+)/(?P<trellis_task>\w+(?:-\w+)+)/(?P<task_id>\w+(?:-\w+)+)/.*"],
-            "Gatk": ["\w+/gatk-5-dollar/.*\\/output\\/.*"],
+            "Gatk": [r"(?P<plate>\w+)/(?P<sample>\w+)/gatk-5-dollar/(?P<task_id>\w+(?:-\w+)+)/output/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
@@ -143,6 +143,7 @@ class NodeKinds:
                                          read_group_name_1,
                                          get_metadata_from_all_json],
         }
+
 
 class RelationshipKinds:
 
