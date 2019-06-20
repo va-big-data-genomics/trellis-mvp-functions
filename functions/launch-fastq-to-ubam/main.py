@@ -179,7 +179,7 @@ def launch_fastq_to_ubam(event, context):
         "--name", "fastq-to-ubam",
         "--label", f"read-group={read_group}",
         "--label", f"sample={sample.lower()}",
-        "--label", f"task-id={taskId}",
+        "--label", f"task-id={task_id}",
         "--provider", job_dict["provider"], 
         "--user", job_dict["user"], 
         "--zones", job_dict["zones"], 
