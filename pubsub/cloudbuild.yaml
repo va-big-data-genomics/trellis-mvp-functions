@@ -1,3 +1,3 @@
 steps:
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: ['gcloud','pubsub','topics','create','${_DATA_GROUP}-add-relationships']
+  args: ['pubsub','topics','create','${_DATA_GROUP}-add-relationships']
