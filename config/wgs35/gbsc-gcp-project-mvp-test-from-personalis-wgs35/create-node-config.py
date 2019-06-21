@@ -18,22 +18,13 @@ def trellis_metadata_groupdict(db_dict, groupdict):
             'plate': groupdict['plate'],
     }
 
+
 def gatk_metadata_groupdict(db_dict, groupdict):
     return {
             'gatkWorkflow': groupdict['gatk_workflow'],
             'gatkJobId': groupdict['gatk_job_id'],
             'gatkTask': groupdict['gatk_task'],
     }
-
-#def workflow_path_4(db_dict, groupdict):
-#    value = db_dict['path'].split('/')[4] 
-#    return {'gatkWorkflow': str(value)}
-
-
-#def task_path_6(db_dict, groupdict):
-#    value = db_dict['path'].split('/')[6] 
-#    task = value.split('-')[1]
-#    return {'gatkTask': str(task)}
 
 
 def shard_index_name_1(db_dict, groupdict):
@@ -82,8 +73,8 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": [r"(?P<plate>\w+)/(?P<sample>\w+)/(?P<trellis_task>\w+(?:-\w+)+)/(?P<task_id>\w+(?:-\w+)+)/.*"],
-            "Gatk": [r"(?P<plate>\w+)/(?P<sample>\w+)/gatk-5-dollar/(?P<task_id>\w+(?:-\w+)+)/output/(?P<gatk_workflow>\w+(?:_\w+)+)/(?P<gatk_job_id>\w+(?:-\w+)+)/call-(?P<gatk_task>\w+)/.*"],
+            "Blob": [r"^(?P<plate>\w+)/(?P<sample>\w+)/(?P<trellis_task>\w+(?:-\w+)+)/(?P<task_id>\w+(?:-\w+)+)/.*"],
+            "Gatk": [r"^(?P<plate>\w+)/(?P<sample>\w+)/gatk-5-dollar/(?P<task_id>\w+(?:-\w+)+)/output/(?P<gatk_workflow>\w+(?:_\w+)+)/(?P<gatk_job_id>\w+(?:-\w+)+)/call-(?P<gatk_task>\w+)/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
