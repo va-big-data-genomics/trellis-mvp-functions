@@ -173,10 +173,11 @@ def launch_fastq_to_ubam(event, context):
                 "sample": sample,
                 "plate": plate,
                 "readGroup": read_group,
+                "name": "fastq-to-ubam",
     }
 
     dsub_args = [
-        "--name", "fastq-to-ubam",
+        "--name", job_dict["name"],
         "--label", f"read-group={read_group}",
         "--label", f"sample={sample.lower()}",
         "--label", f"trellis-id={task_id}",
