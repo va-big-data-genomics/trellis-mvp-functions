@@ -60,7 +60,7 @@ def launch_dsub_task(dsub_args):
 
 def get_datetime_stamp():
     now = datetime.now()
-    datestamp = now.strftime("%y%m%d-%H%M%S")
+    datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
     return datestamp
 
 
@@ -122,8 +122,8 @@ def launch_gatk_5_dollar(event, context):
     task_name = 'gatk-5-dollar'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    mac_address = hex(uuid.getnode())
-    task_id = f"{datetime_stamp}-{mac_address}"
+    #mac_address = hex(uuid.getnode())
+    #task_id = f"{datetime_stamp}-{mac_address}"
 
     ubams = []
     for node in nodes:
@@ -196,11 +196,15 @@ def launch_gatk_5_dollar(event, context):
                 },
                 "preemptible": False,
                 "dryRun": dry_run,
-                "taskId": task_id,
+                #"taskId": task_id,
                 "sample": sample,
                 "plate": plate,
-                "name": "gatk-germline-caller"
+                "name": task_name,
     }
+    # Hash job inputs string to create "unique" ID
+    job_hash = hashlib.sha256(json.dumps(job_dict).encode('utf-8')).hexdigest()
+    task_id = f"{datetime_stamp}-{job_hash[:8]}"
+    job_dict["taskId"] = task_id
 
     dsub_args = [
                  "--name", job_dict["name"],
