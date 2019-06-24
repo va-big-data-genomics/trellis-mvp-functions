@@ -4,6 +4,7 @@ import json
 import uuid
 import yaml
 import base64
+import hashlib
 
 from google.cloud import storage
 from google.cloud import pubsub
@@ -77,7 +78,7 @@ def launch_dsub_task(dsub_args):
 
 def get_datetime_stamp():
     now = datetime.now()
-    datestamp = now.strftime("%y%m%d-%H%M%S")
+    datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
     return datestamp
 
 
@@ -119,8 +120,9 @@ def launch_fastq_to_ubam(event, context):
     task_name = 'fastq-to-ubam'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    mac_address = hex(uuid.getnode())
-    task_id = f"{datetime_stamp}-{mac_address}"
+    #inputs_hash = hashlib.md5(json.dumps(test).encode('utf-8')).hexdigest()
+    #mac_address = hex(uuid.getnode())
+    #task_id = f"{datetime_stamp}-{mac_address}"
 
     # TODO: Implement QC checking to make sure fastqs match
     fastqs = {}
@@ -167,14 +169,18 @@ def launch_fastq_to_ubam(event, context):
                 "outputs": {
                             "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
                 },
-                "taskId": task_id,
+                #"taskId": task_id,
                 "dryRun": dry_run,
                 "preemptible": False,
                 "sample": sample,
                 "plate": plate,
                 "readGroup": read_group,
-                "name": "fastq-to-ubam",
+                "name": task_name,
     }
+    # Hash job inputs string to create "unique" ID
+    job_hash = hashlib.sha256(json.dumps(job_dict).encode('utf-8')).hexdigest()
+    task_id = f"{datetime_stamp}-{job_hash[:8]}"
+    job_dict["taskId"] = task_id
 
     dsub_args = [
         "--name", job_dict["name"],
