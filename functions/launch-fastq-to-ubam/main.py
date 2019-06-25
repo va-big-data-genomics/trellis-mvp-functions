@@ -146,7 +146,7 @@ def launch_fastq_to_ubam(event, context):
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
                 "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-                "diskSize": 1000,
+                "diskSize": 200,
                 "command": (
                             '/gatk/gatk ' +
                             '--java-options ' +
