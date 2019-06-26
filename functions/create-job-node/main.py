@@ -146,7 +146,7 @@ def format_query(db_entry, dry_run=False):
     # Format as cypher query
     query = (
              f"CREATE (node:{labels_str} " +
-              "{" + f"{entry_string}" +"}) " +
+              f"{{ {entry_string}, nodeCreated=timestamp() }}) " +
               "RETURN node")
     return query
 
