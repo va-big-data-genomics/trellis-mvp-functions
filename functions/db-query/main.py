@@ -98,7 +98,14 @@ def query_db(event, context):
     #### RESTRUCTURED
     if result_mode == 'stats':
         print(f"> Running stats query: '{query}'.")
-        results = GRAPH.run(query).stats()
+        # New connection pool error handling logic
+        try:
+            results = GRAPH.run(query).stats()
+        except urllib3.exceptions.ProtocolError as e
+            print("> Protocol error. Resending message to this topic.")
+            publish_to_topic(THIS_TOPIC, pubsub_message)
+            return
+
     elif result_mode == 'data':
         print(f"> Running data query: '{query}'.")
         results = GRAPH.run(query).data()
