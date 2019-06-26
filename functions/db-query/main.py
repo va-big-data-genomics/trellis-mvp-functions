@@ -6,6 +6,8 @@ import base64
 
 from py2neo import Graph
 
+from requests.packages.urllib3.exceptions import
+
 from google.cloud import pubsub
 from google.cloud import storage
 
@@ -24,6 +26,8 @@ if ENVIRONMENT == 'google-cloud':
     # Runtime variables
     DATA_GROUP = parsed_vars['DATA_GROUP']
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    DB_QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
+
     NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_USER = parsed_vars['NEO4J_USER']
     NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
@@ -96,16 +100,28 @@ def query_db(event, context):
     
     # TODO: Add handling for ConnectionResetError
     #### RESTRUCTURED
-    if result_mode == 'stats':
-        print(f"> Running stats query: '{query}'.")
-        results = GRAPH.run(query).stats()
-    elif result_mode == 'data':
-        print(f"> Running data query: '{query}'.")
-        results = GRAPH.run(query).data()
-    else:
-        GRAPH.run(query)
-        results = None
-    print(f"Query results: {results}.")
+    try:
+        if result_mode == 'stats':
+            print(f"> Running stats query: '{query}'.")
+            results = GRAPH.run(query).stats()
+        elif result_mode == 'data':
+            print(f"> Running data query: '{query}'.")
+            results = GRAPH.run(query).data()
+        else:
+            GRAPH.run(query)
+            results = None
+        print(f"Query results: {results}.")
+    except ProtocolError as error:
+        print(f"> Protocol Error: {error}.")
+        # Reset graph connection
+        GRAPH = Graph(
+                      NEO4J_URL, 
+                      user=NEO4J_USER, 
+                      password=NEO4J_PASSPHRASE)
+        # Add message back to queue
+        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+        return
 
     # Return if not pubsub topic
     if not topic:
