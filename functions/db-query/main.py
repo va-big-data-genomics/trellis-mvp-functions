@@ -6,7 +6,7 @@ import base64
 
 from py2neo import Graph
 
-from requests.packages.urllib3.exceptions import
+from urllib3.exceptions import ProtocolError
 
 from google.cloud import pubsub
 from google.cloud import storage
