@@ -32,7 +32,7 @@ if ENVIRONMENT == 'google-cloud':
     #NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
     NEO4J_HOST = parsed_vars['NEO4J_HOST']
-    NEO4J_POST = parsed_vars['NEO4J_PORT']
+    NEO4J_PORT = parsed_vars['NEO4J_PORT']
     NEO4J_USER = parsed_vars['NEO4J_USER']
     NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
     NEO4J_MAX_CONN = parsed_vars['NEO4J_MAX_CONN']
