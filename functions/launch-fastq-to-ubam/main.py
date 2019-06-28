@@ -11,7 +11,8 @@ from google.cloud import pubsub
 
 from datetime import datetime
 
-from dsub.commands import dsub
+import dsub
+#from dsub.commands import dsub
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
@@ -63,7 +64,8 @@ def publish_to_topic(publisher, project_id, topic, data):
 
 def launch_dsub_task(dsub_args):
     try:
-        dsub.main('dsub', dsub_args)
+        dsub.commands.dsub.main('dsub', dsub_args)
+        #dsub.main('dsub', dsub_args)
     except ValueError as exception:
         print(exception)
         print(f'Error with dsub arguments: {dsub_args}')
