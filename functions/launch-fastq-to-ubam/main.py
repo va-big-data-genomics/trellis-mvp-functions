@@ -11,7 +11,6 @@ from google.cloud import pubsub
 
 from datetime import datetime
 
-import dsub
 from dsub.commands import dsub
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
