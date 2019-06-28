@@ -138,6 +138,7 @@ def launch_fastq_to_ubam(event, context):
         fastq_name = f'FASTQ_{mate_pair}'
         fastqs[fastq_name] = f"gs://{bucket}/{path}" 
 
+    # Define logging & outputs after task_id
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
@@ -147,7 +148,7 @@ def launch_fastq_to_ubam(event, context):
                 "minRam": 7.5,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
-                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
+                #"logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 1000,
                 "command": (
                             '/gatk/gatk ' +
@@ -166,9 +167,9 @@ def launch_fastq_to_ubam(event, context):
                          "PL": "illumina"
                 },
                 "inputs": fastqs,
-                "outputs": {
-                            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
-                },
+                #"outputs": {
+                #            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
+                #},
                 #"taskId": task_id,
                 "dryRun": dry_run,
                 "preemptible": False,
@@ -181,6 +182,8 @@ def launch_fastq_to_ubam(event, context):
     job_hash = hashlib.sha256(json.dumps(job_dict).encode('utf-8')).hexdigest()
     task_id = f"{datetime_stamp}-{job_hash[:8]}"
     job_dict["taskId"] = task_id
+    job_dict["outputs"] = {"UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"}
+    job_dict["logging"] = f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs"
 
     dsub_args = [
         "--name", job_dict["name"],
