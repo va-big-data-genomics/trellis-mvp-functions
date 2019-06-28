@@ -30,12 +30,12 @@ if ENVIRONMENT == 'google-cloud':
     DB_QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
 
     #NEO4J_URL = parsed_vars['NEO4J_URL']
-    NEO4J_SCHEME = parsed_vars['SCHEME']
+    NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
     NEO4J_HOST = parsed_vars['NEO4J_HOST']
     NEO4J_POST = parsed_vars['NEO4J_PORT']
     NEO4J_USER = parsed_vars['NEO4J_USER']
     NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
-    MAX_CONNECTIONS = parsed_vars['MAX_CONNECTIONS']
+    NEO4J_MAX_CONN = parsed_vars['NEO4J_MAX_CONN']
 
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
@@ -47,7 +47,7 @@ if ENVIRONMENT == 'google-cloud':
                   port=NEO4J_PORT,
                   user=NEO4J_USER, 
                   password=NEO4J_PASSPHRASE,
-                  max_connections=MAX_CONNECTIONS)
+                  max_connections=NEO4J_MAX_CONN)
     #GRAPH = Graph(
     #              NEO4J_URL, 
     #              user=NEO4J_USER, 
