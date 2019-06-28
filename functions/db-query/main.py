@@ -181,7 +181,7 @@ if __name__ == "__main__":
     MAX_CONNECTIONS = 200
 
 
-    global GRAPH = Graph(
+    GRAPH = Graph(
                   scheme=NEO4J_SCHEME,
                   host=NEO4J_HOST, 
                   port=NEO4J_PORT,
