@@ -64,8 +64,8 @@ def publish_to_topic(publisher, project_id, topic, data):
 
 def launch_dsub_task(dsub_args):
     try:
-        dsub.commands.dsub.main('dsub', dsub_args)
-        #dsub.main('dsub', dsub_args)
+        #dsub.commands.dsub.main('dsub', dsub_args)
+        dsub.main('dsub', dsub_args)
     except ValueError as exception:
         print(exception)
         print(f'Error with dsub arguments: {dsub_args}')
