@@ -23,7 +23,8 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    ZONES = parsed_vars['DSUB_ZONES']
+    #ZONES = parsed_vars['DSUB_ZONES']
+    REGIONS = parsed_vars['DSUB_REGIONS']
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
@@ -165,7 +166,8 @@ def launch_gatk_5_dollar(event, context):
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
-                "zones": ZONES,
+                #"zones": ZONES,
+                "regions": REGIONS,
                 "project": PROJECT_ID,
                 "minCores": 1,
                 "minRam": 6.5,
@@ -212,7 +214,8 @@ def launch_gatk_5_dollar(event, context):
                  "--label", f"trellis-id={task_id}",
                  "--provider", job_dict["provider"], 
                  "--user", job_dict["user"], 
-                 "--zones", job_dict["zones"], 
+                 #"--zones", job_dict["zones"], 
+                 "--regions", job_dict["regions"],
                  "--project", job_dict["project"],
                  "--min-cores", str(job_dict["minCores"]), 
                  "--min-ram", str(job_dict["minRam"]),
