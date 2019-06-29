@@ -123,7 +123,7 @@ def query_db(event, context):
             GRAPH.run(query)
             results = None
         print(f"Query results: {results}.")
-        results = GRAPH.run(query).data()
+
     except ProtocolError as error:
         print(f"> Protocol Error: {error}.")
         
@@ -138,7 +138,6 @@ def query_db(event, context):
     #    result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
     #    print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
     #    return
-    
 
     # Return if not pubsub topic
     if not topic:
