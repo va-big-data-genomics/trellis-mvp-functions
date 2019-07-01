@@ -115,8 +115,7 @@ def launch_fastq_to_ubam(event, context):
             metadata[key] = body['results'][result_name]
 
     if len(nodes) != 2:
-        print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
-        return
+        raise ValueError(f"Error: Need 2 fastqs; {len(nodes)} provided.")
 
     # Dsub data
     task_name = 'fastq-to-ubam'
