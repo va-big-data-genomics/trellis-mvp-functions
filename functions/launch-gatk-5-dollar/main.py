@@ -4,6 +4,7 @@ import json
 import uuid
 import yaml
 import base64
+import hashlib
 
 from google.cloud import storage
 from google.cloud import pubsub
@@ -128,6 +129,8 @@ def launch_gatk_5_dollar(event, context):
     task_name = 'gatk-5-dollar'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
+    nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
+    task_id = f"{datetime_stamp}-{nodes_hash[:8]}"
     #mac_address = hex(uuid.getnode())
     #task_id = f"{datetime_stamp}-{mac_address}"
 
@@ -179,7 +182,7 @@ def launch_gatk_5_dollar(event, context):
                 "preemptible": False,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/***REMOVED***/wdl_runner:latest",
-                #"logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
+                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 1000,
                 "command": ("java " +
                             "-Dconfig.file=${CFG} " +
@@ -199,21 +202,30 @@ def launch_gatk_5_dollar(event, context):
                 },
                 "envs": {
                          "MYproject": PROJECT_ID,
-                         #"ROOT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output",
+                         "ROOT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output",
                 },
                 "preemptible": False,
                 "dryRun": dry_run,
-                #"taskId": task_id,
+                "taskId": task_id,
                 "sample": sample,
                 "plate": plate,
                 "name": task_name,
     }
     # Hash job inputs string to create "unique" ID
-    job_hash = hashlib.sha256(json.dumps(job_dict).encode('utf-8')).hexdigest()
-    task_id = f"{datetime_stamp}-{job_hash[:8]}"
-    job_dict["taskId"] = task_id
-    job_dict["envs"]["ROOT"] = f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output",
-    job_dict["logging"] = f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
+    #job_hash = hashlib.sha256(json.dumps(job_dict).encode('utf-8')).hexdigest()
+    #task_id = f"{datetime_stamp}-{job_hash[:8]}"
+    #job_dict["taskId"] = task_id
+    #job_dict["envs"]["ROOT"] = f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output",
+    #job_dict["logging"] = f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
+
+    # Write JSON to GCS
+    #gatk_inputs_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/inputs.json"
+    #gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
+    #    .get_bucket(OUT_BUCKET) \
+    #    .blob(gatk_inputs_path) \
+    #    .upload_from_string(json.dumps(gatk_inputs, indent=4))
+    #print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
+    #job_dict["inputs"]["INPUT"] = f"gs://{OUT_BUCKET}/{gatk_inputs_path}"
 
     dsub_args = [
                  "--name", job_dict["name"],
