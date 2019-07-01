@@ -115,13 +115,11 @@ def launch_gatk_5_dollar(event, context):
         dry_run = False
 
     metadata = {}
-    if len(body['results']) > 1:
-        raise ValueError("More than one set of nodes provided as input.")
-    if len(body['results']) < 1: 
-        raise ValueError("No nodes provided as results")
+    if len(body['results']) != 1:
+        raises ValueError(f"Expected single result, got {len(body['results'])}.")
     
     #nodes = parse_case_results(body['results'])
-    nodes = body['results'][0]['nodes']
+    nodes = body['results']['nodes']
     # If not all Ubams present in database, results will be NoneType
     if not nodes:
         raise ValueError("No nodes provided; exiting.")
