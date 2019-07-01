@@ -66,6 +66,8 @@ def get_datetime_stamp():
 
 
 def parse_case_results(results):
+    """20190701: DEPRECATED with new cypher query
+    """
     #'results': [{'CASE WHEN ': [{node_metadata}]}]
     results = results[0]
     return list(results.values())[0]
@@ -113,11 +115,15 @@ def launch_gatk_5_dollar(event, context):
         dry_run = False
 
     metadata = {}
-    nodes = parse_case_results(body['results'])
+    if len(body['results']) > 1:
+        raise ValueError("More than one set of nodes provided as input.")
+    if len(bodey['results']) < 1: 
+        raise ValueError("No nodes provided as results")
+    #nodes = parse_case_results(body['results'])
+    nodes = body['results'][0]['nodes']
     # If not all Ubams present in database, results will be NoneType
     if not nodes:
-        print("> No nodes provided; exiting.")
-        return
+        raise ValueError("No nodes provided; exiting.")
 
     # Dsub data
     task_name = 'gatk-5-dollar'
