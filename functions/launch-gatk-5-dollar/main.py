@@ -116,7 +116,7 @@ def launch_gatk_5_dollar(event, context):
 
     metadata = {}
     if len(body['results']) != 1:
-        raises ValueError(f"Expected single result, got {len(body['results'])}.")
+        raise ValueError(f"Expected single result, got {len(body['results'])}.")
     
     #nodes = parse_case_results(body['results'])
     nodes = body['results']['nodes']
