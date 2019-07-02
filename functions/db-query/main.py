@@ -29,7 +29,6 @@ if ENVIRONMENT == 'google-cloud':
     DATA_GROUP = parsed_vars['DATA_GROUP']
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     DB_QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
-    DB_QUERY_OVERFLOW
 
     #NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
