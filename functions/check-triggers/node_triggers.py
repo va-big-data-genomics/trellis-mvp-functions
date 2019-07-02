@@ -102,7 +102,7 @@ class NodeTriggers:
                                      "END"),
                             "cypher": (
                                        "MATCH (n:Ubam) " +
-                                       "WHERE n.sample=\"{sample}\" " +
+                                       f"WHERE n.sample=\"{sample}\" " +
                                        "WITH n.sample AS sample, " +
                                        "n.setSize AS setSize, " +
                                        "COLLECT(n) as nodes " +
