@@ -4,6 +4,7 @@ import sys
 import json
 import yaml
 import base64
+import logging
 
 from py2neo import Graph
 
@@ -28,6 +29,7 @@ if ENVIRONMENT == 'google-cloud':
     DATA_GROUP = parsed_vars['DATA_GROUP']
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     DB_QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
+    DB_QUERY_OVERFLOW
 
     #NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
@@ -125,11 +127,13 @@ def query_db(event, context):
         print(f"Query results: {results}.")
 
     except ProtocolError as error:
-        print(f"> Protocol Error: {error}.")
+        print(f"> Encountered Protocol Error: {error}.")
         
         # Add message back to queue
         result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
         print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+        # Duplicate message flagged as warning
+        logging.warn(f"> Encountered Protocol Error: {error}.")
         return
     #except:
     #    print(f"> Uncaught error.")
@@ -146,8 +150,6 @@ def query_db(event, context):
 
     # Perpetuate metadata in specified by "perpetuate" key
     perpetuate = body.get('perpetuate')
-    #if perpetuate:
-    #    message['body'].update(perpetuate)
 
     if result_split == 'True':
         for result in results:
