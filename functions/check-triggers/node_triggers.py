@@ -110,7 +110,7 @@ class NodeTriggers:
                                        "RETURN nodes"),
                             "result-mode": "data", 
                             "result-structure": "list",
-                            "result-split": "False",
+                            "result-split": "True",
                    }
         }
         return(topic, message)
