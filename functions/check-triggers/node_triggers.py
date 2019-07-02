@@ -89,17 +89,17 @@ class NodeTriggers:
                               "publishTo": "wgs35-tasks-gatk-5-dollar",
                    },
                    "body": {
-                            "cypher-old": (
-                                     "MATCH (n:Ubam) " +
-                                    f"WHERE n.sample=\"{sample}\" " +
-                                     "WITH n.sample AS sample, " +
-                                     "COLLECT(n) as nodes " +
-                                     "RETURN " +
-                                     "CASE " +
-                                    f"WHEN size(nodes) = {set_size} " +
-                                     "THEN nodes " +
-                                     "ELSE NULL " +
-                                     "END"),
+                            #"cypher-old": (
+                            #         "MATCH (n:Ubam) " +
+                            #        f"WHERE n.sample=\"{sample}\" " +
+                            #         "WITH n.sample AS sample, " +
+                            #         "COLLECT(n) as nodes " +
+                            #         "RETURN " +
+                            #         "CASE " +
+                            #        f"WHEN size(nodes) = {set_size} " +
+                            #         "THEN nodes " +
+                            #         "ELSE NULL " +
+                            #         "END"),
                             "cypher": (
                                        "MATCH (n:Ubam) " +
                                        f"WHERE n.sample=\"{sample}\" " +
