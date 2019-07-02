@@ -115,15 +115,20 @@ def launch_gatk_5_dollar(event, context):
     if not dry_run:
         dry_run = False
 
-    metadata = {}
-    if len(body['results']) != 1:
+    #metadata = {}
+    if len(body['results']) == 0:
+        logging.warn("No results found; ignoring.")
+        return
+    elif len(body['results']) != 1:
         raise ValueError(f"Expected single result, got {len(body['results'])}.")
+    else:
+        pass
     
-    #nodes = parse_case_results(body['results'])
-    nodes = body['results']['nodes']
+    # New formatting; this block no longer necessary
+    #nodes = body['results']['nodes']
     # If not all Ubams present in database, results will be NoneType
-    if not nodes:
-        raise ValueError("No nodes provided; exiting.")
+    #if not nodes:
+    #    raise ValueError("No nodes provided; exiting.")
 
     # Dsub data
     task_name = 'gatk-5-dollar'
@@ -131,8 +136,6 @@ def launch_gatk_5_dollar(event, context):
     datetime_stamp = get_datetime_stamp()
     nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
     task_id = f"{datetime_stamp}-{nodes_hash[:8]}"
-    #mac_address = hex(uuid.getnode())
-    #task_id = f"{datetime_stamp}-{mac_address}"
 
     ubams = []
     for node in nodes:
@@ -211,12 +214,6 @@ def launch_gatk_5_dollar(event, context):
                 "plate": plate,
                 "name": task_name,
     }
-    # Hash job inputs string to create "unique" ID
-    #job_hash = hashlib.sha256(json.dumps(job_dict).encode('utf-8')).hexdigest()
-    #task_id = f"{datetime_stamp}-{job_hash[:8]}"
-    #job_dict["taskId"] = task_id
-    #job_dict["envs"]["ROOT"] = f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output",
-    #job_dict["logging"] = f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
 
     # Write JSON to GCS
     #gatk_inputs_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/inputs.json"
