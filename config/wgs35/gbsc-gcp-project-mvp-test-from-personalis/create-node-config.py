@@ -260,7 +260,7 @@ class NodeKinds:
         """
 
         self.match_patterns = {
-                                "Blob": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*"],
+                               "Blob": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*"],
                                "Fastq": ["va_mvp_phase2/.*/.*/FASTQ/.*\\.fastq.gz$"], 
                                "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
                                "Json": ["^va_mvp_phase2/.*\\.json$"], 
