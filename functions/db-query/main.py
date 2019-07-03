@@ -5,10 +5,12 @@ import json
 import yaml
 import base64
 import logging
+import neobolt
 
 from py2neo import Graph
 
 from urllib3.exceptions import ProtocolError
+from neobolt.exceptions import ServiceUnavailable
 
 from google.cloud import pubsub
 from google.cloud import storage
@@ -111,8 +113,6 @@ def query_db(event, context):
     result_structure = body.get('result-structure')
     result_split = body.get('result-split')
     
-    # TODO: Add handling for ConnectionResetError
-    #### RESTRUCTURED
     try:
         if result_mode == 'stats':
             print(f"> Running stats query: '{query}'.")
@@ -124,23 +124,23 @@ def query_db(event, context):
             GRAPH.run(query)
             results = None
         print(f"Query results: {results}.")
-
+    # Neo4j http connector
     except ProtocolError as error:
-        print(f"> Encountered Protocol Error: {error}.")
-        
+        logging.warn(f"> Encountered Protocol Error: {error}.")
         # Add message back to queue
         result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
-        print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+        logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
         # Duplicate message flagged as warning
         logging.warn(f"> Encountered Protocol Error: {error}.")
         return
-    #except:
-    #    print(f"> Uncaught error.")
-        
-        # Write message to 
-    #    result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
-    #    print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
-    #    return
+    except ServiceUnavailable as error:
+        logging.warn(f"> Encountered Service Interrupion: {error}.")
+        # Add message back to queue
+        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+        # Duplicate message flagged as warning
+        logging.warn(f"> Requeued message: {pubsub_message}.")
+        return
 
     # Return if not pubsub topic
     if not topic:
