@@ -89,20 +89,28 @@ class NodeTriggers:
                               "publishTo": "wgs35-tasks-gatk-5-dollar",
                    },
                    "body": {
-                        "cypher": (
-                                 "MATCH (n:Ubam) " +
-                                f"WHERE n.sample=\"{sample}\" " +
-                                 "WITH n.sample AS sample, " +
-                                 "COLLECT(n) as nodes " +
-                                 "RETURN " +
-                                 "CASE " +
-                                f"WHEN size(nodes) = {set_size} " +
-                                 "THEN nodes " +
-                                 "ELSE NULL " +
-                                 "END"),
-                        "result-mode": "data", 
-                        "result-structure": "list",
-                        "result-split": "False",
+                            #"cypher-old": (
+                            #         "MATCH (n:Ubam) " +
+                            #        f"WHERE n.sample=\"{sample}\" " +
+                            #         "WITH n.sample AS sample, " +
+                            #         "COLLECT(n) as nodes " +
+                            #         "RETURN " +
+                            #         "CASE " +
+                            #        f"WHEN size(nodes) = {set_size} " +
+                            #         "THEN nodes " +
+                            #         "ELSE NULL " +
+                            #         "END"),
+                            "cypher": (
+                                       "MATCH (n:Ubam) " +
+                                       f"WHERE n.sample=\"{sample}\" " +
+                                       "WITH n.sample AS sample, " +
+                                       "n.setSize AS setSize, " +
+                                       "COLLECT(n) as nodes " +
+                                       "WHERE size(nodes) = setSize " +
+                                       "RETURN nodes"),
+                            "result-mode": "data", 
+                            "result-structure": "list",
+                            "result-split": "True",
                    }
         }
         return(topic, message)

@@ -4,6 +4,7 @@ import json
 import uuid
 import yaml
 import base64
+import hashlib
 
 from google.cloud import storage
 from google.cloud import pubsub
@@ -23,7 +24,8 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    ZONES = parsed_vars['DSUB_ZONES']
+    #ZONES = parsed_vars['DSUB_ZONES']
+    REGIONS = parsed_vars['DSUB_REGIONS']
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
@@ -60,11 +62,13 @@ def launch_dsub_task(dsub_args):
 
 def get_datetime_stamp():
     now = datetime.now()
-    datestamp = now.strftime("%y%m%d-%H%M%S")
+    datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
     return datestamp
 
 
 def parse_case_results(results):
+    """20190701: DEPRECATED with new cypher query
+    """
     #'results': [{'CASE WHEN ': [{node_metadata}]}]
     results = results[0]
     return list(results.values())[0]
@@ -111,19 +115,27 @@ def launch_gatk_5_dollar(event, context):
     if not dry_run:
         dry_run = False
 
-    metadata = {}
-    nodes = parse_case_results(body['results'])
-    # If not all Ubams present in database, results will be NoneType
-    if not nodes:
-        print("> No nodes provided; exiting.")
+    #metadata = {}
+    if len(body['results']) == 0:
+        logging.warn("No results found; ignoring.")
         return
+    elif len(body['results']) != 1:
+        raise ValueError(f"Expected single result, got {len(body['results'])}.")
+    else:
+        pass
+    
+    # New formatting; this block no longer necessary
+    #nodes = body['results']['nodes']
+    # If not all Ubams present in database, results will be NoneType
+    #if not nodes:
+    #    raise ValueError("No nodes provided; exiting.")
 
     # Dsub data
     task_name = 'gatk-5-dollar'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    mac_address = hex(uuid.getnode())
-    task_id = f"{datetime_stamp}-{mac_address}"
+    nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
+    task_id = f"{datetime_stamp}-{nodes_hash[:8]}"
 
     ubams = []
     for node in nodes:
@@ -165,7 +177,8 @@ def launch_gatk_5_dollar(event, context):
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
-                "zones": ZONES,
+                #"zones": ZONES,
+                "regions": REGIONS,
                 "project": PROJECT_ID,
                 "minCores": 1,
                 "minRam": 6.5,
@@ -199,15 +212,26 @@ def launch_gatk_5_dollar(event, context):
                 "taskId": task_id,
                 "sample": sample,
                 "plate": plate,
+                "name": task_name,
     }
 
+    # Write JSON to GCS
+    #gatk_inputs_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/inputs.json"
+    #gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
+    #    .get_bucket(OUT_BUCKET) \
+    #    .blob(gatk_inputs_path) \
+    #    .upload_from_string(json.dumps(gatk_inputs, indent=4))
+    #print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
+    #job_dict["inputs"]["INPUT"] = f"gs://{OUT_BUCKET}/{gatk_inputs_path}"
+
     dsub_args = [
-                 "--name", "gatk-germline-caller",
+                 "--name", job_dict["name"],
                  "--label", f"sample={sample.lower()}",
                  "--label", f"trellis-id={task_id}",
                  "--provider", job_dict["provider"], 
                  "--user", job_dict["user"], 
-                 "--zones", job_dict["zones"], 
+                 #"--zones", job_dict["zones"], 
+                 "--regions", job_dict["regions"],
                  "--project", job_dict["project"],
                  "--min-cores", str(job_dict["minCores"]), 
                  "--min-ram", str(job_dict["minRam"]),
