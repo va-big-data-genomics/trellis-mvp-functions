@@ -8,7 +8,7 @@ steps:
          '--project=${PROJECT_ID}',
          '--source=functions/db-query',
          '--memory=128MB',
-         '--max-instances=100',
+         '--max-instances=40',
          '--entry-point=query_db',
          '--runtime=python37',
          '--trigger-topic=${_DATA_GROUP}-db-queries',

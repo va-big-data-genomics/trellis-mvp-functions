@@ -4,6 +4,7 @@ import json
 import uuid
 import yaml
 import base64
+import hashlib
 
 from google.cloud import storage
 from google.cloud import pubsub
@@ -23,7 +24,8 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    ZONES = parsed_vars['DSUB_ZONES']
+    REGIONS = parsed_vars['DSUB_REGIONS']
+    #ZONES = parsed_vars['DSUB_ZONES']
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
@@ -62,6 +64,7 @@ def publish_to_topic(publisher, project_id, topic, data):
 
 def launch_dsub_task(dsub_args):
     try:
+        #dsub.commands.dsub.main('dsub', dsub_args)
         dsub.main('dsub', dsub_args)
     except ValueError as exception:
         print(exception)
@@ -77,7 +80,7 @@ def launch_dsub_task(dsub_args):
 
 def get_datetime_stamp():
     now = datetime.now()
-    datestamp = now.strftime("%y%m%d-%H%M%S")
+    datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
     return datestamp
 
 
@@ -112,15 +115,14 @@ def launch_fastq_to_ubam(event, context):
             metadata[key] = body['results'][result_name]
 
     if len(nodes) != 2:
-        print(f"Error: Need 2 fastqs; {len(nodes)} provided.")
-        return
+        raise ValueError(f"Error: Need 2 fastqs; {len(nodes)} provided.")
 
     # Dsub data
     task_name = 'fastq-to-ubam'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    mac_address = hex(uuid.getnode())
-    task_id = f"{datetime_stamp}-{mac_address}"
+    nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
+    task_id = f"{datetime_stamp}-{nodes_hash[:8]}"
 
     # TODO: Implement QC checking to make sure fastqs match
     fastqs = {}
@@ -136,10 +138,11 @@ def launch_fastq_to_ubam(event, context):
         fastq_name = f'FASTQ_{mate_pair}'
         fastqs[fastq_name] = f"gs://{bucket}/{path}" 
 
+    # Define logging & outputs after task_id
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
-                "zones": ZONES,
+                "regions": REGIONS,
                 "project": PROJECT_ID,
                 "minCores": 1,
                 "minRam": 7.5,
@@ -173,16 +176,17 @@ def launch_fastq_to_ubam(event, context):
                 "sample": sample,
                 "plate": plate,
                 "readGroup": read_group,
+                "name": task_name,
     }
 
     dsub_args = [
-        "--name", "fastq-to-ubam",
+        "--name", job_dict["name"],
         "--label", f"read-group={read_group}",
         "--label", f"sample={sample.lower()}",
         "--label", f"trellis-id={task_id}",
         "--provider", job_dict["provider"], 
         "--user", job_dict["user"], 
-        "--zones", job_dict["zones"], 
+        "--regions", job_dict["regions"],
         "--project", job_dict["project"],
         "--min-cores", str(job_dict["minCores"]), 
         "--min-ram", str(job_dict["minRam"]),
