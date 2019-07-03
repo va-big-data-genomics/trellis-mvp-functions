@@ -19,6 +19,6 @@ steps:
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
          '--update-labels=data-group=${_DATA_GROUP}',
-         '--update-labels=trigger-operation=${_TRIGGER_OPERATION}',
+         '--update-labels=trigger-operation=${_OPERATION_SHORT_NAME}',
          '--update-labels=trigger-resource=${_TRIGGER_RESOURCE}'
   ]
