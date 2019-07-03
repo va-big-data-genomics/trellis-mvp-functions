@@ -1,3 +1,6 @@
+steps:
+- name: 'ubuntu'
+  args: ['cp', '-r', 'config/wgs35', 'functions/create-node/']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
