@@ -107,6 +107,7 @@ def launch_fastq_to_ubam(event, context):
     nodes = body['results']['nodes']
     
     # Get metadata to be perpetuated to Ubams
+    # TODO: Add error checking to make sure metadata_setSize is included
     metadata = {}
     for result_name in body['results']:
         elements = result_name.split('_')
@@ -142,7 +143,6 @@ def launch_fastq_to_ubam(event, context):
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
-                #"zones": ZONES,
                 "regions": REGIONS,
                 "project": PROJECT_ID,
                 "minCores": 1,
@@ -178,6 +178,7 @@ def launch_fastq_to_ubam(event, context):
                 "plate": plate,
                 "readGroup": read_group,
                 "name": task_name,
+                "labels": ["Job", "Dsub", "FastqToUbam"],
     }
 
     dsub_args = [
@@ -232,8 +233,6 @@ def launch_fastq_to_ubam(event, context):
             .blob(meta_blob_path) \
             .upload_from_string(json.dumps(metadata))
         print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
-
-        job_dict['labels'] = ["Job", "Dsub", "FastqToUbam"]
 
     # Job metadata is formatted for neo4j & published
     if result == 1:
