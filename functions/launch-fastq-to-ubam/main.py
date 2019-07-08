@@ -121,9 +121,8 @@ def launch_fastq_to_ubam(event, context):
     task_name = 'fastq-to-ubam'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    #inputs_hash = hashlib.md5(json.dumps(test).encode('utf-8')).hexdigest()
-    #mac_address = hex(uuid.getnode())
-    #task_id = f"{datetime_stamp}-{mac_address}"
+    nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
+    task_id = f"{datetime_stamp}-{nodes_hash[:8]}"
 
     # TODO: Implement QC checking to make sure fastqs match
     fastqs = {}
@@ -150,8 +149,8 @@ def launch_fastq_to_ubam(event, context):
                 "minRam": 7.5,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
-                #"logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-                "diskSize": 200,
+                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
+                "diskSize": 400,
                 "command": (
                             '/gatk/gatk ' +
                             '--java-options ' +
@@ -169,10 +168,10 @@ def launch_fastq_to_ubam(event, context):
                          "PL": "illumina"
                 },
                 "inputs": fastqs,
-                #"outputs": {
-                #            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
-                #},
-                #"taskId": task_id,
+                "outputs": {
+                            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
+                },
+                "taskId": task_id,
                 "dryRun": dry_run,
                 "preemptible": False,
                 "sample": sample,
@@ -180,12 +179,6 @@ def launch_fastq_to_ubam(event, context):
                 "readGroup": read_group,
                 "name": task_name,
     }
-    # Hash job inputs string to create "unique" ID
-    job_hash = hashlib.sha256(json.dumps(job_dict).encode('utf-8')).hexdigest()
-    task_id = f"{datetime_stamp}-{job_hash[:8]}"
-    job_dict["taskId"] = task_id
-    job_dict["outputs"] = {"UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"}
-    job_dict["logging"] = f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs"
 
     dsub_args = [
         "--name", job_dict["name"],
@@ -194,7 +187,6 @@ def launch_fastq_to_ubam(event, context):
         "--label", f"trellis-id={task_id}",
         "--provider", job_dict["provider"], 
         "--user", job_dict["user"], 
-        #"--zones", job_dict["zones"], 
         "--regions", job_dict["regions"],
         "--project", job_dict["project"],
         "--min-cores", str(job_dict["minCores"]), 
