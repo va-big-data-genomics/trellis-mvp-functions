@@ -124,11 +124,10 @@ def launch_gatk_5_dollar(event, context):
     else:
         pass
     
-    # New formatting; this block no longer necessary
-    #nodes = body['results']['nodes']
+    nodes = body['results']['nodes']
     # If not all Ubams present in database, results will be NoneType
-    #if not nodes:
-    #    raise ValueError("No nodes provided; exiting.")
+    if not nodes:
+        raise ValueError("No nodes provided; exiting.")
 
     # Dsub data
     task_name = 'gatk-5-dollar'
