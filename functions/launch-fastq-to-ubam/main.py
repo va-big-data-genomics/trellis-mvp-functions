@@ -106,14 +106,21 @@ def launch_fastq_to_ubam(event, context):
 
     nodes = body['results']['nodes']
     
-    # Get metadata to be perpetuated to Ubams
     # TODO: Add error checking to make sure metadata_setSize is included
+    set_size = False
+
+    # Get metadata to be perpetuated to Ubams
     metadata = {}
     for result_name in body['results']:
         elements = result_name.split('_')
         if elements[0] == 'metadata':
             key = elements[1]
             metadata[key] = body['results'][result_name]
+            if key == "setSize":
+                set_size = True
+
+    if set_size == False:
+        raise ValueError(f"Error: setSize not provided in results metadata.")
 
     if len(nodes) != 2:
         raise ValueError(f"Error: Need 2 fastqs; {len(nodes)} provided.")
