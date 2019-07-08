@@ -214,19 +214,11 @@ def launch_gatk_5_dollar(event, context):
                 "name": task_name,
     }
 
-    # Write JSON to GCS
-    #gatk_inputs_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/inputs.json"
-    #gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
-    #    .get_bucket(OUT_BUCKET) \
-    #    .blob(gatk_inputs_path) \
-    #    .upload_from_string(json.dumps(gatk_inputs, indent=4))
-    #print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
-    #job_dict["inputs"]["INPUT"] = f"gs://{OUT_BUCKET}/{gatk_inputs_path}"
-
     dsub_args = [
                  "--name", job_dict["name"],
                  "--label", f"sample={sample.lower()}",
                  "--label", f"trellis-id={task_id}",
+                 "--label", f"plate={plate}",
                  "--provider", job_dict["provider"], 
                  "--user", job_dict["user"], 
                  #"--zones", job_dict["zones"], 
