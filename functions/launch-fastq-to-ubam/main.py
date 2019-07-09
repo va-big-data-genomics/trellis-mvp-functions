@@ -106,6 +106,9 @@ def launch_fastq_to_ubam(event, context):
 
     nodes = body['results']['nodes']
     
+    # TODO: Add error checking to make sure metadata_setSize is included
+    set_size = False
+
     # Get metadata to be perpetuated to Ubams
     metadata = {}
     for result_name in body['results']:
@@ -113,6 +116,11 @@ def launch_fastq_to_ubam(event, context):
         if elements[0] == 'metadata':
             key = elements[1]
             metadata[key] = body['results'][result_name]
+            if key == "setSize":
+                set_size = True
+
+    if set_size == False:
+        raise ValueError(f"Error: setSize not provided in results metadata.")
 
     if len(nodes) != 2:
         raise ValueError(f"Error: Need 2 fastqs; {len(nodes)} provided.")
@@ -149,7 +157,7 @@ def launch_fastq_to_ubam(event, context):
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
                 "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-                "diskSize": 200,
+                "diskSize": 400,
                 "command": (
                             '/gatk/gatk ' +
                             '--java-options ' +
@@ -177,6 +185,7 @@ def launch_fastq_to_ubam(event, context):
                 "plate": plate,
                 "readGroup": read_group,
                 "name": task_name,
+                "labels": ["Job", "Dsub", "FastqToUbam"],
     }
 
     dsub_args = [
@@ -231,8 +240,6 @@ def launch_fastq_to_ubam(event, context):
             .blob(meta_blob_path) \
             .upload_from_string(json.dumps(metadata))
         print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
-
-        job_dict['labels'] = ["Job", "Dsub", "FastqToUbam"]
 
     # Job metadata is formatted for neo4j & published
     if result == 1:
