@@ -9,11 +9,6 @@ class NodeTriggers:
     def get_triggers(self):
         node_labels = self.node['labels']
 
-        #triggers = {
-        #            'Json': self.add_fastq_set_size,
-        #            'Ubam': self.check_ubam_count
-        #}
-
         triggers = {
                     'Json,FromPersonalis,Marker': self.add_fastq_set_size,
                     'Ubam': self.check_ubam_count,
@@ -28,16 +23,6 @@ class NodeTriggers:
         # Get unique set of functions
         self.unique_functions = set(trigger_functions)
         return self.unique_functions
-
-
-        #trigger_functions = []
-        #for label in node_labels:
-        #    trigger_function = triggers.get(label)
-        #    if trigger_function:
-        #        trigger_functions.append(trigger_function)
-        # Get unique set of functions
-        #self.unique_functions = set(trigger_functions)
-        #return self.unique_functions
 
 
     def add_fastq_set_size(self, function_name):
