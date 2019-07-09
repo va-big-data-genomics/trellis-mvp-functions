@@ -92,6 +92,7 @@ class NodeTriggers:
                             "cypher": (
                                        "MATCH (n:Ubam) " +
                                        f"WHERE n.sample=\"{sample}\" " +
+                                       "AND NOT (n)-[:INPUT_TO]->(:Job:Cromwell {name: \"gatk-5-dollar\"}) " +
                                        "WITH n.sample AS sample, " +
                                        "n.setSize AS setSize, " +
                                        "COLLECT(n) as nodes " +
