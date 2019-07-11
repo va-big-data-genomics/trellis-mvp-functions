@@ -3,6 +3,11 @@ import json
 import base64
 
 from google.cloud import storage
+from googleapiclient import discovery
+from oauth2client.client import GoogleCredentials
+
+credentials = GoogleCredentials.get_application_default()
+SERVICE = discovery.build('compute', 'v1', credentials=credentials)
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
@@ -23,6 +28,7 @@ if ENVIRONMENT == 'google-cloud':
     TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
     PUBLISHER = pubsub.PublisherClient()
+
 
 def format_pubsub_message(job_dict, nodes):
     message = {
@@ -83,7 +89,7 @@ def kill_duplicate_jobs(event, context):
             continue 
 
         # Send request to delete each duplicate job instance
-        request = service.instances().delete(
+        request = SERVICE.instances().delete(
                                              project = PROJECT_ID,
                                              zone = instance_zone,
                                              instance = instance_name)
