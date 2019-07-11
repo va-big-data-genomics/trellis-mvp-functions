@@ -28,7 +28,7 @@ if ENVIRONMENT == 'google-cloud':
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
     DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
-    KILL_TOPIC = parsed_vars.get('KILL_VM_TOPIC')
+    KILL_DUPS_TOPIC = parsed_vars.get('KILL_DUPS_TOPIC')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
     PUBLISHER = pubsub.PublisherClient()
@@ -38,12 +38,14 @@ class InsertOperation:
 
     def __init__(self, data):
 
-        self.instance_name = None
-        self.instance_id = None
+        self.name = None
+        self.id = None
         self.machine_type = None
         self.start_time = None
         self.start_time_epoch = None
         self.task_id = None
+        self.zones = None
+        self.project = None
         self.status = "running"
 
         payload = data['protoPayload']
@@ -56,38 +58,72 @@ class InsertOperation:
             if label['key'] == 'trellis-id':
                 self.task_id = label['value']
 
-        self.instance_name = payload['request']['name']
+        self.name = payload['request']['name']
 
         machine_type = payload['request']['machineType']
         self.machine_type = machine_type.split('/')[-1]
 
-        self.instance_id = resource['labels']['instance_id']
+        self.id = resource['labels']['instance_id']
+        self.zone = resource['labels']['zone']
+        self.project = resource['labels']['project_id']
 
         self.start_time = data['timestamp']
 
         timestamp = get_datetime_iso8601(data['timestamp'])
         self.start_time_epoch = get_seconds_from_epoch(timestamp)
 
-        
+
+    def compose_query(self):
+        query = (
+             "MERGE (node:Job {taskId: " + f"\"{self.task_id}\"" + "}) " + 
+             "ON CREATE SET " +
+            f"node.status = \"{self.status}\", " +
+            f"node.instanceName = \"{self.name}\", " +
+            f"node.instanceId = {self.id}, " +
+            f"node.startTime = \"{self.start_time}\", " +
+            f"node.startTimeEpoch = {self.start_time_epoch}, " +
+            f"node.project = \"{self.project}\", " +
+            f"node.zone = \"{self.zone}\", " +
+            f"node.duplicateNameZones = [] " +
+             "ON MATCH SET " +
+             "node.duplicateNameZones = node.duplicateNameZones + " +
+                                        f"\"{self.name},{self.zone}\" " +
+             "RETURN node")
+        return query
+
 class DeleteOperation:
 
     def __init__(self, data):
 
-        self.instance_name = None
-        self.instance_id = None
+        self.name = None
+        self.id = None
         self.stop_time = None
         self.stop_time_epoch = None
         self.status = "stopped"
 
         payload = data['jsonPayload']
+        resource = data['resource']
 
-        self.instance_name = payload['resource']['name']
-        self.instance_id = payload['resource']['id']
+        self.name = payload['resource']['name']
+        self.id = resource['labels']['instance_id']
 
         self.stop_time = data['timestamp']
         timestamp = get_datetime_iso8601(data['timestamp'])
         self.stop_time_epoch = get_seconds_from_epoch(timestamp)
 
+
+    def compose_query(self):
+        query = (
+                 "MATCH (job:Job) " +
+                f"WHERE job.instanceId = {self.id} " +
+                f"AND job.instanceName = \"{self.name}\" " +
+                f"SET job.stopTime = \"{self.stop_time}\", " +
+                f"job.stopTimeEpoch = {self.stop_time_epoch}, " + 
+                 "job.status = \"stopped\", " +
+                 "job.durationMinutes = " +
+                    "duration.inSeconds(datetime(job.startTime), datetime(job.stopTime)).minutes " +
+                 "RETURN job")
+        return query
 
 def format_pubsub_message(query, publish_to=None, perpetuate=None):
     message = {
@@ -149,33 +185,6 @@ def get_datetime_iso8601(date_string):
     return iso8601.parse_date(date_string)
 
 
-def compose_insert_query(insert_op):
-    query = (
-             "MERGE (node:Job {taskId: " + f"\"{insert_op.task_id}\"" + "}) " + 
-             "ON CREATE SET " +
-            f"node.status = \"{insert_op.status}\", " +
-            f"node.instanceName = \"{insert_op.instance_name}\", " +
-            f"node.instanceId = {insert_op.instance_id}, " +
-            f"node.instanceStarted = \"{insert_op.start_time}\", " +
-            f"node.instanceStartedEpoch = {insert_op.start_time_epoch}, " +
-            f"node.duplicateIds = [] " +
-             "ON MATCH SET " +
-            f"node.duplicateIds = node.duplicateIds + {insert_op.instance_id} " +
-             "RETURN node")
-    return query
-
-
-def compose_delete_query(delete_op):
-    query = (
-             "MATCH (job:Job) " +
-            f"WHERE job.instanceId={delete_op.instance_id} " +
-            f"AND job.instanceName=\"{delete_op.instance_name}\" " +
-            f"SET job.stopTime=\"{delete_op.stop_time}\", " +
-            f"job.stopTimeEpoch={delete_op.stop_time_epoch} " +
-             "RETURN job")
-    return query
-
-
 def update_job_status(event, context):
     """When object created in bucket, add metadata to database.
     Args:
@@ -196,17 +205,16 @@ def update_job_status(event, context):
     insert = False
     if data.get('protoPayload'):
         if data.get('protoPayload').get('methodName') == insert_method:
-            insert_op = InsertOperation(data)
-            query = compose_insert_query(insert_op)
+            job_op = InsertOperation(data)
             insert = True
     elif data.get('jsonPayload'):
         if data.get('jsonPayload').get('event_subtype') == delete_event:
-            delete_op = DeleteOperation(data)
-            query = compose_delete_query(delete_op)
+            job_op = DeleteOperation(data)
+    query = job_op.compose_query()
     print(f"> Database query: \"{query}\".")
 
     if insert:
-        message = format_pubsub_message(query, publish_to=KILL_TOPIC)
+        message = format_pubsub_message(query, publish_to=KILL_DUPS_TOPIC)
     else:
         message = format_pubsub_message(query)
     print(f"> Pubsub message: {message}.")
@@ -219,7 +227,7 @@ if __name__ == "__main__":
     # Run unit tests in local
     PROJECT_ID = "***REMOVED***-dev"
     DB_TOPIC = "wgs35-db-queries"
-    KILL_TOPIC = "wgs35-delete-instance"
+    KILL_DUPS_TOPIC = "wgs35-kill-duplicate-jobs"
     DATA_GROUP = "wgs35"
     FUNCTION_NAME = "wgs35-update-job-status"
 
@@ -228,16 +236,16 @@ if __name__ == "__main__":
     # Insert operation
     with open("insert_data_sample.json", "r") as fh:
         data = json.load(fh)
-        data = json.dumps(data).encode('utf-8') 
+    data = json.dumps(data).encode('utf-8') 
     event = {'data': base64.b64encode(data)}
     context = {'test': 123}
     update_job_status(event, context)
 
-    #pdb.set_trace()
-    sys.exit()
+    pdb.set_trace()
 
     # Delete operation
-    data = {"insertId":"8vo5t4g1d17tob","jsonPayload":{"actor":{"user":"service-133012913968@genomics-api.google.com.iam.gserviceaccount.com"},"event_subtype":"compute.instances.delete","event_timestamp_us":"1562731913309726","event_type":"GCE_OPERATION_DONE","operation":{"id":"6066364432740047756","name":"operation-1562731875193-58d4bde4cd364-1f29351a-caac1bca","type":"operation","zone":"us-west1-b"},"resource":{"id":"5162806143768987474","name":"google-pipelines-worker-b094108ab1ceec43210edcc78e27b50a","type":"instance","zone":"us-west1-b"},"trace_id":"operation-1562731875193-58d4bde4cd364-1f29351a-caac1bca","version":"1.2"},"labels":{"compute.googleapis.com/resource_id":"5162806143768987474","compute.googleapis.com/resource_name":"google-pipelines-worker-b094108ab1ceec43210edcc78e27b50a","compute.googleapis.com/resource_type":"instance","compute.googleapis.com/resource_zone":"us-west1-b"},"logName":"projects/***REMOVED***-test/logs/compute.googleapis.com%2Factivity_log","receiveTimestamp":"2019-07-10T04:11:53.365559788Z","resource":{"labels":{"instance_id":"5162806143768987474","project_id":"***REMOVED***-test","zone":"us-west1-b"},"type":"gce_instance"},"severity":"INFO","timestamp":"2019-07-10T04:11:53.309726Z"}
+    with open("delete_data_sample.json", "r") as fh:
+        data = json.load(fh)
     data = json.dumps(data).encode('utf-8')
     event = {'data': base64.b64encode(data)}   
     context = {'event_id': 611225247182937, 'timestamp': '2019-07-10T04:11:53.865Z', 'event_type': 'google.pubsub.topic.publish', 'resource': {'service': 'pubsub.googleapis.com', 'name': 'projects/***REMOVED***-test/topics/wgs35-update-vm-status', 'type': 'type.googleapis.com/google.pubsub.v1.PubsubMessage'}}
