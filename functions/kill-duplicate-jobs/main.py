@@ -4,30 +4,16 @@ import base64
 
 from google.cloud import storage
 from googleapiclient import discovery
-from oauth2client.client import GoogleCredentials
+#from oauth2client.client import GoogleCredentials
 
-credentials = GoogleCredentials.get_application_default()
-SERVICE = discovery.build('compute', 'v1', credentials=credentials)
+#credentials = GoogleCredentials.get_application_default()
+#SERVICE = discovery.build('compute', 'v1', credentials=credentials)
+SERVICE = discovery.build('compute', 'v1')
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
-
-    vars_blob = storage.Client() \
-                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                .get_blob(os.environ['CREDENTIALS_BLOB']) \
-                .download_as_string()
-    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
-
-    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    REGIONS = parsed_vars['DSUB_REGIONS']
-    #ZONES = parsed_vars['DSUB_ZONES']
-    OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
-    LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
-    DSUB_USER = parsed_vars['DSUB_USER']
-    TOPIC = parsed_vars['NEW_JOBS_TOPIC']
-
-    PUBLISHER = pubsub.PublisherClient()
+    PROJECT_ID = os.environ['GCP_PROJECT']
 
 
 def format_pubsub_message(job_dict, nodes):
