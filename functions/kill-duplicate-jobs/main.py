@@ -51,10 +51,12 @@ def kill_duplicate_jobs(event, context):
          context (google.cloud.functions.Context): Metadata for the event.
     """
     
-    data = base64.b64decode(event['data']).decode('utf-8')
+    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     event_id = context.event_id
+    data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
+
     header = data['header']
     body = data['body']
 
