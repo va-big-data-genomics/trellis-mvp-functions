@@ -43,9 +43,11 @@ class InsertOperation:
         self.machine_type = None
         self.start_time = None
         self.start_time_epoch = None
-        self.task_id = None
         self.zones = None
         self.project = None
+        self.task_id = None 
+        self.job_name = None
+        self.sample = None
         self.status = "running"
 
         payload = data['protoPayload']
@@ -57,6 +59,10 @@ class InsertOperation:
         for label in labels:
             if label['key'] == 'trellis-id':
                 self.task_id = label['value']
+            elif label['key'] == 'sample':
+                self.sample = label['value']
+            elif label['key'] == 'job-name':
+                self.job_name = label['value']
 
         self.name = payload['request']['name']
 
@@ -82,6 +88,8 @@ class InsertOperation:
             f"node.status = \"{self.status}\", " +
             f"node.instanceName = \"{self.name}\", " +
             f"node.instanceId = {self.id}, " +
+            f"node.sample = \"{self.sample}\", " +
+            f"node.jobName = \"{self.job_name}\", " +
             f"node.startTime = \"{self.start_time}\", " +
             f"node.startTimeEpoch = {self.start_time_epoch}, " +
             f"node.project = \"{self.project}\", " +
