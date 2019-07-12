@@ -93,6 +93,7 @@ class InsertOperation:
             "RETURN node")
         return query
 
+
 class DeleteOperation:
 
     def __init__(self, data):
@@ -130,6 +131,7 @@ class DeleteOperation:
                     "duration.inSeconds(datetime(node.startTime), datetime(node.stopTime)).minutes " +
                  "RETURN node")
         return query
+
 
 def format_pubsub_message(query, publish_to=None, perpetuate=None):
     message = {
@@ -207,15 +209,6 @@ def update_job_status(event, context):
     # Handle insert cases
     insert_type = 'type.googleapis.com/compute.instances.insert'
     delete_type = 'type.googleapis.com/compute.instances.delete'
-
-    #if data.get('protoPayload'):
-    #    if data.get('protoPayload').get('methodName') == insert_method:
-    #        job_op = InsertOperation(data)
-    #        insert = True
-    #elif data.get('jsonPayload'):
-    #    if data.get('jsonPayload').get('event_subtype') == delete_event:
-    #        job_op = DeleteOperation(data)
-    #query = job_op.compose_query()
 
     insert = False
     request_type = data['protoPayload']['request']['@type']
