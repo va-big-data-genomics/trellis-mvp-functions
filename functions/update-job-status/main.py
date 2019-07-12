@@ -105,10 +105,14 @@ class DeleteOperation:
         self.stop_time_epoch = None
         self.status = "stopped"
 
-        payload = data['jsonPayload']
+        payload = data['protoPayload']
         resource = data['resource']
 
-        self.name = payload['resource']['name']
+        # resourceName provides entire project path
+        name = payload['resourceName']
+        self.name = name.split('/')[-1]
+
+        #self.name = payload['resource']['name']
         self.id = resource['labels']['instance_id']
 
         self.stop_time = data['timestamp']
@@ -203,18 +207,29 @@ def update_job_status(event, context):
     print(f"> Data: {data}.")
 
     # Handle insert cases
-    insert_method = 'v1.compute.instances.insert'
-    delete_event = 'compute.instances.delete'
-    
+    insert_type = 'type.googleapis.com/compute.instances.insert'
+    delete_type = 'type.googleapis.com/compute.instances.delete'
+
+    #if data.get('protoPayload'):
+    #    if data.get('protoPayload').get('methodName') == insert_method:
+    #        job_op = InsertOperation(data)
+    #        insert = True
+    #elif data.get('jsonPayload'):
+    #    if data.get('jsonPayload').get('event_subtype') == delete_event:
+    #        job_op = DeleteOperation(data)
+    #query = job_op.compose_query()
+
     insert = False
-    if data.get('protoPayload'):
-        if data.get('protoPayload').get('methodName') == insert_method:
-            job_op = InsertOperation(data)
-            insert = True
-    elif data.get('jsonPayload'):
-        if data.get('jsonPayload').get('event_subtype') == delete_event:
-            job_op = DeleteOperation(data)
+    request_type = data['protoPayload']['request']['@type']
+    if request_type == insert_type:
+        job_op = InsertOperation(data)
+        insert = True
+    elif request_type == delete_type:
+        job_op = DeleteOperation(data)
+    else:
+        raise ValueError(f"Request type not supported: {request_type}.")
     query = job_op.compose_query()
+
     print(f"> Database query: \"{query}\".")
 
     if insert:
