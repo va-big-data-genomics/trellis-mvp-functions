@@ -94,6 +94,7 @@ class InsertOperation:
             f"node.startTimeEpoch = {self.start_time_epoch}, " +
             f"node.project = \"{self.project}\", " +
             f"node.zone = \"{self.zone}\", " +
+            f"node.machineType = \"{self.machine_type}\", " +
             f"node.duplicateNameZones = [] " +
             "ON MATCH SET " +
             "node.duplicateNameZones = node.duplicateNameZones + " +
