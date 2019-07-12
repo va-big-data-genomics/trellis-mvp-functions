@@ -1,43 +1,36 @@
 {
-    "insertId":"8vo5t4g1d17tob", 
-    "jsonPayload":{
-        "actor":{
-            "user":"service-133012913968@genomics-api.google.com.iam.gserviceaccount.com"
-        },
-        "event_subtype":"compute.instances.delete",
-        "event_timestamp_us":"1562731913309726",
-        "event_type":"GCE_OPERATION_DONE",
-        "operation":{
-            "id":"6066364432740047756",
-            "name":"operation-1562731875193-58d4bde4cd364-1f29351a-caac1bca",
-            "type":"operation",
-            "zone":"us-west1-b"
-        },
-        "resource":{
-            "id":"5162806143768987474",
-            "name":"google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
-            "type":"instance",
-            "zone":"us-west1-b"
-        },
-        "trace_id":"operation-1562731875193-58d4bde4cd364-1f29351a-caac1bca",
-        "version":"1.2"
-    },
-    "labels":{
-        "compute.googleapis.com/resource_id":"5162806143768987474",
-        "compute.googleapis.com/resource_name":"google-pipelines-worker-b094108ab1ceec43210edcc78e27b50a",
-        "compute.googleapis.com/resource_type":"instance",
-        "compute.googleapis.com/resource_zone":"us-west1-b"
-    },
-    "logName":"projects/***REMOVED***-test/logs/compute.googleapis.com%2Factivity_log",
-    "receiveTimestamp":"2019-07-10T04:11:53.365559788Z",
-    "resource":{
-        "labels":{
-            "instance_id":"1012478124934201125",
-            "project_id":"***REMOVED***-test",
-            "zone":"us-west1-b"
-        },
-        "type":"gce_instance"
-    },
-    "severity":"INFO",
-    "timestamp":"2019-07-10T04:11:53.309726Z"
+"protoPayload": {
+ "@type": "type.googleapis.com/google.cloud.audit.AuditLog",
+ "authenticationInfo": {
+   "principalEmail": "pbilling@stanford.edu"
+ },
+ "requestMetadata": {
+   "callerIp": "171.66.212.131",
+   "callerSuppliedUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36,gzip(gfe)"
+ },
+ "serviceName": "compute.googleapis.com",
+ "methodName": "v1.compute.instances.delete",
+ "resourceName": "projects/***REMOVED***-dev/zones/us-west1-a/instances/google-pipelines-worker-test-3",
+ "request": {
+   "@type": "type.googleapis.com/compute.instances.delete"
+ }
+},
+"insertId": "yynib8ddgqc",
+"resource": {
+ "type": "gce_instance",
+ "labels": {
+   "instance_id": "5444785242265443190",
+   "zone": "us-west1-a",
+   "project_id": "***REMOVED***-dev"
+ }
+},
+"timestamp": "2019-07-12T20:00:26.314Z",
+"severity": "NOTICE",
+"logName": "projects/***REMOVED***-dev/logs/cloudaudit.googleapis.com%2Factivity",
+"operation": {
+ "id": "operation-1562961588397-58d815a46273a-7ccc668e-b053a3b5",
+ "producer": "compute.googleapis.com",
+ "last": true
+},
+"receiveTimestamp": "2019-07-12T20:00:27.189633623Z"
 }
