@@ -75,12 +75,10 @@ class InsertOperation:
 
     def compose_query(self):
         query = (
-             "MATCH (j:Job {taskId: " + 
-                f"\"{self.task_id}\"" +"}) " +
-             "MERGE (j)-[:RUN_ON]->(node:Instance {taskId: " + 
-                f"\"{self.task_id}\"" + 
-                "}) " + 
-             "ON CREATE SET " +
+            "MERGE (node:Instance {taskId: " + 
+                    f"\"{self.task_id}\"" + 
+                    "}) " + 
+            "ON CREATE SET " +
             f"node.status = \"{self.status}\", " +
             f"node.instanceName = \"{self.name}\", " +
             f"node.instanceId = {self.id}, " +
@@ -89,10 +87,10 @@ class InsertOperation:
             f"node.project = \"{self.project}\", " +
             f"node.zone = \"{self.zone}\", " +
             f"node.duplicateNameZones = [] " +
-             "ON MATCH SET " +
-             "node.duplicateNameZones = node.duplicateNameZones + " +
+            "ON MATCH SET " +
+            "node.duplicateNameZones = node.duplicateNameZones + " +
                                         f"\"{self.name},{self.zone}\" " +
-             "RETURN node")
+            "RETURN node")
         return query
 
 class DeleteOperation:
