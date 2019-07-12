@@ -75,7 +75,11 @@ class InsertOperation:
 
     def compose_query(self):
         query = (
-             "MERGE (node:Job {taskId: " + f"\"{self.task_id}\"" + "}) " + 
+             "MATCH (j:Job {taskId: " + 
+                f"\"{self.task_id}\"" +"}) " +
+             "MERGE (j)-[:RUN_ON]->(node:Instance {taskId: " + 
+                f"\"{self.task_id}\"" + 
+                "}) " + 
              "ON CREATE SET " +
             f"node.status = \"{self.status}\", " +
             f"node.instanceName = \"{self.name}\", " +
@@ -114,15 +118,15 @@ class DeleteOperation:
 
     def compose_query(self):
         query = (
-                 "MATCH (job:Job) " +
-                f"WHERE job.instanceId = {self.id} " +
-                f"AND job.instanceName = \"{self.name}\" " +
-                f"SET job.stopTime = \"{self.stop_time}\", " +
-                f"job.stopTimeEpoch = {self.stop_time_epoch}, " + 
-                 "job.status = \"stopped\", " +
-                 "job.durationMinutes = " +
-                    "duration.inSeconds(datetime(job.startTime), datetime(job.stopTime)).minutes " +
-                 "RETURN job")
+                 "MATCH (node:Instance) " +
+                f"WHERE node.instanceId = {self.id} " +
+                f"AND node.instanceName = \"{self.name}\" " +
+                f"SET node.stopTime = \"{self.stop_time}\", " +
+                f"node.stopTimeEpoch = {self.stop_time_epoch}, " + 
+                 "node.status = \"stopped\", " +
+                 "node.durationMinutes = " +
+                    "duration.inSeconds(datetime(node.startTime), datetime(node.stopTime)).minutes " +
+                 "RETURN node")
         return query
 
 def format_pubsub_message(query, publish_to=None, perpetuate=None):
