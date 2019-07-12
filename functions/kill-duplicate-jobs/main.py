@@ -60,7 +60,7 @@ def kill_duplicate_jobs(event, context):
     header = data['header']
     body = data['body']
 
-    job = body['results']['job']
+    job = body['results']['node']
     duplicates = job.get('duplicateNameZones')
     if not duplicates:
         print("> No duplicates found. exiting.")
