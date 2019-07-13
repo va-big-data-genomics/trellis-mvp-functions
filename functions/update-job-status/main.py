@@ -48,6 +48,7 @@ class InsertOperation:
         self.task_id = None 
         self.job_name = None
         self.sample = None
+        self.plate = None
         self.status = "running"
 
         payload = data['protoPayload']
@@ -63,6 +64,8 @@ class InsertOperation:
                 self.sample = label['value']
             elif label['key'] == 'job-name':
                 self.job_name = label['value']
+            elif label['key'] == 'plate':
+                self.plate = label['value']
 
         self.name = payload['request']['name']
 
@@ -89,7 +92,8 @@ class InsertOperation:
             f"node.instanceName = \"{self.name}\", " +
             f"node.instanceId = {self.id}, " +
             f"node.sample = \"{self.sample}\", " +
-            f"node.jobName = \"{self.job_name}\", " +
+            f"node.jobName = \"{self.job_name}\", " + 
+            f"node.plate = \"{self.plate}\", " +
             f"node.startTime = \"{self.start_time}\", " +
             f"node.startTimeEpoch = {self.start_time_epoch}, " +
             f"node.project = \"{self.project}\", " +
