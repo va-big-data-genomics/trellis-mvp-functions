@@ -28,7 +28,8 @@ if ENVIRONMENT == 'google-cloud':
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
     DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
-    KILL_DUPS_TOPIC = parsed_vars.get('KILL_DUPS_TOPIC')
+    #KILL_DUPS_TOPIC = parsed_vars.get('KILL_DUPS_TOPIC')
+    PROPERTY_TRIGGERS_TOPIC = parsed_vars.get('PROPERTY_TRIGGERS_TOPIC')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
     PUBLISHER = pubsub.PublisherClient()
@@ -49,7 +50,7 @@ class InsertOperation:
         self.job_name = None
         self.sample = None
         self.plate = None
-        self.status = "running"
+        self.status = "RUNNING"
 
         payload = data['protoPayload']
         resource = data['resource']
@@ -82,7 +83,9 @@ class InsertOperation:
         self.start_time_epoch = get_seconds_from_epoch(timestamp)
 
 
-    def compose_query(self):
+    def compose_instance_query(self):
+        """Create a separate Instance node to store VM metadata.
+        """
         query = (
             "MERGE (node:Instance {taskId: " + 
                     f"\"{self.task_id}\"" + 
@@ -107,6 +110,27 @@ class InsertOperation:
         return query
 
 
+    def compose_job_query(self):
+        """Merge instance metadata with Job node.
+        """
+        query = (
+            "MERGE (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
+            "ON MATCH SET " +
+                f"node.status = \"{self.status}\", " +
+                f"node.instanceName = \"{self.name}\", " +
+                f"node.instanceId = {self.id}, " +
+                f"node.startTime = \"{self.start_time}\", " +
+                f"node.startTimeEpoch = {self.start_time_epoch}, " +
+                f"node.zone = \"{self.zone}\", " +
+                f"node.machineType = \"{self.machine_type}\" " +
+            "RETURN node")
+        return query
+
+    def compose_query(self):
+        # Specify active query function
+        return self.compose_job_query()
+
+
 class DeleteOperation:
 
     def __init__(self, data):
@@ -115,7 +139,7 @@ class DeleteOperation:
         self.id = None
         self.stop_time = None
         self.stop_time_epoch = None
-        self.status = "stopped"
+        self.status = "STOPPED"
 
         payload = data['protoPayload']
         resource = data['resource']
@@ -132,18 +156,39 @@ class DeleteOperation:
         self.stop_time_epoch = get_seconds_from_epoch(timestamp)
 
 
-    def compose_query(self):
+    def compose_instance_query(self):
         query = (
                  "MATCH (node:Instance) " +
                 f"WHERE node.instanceId = {self.id} " +
                 f"AND node.instanceName = \"{self.name}\" " +
                 f"SET node.stopTime = \"{self.stop_time}\", " +
                 f"node.stopTimeEpoch = {self.stop_time_epoch}, " + 
-                 "node.status = \"stopped\", " +
+                f"node.status = \"{self.status}\", " +
                  "node.durationMinutes = " +
                     "duration.inSeconds(datetime(node.startTime), datetime(node.stopTime)).minutes " +
                  "RETURN node")
         return query
+
+
+    def compose_job_query(self):
+        query = (
+                 "MATCH (node:Job) " +
+                f"WHERE node.instanceId = {self.id} " +
+                f"AND node.instanceName = \"{self.name}\" " +
+                 "SET " +
+                    f"node.stopTime = \"{self.stop_time}\", " +
+                    f"node.stopTimeEpoch = {self.stop_time_epoch}, " + 
+                    f"node.status = \"{self.status}\", " +
+                    "node.durationMinutes = " +
+                        "duration.inSeconds(datetime(node.startTime), " +
+                        "datetime(node.stopTime)).minutes " +
+                 "RETURN node")
+        return query
+
+
+    def compose_query(self):
+        # Specify active query function
+        return self.compose_job_query()
 
 
 def format_pubsub_message(query, publish_to=None, perpetuate=None):
@@ -237,7 +282,7 @@ def update_job_status(event, context):
     print(f"> Database query: \"{query}\".")
 
     if insert:
-        message = format_pubsub_message(query, publish_to=KILL_DUPS_TOPIC)
+        message = format_pubsub_message(query, publish_to=PROPERTY_TRIGGERS_TOPIC)
     else:
         message = format_pubsub_message(query)
     print(f"> Pubsub message: {message}.")
