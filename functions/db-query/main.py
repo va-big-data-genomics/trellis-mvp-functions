@@ -51,10 +51,6 @@ if ENVIRONMENT == 'google-cloud':
                   user=NEO4J_USER, 
                   password=NEO4J_PASSPHRASE,
                   max_connections=NEO4J_MAX_CONN)
-    #GRAPH = Graph(
-    #              NEO4J_URL, 
-    #              user=NEO4J_USER, 
-    #              password=NEO4J_PASSPHRASE)
 
 
 def format_pubsub_message(query, results, perpetuate=None):
