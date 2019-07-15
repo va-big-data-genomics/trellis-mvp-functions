@@ -1,0 +1,2 @@
+google-cloud-storage==1.9.0
+google-api-python-client==1.7.9
