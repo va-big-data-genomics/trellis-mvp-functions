@@ -193,6 +193,7 @@ def launch_fastq_to_ubam(event, context):
         "--label", f"read-group={read_group}",
         "--label", f"sample={sample.lower()}",
         "--label", f"trellis-id={task_id}",
+        "--label", f"plate={plate.lower()}",
         "--provider", job_dict["provider"], 
         "--user", job_dict["user"], 
         "--regions", job_dict["regions"],
