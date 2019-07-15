@@ -17,6 +17,7 @@ from google.cloud import pubsub
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    TRIGGER_OPERATION = os.environ['_TRIGGER_OPERATION']
 
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -146,30 +147,6 @@ def get_datetime_iso8601(date_string):
     return iso8601.parse_date(date_string)
 
 
-def format_output_node_query(db_entry, dry_run=False):
-    """DEPRECATED since relationship logic moved to own function.
-    """
-    # Create label string
-    labels_str = ':'.join(db_entry['labels'])
-
-    # Create database entry string
-    entry_strings = []
-    for key, value in db_entry.items():
-        if isinstance(value, str):
-            entry_strings.append(f'{key}: "{value}"')
-        else:
-            entry_strings.append(f'{key}: {value}')
-    entry_string = ', '.join(entry_strings)
-
-    # Format as cypher query
-    query = (
-             f"MATCH (jobNode) WHERE jobNode.taskId=\"{db_entry['taskId']}\" " +
-             f"CREATE (jobNode)-[:OUTPUT]-> " +
-             f"(node:{labels_str} {{ {entry_string} }}) " +
-              "RETURN node")
-    return query
-
-
 def format_node_merge_query(db_dict, dry_run=False):
     # Create label string 
     labels_str = ':'.join(db_dict['labels'])
@@ -239,30 +216,6 @@ def format_node_query(db_entry, dry_run=False):
     query = (
              f"CREATE (node:{labels_str} {{ {entry_string} }}) " +
               "RETURN node")
-    return query
-
-
-def format_relationship_query(node1, node2, name, orientation, properties):
-    """NOT CURRENTLY IN USE
-    Format cypher query to create relationship between nodes
-
-    node1 (dict): Properties of node to match in db
-    node2 (dict): Properties of node to match in db
-    name (str): Name of relationship
-    orientation (str): Orientation of relationship ["-", "->"]
-
-    relationship example:
-        {
-            "name": "INPUT_TO",
-            "direction": "to",
-            "properties": {}
-        }
-    """
-
-    query = (
-             f"MATCH (a {{ {node1} }}), " +
-             f"(b {{ {node2} }}) " + 
-             f"CREATE (a)-[:{name} {{ {properties} }}]{orientation}(b)")
     return query
 
 
