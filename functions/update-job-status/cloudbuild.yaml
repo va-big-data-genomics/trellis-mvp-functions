@@ -1,0 +1,20 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         '${_DATA_GROUP}-update-job-status',
+         '--project=${PROJECT_ID}',
+         '--source=functions/update-job-status',
+         '--memory=128MB',
+         '--max-instances=100',
+         '--entry-point=update_job_status',
+         '--runtime=python37',
+         '--trigger-topic=${_DATA_GROUP}-update-vm-status',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=data-group=${_DATA_GROUP}',
+         '--update-labels=task=update-job-status',
+  ]
