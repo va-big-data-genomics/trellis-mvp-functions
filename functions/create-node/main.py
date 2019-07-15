@@ -17,7 +17,7 @@ from google.cloud import pubsub
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
-    TRIGGER_OPERATION = os.environ['_TRIGGER_OPERATION']
+    TRIGGER_OPERATION = os.environ['TRIGGER_OPERATION']
 
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
