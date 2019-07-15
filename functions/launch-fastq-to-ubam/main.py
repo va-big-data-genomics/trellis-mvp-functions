@@ -130,7 +130,8 @@ def launch_fastq_to_ubam(event, context):
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
     nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
-    task_id = f"{datetime_stamp}-{nodes_hash[:8]}"
+    trunc_nodes_hash = nodes_hash[:8]
+    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
 
     # TODO: Implement QC checking to make sure fastqs match
     fastqs = {}
@@ -185,6 +186,7 @@ def launch_fastq_to_ubam(event, context):
                 "plate": plate,
                 "readGroup": read_group,
                 "name": task_name,
+                "inputHash": trunc_nodes_hash,
                 "labels": ["Job", "Dsub", "FastqToUbam"],
     }
 
@@ -194,6 +196,7 @@ def launch_fastq_to_ubam(event, context):
         "--label", f"sample={sample.lower()}",
         "--label", f"trellis-id={task_id}",
         "--label", f"plate={plate.lower()}",
+        "--label", f"input-hash={trunc_nodes_hash}",
         "--provider", job_dict["provider"], 
         "--user", job_dict["user"], 
         "--regions", job_dict["regions"],
