@@ -24,8 +24,14 @@ if ENVIRONMENT == 'google-cloud':
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
     TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
     PUBLISHER = pubsub.PublisherClient()
+
+    # Load trigger module
+    trigger_module_name = f"{DATA_GROUP}_triggers"
+    triggers = importlib.import_module(trigger_module_name)
+    ALL_TRIGGERS = triggers.get_triggers(function_name, parsed_vars)
 
 
 def publish_to_topic(topic, data):
@@ -33,13 +39,6 @@ def publish_to_topic(topic, data):
     message = json.dumps(data).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
-
-
-#def publish_message(topic_path, message):
-#    message = json.dumps(message).encode('utf-8')
-#    print(f'> Publishing message "{message}".')
-#    result = PUBLISHER.publish(topic_path, data=message).result()
-#    print(f'> Message published to {topic_path}: {result}.')   
 
 
 def check_triggers(event, context):
@@ -60,57 +59,22 @@ def check_triggers(event, context):
     query = body['query']
     results = body['results']
 
-    if isinstance(results, str):
-        results = json.loads(results)
-
     # Check that resource is query
     if resource != 'queryResult':
         print(f"Error: Expected resource type 'queryResult', " +
               f"got '{header['resource']}.'")
         return
 
-    trigger_module_name = f"{TRIGGER}_triggers"
-    trigger_module = importlib.import_module(trigger_module_name)
+    node = body['results']['node']
 
-    if TRIGGER == 'node':
-        # Support CASE formatting
-        case_str = "CASE node.nodeIteration WHEN 'initial' THEN node ELSE null END"
-        if "node" in body['results'].keys():
-            node = body['results']['node']
-        elif case_str in body['results'].keys():
-            node = body['results'][case_str]
-        else:
-            print("No node provided; exiting.")
-            return
-
-        trigger_config = trigger_module.NodeTriggers(
-                                                     project_id = PROJECT_ID,
-                                                     node = node) #????
-    elif TRIGGER == 'property':
-        trigger_config = trigger_module.PropertyTriggers(
-                                                         project_id = PROJECT_ID,
-                                                         properties = results)
-
-    triggers = trigger_config.get_triggers()
-    if triggers:
-        for trigger in triggers:
+    for trigger in ALL_TRIGGERS:
+        status = trigger.check_conditions(node)
+        if status == True:
             print(f'> Executing trigger: {triggers}.')
-            topic, message = trigger(FUNCTION_NAME)
+            topic, message = trigger.compose_message(node)
             print(f"> Publishing message: {message}.")
             result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {result}.")
-    else:
-        print(f'> No triggers executed.')
-
-    #summary = {
-    #           "name": name, 
-    #           "bucket": bucket_name, 
-    #           "node-module-name": node_module_name, 
-    #           "trigger-module-name": trigger_module_name, 
-    #           "labels": labels, 
-    #           "db-query": db_query,
-    #}
-    #return(summary)
 
 
 if __name__ == "__main__":
