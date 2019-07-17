@@ -1,5 +1,8 @@
 
 class AddFastqSetSize:
+    """Add setSize property to Fastqs and send them back to 
+    triggers to launch fastq-to-ubam.
+    """
 
     def __init__(self, function_name, env_vars):
         self.function_name = function_name
@@ -34,7 +37,7 @@ class AddFastqSetSize:
                               "method": "UPDATE",
                               "labels": ["Cypher", "Query", "Set", "Properties"], 
                               "sentFrom": self.function_name,
-                              "publishTo": self.env_vars['TRIGGER_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                    },
                    "body": {
                           "cypher": (
@@ -66,6 +69,7 @@ class CheckUbamCount:
         required_labels = ['Ubam']
 
         conditions = [
+            node.get('setSize'),
             set(required_labels).issubset(set(node.get('labels')))
         ]
 
@@ -89,7 +93,7 @@ class CheckUbamCount:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Ubam", "GATK", "Nodes"],
                               "sentFrom": self.function_name,
-                              "publishTo": self.env_vars['GATK_5_DOLLAR_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
                    },
                    "body": {
                             "cypher": (
@@ -109,15 +113,15 @@ class CheckUbamCount:
         return(topic, message)
 
 
-class FastqToUbamTrigger:
+class GetFastqForUbam:
     #TODO: Finish this class 
 
-    def __init__(self, node):
+    def __init__(self, function_name, env_vars):
 
-        self.trigger = node
-        self.check_conditions()
+        self.function_name = function_name
+        self.env_vars = env_vars
 
-    def check_conditions(self):
+    def check_conditions(self, node):
 
         required_labels = [
                            'Blob', 
@@ -127,8 +131,8 @@ class FastqToUbamTrigger:
 
         #conditions:
         conditions = [
-            self.node.get('setSize'),
-            self.node.get('sample'),
+            node.get('setSize'),
+            node.get('sample'),
             set(required_labels).issubset(set(node.get('labels')))
         ]
 
@@ -139,94 +143,18 @@ class FastqToUbamTrigger:
                 return False
         return True
 
+    def compose_message(self, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
 
-class FastqToUbamTrigger:
-
-    def __init__(self):
-
-    def check_conditions(self):
-
-        required_labels = [
-                           'Blob', 
-                           'Fastq', 
-                           'WGS35', 
-                           'FromPersonalis']
-
-        #conditions:
-        self.node.get('setSize')
-        self.node.get('sample')
-        set(required_labels).issubset(s)
-
-class PropertyTriggers:
-
-    """OLD
-    def __init__(self, project_id, properties):
-        self.project_id = project_id
-
-        self.added = {}
-        self.removed = {}
-        self.changed = {}
-        self.nodes = {}
-
-        for key, value in properties.items():
-            elements = key.split('_')
-            if len(elements) > 2:
-                printf("ERROR")
-            category = elements[0]
-
-            if category == 'added':
-                self.added[elements[1]] = value
-            elif category == 'removed':
-                self.removed[elements[1]] = value
-            elif category == 'changed':
-                self.changed[elements[1]] = value
-            elif category == 'nodes':
-                self.nodes[elements[1]] = value
-            else:
-                printf("ERROR")
-    """
-
-    def __init__(self, project_id, node):
-        self.project_id = project_id
-        self.node = node
-
-
-    def get_triggers(self):
-        #triggers = {
-        #            self.fastq_to_ubam: [
-        #                True if(self.added.get('setSize')) else False,
-        #                True if(self.nodes.get('sample')) else False]
-        #}
-
-        triggers = {
-                    self.fastq_to_ubam: [
-                        True if (self.node.get('setSize')) else False,
-                        True if (self.node.get('sample')) else False,
-                        True if (set(['Blob','Fastq','WGS35','FromPersonalis']))]
-        }
-
-
-        trigger_functions = []
-        for function, conditions in triggers.items():
-            if set(conditions) == {True}:
-                trigger_functions.append(function)
-        self.unique_functions = set(trigger_functions)
-        return self.unique_functions
-
-
-    def fastq_to_ubam(self, function_name):
-        topic = "wgs35-db-queries"
-        #topic_path = f"projects/{self.project_id}/topics/{topic}"
-
-        sample = self.nodes['sample']
+        sample = node['sample']
 
         message = {
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Nodes"],
-                              "sentFrom": function_name,
-                              "publishTo": "wgs35-tasks-fastq-to-ubam",
+                              "labels": ["Cypher", "Query", "Fastq", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "publishTo": self.env_vars['TOPIC_FASTQ_TO_UBAM'],
                    },
                    "body": {
                             "cypher": (
@@ -245,3 +173,18 @@ class PropertyTriggers:
                    }
         }
         return(topic, message)
+
+
+def get_triggers(function_name, env_vars):
+
+    triggers = []
+    triggers.append(AddFastqSetSize(
+                                    function_name,
+                                    env_vars))
+    triggers.append(CheckUbamCount(
+                                   function_name,
+                                   env_vars))
+    triggers.append(GetFastqForUbam(
+                                    function_name,
+                                    env_vars))
+    return triggers
