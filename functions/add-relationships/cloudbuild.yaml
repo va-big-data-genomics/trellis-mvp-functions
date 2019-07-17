@@ -1,5 +1,4 @@
 steps:
-steps:
 - name: 'ubuntu'
   args: ['cp', '-r', 'config/wgs35', 'functions/add-relationships/']
 - name: 'gcr.io/cloud-builders/gcloud'
