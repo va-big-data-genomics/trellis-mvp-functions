@@ -1,10 +1,14 @@
 steps:
+- name: 'ubuntu'
+  args: ['cp', '-r',
+         'config/${_DATA_GROUP}/${_DATA_GROUP}_triggers.py',
+         'functions/check-triggers/${_DATA_GROUP}_triggers.py']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
          'functions',
          'deploy',
-         '${_DATA_GROUP}-${_TRIGGER_TYPE}-triggers',
+         '${_DATA_GROUP}-triggers',
          '--project=${PROJECT_ID}',
          '--source=functions/check-triggers',
          '--memory=128MB',
@@ -15,6 +19,5 @@ steps:
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
-         '--update-env-vars=TRIGGER=${_TRIGGER_TYPE}',
          '--update-labels=data-group=${_DATA_GROUP}',
   ]
