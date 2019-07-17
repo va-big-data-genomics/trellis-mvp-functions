@@ -13,7 +13,6 @@ from google.cloud import pubsub
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
-    TRIGGER = os.environ['TRIGGER']
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     
     vars_blob = storage.Client() \
@@ -81,8 +80,7 @@ def check_triggers(event, context, dry_run=False):
             else:
                 result = publish_to_topic(topic, message)
                 print(f">>> Published message to {topic} with result: {result}.")
-    return(activated_triggers)
-                
+    return(activated_triggers)                
 
 
 if __name__ == "__main__":
