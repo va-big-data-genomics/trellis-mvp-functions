@@ -29,7 +29,7 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
     # Load trigger module
-    trigger_module_name = f"triggers/{DATA_GROUP}-triggers"
+    trigger_module_name = f"{DATA_GROUP}-triggers"
     triggers = importlib.import_module(trigger_module_name)
     ALL_TRIGGERS = triggers.get_triggers(function_name, parsed_vars)
 
