@@ -1,8 +1,8 @@
 steps:
-- name: 'ubuntu'
-  args: ['cp',
-         'config/${_DATA_GROUP}/${_DATA_GROUP}_triggers.py',
-         'functions/check-triggers/${_DATA_GROUP}_triggers.py']
+#- name: 'ubuntu'
+#  args: ['cp',
+#         'config/${_DATA_GROUP}/${_DATA_GROUP}_triggers.py',
+#         'functions/check-triggers/${_DATA_GROUP}_triggers.py']
 - name: 'ubuntu'
   args: ['ls', 'functions/check-triggers']
 - name: 'gcr.io/cloud-builders/gcloud'
