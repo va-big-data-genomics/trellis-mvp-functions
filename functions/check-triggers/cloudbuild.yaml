@@ -1,14 +1,14 @@
 steps:
-- name: 'ubuntu'
-  args: ['cp', '-r',
-         'config/${_DATA_GROUP}/triggers',
-         'functions/check-triggers/']
-- name: 'ubuntu'
-  args: ['cp',
-         'config/${_DATA_GROUP}/wgs35-triggers.py',
-         'functions/check-triggers/']
-- name: 'ubuntu'
-  args: ['ls', 'functions/check-triggers']
+#- name: 'ubuntu'
+#  args: ['cp', '-r',
+#         'config/${_DATA_GROUP}/triggers',
+#         'functions/check-triggers/']
+#- name: 'ubuntu'
+#  args: ['cp',
+#         'config/${_DATA_GROUP}/wgs35-triggers.py',
+#         'functions/check-triggers/']
+#- name: 'ubuntu'
+#  args: ['ls', 'functions/check-triggers']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
