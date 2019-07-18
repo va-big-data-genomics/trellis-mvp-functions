@@ -74,8 +74,8 @@ class CheckUbamCount:
             set(required_labels).issubset(set(node.get('labels'))),
             # Only activate trigger on initial upload or
             #   metadata update.
-            (node['nodeIteration'] == 'initial' or 
-                node['triggerOperation'] == 'metadataUpdate'),
+            #(node['nodeIteration'] == 'initial' or 
+            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
@@ -136,8 +136,8 @@ class GetFastqForUbam:
         conditions = [
             node.get('setSize'),
             node.get('sample'),
-            node['readGroup'] == 0,
-            node['matePair'] == 1,
+            node.get('readGroup') == 0,
+            node.get('matePair') == 1,
             set(required_labels).issubset(set(node.get('labels'))),
             # (DISABLED) Only activate trigger on initial upload or
             #   metadata update.
