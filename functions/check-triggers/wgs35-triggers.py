@@ -121,7 +121,6 @@ class CheckUbamCount:
 
 
 class GetFastqForUbam:
-    #TODO: Finish this class 
 
     def __init__(self, function_name, env_vars):
 
@@ -140,10 +139,10 @@ class GetFastqForUbam:
             node.get('setSize'),
             node.get('sample'),
             set(required_labels).issubset(set(node.get('labels'))),
-            # Only activate trigger on initial upload or
+            # (DISABLED) Only activate trigger on initial upload or
             #   metadata update.
-            (node['nodeIteration'] == 'initial' or 
-                node['triggerOperation'] == 'metadataUpdate'),
+            #(node['nodeIteration'] == 'initial' or 
+            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
