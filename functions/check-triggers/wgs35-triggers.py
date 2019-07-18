@@ -15,7 +15,11 @@ class AddFastqSetSize:
                            'Marker']
 
         conditions = [
-            set(required_labels).issubset(set(node.get('labels')))
+            set(required_labels).issubset(set(node.get('labels'))),
+            # Only activate trigger on initial upload or
+            #   metadata update.
+            (node['nodeIteration'] == 'initial' or 
+                node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
@@ -69,7 +73,11 @@ class CheckUbamCount:
 
         conditions = [
             node.get('setSize'),
-            set(required_labels).issubset(set(node.get('labels')))
+            set(required_labels).issubset(set(node.get('labels'))),
+            # Only activate trigger on initial upload or
+            #   metadata update.
+            (node['nodeIteration'] == 'initial' or 
+                node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
@@ -128,11 +136,14 @@ class GetFastqForUbam:
                            'WGS35', 
                            'FromPersonalis']
 
-        #conditions:
         conditions = [
             node.get('setSize'),
             node.get('sample'),
-            set(required_labels).issubset(set(node.get('labels')))
+            set(required_labels).issubset(set(node.get('labels'))),
+            # Only activate trigger on initial upload or
+            #   metadata update.
+            (node['nodeIteration'] == 'initial' or 
+                node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
