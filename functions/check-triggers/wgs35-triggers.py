@@ -48,11 +48,9 @@ class AddFastqSetSize:
                                     f"WHERE n.sample=\"{sample}\" " +
                                      "WITH n.sample AS sample, " +
                                      "COLLECT(n) AS nodes " +
-                                     "LIMIT 1 " +
                                      "UNWIND nodes AS node " +
                                      "SET node.setSize = size(nodes)" +
-                                     "RETURN node " +
-                                     "LIMIT 1"),
+                                     "RETURN node "),
                           "result-mode": "data",
                           "result-structure": "list",
                           "result-split": "True",
@@ -138,6 +136,8 @@ class GetFastqForUbam:
         conditions = [
             node.get('setSize'),
             node.get('sample'),
+            node['readGroup'] == 0,
+            node['matePair'] == 1,
             set(required_labels).issubset(set(node.get('labels'))),
             # (DISABLED) Only activate trigger on initial upload or
             #   metadata update.
