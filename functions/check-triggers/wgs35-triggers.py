@@ -16,10 +16,10 @@ class AddFastqSetSize:
 
         conditions = [
             set(required_labels).issubset(set(node.get('labels'))),
-            # Only activate trigger on initial upload or
+            # (DISABLED) Only activate trigger on initial upload or
             #   metadata update.
-            (node['nodeIteration'] == 'initial' or 
-                node['triggerOperation'] == 'metadataUpdate'),
+            #(node['nodeIteration'] == 'initial' or 
+            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
