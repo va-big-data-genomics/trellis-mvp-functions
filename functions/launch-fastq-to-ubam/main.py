@@ -147,7 +147,7 @@ def launch_fastq_to_ubam(event, context):
     trunc_nodes_hash = str(nodes_hash)[:8]
     task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
     # TODO: Implement QC checking to make sure fastqs match
     fastqs = {}
