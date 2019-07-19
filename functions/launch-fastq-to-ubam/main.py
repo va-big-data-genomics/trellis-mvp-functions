@@ -187,7 +187,7 @@ def launch_fastq_to_ubam(event, context):
                 "readGroup": read_group,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
-                "labels": ["Job", "Dsub", "FastqToUbam"],
+                "labels": ["Job", "Dsub"],
     }
 
     dsub_args = [
