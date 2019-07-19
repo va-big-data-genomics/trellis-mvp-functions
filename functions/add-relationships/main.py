@@ -1,4 +1,5 @@
 import os
+import re
 import pdb
 import sys
 import json
@@ -104,7 +105,7 @@ def add_relationships(event, context):
         pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
         match = re.match(pattern, bucket_name)
         suffix = match['suffix']
-        
+
         config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
         config_module = importlib.import_module(config_module_name)
 
