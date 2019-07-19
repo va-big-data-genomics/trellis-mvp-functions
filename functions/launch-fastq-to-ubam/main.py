@@ -185,7 +185,7 @@ def launch_fastq_to_ubam(event, context):
                 "plate": plate,
                 "readGroup": read_group,
                 "name": task_name,
-                "labels": ["Job", "Dsub", "FastqToUbam"],
+                "labels": ["Job", "Dsub"],
     }
 
     dsub_args = [
