@@ -231,8 +231,13 @@ def create_node_query(event, context):
     name = event['name']
     bucket_name = event['bucket']
 
+    # Bucket name does not include project prefix
+    pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
+    match = re.match(pattern, bucket_name)
+    suffix = match['suffix']
+
     # Import the config modules that corresponds to event-trigger bucket
-    node_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
+    node_module_name = f"{DATA_GROUP}.{suffix}.create-node-config"
     node_module = importlib.import_module(node_module_name)
 
     node_kinds = node_module.NodeKinds()
