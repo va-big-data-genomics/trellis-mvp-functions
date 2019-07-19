@@ -106,7 +106,7 @@ def add_relationships(event, context):
         match = re.match(pattern, bucket_name)
         suffix = match['suffix']
 
-        config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
+        config_module_name = f"{DATA_GROUP}.{suffix}.create-node-config"
         config_module = importlib.import_module(config_module_name)
 
         # Add provided relationships
