@@ -1,4 +1,5 @@
 import os
+import re
 import pdb
 import sys
 import json
@@ -26,7 +27,7 @@ if ENVIRONMENT == 'google-cloud':
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
-    NODE_TRIGGERS_TOPIC = parsed_vars['NODE_TRIGGERS_TOPIC']
+    TOPIC_TRIGGERS = parsed_vars['TOPIC_TRIGGERS']
     DATA_GROUP = parsed_vars['DATA_GROUP']
 
     # Establish PubSub connection
@@ -100,7 +101,12 @@ def add_relationships(event, context):
     result = None
     bucket_name = node.get('bucket')
     if bucket_name:
-        config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
+        # Remove project name from bucket to get module name
+        pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
+        match = re.match(pattern, bucket_name)
+        suffix = match['suffix']
+
+        config_module_name = f"{DATA_GROUP}.{suffix}.create-node-config"
         config_module = importlib.import_module(config_module_name)
 
         # Add provided relationships
@@ -116,7 +122,7 @@ def add_relationships(event, context):
                     ship_queries.append(ship_query)
 
         for query in ship_queries:
-            message = format_pubsub_message(query, NODE_TRIGGERS_TOPIC)
+            message = format_pubsub_message(query, TOPIC_TRIGGERS)
             result = publish_to_topic(QUERY_TOPIC, message)
             print(
                   f"> Published following message to {QUERY_TOPIC} with " + 
@@ -131,8 +137,8 @@ def add_relationships(event, context):
     if not relationships and not result:
         print(f"> No relationships, pushing data to node triggers.")
         print(f"> Pubsub message: {data}.")
-        result = publish_to_topic(NODE_TRIGGERS_TOPIC, data)
-        print(f"> Published message to {NODE_TRIGGERS_TOPIC} with result: {result}.")
+        result = publish_to_topic(TOPIC_TRIGGERS, data)
+        print(f"> Published message to {TOPIC_TRIGGERS} with result: {result}.")
         return
 
     # Write a generic relationship query
@@ -191,7 +197,7 @@ def add_relationships(event, context):
 if __name__ == "__main__":
     PROJECT_ID = "gbsc-gcp-project-mvp-dev"
     QUERY_TOPIC = "wgs35-db-queries"
-    NODE_TRIGGERS_TOPIC = "wgs35-node-triggers"
+    TOPIC_TRIGGERS = "wgs35-triggers"
     FUNCTION_NAME = "add-relationships"
     DATA_GROUP = "wgs35"
 
