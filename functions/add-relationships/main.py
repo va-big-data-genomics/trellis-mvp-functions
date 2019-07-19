@@ -100,6 +100,11 @@ def add_relationships(event, context):
     result = None
     bucket_name = node.get('bucket')
     if bucket_name:
+        # Remove project name from bucket to get module name
+        pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
+        match = re.match(pattern, bucket_name)
+        suffix = match['suffix']
+        
         config_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
         config_module = importlib.import_module(config_module_name)
 
