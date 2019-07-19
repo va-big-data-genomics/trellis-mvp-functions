@@ -154,7 +154,6 @@ class GetFastqForUbam:
 
     def compose_message(self, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
-        #topic_path = f"projects/{self.project_id}/topics/{topic}"
 
         sample = node['sample']
 
@@ -184,6 +183,60 @@ class GetFastqForUbam:
         }
         return(topic, message)
 
+
+class KillDuplicateJobs:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, node):
+
+        required_labels = ['Job']
+
+        conditions = [
+            node.get('startTime'),
+            node.get('instanceName'),
+            node.get('instanceId'),
+            node.get('inputHash'),
+            node.get('status') == 'RUNNING']
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+        job_name = node['jobName']
+        input_hash = node['inputHash']
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Duplicate", "Jobs", "Running"],
+                              "sentFrom": self.function_name,
+                              "publishTo": self.env_vars['TOPIC_KILL_DUPLICATES'],
+                   }, 
+                   "body": {
+                            "MATCH (n:Job) " +
+                            f"WHERE n.sample = {sample} " +
+                            f"AND n.jobName = {jobName} " +
+                            f"AND n.inputHash = {inputHash} " +
+                            "AND n.status = \"RUNNING\" " +
+                            "WITH n.inputHash AS hash " +
+                            "COLLECT(n) AS jobs " +
+                            "WHERE SIZE(jobs) > 1 " +
+                            "RETURN (node in tail(jobs))"
+                   }
+        }
+        return(topic, message)
 
 def get_triggers(function_name, env_vars):
 
