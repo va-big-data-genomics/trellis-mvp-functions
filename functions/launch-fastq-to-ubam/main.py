@@ -136,7 +136,7 @@ def launch_fastq_to_ubam(event, context):
     for node in nodes:
         nodes_hash += frozenset(node).__hash__()
     #nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
-    trunc_nodes_hash = nodes_hash[:8]
+    trunc_nodes_hash = str(nodes_hash)[:8]
     task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
 
     # TODO: Implement QC checking to make sure fastqs match
