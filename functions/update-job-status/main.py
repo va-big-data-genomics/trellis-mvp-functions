@@ -28,8 +28,7 @@ if ENVIRONMENT == 'google-cloud':
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
     DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
-    #KILL_DUPS_TOPIC = parsed_vars.get('KILL_DUPS_TOPIC')
-    PROPERTY_TRIGGERS_TOPIC = parsed_vars.get('PROPERTY_TRIGGERS_TOPIC')
+    TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
     PUBLISHER = pubsub.PublisherClient()
@@ -55,7 +54,7 @@ class InsertOperation:
         payload = data['protoPayload']
         resource = data['resource']
 
-        # Get task ID from request labels
+        # Get task ID from request
         # labels: [{0: {key: "trellis-id", value: "1907-5fxf7"}}]
         labels = payload['request']['labels']
         for label in labels:
@@ -282,7 +281,7 @@ def update_job_status(event, context):
     print(f"> Database query: \"{query}\".")
 
     if insert:
-        message = format_pubsub_message(query, publish_to=PROPERTY_TRIGGERS_TOPIC)
+        message = format_pubsub_message(query, publish_to=TOPIC_TRIGGERS)
     else:
         message = format_pubsub_message(query)
     print(f"> Pubsub message: {message}.")
