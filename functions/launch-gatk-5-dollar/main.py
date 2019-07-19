@@ -134,7 +134,8 @@ def launch_gatk_5_dollar(event, context):
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
     nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
-    task_id = f"{datetime_stamp}-{nodes_hash[:8]}"
+    trunc_nodes_hash = nodes_hash[:8]
+    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
 
     ubams = []
     for node in nodes:
@@ -212,6 +213,7 @@ def launch_gatk_5_dollar(event, context):
                 "sample": sample,
                 "plate": plate,
                 "name": task_name,
+                "inputHash": trunc_nodes_hash,
     }
 
     dsub_args = [
@@ -219,6 +221,7 @@ def launch_gatk_5_dollar(event, context):
                  "--label", f"sample={sample.lower()}",
                  "--label", f"trellis-id={task_id}",
                  "--label", f"plate={plate.lower()}",
+                 "--label", f"input-hash={trunc_nodes_hash}",
                  "--provider", job_dict["provider"], 
                  "--user", job_dict["user"], 
                  "--regions", job_dict["regions"],
