@@ -129,7 +129,13 @@ def launch_fastq_to_ubam(event, context):
     task_name = 'fastq-to-ubam'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
+
+    # Convert each node to a frozenhash, and calculate hash
+    # Sum all hashes to get job hash
+    nodes_hash = 0
+    for node in nodes:
+        nodes_hash += frozenset(node).__hash__()
+    #nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
     trunc_nodes_hash = nodes_hash[:8]
     task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
 
@@ -186,7 +192,8 @@ def launch_fastq_to_ubam(event, context):
                 "plate": plate,
                 "readGroup": read_group,
                 "name": task_name,
-                "inputHash": trunc_nodes_hash,
+                "inputHash": nodes_hash,
+                "truncHash": trunc_nodes_hash,
                 "labels": ["Job", "Dsub"],
     }
 
