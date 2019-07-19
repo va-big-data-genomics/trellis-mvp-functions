@@ -214,6 +214,7 @@ def launch_gatk_5_dollar(event, context):
                 "plate": plate,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
+                "labels": ['Job', 'Cromwell'],
     }
 
     dsub_args = [
@@ -259,9 +260,6 @@ def launch_gatk_5_dollar(event, context):
 
     # If job launch is successful, add job to database
     if result == 1:
-        # Add additional job metadata
-        job_dict['labels'] = ['Job', 'Cromwell']
-
         # Reformat dict values as separate key/value pairs
         # to be compatible with Neo4j
         for key, value in job_dict["inputs"].items():
