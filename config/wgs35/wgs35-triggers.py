@@ -1,4 +1,3 @@
-
 class AddFastqSetSize:
     """Add setSize property to Fastqs and send them back to 
     triggers to launch fastq-to-ubam.
@@ -16,7 +15,11 @@ class AddFastqSetSize:
                            'Marker']
 
         conditions = [
-            set(required_labels).issubset(set(node.get('labels')))
+            set(required_labels).issubset(set(node.get('labels'))),
+            # (DISABLED) Only activate trigger on initial upload or
+            #   metadata update.
+            #(node['nodeIteration'] == 'initial' or 
+            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
@@ -45,11 +48,9 @@ class AddFastqSetSize:
                                     f"WHERE n.sample=\"{sample}\" " +
                                      "WITH n.sample AS sample, " +
                                      "COLLECT(n) AS nodes " +
-                                     "LIMIT 1 " +
                                      "UNWIND nodes AS node " +
                                      "SET node.setSize = size(nodes)" +
-                                     "RETURN node " +
-                                     "LIMIT 1"),
+                                     "RETURN node "),
                           "result-mode": "data",
                           "result-structure": "list",
                           "result-split": "True",
@@ -70,7 +71,11 @@ class CheckUbamCount:
 
         conditions = [
             node.get('setSize'),
-            set(required_labels).issubset(set(node.get('labels')))
+            set(required_labels).issubset(set(node.get('labels'))),
+            # Only activate trigger on initial upload or
+            #   metadata update.
+            #(node['nodeIteration'] == 'initial' or 
+            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
@@ -114,7 +119,6 @@ class CheckUbamCount:
 
 
 class GetFastqForUbam:
-    #TODO: Finish this class 
 
     def __init__(self, function_name, env_vars):
 
@@ -129,11 +133,16 @@ class GetFastqForUbam:
                            'WGS35', 
                            'FromPersonalis']
 
-        #conditions:
         conditions = [
             node.get('setSize'),
             node.get('sample'),
-            set(required_labels).issubset(set(node.get('labels')))
+            node.get('readGroup') == 0,
+            node.get('matePair') == 1,
+            set(required_labels).issubset(set(node.get('labels'))),
+            # (DISABLED) Only activate trigger on initial upload or
+            #   metadata update.
+            #(node['nodeIteration'] == 'initial' or 
+            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
 
         for condition in conditions:
@@ -145,6 +154,7 @@ class GetFastqForUbam:
 
     def compose_message(self, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
+        #topic_path = f"projects/{self.project_id}/topics/{topic}"
 
         sample = node['sample']
 
