@@ -231,7 +231,7 @@ def create_node_query(event, context):
     name = event['name']
     bucket_name = event['bucket']
 
-    # Bucket name does not include project prefix
+    # Module name does not include project prefix
     pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
     match = re.match(pattern, bucket_name)
     suffix = match['suffix']
