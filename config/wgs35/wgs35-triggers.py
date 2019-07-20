@@ -234,7 +234,7 @@ class KillDuplicateJobs:
                             "WITH n.inputHash AS hash, " +
                             "COLLECT(n) AS nodes " +
                             "WHERE SIZE(nodes) > 1 " +
-                            "RETURN tail(nodes)"
+                            "RETURN tail(nodes) AS nodes"
                         ),
                         "result-mode": "data",
                         "result-structure": "list",
