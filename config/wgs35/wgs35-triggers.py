@@ -227,11 +227,11 @@ class KillDuplicateJobs:
                    "body": {
                         "cypher": (
                             "MATCH (n:Job) " +
-                            f"WHERE n.sample = {sample} " +
-                            f"AND n.name = {name} " +
-                            f"AND n.inputHash = {input_hash} " +
+                            f"WHERE n.sample = \"{sample}\" " +
+                            f"AND n.name = \"{name}\" " +
+                            f"AND n.inputHash = \"{input_hash}\" " +
                             "AND n.status = \"RUNNING\" " +
-                            "WITH n.inputHash AS hash " +
+                            "WITH n.inputHash AS hash, " +
                             "COLLECT(n) AS jobs " +
                             "WHERE SIZE(jobs) > 1 " +
                             "RETURN (node in tail(jobs))"
