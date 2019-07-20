@@ -213,7 +213,7 @@ class KillDuplicateJobs:
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
-        job_name = node['jobName']
+        name = node['name']
         input_hash = node['inputHash']
 
         message = {
@@ -227,7 +227,7 @@ class KillDuplicateJobs:
                    "body": {
                             "MATCH (n:Job) " +
                             f"WHERE n.sample = {sample} " +
-                            f"AND n.jobName = {jobName} " +
+                            f"AND n.name = {name} " +
                             f"AND n.inputHash = {inputHash} " +
                             "AND n.status = \"RUNNING\" " +
                             "WITH n.inputHash AS hash " +
