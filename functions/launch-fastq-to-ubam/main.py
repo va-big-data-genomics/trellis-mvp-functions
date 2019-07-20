@@ -142,8 +142,12 @@ def launch_fastq_to_ubam(event, context):
     #                                  default=str))
         #nodes_hash += frozenset(node).__hash__()
     #print(f"> Nodes hash: nodes_hash")
-    nodes_str = json.dumps(nodes, sort_keys=True, ensure_ascii=True, default=str)
+
+    # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
+    sorted_nodes = sorted(nodes, key = lambda i: i['id'])
+    nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
     nodes_hash = hashlib.sha256(nodes_str.encode('utf-8')).hexdigest()
+    print(nodes_hash)
     trunc_nodes_hash = str(nodes_hash)[:8]
     task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
 
