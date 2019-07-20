@@ -288,10 +288,10 @@ def launch_gatk_5_dollar(event, context):
         publish_to_topic(NEW_JOBS_TOPIC, message)  
 
         # Write message to blob
-        storage.Client(project=PROJECT_ID) \
-            .get_bucket(TRELLIS_BUCKET) \
-            .blob('launch-gatk-5-dollar-message.out') \
-            .upload_from_string(json.dumps(message))
+        #storage.Client(project=PROJECT_ID) \
+        #    .get_bucket(TRELLIS_BUCKET) \
+        #    .blob('launch-gatk-5-dollar-message.out') \
+        #    .upload_from_string(json.dumps(message))
         #gatk_inputs = json.loads(gatk_input_template)
 
 
