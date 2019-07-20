@@ -250,4 +250,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(GetFastqForUbam(
                                     function_name,
                                     env_vars))
+    triggers.append(KillDuplicateJobs(
+                                      function_name,
+                                      env_vars))
     return triggers
