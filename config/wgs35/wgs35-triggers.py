@@ -228,7 +228,7 @@ class KillDuplicateJobs:
                             "MATCH (n:Job) " +
                             f"WHERE n.sample = {sample} " +
                             f"AND n.name = {name} " +
-                            f"AND n.inputHash = {inputHash} " +
+                            f"AND n.inputHash = {input_hash} " +
                             "AND n.status = \"RUNNING\" " +
                             "WITH n.inputHash AS hash " +
                             "COLLECT(n) AS jobs " +
