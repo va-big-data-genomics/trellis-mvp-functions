@@ -232,9 +232,9 @@ class KillDuplicateJobs:
                             f"AND n.inputHash = \"{input_hash}\" " +
                             "AND n.status = \"RUNNING\" " +
                             "WITH n.inputHash AS hash, " +
-                            "COLLECT(n) AS jobs " +
-                            "WHERE SIZE(jobs) > 1 " +
-                            "RETURN tail(jobs)"
+                            "COLLECT(n) AS nodes " +
+                            "WHERE SIZE(nodes) > 1 " +
+                            "RETURN tail(nodes)"
                         ),
                         "result-mode": "data",
                         "result-structure": "list",
