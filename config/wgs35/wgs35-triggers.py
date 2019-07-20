@@ -225,6 +225,7 @@ class KillDuplicateJobs:
                               "publishTo": self.env_vars['TOPIC_KILL_DUPLICATES'],
                    }, 
                    "body": {
+                        "cypher": (
                             "MATCH (n:Job) " +
                             f"WHERE n.sample = {sample} " +
                             f"AND n.name = {name} " +
@@ -234,6 +235,10 @@ class KillDuplicateJobs:
                             "COLLECT(n) AS jobs " +
                             "WHERE SIZE(jobs) > 1 " +
                             "RETURN (node in tail(jobs))"
+                        ),
+                        "result-mode": "data",
+                        "result-structure": "list",
+                        "result-split": "True"
                    }
         }
         return(topic, message)
