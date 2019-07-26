@@ -147,9 +147,16 @@ def query_db(event, context):
     # Perpetuate metadata in specified by "perpetuate" key
     perpetuate = body.get('perpetuate')
 
+    
     if result_split == 'True':
+        if not results:
+            # If no results; send one message so triggers can respond to null
+            message = format_pubsub_message(query, results, perpetuate)
+            print(f"> Pubsub message: {message}.")
+            result = publish_to_topic(topic, message)
+            print(f"> Published message to {topic} with result: {result}.")
+
         for result in results:
-            #message['body']['results'] = result
             message = format_pubsub_message(query, result, perpetuate)
             print(f"> Pubsub message: {message}.")
             result = publish_to_topic(topic, message)
