@@ -214,6 +214,7 @@ def launch_gatk_5_dollar(event, context):
                 "plate": plate,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
+                "labels": ['Job', 'Cromwell'],
     }
 
     dsub_args = [
@@ -259,9 +260,6 @@ def launch_gatk_5_dollar(event, context):
 
     # If job launch is successful, add job to database
     if result == 1:
-        # Add additional job metadata
-        job_dict['labels'] = ['Job', 'Cromwell']
-
         # Reformat dict values as separate key/value pairs
         # to be compatible with Neo4j
         for key, value in job_dict["inputs"].items():
@@ -290,10 +288,10 @@ def launch_gatk_5_dollar(event, context):
         publish_to_topic(NEW_JOBS_TOPIC, message)  
 
         # Write message to blob
-        storage.Client(project=PROJECT_ID) \
-            .get_bucket(TRELLIS_BUCKET) \
-            .blob('launch-gatk-5-dollar-message.out') \
-            .upload_from_string(json.dumps(message))
+        #storage.Client(project=PROJECT_ID) \
+        #    .get_bucket(TRELLIS_BUCKET) \
+        #    .blob('launch-gatk-5-dollar-message.out') \
+        #    .upload_from_string(json.dumps(message))
         #gatk_inputs = json.loads(gatk_input_template)
 
 
