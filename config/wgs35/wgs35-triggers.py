@@ -15,12 +15,12 @@ class AddFastqSetSize:
                            'FromPersonalis',
                            'Marker']
 
+        if not node:
+            return False
+
         conditions = [
             set(required_labels).issubset(set(node.get('labels'))),
         ]
-
-        if not node:
-            return False
 
         for condition in conditions:
             if condition:
@@ -70,13 +70,13 @@ class CheckUbamCount:
     def check_conditions(self, header, body, node):
         required_labels = ['Ubam']
 
+        if not node:
+            return False
+
         conditions = [
             node.get('setSize'),
             set(required_labels).issubset(set(node.get('labels'))),
         ]
-
-        if not node:
-            return False
 
         for condition in conditions:
             if condition:
@@ -135,6 +135,9 @@ class GetFastqForUbam:
                            'WGS35', 
                            'FromPersonalis']
 
+        if not node:
+            return False
+
         conditions = [
             node.get('setSize'),
             node.get('sample'),
@@ -142,9 +145,6 @@ class GetFastqForUbam:
             node.get('matePair') == 1,
             set(required_labels).issubset(set(node.get('labels'))),
         ]
-
-        if not node:
-            return False
 
         for condition in conditions:
             if condition:
@@ -199,6 +199,9 @@ class KillDuplicateJobs:
 
         required_labels = ['Job']
 
+        if not node:
+            return False
+
         conditions = [
             node.get('startTime'),
             node.get('instanceName'),
@@ -207,9 +210,6 @@ class KillDuplicateJobs:
             node.get('status') == 'RUNNING',
             set(required_labels).issubset(set(node.get('labels')))
         ]
-
-        if not node:
-            return False
 
         for condition in conditions:
             if condition:
