@@ -183,19 +183,16 @@ def format_node_merge_query(db_dict, dry_run=False):
     merge_string = ', '.join(merge_strings)
 
     query = (
-             f"MERGE (node:{labels_str} {{ " +
-                                         f'bucket: "{db_dict["bucket"]}", ' +
-                                         f'path: "{db_dict["path"]}" }}) ' +
-              "ON CREATE SET node.nodeCreated = timestamp(), " +
-                'node.nodeIteration = "initial", ' +
-                f"{create_string} " + 
-              f"ON MATCH SET " +
-                'node.nodeIteration = "merged", ' +
-                f"{merge_string} " + 
-              "RETURN " + 
-              "CASE node.nodeIteration " +
-              "WHEN 'initial' THEN node " +
-              "ELSE null END")
+        f"MERGE (node:{labels_str} {{ " +
+            f'bucket: "{db_dict["bucket"]}", ' +
+            f'path: "{db_dict["path"]}" }}) ' +
+        "ON CREATE SET node.nodeCreated = timestamp(), " +
+            'node.nodeIteration = "initial", ' +
+            f"{create_string} " + 
+        f"ON MATCH SET " +
+            'node.nodeIteration = "merged", ' +
+            f"{merge_string} " + 
+        "RETURN node") 
     return query
 
 
@@ -234,8 +231,13 @@ def create_node_query(event, context):
     name = event['name']
     bucket_name = event['bucket']
 
+    # Module name does not include project prefix
+    pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
+    match = re.match(pattern, bucket_name)
+    suffix = match['suffix']
+
     # Import the config modules that corresponds to event-trigger bucket
-    node_module_name = f"{DATA_GROUP}.{bucket_name}.create-node-config"
+    node_module_name = f"{DATA_GROUP}.{suffix}.create-node-config"
     node_module = importlib.import_module(node_module_name)
 
     node_kinds = node_module.NodeKinds()
@@ -251,6 +253,9 @@ def create_node_query(event, context):
 
     db_dict.update(name_fields)
     db_dict.update(time_fields)
+
+    # Add trigger operation as metadata property
+    db_dict['triggerOperation'] = TRIGGER_OPERATION
 
     # Check db_dict with metadata about object
     db_dict['labels'] = []

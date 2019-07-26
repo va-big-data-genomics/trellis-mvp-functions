@@ -11,7 +11,7 @@ steps:
          '--max-instances=100',
          '--entry-point=launch_fastq_to_ubam',
          '--runtime=python37',
-         '--trigger-topic=${_DATA_GROUP}-tasks-fastq-to-ubam',
+         '--trigger-topic=${_DATA_GROUP}-fastq-to-ubam',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',

@@ -28,8 +28,7 @@ if ENVIRONMENT == 'google-cloud':
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
     DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
-    #KILL_DUPS_TOPIC = parsed_vars.get('KILL_DUPS_TOPIC')
-    PROPERTY_TRIGGERS_TOPIC = parsed_vars.get('PROPERTY_TRIGGERS_TOPIC')
+    TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
     PUBLISHER = pubsub.PublisherClient()
@@ -55,7 +54,7 @@ class InsertOperation:
         payload = data['protoPayload']
         resource = data['resource']
 
-        # Get task ID from request labels
+        # Get task ID from request
         # labels: [{0: {key: "trellis-id", value: "1907-5fxf7"}}]
         labels = payload['request']['labels']
         for label in labels:
@@ -84,7 +83,7 @@ class InsertOperation:
 
 
     def compose_instance_query(self):
-        """Create a separate Instance node to store VM metadata.
+        """NOT IN USE! Create a separate Instance node to store VM metadata.
         """
         query = (
             "MERGE (node:Instance {taskId: " + 
@@ -114,8 +113,8 @@ class InsertOperation:
         """Merge instance metadata with Job node.
         """
         query = (
-            "MERGE (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
-            "ON MATCH SET " +
+            "MATCH (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
+            "SET " +
                 f"node.status = \"{self.status}\", " +
                 f"node.instanceName = \"{self.name}\", " +
                 f"node.instanceId = {self.id}, " +
@@ -125,6 +124,7 @@ class InsertOperation:
                 f"node.machineType = \"{self.machine_type}\" " +
             "RETURN node")
         return query
+
 
     def compose_query(self):
         # Specify active query function
@@ -195,8 +195,8 @@ def format_pubsub_message(query, publish_to=None, perpetuate=None):
     message = {
                "header": {
                           "resource": "query",
-                          "method": "POST", 
-                          "labels": ['Job', 'Create', 'Node', 'Query', 'Cypher'], 
+                          "method": "UPDATE", 
+                          "labels": ['Query', 'Cypher', 'Update', 'Job', 'Node'], 
                           "sentFrom": f"{FUNCTION_NAME}",
                },
                "body": {
@@ -282,7 +282,7 @@ def update_job_status(event, context):
     print(f"> Database query: \"{query}\".")
 
     if insert:
-        message = format_pubsub_message(query, publish_to=PROPERTY_TRIGGERS_TOPIC)
+        message = format_pubsub_message(query, publish_to=TOPIC_TRIGGERS)
     else:
         message = format_pubsub_message(query)
     print(f"> Pubsub message: {message}.")
