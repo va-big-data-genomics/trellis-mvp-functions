@@ -151,7 +151,8 @@ def query_db(event, context):
     if result_split == 'True':
         if not results:
             # If no results; send one message so triggers can respond to null
-            message = format_pubsub_message(query, results, perpetuate)
+            result = {}
+            message = format_pubsub_message(query, result, perpetuate)
             print(f"> Pubsub message: {message}.")
             result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {result}.")
