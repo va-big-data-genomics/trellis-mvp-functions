@@ -98,9 +98,8 @@ def query_db(event, context):
 
     # Check that resource is query
     if header['resource'] != 'query':
-        print(f"Error: Expected resource type 'request', " +
-              f"got '{header['resource']}.'")
-        return
+        raise ValueError(f"Expected resource type 'query', " +
+                         f"got '{header['resource']}.'")
     
     topic = header.get('publishTo')
 
@@ -111,15 +110,17 @@ def query_db(event, context):
     
     try:
         if result_mode == 'stats':
-            print(f"> Running stats query: '{query}'.")
+            #print(f"> Running stats query: '{query}'.")
+            print("> Running stats query.")
             results = GRAPH.run(query).stats()
         elif result_mode == 'data':
-            print(f"> Running data query: '{query}'.")
+            #print(f"> Running data query: '{query}'.")
+            print("> Running data query.")
             results = GRAPH.run(query).data()
         else:
             GRAPH.run(query)
             results = None
-        print(f"Query results: {results}.")
+        print(f"> Query results: {results}.")
     # Neo4j http connector
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
@@ -146,9 +147,17 @@ def query_db(event, context):
     # Perpetuate metadata in specified by "perpetuate" key
     perpetuate = body.get('perpetuate')
 
+    
     if result_split == 'True':
+        if not results:
+            # If no results; send one message so triggers can respond to null
+            result = {}
+            message = format_pubsub_message(query, result, perpetuate)
+            print(f"> Pubsub message: {message}.")
+            result = publish_to_topic(topic, message)
+            print(f"> Published message to {topic} with result: {result}.")
+
         for result in results:
-            #message['body']['results'] = result
             message = format_pubsub_message(query, result, perpetuate)
             print(f"> Pubsub message: {message}.")
             result = publish_to_topic(topic, message)
