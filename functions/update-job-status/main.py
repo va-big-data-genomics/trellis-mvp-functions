@@ -125,6 +125,7 @@ class InsertOperation:
             "RETURN node")
         return query
 
+
     def compose_query(self):
         # Specify active query function
         return self.compose_job_query()
