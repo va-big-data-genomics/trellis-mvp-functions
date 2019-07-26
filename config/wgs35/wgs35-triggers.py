@@ -7,6 +7,7 @@ class AddFastqSetSize:
         self.function_name = function_name
         self.env_vars = env_vars
 
+
     def check_conditions(self, header, body, node):
 
         required_labels = [
@@ -16,11 +17,10 @@ class AddFastqSetSize:
 
         conditions = [
             set(required_labels).issubset(set(node.get('labels'))),
-            # (DISABLED) Only activate trigger on initial upload or
-            #   metadata update.
-            #(node['nodeIteration'] == 'initial' or 
-            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
+
+        if not node:
+            return False
 
         for condition in conditions:
             if condition:
@@ -28,6 +28,7 @@ class AddFastqSetSize:
             else:
                 return False
         return True
+
 
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
@@ -65,18 +66,17 @@ class CheckUbamCount:
         self.function_name = function_name
         self.env_vars = env_vars
 
-    def check_conditions(self, header, body, node):
 
+    def check_conditions(self, header, body, node):
         required_labels = ['Ubam']
 
         conditions = [
             node.get('setSize'),
             set(required_labels).issubset(set(node.get('labels'))),
-            # Only activate trigger on initial upload or
-            #   metadata update.
-            #(node['nodeIteration'] == 'initial' or 
-            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
+
+        if not node:
+            return False
 
         for condition in conditions:
             if condition:
@@ -84,6 +84,7 @@ class CheckUbamCount:
             else:
                 return False
         return True
+
 
     def compose_message(self, header, body, node):
         """Send full set of ubams to GATK task"""
@@ -125,6 +126,7 @@ class GetFastqForUbam:
         self.function_name = function_name
         self.env_vars = env_vars
 
+
     def check_conditions(self, header, body, node):
 
         required_labels = [
@@ -139,11 +141,10 @@ class GetFastqForUbam:
             node.get('readGroup') == 0,
             node.get('matePair') == 1,
             set(required_labels).issubset(set(node.get('labels'))),
-            # (DISABLED) Only activate trigger on initial upload or
-            #   metadata update.
-            #(node['nodeIteration'] == 'initial' or 
-            #    node['triggerOperation'] == 'metadataUpdate'),
         ]
+
+        if not node:
+            return False
 
         for condition in conditions:
             if condition:
@@ -151,6 +152,7 @@ class GetFastqForUbam:
             else:
                 return False
         return True
+
 
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
@@ -191,6 +193,7 @@ class KillDuplicateJobs:
         self.function_name = function_name
         self.env_vars = env_vars
 
+
     def check_conditions(self, header, body, node):
 
         required_labels = ['Job']
@@ -204,12 +207,16 @@ class KillDuplicateJobs:
             set(required_labels).issubset(set(node.get('labels')))
         ]
 
+        if not node:
+            return False
+
         for condition in conditions:
             if condition:
                 continue
             else:
                 return False
         return True
+
 
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
