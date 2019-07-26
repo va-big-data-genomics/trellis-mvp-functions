@@ -7,7 +7,7 @@ class AddFastqSetSize:
         self.function_name = function_name
         self.env_vars = env_vars
 
-    def check_conditions(self, node):
+    def check_conditions(self, header, body, node):
 
         required_labels = [
                            'Json',
@@ -29,7 +29,7 @@ class AddFastqSetSize:
                 return False
         return True
 
-    def compose_message(self, node):
+    def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
@@ -65,7 +65,7 @@ class CheckUbamCount:
         self.function_name = function_name
         self.env_vars = env_vars
 
-    def check_conditions(self, node):
+    def check_conditions(self, header, body, node):
 
         required_labels = ['Ubam']
 
@@ -85,7 +85,7 @@ class CheckUbamCount:
                 return False
         return True
 
-    def compose_message(self, node):
+    def compose_message(self, header, body, node):
         """Send full set of ubams to GATK task"""
         topic = self.env_vars['DB_QUERY_TOPIC']
 
@@ -125,7 +125,7 @@ class GetFastqForUbam:
         self.function_name = function_name
         self.env_vars = env_vars
 
-    def check_conditions(self, node):
+    def check_conditions(self, header, body, node):
 
         required_labels = [
                            'Blob', 
@@ -152,7 +152,7 @@ class GetFastqForUbam:
                 return False
         return True
 
-    def compose_message(self, node):
+    def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
@@ -191,7 +191,7 @@ class KillDuplicateJobs:
         self.function_name = function_name
         self.env_vars = env_vars
 
-    def check_conditions(self, node):
+    def check_conditions(self, header, body, node):
 
         required_labels = ['Job']
 
@@ -200,7 +200,9 @@ class KillDuplicateJobs:
             node.get('instanceName'),
             node.get('instanceId'),
             node.get('inputHash'),
-            node.get('status') == 'RUNNING']
+            node.get('status') == 'RUNNING',
+            set(required_labels).issubset(set(node.get('labels')))
+        ]
 
         for condition in conditions:
             if condition:
@@ -209,7 +211,7 @@ class KillDuplicateJobs:
                 return False
         return True
 
-    def compose_message(self, node):
+    def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
@@ -242,6 +244,44 @@ class KillDuplicateJobs:
                    }
         }
         return(topic, message)
+
+class RequeueJobQuery:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node=None):
+
+        reqd_header_labels = ['Query', 'Cypher', 'Update', 'Job', 'Node']
+
+        conditions = [
+            header.get('method') == "UPDATE",
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            not node
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        # Requeue original message, updating sentFrom property
+        message = {}
+        header['sentFrom'] = os.environ['FUNCTION_NAME']
+        message['header'] = header
+        message['body'] = body
+
+        return(topic, message)
+
 
 def get_triggers(function_name, env_vars):
 
