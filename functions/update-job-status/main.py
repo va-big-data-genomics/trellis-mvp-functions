@@ -194,8 +194,8 @@ def format_pubsub_message(query, publish_to=None, perpetuate=None):
     message = {
                "header": {
                           "resource": "query",
-                          "method": "POST", 
-                          "labels": ['Job', 'Create', 'Node', 'Query', 'Cypher'], 
+                          "method": "UPDATE", 
+                          "labels": ['Query', 'Cypher', 'Update', 'Job', 'Node'], 
                           "sentFrom": f"{FUNCTION_NAME}",
                },
                "body": {
