@@ -60,23 +60,10 @@ def kill_duplicate_jobs(event, context):
     header = data['header']
     body = data['body']
 
-    #job = body['results']['node']
-    #duplicates = job.get('duplicateNameZones')
-    #if not duplicates:
-    #    print("> No duplicates found. exiting.")
-    #primary_instance_name = job['instanceName']
-
-    duplicates = body['results']['nodes']
-
-    # Delete all duplicate job instances
-    #for instance_name_zone in duplicates:
-        #elements = instance_name_zone.split(',')
-        #instance_name = elements[0]
-        #instance_zone = elements[1]
-
-        # Don't accidentally kill the primary job instance
-        #if instance_name == primary_instance_name:
-        #    continue 
+    duplicates = body['results'].get('nodes')
+    if not duplicates:
+        print("> No duplicates found; exiting.")
+        return
 
     for duplicate in duplicates:
         name = duplicate['instanceName']
