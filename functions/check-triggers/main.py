@@ -13,7 +13,7 @@ from google.cloud import pubsub
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
-    function_name = os.environ['FUNCTION_NAME']
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
     
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -31,7 +31,7 @@ if ENVIRONMENT == 'google-cloud':
     # Load trigger module
     trigger_module_name = f"{DATA_GROUP}-triggers"
     triggers = importlib.import_module(trigger_module_name)
-    ALL_TRIGGERS = triggers.get_triggers(function_name, parsed_vars)
+    ALL_TRIGGERS = triggers.get_triggers(FUNCTION_NAME, parsed_vars)
 
 
 def publish_to_topic(topic, data):
@@ -65,15 +65,17 @@ def check_triggers(event, context, dry_run=False):
                          f"Error: Expected resource type 'queryResult', " +
                          f"got '{header['resource']}.'")
 
-    node = body['results']['node']
+    node = body['results'].get('node')
 
     activated_triggers = []
     for trigger in ALL_TRIGGERS:
-        status = trigger.check_conditions(node)
+        #status = trigger.check_conditions(node)
+        status = trigger.check_conditions(header, body, node)
         if status == True:
             activated_triggers.append(trigger)
             print(f'>>> Trigger activated: {trigger}.')
-            topic, message = trigger.compose_message(node)
+            #topic, message = trigger.compose_message(node)
+            topic, message = trigger.compose_message(header, body, node)
             print(f">>> Publishing message: {message}.")
             if dry_run:
                 print(f">>> Dry run: Would have published message to {topic}.")
