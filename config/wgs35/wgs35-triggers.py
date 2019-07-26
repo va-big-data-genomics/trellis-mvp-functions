@@ -245,6 +245,7 @@ class KillDuplicateJobs:
         }
         return(topic, message)
 
+
 class RequeueJobQuery:
 
     def __init__(self, function_name, env_vars):
