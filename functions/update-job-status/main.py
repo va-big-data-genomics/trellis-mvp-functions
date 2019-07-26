@@ -83,7 +83,7 @@ class InsertOperation:
 
 
     def compose_instance_query(self):
-        """Create a separate Instance node to store VM metadata.
+        """NOT IN USE! Create a separate Instance node to store VM metadata.
         """
         query = (
             "MERGE (node:Instance {taskId: " + 
@@ -113,8 +113,8 @@ class InsertOperation:
         """Merge instance metadata with Job node.
         """
         query = (
-            "MERGE (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
-            "ON MATCH SET " +
+            "MATCH (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
+            "SET " +
                 f"node.status = \"{self.status}\", " +
                 f"node.instanceName = \"{self.name}\", " +
                 f"node.instanceId = {self.id}, " +
