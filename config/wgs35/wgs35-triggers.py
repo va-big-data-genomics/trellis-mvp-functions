@@ -170,7 +170,8 @@ class GetFastqForUbam:
                    "body": {
                             "cypher": (
                                        "MATCH (n:Fastq) " + 
-                                       f"WHERE n.sample=\"{sample}\" " + 
+                                       f"WHERE n.sample=\"{sample}\" " +
+                                       "WHERE NOT (n)-[*2]->(:Ubam) " +
                                        "WITH n.readGroup AS read_group, " +
                                        "n.setSize AS set_size, " +
                                        "COLLECT(n) AS nodes " +
