@@ -77,9 +77,8 @@ def add_relationships(event, context):
     body = data['body']
 
     if header['resource'] != 'queryResult':
-        print(f"Error: Expected resource type 'blob', " +
-              f"got '{header['resource']}.'")
-        return
+        raise ValueError(f"Expected resource type 'queryResult', " +
+                         f"got '{header['resource']}.'")
 
     case_str = "CASE node.nodeIteration WHEN 'initial' THEN node ELSE null END"
     if "node" in body['results'].keys():
@@ -87,7 +86,7 @@ def add_relationships(event, context):
     elif case_str in body['results'].keys():
         node = body['results'][case_str]
     else:
-        print("No node provided; exiting.")
+        print(">>> No node provided; exiting.")
         return
 
     # Node provided by CASE can still be null
