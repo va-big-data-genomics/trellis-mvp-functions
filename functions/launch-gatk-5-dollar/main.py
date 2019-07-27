@@ -5,6 +5,7 @@ import uuid
 import yaml
 import base64
 import hashlib
+import logging
 
 from google.cloud import storage
 from google.cloud import pubsub
@@ -117,6 +118,9 @@ def launch_gatk_5_dollar(event, context):
 
     #metadata = {}
     if len(body['results']) == 0:
+        # This is expected, because everytime a ubam is created 
+        # a query result will be sent here, but will be empty 
+        # unless all ubams are present
         logging.warn("No results found; ignoring.")
         return
     elif len(body['results']) != 1:
