@@ -157,6 +157,7 @@ class DeleteOperation:
 
 
     def compose_instance_query(self):
+        """DEPRECATED"""
         query = (
                  "MATCH (node:Instance) " +
                 f"WHERE node.instanceId = {self.id} " +
@@ -278,6 +279,13 @@ def update_job_status(event, context):
     else:
         raise ValueError(f"Request type not supported: {request_type}.")
     query = job_op.compose_query()
+
+    # If an instance cannot be found (i.e. already deleted), 
+    # delete operation will not return an instance ID.
+    # For now, I'm just ignoring these messages.
+    if not job_op.id:
+        print(f"> No instance ID provided; skipping.")
+        return
 
     print(f"> Database query: \"{query}\".")
 
