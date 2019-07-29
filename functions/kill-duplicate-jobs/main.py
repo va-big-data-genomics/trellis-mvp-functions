@@ -38,6 +38,16 @@ def publish_to_topic(publisher, project_id, topic, data):
     result = publisher.publish(topic_path, data=message).result()
     return result
 
+def delete_instance(zone, name):
+    try:
+        request = SERVICE.instances().delete(
+                                             project = PROJECT_ID,
+                                             zone = zone,
+                                             instance = name)
+        response = request.execute()
+        return True
+    except:
+        return False
 
 def kill_duplicate_jobs(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
@@ -70,11 +80,14 @@ def kill_duplicate_jobs(event, context):
         zone = duplicate['zone']
 
         # Send request to delete each duplicate job instance
-        request = SERVICE.instances().delete(
-                                             project = PROJECT_ID,
-                                             zone = zone,
-                                             instance = name)
-        response = request.execute()
-
+        #request = SERVICE.instances().delete(
+        #                                     project = PROJECT_ID,
+        #                                     zone = zone,
+        #                                     instance = name)
+        #response = request.execute()
+        while True:
+            result = delete_instance(zone, name)
+            if result == True:
+                break
 
         
