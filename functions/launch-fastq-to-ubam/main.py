@@ -105,7 +105,10 @@ def launch_fastq_to_ubam(event, context):
     if not dry_run:
         dry_run = False
 
-    nodes = body['results']['nodes']
+    nodes = body['results'].get('nodes')
+    if not nodes:
+        print("> No nodes provided. Exiting.")
+        return
     
     # TODO: Add error checking to make sure metadata_setSize is included
     set_size = False
