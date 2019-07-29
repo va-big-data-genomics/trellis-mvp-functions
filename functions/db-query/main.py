@@ -53,12 +53,13 @@ if ENVIRONMENT == 'google-cloud':
                   max_connections=NEO4J_MAX_CONN)
 
 
-def format_pubsub_message(query, results, perpetuate=None):
+def format_pubsub_message(method, labels, query, results, perpetuate=None):
+    labels.extend(["Database", "Result"])
     message = {
                "header": {
-                          "method": "VIEW",
+                          "method": method,
                           "resource": "queryResult",
-                          "labels": ["Cypher", "Database", "Result"],
+                          "labels": labels,
                           "sentFrom": FUNCTION_NAME
                },
                "body": {
@@ -101,6 +102,8 @@ def query_db(event, context):
         raise ValueError(f"Expected resource type 'query', " +
                          f"got '{header['resource']}.'")
     
+    method = header['method']
+    labels = header['labels']
     topic = header.get('publishTo')
 
     query = body['cypher']
@@ -152,19 +155,19 @@ def query_db(event, context):
         if not results:
             # If no results; send one message so triggers can respond to null
             result = {}
-            message = format_pubsub_message(query, result, perpetuate)
+            message = format_pubsub_message(method, labels, query, result, perpetuate)
             print(f"> Pubsub message: {message}.")
             result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {result}.")
 
         for result in results:
-            message = format_pubsub_message(query, result, perpetuate)
+            message = format_pubsub_message(method, labels, query, result, perpetuate)
             print(f"> Pubsub message: {message}.")
             result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {result}.")
     else:
         #message['body']['results'] = results
-        message = format_pubsub_message(query, results, perpetuate)
+        message = format_pubsub_message(method, labels, query, results, perpetuate)
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(topic, message)
         print(f"> Published message to {topic} with result: {result}.")
