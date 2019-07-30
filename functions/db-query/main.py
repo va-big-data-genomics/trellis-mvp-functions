@@ -141,6 +141,14 @@ def query_db(event, context):
         # Duplicate message flagged as warning
         logging.warn(f"> Requeued message: {pubsub_message}.")
         return
+    except ConnectionResetError as error:
+        logging.warn(f"> Encountered connection interruption: {error}.")
+        # Add message back to queue
+        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+        # Duplicate message flagged as warning
+        logging.warn(f"> Requeued message: {pubsub_message}.")
+        return
 
     # Return if not pubsub topic
     if not topic:
