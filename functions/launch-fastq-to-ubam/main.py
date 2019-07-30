@@ -84,6 +84,15 @@ def get_datetime_stamp():
     datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
     return datestamp
 
+def write_metadata_to_blob(meta_blob_path, metadata):
+    try:
+        meta_blob = storage.Client(project=PROJECT_ID) \
+            .get_bucket(OUT_BUCKET) \
+            .blob(meta_blob_path) \
+            .upload_from_string(json.dumps(metadata))
+        return True
+    except:
+        return False
 
 def launch_fastq_to_ubam(event, context):
     """When an object node is added to the database, launch any
@@ -105,7 +114,10 @@ def launch_fastq_to_ubam(event, context):
     if not dry_run:
         dry_run = False
 
-    nodes = body['results']['nodes']
+    nodes = body['results'].get('nodes')
+    if not nodes:
+        print("> No nodes provided. Exiting.")
+        return
     
     # TODO: Add error checking to make sure metadata_setSize is included
     set_size = False
@@ -130,18 +142,6 @@ def launch_fastq_to_ubam(event, context):
     task_name = 'fastq-to-ubam'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-
-    # Convert each node to a frozenhash, and calculate hash
-    # Sum all hashes to get job hash
-    #nodes_hash = 0
-    #for node in nodes:
-    #    nodes_hash += hash(json.dumps(
-    #                                  node,
-    #                                  sort_keys=True,
-    #                                  ensure_ascii=True,
-    #                                  default=str))
-        #nodes_hash += frozenset(node).__hash__()
-    #print(f"> Nodes hash: nodes_hash")
 
     # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
     sorted_nodes = sorted(nodes, key = lambda i: i['id'])
@@ -256,14 +256,19 @@ def launch_fastq_to_ubam(event, context):
     print(f"Dsub result: '{result}'.")
 
     # Metadata to be perpetuated to ubams is written to file
+    # Try until success
     if result == 1 and metadata and not dry_run:
         print(f"Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
         meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
-        meta_blob = storage.Client(project=PROJECT_ID) \
-            .get_bucket(OUT_BUCKET) \
-            .blob(meta_blob_path) \
-            .upload_from_string(json.dumps(metadata))
+        #meta_blob = storage.Client(project=PROJECT_ID) \
+        #    .get_bucket(OUT_BUCKET) \
+        #    .blob(meta_blob_path) \
+        #    .upload_from_string(json.dumps(metadata))
+        while True:
+            result = write_metadata_to_blob(meta_blob_path, metadata)
+            if result == True:
+                break
         print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
 
     # Job metadata is formatted for neo4j & published
