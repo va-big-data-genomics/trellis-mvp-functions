@@ -11,7 +11,7 @@ steps:
          '--max-instances=100',
          '--entry-point=update_job_status',
          '--runtime=python37',
-         '--trigger-topic=${_DATA_GROUP}-update-vm-status',
+         '--trigger-topic=${_DATA_GROUP}-update-job-status',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
