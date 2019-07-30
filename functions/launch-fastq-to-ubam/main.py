@@ -165,7 +165,7 @@ def launch_fastq_to_ubam(event, context):
         sample = node['sample']
         read_group = node['readGroup']
         mate_pair = node['matePair']
-        set_size = node['setSize']
+        set_size = int(node['setSize'])/2
 
         bucket = node['bucket']
         path = node['path']
