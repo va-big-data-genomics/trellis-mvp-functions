@@ -107,10 +107,16 @@ class CheckUbamCount:
                                        f"WHERE n.sample=\"{sample}\" " +
                                        "AND NOT (n)-[:INPUT_TO]->(:Job:Cromwell {name: \"gatk-5-dollar\"}) " +
                                        "WITH n.sample AS sample, " +
-                                       "n.setSize AS setSize, " +
-                                       "COLLECT(n) as nodes " +
-                                       "WHERE size(nodes) = setSize " +
-                                       "RETURN nodes"),
+                                       "n.readGroup AS readGroup, " +
+                                       "n.matePair AS matePair, " +
+                                       "COLLECT(n) as allNodes " +
+                                       "WITH head(allNodes) AS heads " +
+                                       "UNWIND [heads] AS uniqueNodes " +
+                                       "WITH uniqueNodes.sample AS sample, " +
+                                       "uniqueNodes.setSize AS setSize, " +
+                                       "COLLECT(uniqueNodes) AS sampleNodes " +
+                                       "WHERE size(sampleNodes) = setSize " +
+                                       "RETURN sampleNodes AS nodes"),
                             "result-mode": "data", 
                             "result-structure": "list",
                             "result-split": "True",
