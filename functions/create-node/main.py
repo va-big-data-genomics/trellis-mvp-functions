@@ -197,6 +197,7 @@ def format_node_merge_query(db_dict, dry_run=False):
 
 
 def format_node_query(db_entry, dry_run=False):
+    """DEPRECATED"""
     # Create label string
     labels_str = ':'.join(db_entry['labels'])
 
