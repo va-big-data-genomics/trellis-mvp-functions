@@ -120,9 +120,11 @@ def launch_fastq_to_ubam(event, context):
         return
     
     # TODO: Add error checking to make sure metadata_setSize is included
-    set_size = False
+    #set_size = False
 
     # Get metadata to be perpetuated to Ubams
+    # 20190730: Deprecated. Get metadata from node(s)
+    """
     metadata = {}
     for result_name in body['results']:
         elements = result_name.split('_')
@@ -133,10 +135,11 @@ def launch_fastq_to_ubam(event, context):
                 set_size = True
 
     if set_size == False:
-        raise ValueError(f"Error: setSize not provided in results metadata.")
+        raise ValueError(f"> Error: setSize not provided in results metadata.")
+    """
 
     if len(nodes) != 2:
-        raise ValueError(f"Error: Need 2 fastqs; {len(nodes)} provided.")
+        raise ValueError(f"> Error: Need 2 fastqs; {len(nodes)} provided.")
 
     # Dsub data
     task_name = 'fastq-to-ubam'
@@ -154,18 +157,33 @@ def launch_fastq_to_ubam(event, context):
     #pdb.set_trace()
 
     # TODO: Implement QC checking to make sure fastqs match
+    set_sizes = []
+    fastq_fields = []
     fastqs = {}
     for node in nodes:
         plate = node['plate']
         sample = node['sample']
         read_group = node['readGroup']
         mate_pair = node['matePair']
+        set_size = node['setSize']
 
         bucket = node['bucket']
         path = node['path']
 
         fastq_name = f'FASTQ_{mate_pair}'
         fastqs[fastq_name] = f"gs://{bucket}/{path}" 
+
+        fastq_fields.extend([plate, sample, read_group])
+        set_sizes.append(set_size)
+
+    # Check that fastqs are from same sample/read group
+    if len(set(fastq_fields)) != 3:
+        raise ValueError(f"> Fastq fields are not in agreement: {fastq_fields}. Exiting.")
+
+    # Check to make sure that set sizes are in agreement
+    if len(set(set_sizes)) != 1:
+        raise ValueError(f"> Set sizes of fastqs are not in agreement: {set_sizes}. Exiting.")
+
 
     # Define logging & outputs after task_id
     job_dict = {
@@ -257,6 +275,7 @@ def launch_fastq_to_ubam(event, context):
 
     # Metadata to be perpetuated to ubams is written to file
     # Try until success
+    metadata = {"setSize": set_size}
     if result == 1 and metadata and not dry_run:
         print(f"Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
