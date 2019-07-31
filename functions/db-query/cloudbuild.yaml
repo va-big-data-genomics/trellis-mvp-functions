@@ -7,7 +7,7 @@ steps:
          '${_DATA_GROUP}-db-query',
          '--project=${PROJECT_ID}',
          '--source=functions/db-query',
-         '--memory=128MB',
+         '--memory=256MB',
          '--max-instances=40',
          '--entry-point=query_db',
          '--runtime=python37',
