@@ -94,17 +94,8 @@ def query_db(event, context):
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
-    
-    # This chunk intermittently throws following error: 
-    # "TypeErRor: string indices must be integers"
-    while True:
-        try:
-            header = data['header']
-            body = data['body']
-            break
-        except TypeError as error:
-            logging.warn(f"> Error parsing JSON: {error}. Retrying.")
-            data = json.loads(pubsub_message)
+    header = data['header']
+    body = data['body']
 
     # Check that resource is query
     if header['resource'] != 'query':
