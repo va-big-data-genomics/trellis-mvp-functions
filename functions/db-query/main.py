@@ -102,7 +102,8 @@ def query_db(event, context):
             header = data['header']
             body = data['body']
             break
-        except:
+        except TypeError as error:
+            logging.warn(f"> Error parsing JSON: {error}. Retrying.")
             data = json.loads(pubsub_message)
 
     # Check that resource is query
