@@ -298,6 +298,9 @@ class RequeueJobQuery:
         header['labels'].remove('Result')
 
         del(body['result'])
+        body['result-mode'] = 'data'
+        body['result-structure'] = 'list'
+        body['result-split'] = 'True'
 
         message['header'] = header
         message['body'] = body
