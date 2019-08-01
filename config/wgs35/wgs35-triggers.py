@@ -291,7 +291,7 @@ class RequeueJobQuery:
 
         # Requeue original message, updating sentFrom property
         message = {}
-        header['sentFrom'] = os.environ['FUNCTION_NAME']
+        header['sentFrom'] = self.function_name
         message['header'] = header
         message['body'] = body
 
