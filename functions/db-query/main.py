@@ -95,8 +95,8 @@ def query_db(event, context):
     print(f"> Data: {data}.")
 
     try:
-        header = data['header']
-        body = data['body']
+        header = data["header"]
+        body = data["body"]
     except TypeError as error:
         logging.warn(f"> Data type: {type(data)}.")
         logging.warn(f"> Data content: {data}.")
