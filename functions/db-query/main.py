@@ -72,9 +72,9 @@ def format_pubsub_message(method, labels, query, results, perpetuate=None):
     return message
 
 
-def publish_to_topic(topic, data):
+def publish_to_topic(topic, json_data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
-    message = json.dumps(data).encode('utf-8')
+    message = json.dumps(json_data).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
 
@@ -90,12 +90,17 @@ def query_db(event, context):
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     print(f"> Received pubsub message: {pubsub_message}.")
-    #context = base64.b64decode(context).decode('uft-8')
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
-    header = data['header']
-    body = data['body']
+
+    try:
+        header = data['header']
+        body = data['body']
+    except TypeError as error:
+        logging.warn(f"> Data type: {type(data)}.")
+        logging.warn(f"> Data content: {data}.")
+        raise TypeError(error)
 
     # Check that resource is query
     if header['resource'] != 'query':
@@ -113,11 +118,9 @@ def query_db(event, context):
     
     try:
         if result_mode == 'stats':
-            #print(f"> Running stats query: '{query}'.")
             print("> Running stats query.")
             results = GRAPH.run(query).stats()
         elif result_mode == 'data':
-            #print(f"> Running data query: '{query}'.")
             print("> Running data query.")
             results = GRAPH.run(query).data()
         else:
