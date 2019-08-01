@@ -291,7 +291,14 @@ class RequeueJobQuery:
 
         # Requeue original message, updating sentFrom property
         message = {}
+        
         header['sentFrom'] = self.function_name
+        header['resource'] = 'query'
+        header['labels'].remove('Database')
+        header['labels'].remove('Result')
+
+        del(body['result'])
+
         message['header'] = header
         message['body'] = body
 
