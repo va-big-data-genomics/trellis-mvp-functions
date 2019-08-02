@@ -100,7 +100,9 @@ def query_db(event, context):
     except TypeError as error:
         logging.warn(f"> Data type: {type(data)}.")
         logging.warn(f"> Data content: {data}.")
-        raise TypeError(error)
+        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+        raise TypeError("> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
 
     # Check that resource is query
     if header['resource'] != 'query':
