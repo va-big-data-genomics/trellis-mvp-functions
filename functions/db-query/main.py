@@ -63,7 +63,7 @@ def format_pubsub_message(method, labels, query, results, perpetuate=None):
                           "sentFrom": FUNCTION_NAME
                },
                "body": {
-                        "query": query,
+                        "cypher": query,
                         "results": results,
                }
     }
