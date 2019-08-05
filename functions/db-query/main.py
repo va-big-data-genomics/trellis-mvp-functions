@@ -79,6 +79,13 @@ def publish_to_topic(topic, json_data):
     return result
 
 
+def publish_str_to_topic(topic, str_data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    message = str_data.encode('utf-8')
+    result = PUBLISHER.publish(topic_path, data=message).result()
+    return result    
+
+
 def query_db(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
@@ -100,9 +107,9 @@ def query_db(event, context):
     except TypeError as error:
         logging.warn(f"> Data type: {type(data)}.")
         logging.warn(f"> Data content: {data}.")
-        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        result = publish_str_to_topic(DB_QUERY_TOPIC, pubsub_message)
         logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
-        raise TypeError("> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
+        raise TypeError(f"> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
 
     # Check that resource is query
     if header['resource'] != 'query':
