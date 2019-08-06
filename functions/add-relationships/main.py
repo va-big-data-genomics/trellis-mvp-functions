@@ -40,8 +40,7 @@ def format_pubsub_message(query, topic=None):
                           "resource": "query", 
                           "method": "POST",
                           "labels": ["Cypher", "Query", "Relationship", "Create"],
-                          "sentFrom": FUNCTION_NAME,
-                          "publishTo": topic,
+                          "sentFrom": FUNCTION_NAME
                },
                "body": {
                         "cypher": query,
@@ -50,6 +49,9 @@ def format_pubsub_message(query, topic=None):
                         "result-split": "True", 
                }
     }
+    if topic:
+        extension = {"publishTo": topic}
+        message["header"].update(extension)
     return message
 
 
