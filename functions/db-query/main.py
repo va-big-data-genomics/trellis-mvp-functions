@@ -97,9 +97,9 @@ def query_db(event, context):
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     print(f"> Received pubsub message: {pubsub_message}.")
-    json_data = json.loads(pubsub_message)
+    data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
-    print(f"> Data: {json_data}.")
+    print(f"> Data: {data}.")
 
     #try:
     #    header = json_data["header"]
@@ -110,10 +110,13 @@ def query_db(event, context):
     #    result = publish_str_to_topic(DB_QUERY_TOPIC, pubsub_message)
     #    logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
     #    raise TypeError(f"> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
-    data = eval(json_data)
+    
+    if type(data) == str:
+        data = eval(data)
+
     header = data["header"]
     body = data["body"]
-
+    
     # Check that resource is query
     if header['resource'] != 'query':
         raise ValueError(f"Expected resource type 'query', " +
