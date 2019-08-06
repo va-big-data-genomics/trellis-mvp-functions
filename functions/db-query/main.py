@@ -97,19 +97,22 @@ def query_db(event, context):
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     print(f"> Received pubsub message: {pubsub_message}.")
-    data = json.loads(pubsub_message)
+    json_data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
-    print(f"> Data: {data}.")
+    print(f"> Data: {json_data}.")
 
-    try:
-        header = data["header"]
-        body = data["body"]
-    except TypeError as error:
-        logging.warn(f"> Data type: {type(data)}.")
-        logging.warn(f"> Data content: {data}.")
-        result = publish_str_to_topic(DB_QUERY_TOPIC, pubsub_message)
-        logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
-        raise TypeError(f"> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
+    #try:
+    #    header = json_data["header"]
+    #    body = json_data["body"]
+    #except TypeError as error:
+    #    logging.warn(f"> Data type: {type(json_data)}.")
+    #    logging.warn(f"> Data content: {json_data}.")
+    #    result = publish_str_to_topic(DB_QUERY_TOPIC, pubsub_message)
+    #    logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+    #    raise TypeError(f"> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
+    data = dict(json_data)
+    header = data["header"]
+    body = data["body"]
 
     # Check that resource is query
     if header['resource'] != 'query':
