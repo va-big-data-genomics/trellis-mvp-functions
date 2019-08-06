@@ -112,6 +112,8 @@ def query_db(event, context):
     #    raise TypeError(f"> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
     
     if type(data) == str:
+        logging.warn("Message data not correctly loaded as JSON. " +
+                     "Used eval to convert from string.")
         data = eval(data)
 
     header = data["header"]
