@@ -110,7 +110,7 @@ def query_db(event, context):
     #    result = publish_str_to_topic(DB_QUERY_TOPIC, pubsub_message)
     #    logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
     #    raise TypeError(f"> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
-    data = dict(json_data)
+    data = eval(json_data)
     header = data["header"]
     body = data["body"]
 
