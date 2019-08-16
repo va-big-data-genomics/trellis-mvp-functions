@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import base64
 
 from google.cloud import storage
@@ -38,6 +39,7 @@ def publish_to_topic(publisher, project_id, topic, data):
     result = publisher.publish(topic_path, data=message).result()
     return result
 
+
 def delete_instance(zone, name):
     try:
         request = SERVICE.instances().delete(
@@ -47,7 +49,12 @@ def delete_instance(zone, name):
         response = request.execute()
         return True
     except:
+        # TODO: implement handling for different exceptions
+        #   i.e. If an instance has already been deleted, stop 
+        #   trying to delete it.
+        time.sleep(10)
         return False
+
 
 def kill_duplicate_jobs(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
