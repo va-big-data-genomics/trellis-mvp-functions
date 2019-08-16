@@ -8,7 +8,7 @@ steps:
          '--project=${PROJECT_ID}',
          '--source=functions/launch-fastq-to-ubam',
          '--memory=128MB',
-         '--max-instances=100',
+         '--max-instances=40',
          '--entry-point=launch_fastq_to_ubam',
          '--runtime=python37',
          '--trigger-topic=${_DATA_GROUP}-fastq-to-ubam',
