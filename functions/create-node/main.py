@@ -273,6 +273,13 @@ def create_node_query(event, context):
                 # Break after a single pattern per label has been matched
                 break
 
+    # Ignore log files
+    log_labels = set(['Log', 'Stderr', 'Stdout'])
+    log_interesction = log_labels.intersection(db_dict['labels'])
+    if log_intersection:
+        print(f"> This is a log file; ignoring. {db_dict['labels']}")
+        return
+
     # Key, value pairs unique to db_dict are trellis metadata
     trellis_metadata = {}
     for key, value in db_dict.items():
