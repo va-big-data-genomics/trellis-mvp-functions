@@ -294,6 +294,7 @@ class RequeueJobQuery:
         
         header['sentFrom'] = self.function_name
         header['resource'] = 'query'
+        header['publishTo'] = self.function_name
         header['labels'].remove('Database')
         header['labels'].remove('Result')
 

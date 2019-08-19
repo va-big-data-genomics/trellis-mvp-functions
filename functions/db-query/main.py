@@ -38,7 +38,7 @@ if ENVIRONMENT == 'google-cloud':
     NEO4J_PORT = parsed_vars['NEO4J_PORT']
     NEO4J_USER = parsed_vars['NEO4J_USER']
     NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
-    NEO4J_MAX_CONN = parsed_vars['NEO4J_MAX_CONN']
+    #NEO4J_MAX_CONN = parsed_vars['NEO4J_MAX_CONN']
 
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
@@ -49,8 +49,8 @@ if ENVIRONMENT == 'google-cloud':
                   host=NEO4J_HOST, 
                   port=NEO4J_PORT,
                   user=NEO4J_USER, 
-                  password=NEO4J_PASSPHRASE,
-                  max_connections=NEO4J_MAX_CONN)
+                  password=NEO4J_PASSPHRASE)
+                  #max_connections=NEO4J_MAX_CONN)
 
 
 def format_pubsub_message(method, labels, query, results, perpetuate=None):
@@ -79,6 +79,13 @@ def publish_to_topic(topic, json_data):
     return result
 
 
+def publish_str_to_topic(topic, str_data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    message = str_data.encode('utf-8')
+    result = PUBLISHER.publish(topic_path, data=message).result()
+    return result    
+
+
 def query_db(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
@@ -94,16 +101,24 @@ def query_db(event, context):
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
 
-    try:
-        header = data["header"]
-        body = data["body"]
-    except TypeError as error:
-        logging.warn(f"> Data type: {type(data)}.")
-        logging.warn(f"> Data content: {data}.")
-        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
-        logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
-        raise TypeError("> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
+    #try:
+    #    header = json_data["header"]
+    #    body = json_data["body"]
+    #except TypeError as error:
+    #    logging.warn(f"> Data type: {type(json_data)}.")
+    #    logging.warn(f"> Data content: {json_data}.")
+    #    result = publish_str_to_topic(DB_QUERY_TOPIC, pubsub_message)
+    #    logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+    #    raise TypeError(f"> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
+    
+    if type(data) == str:
+        logging.warn("Message data not correctly loaded as JSON. " +
+                     "Used eval to convert from string.")
+        data = eval(data)
 
+    header = data["header"]
+    body = data["body"]
+    
     # Check that resource is query
     if header['resource'] != 'query':
         raise ValueError(f"Expected resource type 'query', " +
