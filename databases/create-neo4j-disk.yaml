@@ -1,8 +1,10 @@
 steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
-         'compute', 'instances', 'delete', '--quiet',
-         '--zone=us-west1-a',
+         'compute', 'instances', 'delete',
+         '--quiet',
+         '--service-account=${_SERVICE_ACCOUNT}',
+         '--zone=${_ZONE}',
          '${_INSTANCE_NAME}'
   ]
 - name: 'gcr.io/cloud-builders/gcloud'
