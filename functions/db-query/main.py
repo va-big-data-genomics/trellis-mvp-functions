@@ -38,7 +38,7 @@ if ENVIRONMENT == 'google-cloud':
     NEO4J_PORT = parsed_vars['NEO4J_PORT']
     NEO4J_USER = parsed_vars['NEO4J_USER']
     NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
-    NEO4J_MAX_CONN = parsed_vars['NEO4J_MAX_CONN']
+    #NEO4J_MAX_CONN = parsed_vars['NEO4J_MAX_CONN']
 
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
@@ -49,8 +49,8 @@ if ENVIRONMENT == 'google-cloud':
                   host=NEO4J_HOST, 
                   port=NEO4J_PORT,
                   user=NEO4J_USER, 
-                  password=NEO4J_PASSPHRASE,
-                  max_connections=NEO4J_MAX_CONN)
+                  password=NEO4J_PASSPHRASE)
+                  #max_connections=NEO4J_MAX_CONN)
 
 
 def format_pubsub_message(method, labels, query, results, perpetuate=None):
