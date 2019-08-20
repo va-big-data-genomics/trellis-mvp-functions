@@ -3,7 +3,6 @@ steps:
   args: [
          'compute', 'instances', 'delete',
          '--quiet',
-         '--service-account=${_SERVICE_ACCOUNT}',
          '--zone=${_ZONE}',
          '${_INSTANCE_NAME}'
   ]
