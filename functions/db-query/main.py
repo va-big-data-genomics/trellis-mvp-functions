@@ -7,6 +7,8 @@ import base64
 import logging
 import neobolt
 
+from datetime import datetime
+
 from py2neo import Graph
 
 from urllib3.exceptions import ProtocolError
@@ -94,6 +96,8 @@ def query_db(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
+
+    start = datetime.now()
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     print(f"> Received pubsub message: {pubsub_message}.")
@@ -199,6 +203,12 @@ def query_db(event, context):
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(topic, message)
         print(f"> Published message to {topic} with result: {result}.")
+
+    end = datetime.now()
+    execution_time = (end - start).seconds
+    time_threshold = int(execution_time/10) * 10
+    if time_threshold > 0:
+        print(f"> Execution time exceeded {time_threshold} seconds.")
 
 
 if __name__ == "__main__": 
