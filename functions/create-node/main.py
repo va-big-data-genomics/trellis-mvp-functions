@@ -275,7 +275,7 @@ def create_node_query(event, context):
 
     # Ignore log files
     log_labels = set(['Log', 'Stderr', 'Stdout'])
-    log_interesction = log_labels.intersection(db_dict['labels'])
+    log_intersection = log_labels.intersection(db_dict['labels'])
     if log_intersection:
         print(f"> This is a log file; ignoring. {db_dict['labels']}")
         return
