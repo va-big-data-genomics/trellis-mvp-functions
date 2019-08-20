@@ -1,4 +1,11 @@
-source ../credentials/test-wgs35-db.sh
+INSTANCE_NAME=trellis-neo4j-test-wgs35
+IMAGE_NAME=neo4j-32g
+STABLE_COS=cos-stable-74-11895-125-0
+NEO4J_VERSION=3.5.3
+SERVICE_ACCOUNT=133012913968-compute@developer.gserviceaccount.com
+DISK_NAME=disk-neo4j-test
+PROJECT=***REMOVED***-test
+IP_ADDRESS=35.197.4.223
 
 gcloud compute \
     instances create-with-container ${INSTANCE_NAME} \
