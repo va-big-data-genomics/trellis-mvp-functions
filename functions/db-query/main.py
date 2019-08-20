@@ -177,6 +177,14 @@ def query_db(event, context):
     # Return if not pubsub topic
     if not topic:
         print("No Pub/Sub topic specified; result not published.")
+
+        # Execution time block
+        end = datetime.now()
+        execution_time = (end - start).seconds
+        time_threshold = int(execution_time/10) * 10
+        if time_threshold > 0:
+            print(f"> Execution time exceeded {time_threshold} seconds.")
+
         return results
 
     # Perpetuate metadata in specified by "perpetuate" key
@@ -204,6 +212,7 @@ def query_db(event, context):
         result = publish_to_topic(topic, message)
         print(f"> Published message to {topic} with result: {result}.")
 
+    # Execution time block
     end = datetime.now()
     execution_time = (end - start).seconds
     time_threshold = int(execution_time/10) * 10
