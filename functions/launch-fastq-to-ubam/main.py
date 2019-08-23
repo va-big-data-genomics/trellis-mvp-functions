@@ -26,7 +26,6 @@ if ENVIRONMENT == 'google-cloud':
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     REGIONS = parsed_vars['DSUB_REGIONS']
-    #ZONES = parsed_vars['DSUB_ZONES']
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
@@ -39,21 +38,31 @@ def format_pubsub_message(job_dict, nodes):
                "header": {
                           "resource": "job-metadata", 
                           "method": "POST",
-                          "labels": ["Job", "Dsub", "Command", "Args", "Inputs"],
+                          "labels": ["Create", "Job", "Dsub", "Node"],
                           "sentFrom": f"{FUNCTION_NAME}",
                },
                "body": {
                         "node": job_dict,
-                        "perpetuate": {
-                            "relationships": {
-                                "to-node": {
-                                    "INPUT_TO": nodes
-                                }
-                            }
-                        }
                }
     }
     return message
+
+
+def format_relationship_message(start, end, name, bidirectional):
+    message = {
+        "header": {
+            "resource": "relationship",
+            "method": "POST",
+            "labels": ["Job", "Create", "Relationship", "Input"],
+            "sentFrom": f"{FUNCTION_NAME}"
+        },
+        "body": {
+            "startNode": start,
+            "endNode": end,
+            "name": name,
+            "bidirectional": bidirectional
+        }
+    }
 
 
 def publish_to_topic(publisher, project_id, topic, data):
@@ -294,6 +303,17 @@ def launch_fastq_to_ubam(event, context):
                                   TOPIC,
                                   message) 
         print(f"> Published message to {TOPIC} with result: {result}.")
+
+        # Create relationship messages
+        for node in nodes:
+            rel_name = "INPUT_TO"
+            bi = False
+
+            message = format_relationship_message(
+                                                  start = node,
+                                                  end = job_dict,
+                                                  name = rel_name,
+                                                  bidirectional = bi)
 
 # For local testing
 if __name__ == "__main__":
