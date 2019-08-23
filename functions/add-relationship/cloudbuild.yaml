@@ -1,0 +1,21 @@
+steps:
+#- name: 'ubuntu'
+#  args: ['cp', '-r', 'config/wgs35', 'functions/add-relationship/']
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         '${_DATA_GROUP}-add-relationship',
+         '--project=${PROJECT_ID}',
+         '--source=functions/add-relationship',
+         '--memory=128MB',
+         '--max-instances=40',
+         '--entry-point=add_relationship',
+         '--runtime=python37',
+         '--trigger-topic=${_DATA_GROUP}-add-relationship',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=data-group=${_DATA_GROUP}',
+  ]
