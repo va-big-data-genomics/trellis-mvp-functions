@@ -87,14 +87,14 @@ def kill_duplicate_jobs(event, context):
         zone = duplicate['zone']
 
         # Send request to delete each duplicate job instance
-        #request = SERVICE.instances().delete(
-        #                                     project = PROJECT_ID,
-        #                                     zone = zone,
-        #                                     instance = name)
-        #response = request.execute()
-        while True:
-            result = delete_instance(zone, name)
-            if result == True:
-                break
+        request = SERVICE.instances().delete(
+                                             project = PROJECT_ID,
+                                             zone = zone,
+                                             instance = name)
+        response = request.execute()
+        #while True:
+        #    result = delete_instance(zone, name)
+        #    if result == True:
+        #        break
 
         
