@@ -9,7 +9,7 @@ steps:
          '--source=functions/kill-duplicate-jobs',
          '--memory=128MB',
          '--max-instances=40',
-         '--timeout=120',
+         '--timeout=30',
          '--entry-point=kill_duplicate_jobs',
          '--runtime=python37',
          '--trigger-topic=${_TRIGGER_TOPIC}',
