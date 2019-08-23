@@ -309,6 +309,53 @@ class RequeueJobQuery:
         return(topic, message)
 
 
+class RequeueRelationshipQuery:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node=None):
+
+        reqd_header_labels = ['Cypher', 'Query', 'Relationship', 'Create']
+
+        conditions = [
+            header.get('method') == "POST",
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            not node
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        # Requeue original message, updating sentFrom property
+        message = {}
+        
+        header['sentFrom'] = self.function_name
+        header['resource'] = 'query'
+        header['publishTo'] = self.function_name
+        header['labels'].remove('Database')
+        header['labels'].remove('Result')
+
+        del(body['results'])
+        body['result-mode'] = 'data'
+        body['result-structure'] = 'list'
+        body['result-split'] = 'True'
+
+        message['header'] = header
+        message['body'] = body
+
+        return(topic, message)   
+
+
 def get_triggers(function_name, env_vars):
 
     triggers = []
@@ -325,6 +372,9 @@ def get_triggers(function_name, env_vars):
                                       function_name,
                                       env_vars))
     triggers.append(RequeueJobQuery(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequeueRelationshipQuery(
                                     function_name,
                                     env_vars))
     return triggers
