@@ -84,6 +84,7 @@ def get_datetime_stamp():
     datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
     return datestamp
 
+
 def write_metadata_to_blob(meta_blob_path, metadata):
     try:
         meta_blob = storage.Client(project=PROJECT_ID) \
@@ -93,6 +94,7 @@ def write_metadata_to_blob(meta_blob_path, metadata):
         return True
     except:
         return False
+
 
 def launch_fastq_to_ubam(event, context):
     """When an object node is added to the database, launch any
@@ -118,25 +120,6 @@ def launch_fastq_to_ubam(event, context):
     if not nodes:
         print("> No nodes provided. Exiting.")
         return
-    
-    # TODO: Add error checking to make sure metadata_setSize is included
-    #set_size = False
-
-    # Get metadata to be perpetuated to Ubams
-    # 20190730: Deprecated. Get metadata from node(s)
-    """
-    metadata = {}
-    for result_name in body['results']:
-        elements = result_name.split('_')
-        if elements[0] == 'metadata':
-            key = elements[1]
-            metadata[key] = body['results'][result_name]
-            if key == "setSize":
-                set_size = True
-
-    if set_size == False:
-        raise ValueError(f"> Error: setSize not provided in results metadata.")
-    """
 
     if len(nodes) != 2:
         raise ValueError(f"> Error: Need 2 fastqs; {len(nodes)} provided.")
@@ -280,10 +263,6 @@ def launch_fastq_to_ubam(event, context):
         print(f"Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
         meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
-        #meta_blob = storage.Client(project=PROJECT_ID) \
-        #    .get_bucket(OUT_BUCKET) \
-        #    .blob(meta_blob_path) \
-        #    .upload_from_string(json.dumps(metadata))
         while True:
             result = write_metadata_to_blob(meta_blob_path, metadata)
             if result == True:
@@ -298,6 +277,14 @@ def launch_fastq_to_ubam(event, context):
             job_dict[f"env_{key}"] = value
         for key, value in job_dict["outputs"].items():
             job_dict[f"output_{key}"] = value
+
+        indexed_nodes = []
+        for node in nodes:
+            index_properties['bucket'] = node['bucket']
+            index_properties['path'] = node['path']
+            index_properties['id'] = node['id']
+            indexed_nodes.append(index_properties)
+
 
         message = format_pubsub_message(job_dict, nodes)
         print(f"> Pubsub message: {message}.")
