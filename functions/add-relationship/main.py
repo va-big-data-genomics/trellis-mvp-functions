@@ -82,7 +82,7 @@ def format_relationship_query(start, end, name, indexes):
             start_string.append(f'{key}: "{value}"')
         else:
             start_string.append(f'{key}: {value}')
-                start_string = ', '.join(start_string)
+    start_string = ', '.join(start_string)
 
     end_string = []
     for key, value in end_indexed.items():
@@ -90,7 +90,7 @@ def format_relationship_query(start, end, name, indexes):
             end_string.append(f'{key}: "{value}"')
         else:
             end_string.append(f'{key}: {value}')
-                end_string = ', '.join(end_string)
+    end_string = ', '.join(end_string)
 
     query = (
             f"MATCH (s:{start['label']} {{ {start_string} }}), " +
