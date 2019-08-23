@@ -183,8 +183,8 @@ if __name__ == "__main__":
                        "sentFrom": "wgs35-launch-fastq-to-ubam"
             },
             "body": {
-                     "start": ,
-                     "end": ,
+                     "start": "",
+                     "end": "",
                      "name": "INPUT_TO",
                      "bidirectional": False
             }
