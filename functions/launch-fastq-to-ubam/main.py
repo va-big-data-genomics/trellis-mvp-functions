@@ -307,7 +307,8 @@ def launch_fastq_to_ubam(event, context):
             indexed_properties = {
                                   "bucket": node["bucket"],
                                   "path": node["path"],
-                                  "id": node["id"]
+                                  "id": node["id"],
+                                  "labels": node["labels"]
             }
 
             message = format_relationship_message(
