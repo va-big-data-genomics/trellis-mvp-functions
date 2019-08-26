@@ -64,6 +64,7 @@ def format_relationship_message(start, end, name, bidirectional):
             "bidirectional": bidirectional
         }
     }
+    return message
 
 
 def publish_to_topic(publisher, project_id, topic, data):
