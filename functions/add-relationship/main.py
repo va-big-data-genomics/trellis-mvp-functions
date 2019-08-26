@@ -127,7 +127,7 @@ def add_relationship(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-    
+    # Node properties that are indexed in Neo4j
     indexes = {
         "Blob": ["id"],
         "Job": ["taskId"]
@@ -144,8 +144,8 @@ def add_relationship(event, context):
         raise ValueError(f"Expected resource type {accepted_resource}, " +
                          f"got '{header['resource']}.'")
 
-    start = body['start']
-    end = body['end']
+    start = body['startNode']
+    end = body['endNode']
     name = body['name']
     bidirectional = body['bidirectional']
 
