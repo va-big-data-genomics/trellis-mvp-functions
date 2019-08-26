@@ -111,7 +111,7 @@ def get_indexed_properties(node, index):
 def get_indexed_label(indexes, node):
     node_labels = node.pop("labels")
     for label in node_labels:
-        properties = indexed_properties.get(label)
+        properties = indexes.get(label)
         # Get a node label, for which all of the database indexes
         # are included in the node properties.
         if properties and set(properties).issubset(set(node.keys())):
