@@ -178,7 +178,7 @@ def write_job_node_query(event, context):
     db_query = format_query(db_dict)
     print(f"> Database query: \"{db_query}\".")
 
-    message = format_pubsub_message(db_query, body['perpetuate'])
+    message = format_pubsub_message(db_query)
     print(f"> Pubsub message: {message}.")
     result = publish_to_topic(TOPIC, message)
     print(f"> Published message to {TOPIC} with result: {result}.")
