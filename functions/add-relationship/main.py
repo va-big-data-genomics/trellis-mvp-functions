@@ -93,8 +93,8 @@ def format_relationship_query(start, end, name, indexes):
     end_string = ', '.join(end_string)
 
     query = (
-            f"MATCH (s:{start['label']} {{ {start_string} }}), " +
-            f"(e:{end['label']} {{ {end_string} }}) " +
+            f"MATCH (s:{start_label} {{ {start_string} }}), " +
+            f"(e:{end_label} {{ {end_string} }}) " +
             f"CREATE (s)-[:{name}]->(e) " +
             "RETURN e AS node")
     return query
