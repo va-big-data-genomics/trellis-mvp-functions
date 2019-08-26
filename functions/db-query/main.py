@@ -94,14 +94,14 @@ def republish_message(topic, data):
     """
     max_retries = 3
 
-    retry_chunk = data.get("retry-counter")
-    if retry_counter:
-        if retry_counter >= 3:
+    counter = data.get("retry-counter")
+    if counter:
+        if counter >= max_retries:
             raise ValueError(f"Function exceeded {max_retries} retries.")
         else:
-            retry_counter += 1
+            data["retry-counter"] += 1
     else:
-        data['retry-counter'] = 1
+        data["retry-counter"] = 1
     result = publish_to_topic(DB_QUERY_TOPIC, data)
     return result
 
