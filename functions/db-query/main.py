@@ -2,6 +2,7 @@ import os
 import pdb
 import sys
 import json
+import math
 import yaml
 import base64
 import logging
@@ -88,6 +89,22 @@ def publish_str_to_topic(topic, str_data):
     return result    
 
 
+def republish_message(topic, data):
+    """Wrapper for publish_to_topic which adds retry chunk.
+    """
+
+    retry_chunk = data.get("retry-chunk")
+    if retry_chunk:
+        r = data["retry-chunk"]
+        r = r * int(math.log(len(t),2))
+        data["retry-chunk"] = r
+    else:
+        r = "messageretrylimiter"
+        data["retry-chunk"] = r
+    result = publish_to_topic(DB_QUERY_TOPIC, data)
+    return result
+
+
 def query_db(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
@@ -142,7 +159,8 @@ def query_db(event, context):
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
         # Add message back to queue
-        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        #result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        result = republish_message(DB_QUERY_TOPIC, data)
         logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
         # Duplicate message flagged as warning
         logging.warn(f"> Encountered Protocol Error: {error}.")
@@ -150,7 +168,8 @@ def query_db(event, context):
     except ServiceUnavailable as error:
         logging.warn(f"> Encountered Service Interrupion: {error}.")
         # Add message back to queue
-        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        #result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        result = republish_message(DB_QUERY_TOPIC, data)
         logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
         # Duplicate message flagged as warning
         logging.warn(f"> Requeued message: {pubsub_message}.")
@@ -158,7 +177,8 @@ def query_db(event, context):
     except ConnectionResetError as error:
         logging.warn(f"> Encountered connection interruption: {error}.")
         # Add message back to queue
-        result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
+        result = republish_message(DB_QUERY_TOPIC, data)
+        #result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
         logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
         # Duplicate message flagged as warning
         logging.warn(f"> Requeued message: {pubsub_message}.")
