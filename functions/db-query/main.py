@@ -104,16 +104,6 @@ def query_db(event, context):
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
-
-    #try:
-    #    header = json_data["header"]
-    #    body = json_data["body"]
-    #except TypeError as error:
-    #    logging.warn(f"> Data type: {type(json_data)}.")
-    #    logging.warn(f"> Data content: {json_data}.")
-    #    result = publish_str_to_topic(DB_QUERY_TOPIC, pubsub_message)
-    #    logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
-    #    raise TypeError(f"> Resubmitted message to {DB_QUERY_TOPIC}. {error}.")
     
     if type(data) == str:
         logging.warn("Message data not correctly loaded as JSON. " +
