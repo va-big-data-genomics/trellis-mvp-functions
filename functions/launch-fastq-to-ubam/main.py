@@ -29,7 +29,8 @@ if ENVIRONMENT == 'google-cloud':
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
-    TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+    RELATIONSHIP_TOPIC = parsed_vars['TOPIC_ADD_RELATIONSHIP']
 
     PUBLISHER = pubsub.PublisherClient()
 
@@ -287,33 +288,40 @@ def launch_fastq_to_ubam(event, context):
         for key, value in job_dict["outputs"].items():
             job_dict[f"output_{key}"] = value
 
-        indexed_nodes = []
-        for node in nodes:
-            index_properties['bucket'] = node['bucket']
-            index_properties['path'] = node['path']
-            index_properties['id'] = node['id']
-            indexed_nodes.append(index_properties)
-
-
+        # Send job metadata to create-job-node function
         message = format_pubsub_message(job_dict, nodes)
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(
                                   PUBLISHER,
                                   PROJECT_ID,
-                                  TOPIC,
+                                  NEW_JOB_TOPIC,
                                   message) 
-        print(f"> Published message to {TOPIC} with result: {result}.")
+        print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")
 
-        # Create relationship messages
+        # Send relationship(s) metadata to create-relationship function
+        indexed_nodes = []
         for node in nodes:
-            rel_name = "INPUT_TO"
+            relationship_name = "INPUT_TO"
             bi = False
+            indexed_properties = {
+                                  "bucket": node["bucket"],
+                                  "path": node["path"],
+                                  "id": node["id"]
+            }
 
             message = format_relationship_message(
-                                                  start = node,
+                                                  start = indexed_properties,
                                                   end = job_dict,
-                                                  name = rel_name,
+                                                  name = relationship_name,
                                                   bidirectional = bi)
+            print(f"> Pubsub message: {message}.")
+            result = publish_to_topic(
+                                      PUBLISHER,
+                                      PROJECT_ID,
+                                      RELATIONSHIP_TOPIC,
+                                      message) 
+            print(f"> Published message to {RELATIONSHIP_TOPIC} with result: {result}.")
+
 
 # For local testing
 if __name__ == "__main__":
