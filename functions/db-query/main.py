@@ -93,15 +93,16 @@ def republish_message(topic, data):
     """Wrapper for publish_to_topic which adds retry chunk.
     """
     max_retries = 3
-
-    counter = data.get("retry-counter")
+    
+    header = data["header"]
+    counter = header.get("retry-counter")
     if counter:
         if counter >= max_retries:
             raise ValueError(f"Function exceeded {max_retries} retries.")
         else:
-            data["retry-counter"] += 1
+            header["retry-counter"] += 1
     else:
-        data["retry-counter"] = 1
+        header["retry-counter"] = 1
     result = publish_to_topic(DB_QUERY_TOPIC, data)
     return result
 
