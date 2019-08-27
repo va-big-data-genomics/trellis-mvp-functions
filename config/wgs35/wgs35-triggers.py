@@ -269,11 +269,13 @@ class RequeueJobQuery:
 
 
     def check_conditions(self, header, body, node=None):
-
+        max_retries = 3
         reqd_header_labels = ['Query', 'Cypher', 'Update', 'Job', 'Node']
 
         conditions = [
             header.get('method') == "UPDATE",
+            (not header.get('retry-count') 
+             or header.get('retry-count') < max_retries),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             not node
         ]
@@ -292,6 +294,13 @@ class RequeueJobQuery:
         # Requeue original message, updating sentFrom property
         message = {}
         
+        # Add retry count
+        retry_count = header.get('retry-count')
+        if retry_count:
+            header['retry-count'] += 1
+        else:
+            header['retry-count'] = 1
+
         header['sentFrom'] = self.function_name
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
@@ -317,11 +326,13 @@ class RequeueRelationshipQuery:
         self.env_vars = env_vars
 
     def check_conditions(self, header, body, node=None):
-
+        max_retries = 3
         reqd_header_labels = ['Cypher', 'Query', 'Relationship', 'Create']
 
         conditions = [
             header.get('method') == "POST",
+            (not header.get('retry-count') 
+             or header.get('retry-count') < max_retries),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             not node
         ]
@@ -338,6 +349,13 @@ class RequeueRelationshipQuery:
 
         # Requeue original message, updating sentFrom property
         message = {}
+
+        # Add retry count
+        retry_count = header.get('retry-count')
+        if retry_count:
+            header['retry-count'] += 1
+        else:
+            header['retry-count'] = 1
         
         header['sentFrom'] = self.function_name
         header['resource'] = 'query'
