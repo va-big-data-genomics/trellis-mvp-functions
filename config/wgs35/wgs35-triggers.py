@@ -439,7 +439,6 @@ class RelatedInputToJob:
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             "Job" in node.get("labels"),
             node.get("inputIds"),
-            len(node.get("inputIds")) > 0
         ]
 
         for condition in conditions:
