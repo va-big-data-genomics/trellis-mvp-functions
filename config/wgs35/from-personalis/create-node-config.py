@@ -205,7 +205,6 @@ def relate_job_to_output(db_dict):
     return query
 
 
-
 class NodeEntry:
 
     def __init__(self, event, context, labels, label_functions=[]):
