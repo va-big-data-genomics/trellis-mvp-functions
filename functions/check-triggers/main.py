@@ -70,6 +70,7 @@ def check_triggers(event, context, dry_run=False):
     activated_triggers = []
     for trigger in ALL_TRIGGERS:
         #status = trigger.check_conditions(node)
+        print(f">>> Checking trigger: {trigger}.")
         status = trigger.check_conditions(header, body, node)
         if status == True:
             activated_triggers.append(trigger)
