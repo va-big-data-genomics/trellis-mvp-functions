@@ -467,7 +467,7 @@ class RelatedInputToJob:
                                   "publishTo": self.function_name
                        },
                        "body": {
-                                "cypher": query
+                                "cypher": query,
                                 "result-mode": "data",
                                 "result-structure": "list",
                                 "result-split": "True"
