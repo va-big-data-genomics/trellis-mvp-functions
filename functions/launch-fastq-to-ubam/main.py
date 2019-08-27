@@ -154,12 +154,15 @@ def launch_fastq_to_ubam(event, context):
     set_sizes = []
     fastq_fields = []
     fastqs = {}
+    # inputIds used to create relationships via trigger
+    input_ids = []
     for node in nodes:
         plate = node['plate']
         sample = node['sample']
         read_group = node['readGroup']
         mate_pair = node['matePair']
         set_size = int(node['setSize'])/2
+        input_id = node['id']
 
         bucket = node['bucket']
         path = node['path']
@@ -169,6 +172,7 @@ def launch_fastq_to_ubam(event, context):
 
         fastq_fields.extend([plate, sample, read_group])
         set_sizes.append(set_size)
+        input_ids.append(input_id)
 
     # Check that fastqs are from same sample/read group
     if len(set(fastq_fields)) != 3:
@@ -219,8 +223,8 @@ def launch_fastq_to_ubam(event, context):
                 "readGroup": read_group,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
-                #"truncHash": trunc_nodes_hash,
                 "labels": ["Job", "Dsub"],
+                "inputIds": input_ids,
     }
 
     dsub_args = [
@@ -299,6 +303,9 @@ def launch_fastq_to_ubam(event, context):
                                   message) 
         print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")
 
+        """
+        Deprecated in favor of creating relationships via node trigger
+
         # Send relationship(s) metadata to create-relationship function
         indexed_nodes = []
         for node in nodes:
@@ -323,7 +330,7 @@ def launch_fastq_to_ubam(event, context):
                                       RELATIONSHIP_TOPIC,
                                       message) 
             print(f"> Published message to {RELATIONSHIP_TOPIC} with result: {result}.")
-
+        """
 
 # For local testing
 if __name__ == "__main__":
