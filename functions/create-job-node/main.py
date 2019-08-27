@@ -38,7 +38,7 @@ def format_pubsub_message(query, perpetuate=None):
                "header": {
                           "resource": "query",
                           "method": "POST", 
-                          "labels": ['Job', 'Create', 'Node', 'Query', 'Cypher'], 
+                          "labels": ['Create', 'Job', 'Node', 'Query', 'Cypher'], 
                           "sentFrom": f"{FUNCTION_NAME}",
                           "publishTo": f"{DATA_GROUP}-add-relationships",
                },
