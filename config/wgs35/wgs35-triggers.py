@@ -454,7 +454,7 @@ class RelatedInputToJob:
         messages = []
         for input_id in node["inputIds"]:
             # Create a separate message for each related node
-            query = _create_query(node, input_id)
+            query = self._create_query(node, input_id)
 
             # Requeue original message, updating sentFrom property
             message = {
