@@ -389,7 +389,7 @@ class RelateOutputToJob:
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            if node.get("nodeIteration"): node.get("nodeIteration") == "initial",
+            node.get("nodeIteration") == "initial",
             node.get("taskId"),
             node.get("id")
         ]
