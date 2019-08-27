@@ -381,7 +381,7 @@ class RelateOutputToJob:
         self.function_name = function_name
         self.env_vars = env_vars
 
-    def check_conditions(self, header, body, node=None):
+    def check_conditions(self, header, body, node):
         reqd_header_labels = ['Create', 'Node', 'Cypher', 'Query', 'Database', 'Result']
 
         conditions = [
@@ -432,7 +432,7 @@ class RelatedInputToJob:
         self.function_name = function_name
         self.env_vars = env_vars
 
-    def check_conditions(self, header, body, node=None):
+    def check_conditions(self, header, body, node):
         reqd_header_labels = ['Create', 'Job', 'Node', 'Database', 'Result']
 
         conditions = [
