@@ -57,7 +57,7 @@ class AddFastqSetSize:
                           "result-split": "True",
                    }
         }
-        return(topic, message)
+        return([(topic, message)])
 
 
 class CheckUbamCount:
@@ -122,7 +122,7 @@ class CheckUbamCount:
                             "result-split": "True",
                    }
         }
-        return(topic, message)
+        return([(topic, message)])
 
 
 class GetFastqForUbam:
@@ -190,7 +190,7 @@ class GetFastqForUbam:
                             "result-split": "True"
                    }
         }
-        return(topic, message)
+        return([(topic, message)])
 
 
 class KillDuplicateJobs:
@@ -257,7 +257,7 @@ class KillDuplicateJobs:
                         "result-split": "True"
                    }
         }
-        return(topic, message)
+        return([(topic, message)])
 
 
 class RequeueJobQuery:
@@ -315,7 +315,7 @@ class RequeueJobQuery:
         message['header'] = header
         message['body'] = body
 
-        return(topic, message)
+        return([(topic, message)])
 
 
 class RequeueRelationshipQuery:
@@ -327,7 +327,7 @@ class RequeueRelationshipQuery:
 
     def check_conditions(self, header, body, node=None):
         max_retries = 3
-        reqd_header_labels = ['Cypher', 'Query', 'Relationship', 'Create']
+        reqd_header_labels = ['Relationship', 'Create', 'Cypher', 'Query', ]
 
         conditions = [
             header.get('method') == "POST",
@@ -371,7 +371,119 @@ class RequeueRelationshipQuery:
         message['header'] = header
         message['body'] = body
 
-        return(topic, message)   
+        return([(topic, message)])   
+
+
+class RelateOutputToJob:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node=None):
+        reqd_header_labels = ['Create', 'Node', 'Cypher', 'Query', 'Database', 'Result']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            node.get("nodeIteration") == "initial",
+            node.get("taskId"),
+            node.get("id")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "PUT",
+                              "labels": ["Create", "Relationship", "Output", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "publishTo": self.function_name
+                   },
+                   "body": {
+                            "cypher": (
+                                       f"MATCH (j:Job {{ taskId:\"{node['taskId']}\" }} ), " +
+                                       f"(node:Blob {{taskId:\"{node['taskId']}\", " +
+                                                    f"id:\"{node['id']}\" }})" +
+                                       f"CREATE (j)-[:OUTPUT]->(node) " +
+                                        "RETURN node"),
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])   
+
+
+class RelatedInputToJob:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node=None):
+        reqd_header_labels = ['Create', 'Job', 'Node', 'Database', 'Result']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            "Job" in node.get("labels"),
+            node.get("inputIds"),
+            len(node.get("inputIds")) > 0
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        messages = []
+        for input_id in node["inputIds"]:
+            # Create a separate message for each related node
+            query = _create_query(node, input_id)
+
+            # Requeue original message, updating sentFrom property
+            message = {
+                       "header": {
+                                  "resource": "query",
+                                  "method": "PUT",
+                                  "labels": ["Create", "Relationship", "Input", "Cypher", "Query"],
+                                  "sentFrom": self.function_name,
+                                  "publishTo": self.function_name
+                       },
+                       "body": {
+                                "cypher": query
+                                "result-mode": "data",
+                                "result-structure": "list",
+                                "result-split": "True"
+                       }
+            }
+            result = (topic, message)
+            messages.append(result)
+        return(messages)  
+
+    def _create_query(self, job_node, input_id):
+        query = (
+                 f"MATCH (input:Blob {{ id:{input_id} }}), " +
+                 f"(job:Job {{ taskId:{job_node['taskId']}  }}) " +
+                 f"CREATE (input)-[:INPUT_TO]->(job) " +
+                  "RETURN job AS node")
+        return query
 
 
 def get_triggers(function_name, env_vars):
@@ -393,6 +505,12 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RequeueRelationshipQuery(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateOutputToJob(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelatedInputToJob(
                                     function_name,
                                     env_vars))
     return triggers
