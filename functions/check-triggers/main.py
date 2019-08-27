@@ -74,14 +74,17 @@ def check_triggers(event, context, dry_run=False):
         if status == True:
             activated_triggers.append(trigger)
             print(f'>>> Trigger activated: {trigger}.')
-            #topic, message = trigger.compose_message(node)
-            topic, message = trigger.compose_message(header, body, node)
-            print(f">>> Publishing message: {message}.")
-            if dry_run:
-                print(f">>> Dry run: Would have published message to {topic}.")
-            else:
-                result = publish_to_topic(topic, message)
-                print(f">>> Published message to {topic} with result: {result}.")
+            #topic, message = trigger.compose_message(header, body, node)
+            messages = trigger.compose_message(header, body, node)
+            for message in messages:
+                topic = message[0]
+                data = message[1]
+                print(f">>> Publishing message: {data}.")
+                if dry_run:
+                    print(f">>> Dry run: Would have published message to {topic}.")
+                else:
+                    result = publish_to_topic(topic, data)
+                    print(f">>> Published message to {topic} with result: {result}.")
     return(activated_triggers)                
 
 
