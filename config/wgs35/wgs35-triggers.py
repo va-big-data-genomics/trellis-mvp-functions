@@ -384,9 +384,12 @@ class RelateOutputToJob:
     def check_conditions(self, header, body, node):
         reqd_header_labels = ['Create', 'Node', 'Cypher', 'Query', 'Database', 'Result']
 
+        if not node:
+                return False
+
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            node.get("nodeIteration") == "initial",
+            if node.get("nodeIteration"): node.get("nodeIteration") == "initial",
             node.get("taskId"),
             node.get("id")
         ]
@@ -414,7 +417,7 @@ class RelateOutputToJob:
                             "cypher": (
                                        f"MATCH (j:Job {{ taskId:\"{node['taskId']}\" }} ), " +
                                        f"(node:Blob {{taskId:\"{node['taskId']}\", " +
-                                                    f"id:\"{node['id']}\" }})" +
+                                                    f"id:\"{node['id']}\" }}) " +
                                        f"CREATE (j)-[:OUTPUT]->(node) " +
                                         "RETURN node"),
                             "result-mode": "data",
@@ -434,6 +437,9 @@ class RelatedInputToJob:
 
     def check_conditions(self, header, body, node):
         reqd_header_labels = ['Create', 'Job', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
@@ -478,8 +484,8 @@ class RelatedInputToJob:
 
     def _create_query(self, job_node, input_id):
         query = (
-                 f"MATCH (input:Blob {{ id:{input_id} }}), " +
-                 f"(job:Job {{ taskId:{job_node['taskId']}  }}) " +
+                 f"MATCH (input:Blob {{ id:\"{input_id}\" }}), " +
+                 f"(job:Job {{ taskId:\"{job_node['taskId']}\"  }}) " +
                  f"CREATE (input)-[:INPUT_TO]->(job) " +
                   "RETURN job AS node")
         return query
