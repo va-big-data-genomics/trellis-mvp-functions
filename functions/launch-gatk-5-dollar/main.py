@@ -142,6 +142,8 @@ def launch_gatk_5_dollar(event, context):
     task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
 
     ubams = []
+    # inputIds used to create relationships via trigger
+    input_ids = []
     for node in nodes:
         if 'Ubam' not in node['labels']:
             print(f"Error: inputs must be ubams.")
@@ -149,12 +151,14 @@ def launch_gatk_5_dollar(event, context):
 
         plate = node['plate']
         sample = node['sample']
+        input_id = node['id']
 
         bucket = node['bucket']
         path = node['path']
 
         ubam_path = f"gs://{bucket}/{path}"
         ubams.append(ubam_path)
+        input_ids.append(input_id)
 
     # Load inputs JSON from GCS
     gatk_input_template = storage.Client(project=PROJECT_ID) \
@@ -219,6 +223,7 @@ def launch_gatk_5_dollar(event, context):
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
                 "labels": ['Job', 'Cromwell'],
+                "inputIds": input_ids
     }
 
     dsub_args = [
@@ -275,18 +280,12 @@ def launch_gatk_5_dollar(event, context):
         message = {
             "header": {
                 "method": "POST",
-                "labels": ["Job", "Cromwell", "Command", "Args", "Inputs"],
+                "labels": ["Create", "Job", "Cromwell", "Command", "Args"],
                 "resource": "job-metadata",
+                "sentFrom": f"{FUNCTION_NAME}",
             },
             "body": {
                 "node": job_dict,
-                "perpetuate": {
-                    "relationships": {
-                        "to-node": {
-                            "INPUT_TO": nodes
-                        }
-                    }
-                }
             }
         }
         publish_to_topic(NEW_JOBS_TOPIC, message)  
