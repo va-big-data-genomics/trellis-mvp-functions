@@ -68,14 +68,17 @@ class CheckUbamCount:
 
 
     def check_conditions(self, header, body, node):
+        # Only trigger GATK after relationship has been added
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
         required_labels = ['Ubam']
 
         if not node:
             return False
 
         conditions = [
-            node.get('setSize'),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
             set(required_labels).issubset(set(node.get('labels'))),
+            node.get('setSize'),
         ]
 
         for condition in conditions:
@@ -202,6 +205,8 @@ class KillDuplicateJobs:
 
 
     def check_conditions(self, header, body, node):
+        # Only trigger when job node is created
+        reqd_header_labels = ['Create', 'Job', 'Node']
 
         required_labels = ['Job']
 
@@ -209,12 +214,13 @@ class KillDuplicateJobs:
             return False
 
         conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            set(required_labels).issubset(set(node.get('labels'))),
             node.get('startTime'),
             node.get('instanceName'),
             node.get('instanceId'),
             node.get('inputHash'),
             node.get('status') == 'RUNNING',
-            set(required_labels).issubset(set(node.get('labels')))
         ]
 
         for condition in conditions:
