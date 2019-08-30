@@ -268,13 +268,13 @@ def launch_fastq_to_ubam(event, context):
         dsub_args.append("--dry-run")
 
     print(f"Launching dsub with args: {dsub_args}.")
-    result = launch_dsub_task(dsub_args)
-    print(f"Dsub result: '{result}'.")
+    dsub_result = launch_dsub_task(dsub_args)
+    print(f"Dsub result: {result}.")
 
     # Metadata to be perpetuated to ubams is written to file
     # Try until success
     metadata = {"setSize": set_size}
-    if 'job-id' in result.keys() and metadata and not dry_run:
+    if 'job-id' in dsub_result.keys() and metadata and not dry_run:
         print(f"Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
         meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
@@ -285,7 +285,7 @@ def launch_fastq_to_ubam(event, context):
         print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
 
     
-    if 'job-id' in result.keys():
+    if 'job-id' in dsub_result.keys():
         # Add dsub job ID to neo4j database node
         job_dict['dsub-jobId'] = result['job-id']
 
