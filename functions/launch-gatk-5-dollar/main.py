@@ -45,7 +45,7 @@ def publish_to_topic(topic, data):
 
 def launch_dsub_task(dsub_args):
     try:
-        dsub.main('dsub', dsub_args)
+        result = dsub.dsub_main('dsub', dsub_args)
     except ValueError as exception:
         print(exception)
         print(f'Error with dsub arguments: {dsub_args}')
@@ -55,8 +55,7 @@ def launch_dsub_task(dsub_args):
         for arg in dsub_args:
             print(arg)
         return(sys.exc_info())
-    return(1)
-
+    return(result)
 
 def get_datetime_stamp():
     now = datetime.now()
@@ -182,7 +181,6 @@ def launch_gatk_5_dollar(event, context):
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
-                #"zones": ZONES,
                 "regions": REGIONS,
                 "project": PROJECT_ID,
                 "minCores": 1,
@@ -261,11 +259,22 @@ def launch_gatk_5_dollar(event, context):
         dsub_args.append("--dry-run")
 
     print(f"Launching dsub with args: {dsub_args}.")
-    result = launch_dsub_task(dsub_args)
-    print(f"Dsub result: '{result}'.")
+    dsub_result = launch_dsub_task(dsub_args)
+    print(f"Dsub result: {dsub_result}.")
 
     # If job launch is successful, add job to database
-    if result == 1:
+    if 'job-id' in dsub_result.keys():
+        # Add dsub job ID to neo4j database node
+        job_dict['dsubJobId'] = dsub_result['job-id']
+        job_dict['dstatCmd'] = (
+                                 "dstat " +
+                                f"--project {job_dict['project']} " +
+                                f"--provider {job_dict['provider']} " +
+                                f"--jobs '{job_dict['dsubJobId']}' " +
+                                f"--users '{job_dict['user']}' " +
+                                 "--full " +
+                                 "--status '*'")
+        
         # Reformat dict values as separate key/value pairs
         # to be compatible with Neo4j
         for key, value in job_dict["inputs"].items():
@@ -286,13 +295,6 @@ def launch_gatk_5_dollar(event, context):
             }
         }
         publish_to_topic(NEW_JOBS_TOPIC, message)  
-
-        # Write message to blob
-        #storage.Client(project=PROJECT_ID) \
-        #    .get_bucket(TRELLIS_BUCKET) \
-        #    .blob('launch-gatk-5-dollar-message.out') \
-        #    .upload_from_string(json.dumps(message))
-        #gatk_inputs = json.loads(gatk_input_template)
 
 
 # For local testing
