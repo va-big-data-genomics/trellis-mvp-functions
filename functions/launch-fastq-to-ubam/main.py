@@ -287,7 +287,7 @@ def launch_fastq_to_ubam(event, context):
     
     if 'job-id' in dsub_result.keys():
         # Add dsub job ID to neo4j database node
-        job_dict['dsub-jobId'] = result['job-id']
+        job_dict['dsub-jobId'] = dsub_result['job-id']
 
         # Format inputs for neo4j database
         for key, value in job_dict["inputs"].items():
