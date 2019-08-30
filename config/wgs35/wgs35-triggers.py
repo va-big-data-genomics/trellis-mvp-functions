@@ -414,7 +414,7 @@ class RelateOutputToJob:
         message = {
                    "header": {
                               "resource": "query",
-                              "method": "PUT",
+                              "method": "POST",
                               "labels": ["Create", "Relationship", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "publishTo": self.function_name
@@ -472,7 +472,7 @@ class RelatedInputToJob:
             message = {
                        "header": {
                                   "resource": "query",
-                                  "method": "PUT",
+                                  "method": "POST",
                                   "labels": ["Create", "Relationship", "Input", "Cypher", "Query"],
                                   "sentFrom": self.function_name,
                                   "publishTo": self.function_name
