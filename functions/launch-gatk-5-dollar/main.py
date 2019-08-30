@@ -25,19 +25,16 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    #ZONES = parsed_vars['DSUB_ZONES']
     REGIONS = parsed_vars['DSUB_REGIONS']
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
     TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
     GATK_INPUTS_PATH = parsed_vars['GATK_HG38_INPUTS']
-    # TODO: Create this
     NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
     # Establish PubSub connection
     PUBLISHER = pubsub.PublisherClient()
-    #TOPIC_PATH = f"projects/{PROJECT_ID}/topics/{TOPIC}"
 
 
 def publish_to_topic(topic, data):

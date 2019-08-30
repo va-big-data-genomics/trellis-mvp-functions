@@ -30,7 +30,6 @@ if ENVIRONMENT == 'google-cloud':
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
     NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
-    RELATIONSHIP_TOPIC = parsed_vars['TOPIC_ADD_RELATIONSHIP']
 
     PUBLISHER = pubsub.PublisherClient()
 
@@ -302,35 +301,7 @@ def launch_fastq_to_ubam(event, context):
                                   NEW_JOB_TOPIC,
                                   message) 
         print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")
-
-        """
-        Deprecated in favor of creating relationships via node trigger
-
-        # Send relationship(s) metadata to create-relationship function
-        indexed_nodes = []
-        for node in nodes:
-            relationship_name = "INPUT_TO"
-            bi = False
-            indexed_properties = {
-                                  "bucket": node["bucket"],
-                                  "path": node["path"],
-                                  "id": node["id"],
-                                  "labels": node["labels"]
-            }
-
-            message = format_relationship_message(
-                                                  start = indexed_properties,
-                                                  end = job_dict,
-                                                  name = relationship_name,
-                                                  bidirectional = bi)
-            print(f"> Pubsub message: {message}.")
-            result = publish_to_topic(
-                                      PUBLISHER,
-                                      PROJECT_ID,
-                                      RELATIONSHIP_TOPIC,
-                                      message) 
-            print(f"> Published message to {RELATIONSHIP_TOPIC} with result: {result}.")
-        """
+        
 
 # For local testing
 if __name__ == "__main__":
