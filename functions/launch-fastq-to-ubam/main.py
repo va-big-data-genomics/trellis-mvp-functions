@@ -269,7 +269,7 @@ def launch_fastq_to_ubam(event, context):
 
     print(f"Launching dsub with args: {dsub_args}.")
     dsub_result = launch_dsub_task(dsub_args)
-    print(f"Dsub result: {result}.")
+    print(f"Dsub result: {dsub_result}.")
 
     # Metadata to be perpetuated to ubams is written to file
     # Try until success
