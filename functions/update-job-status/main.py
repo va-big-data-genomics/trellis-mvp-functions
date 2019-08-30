@@ -140,6 +140,7 @@ class DeleteOperation:
         self.stop_time = None
         self.stop_time_epoch = None
         self.status = "STOPPED"
+        self.stopped_by = None
 
         payload = data['protoPayload']
         resource = data['resource']
@@ -155,6 +156,11 @@ class DeleteOperation:
         timestamp = get_datetime_iso8601(data['timestamp'])
         self.stop_time_epoch = get_seconds_from_epoch(timestamp)
 
+        # Find out which agent stopped the VM
+        auth_email = payload['authenticationInfo']['principalEmail']
+        domain = auth_email.split('@')[1]
+        service = domain.split('.')[0]
+        self.stopped_by = service
 
     def compose_instance_query(self):
         """DEPRECATED"""
@@ -178,7 +184,8 @@ class DeleteOperation:
                 f"AND node.instanceName = \"{self.name}\" " +
                  "SET " +
                     f"node.stopTime = \"{self.stop_time}\", " +
-                    f"node.stopTimeEpoch = {self.stop_time_epoch}, " + 
+                    f"node.stopTimeEpoch = {self.stop_time_epoch}, " +
+                    f"node.stoppedBy = \"{self.stopped_by}\", " +
                     f"node.status = \"{self.status}\", " +
                     "node.durationMinutes = " +
                         "duration.inSeconds(datetime(node.startTime), " +
