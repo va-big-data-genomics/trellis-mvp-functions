@@ -56,7 +56,7 @@ if ENVIRONMENT == 'google-cloud':
                   #max_connections=NEO4J_MAX_CONN)
 
 
-def format_pubsub_message(method, labels, query, results, perpetuate=None):
+def format_pubsub_message(method, labels, query, results, perpetuate=None, retry_count=None):
     labels.extend(["Database", "Result"])
     message = {
                "header": {
@@ -72,6 +72,11 @@ def format_pubsub_message(method, labels, query, results, perpetuate=None):
     }
     if perpetuate:
         message['body'].update(perpetuate)
+    
+
+    if retry_count:
+        header['retry-count']=retry_count
+
     return message
 
 
@@ -140,6 +145,7 @@ def query_db(event, context):
     method = header['method']
     labels = header['labels']
     topic = header.get('publishTo')
+    retry_count = header.get('retry-count')
 
     query = body['cypher']
     result_mode = body.get('result-mode')
@@ -200,26 +206,26 @@ def query_db(event, context):
         return results
 
     # Perpetuate metadata in specified by "perpetuate" key
-    perpetuate = body.get('perpetuate')
+    #perpetuate = body.get('perpetuate')
 
     
     if result_split == 'True':
         if not results:
             # If no results; send one message so triggers can respond to null
             result = {}
-            message = format_pubsub_message(method, labels, query, result, perpetuate)
+            message = format_pubsub_message(method, labels, query, result, retry_count=retry_count)
             print(f"> Pubsub message: {message}.")
             result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {result}.")
 
         for result in results:
-            message = format_pubsub_message(method, labels, query, result, perpetuate)
+            message = format_pubsub_message(method, labels, query, result, retry_count=retry_count)
             print(f"> Pubsub message: {message}.")
             result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {result}.")
     else:
         #message['body']['results'] = results
-        message = format_pubsub_message(method, labels, query, results, perpetuate)
+        message = format_pubsub_message(method, labels, query, results, retry_count=retry_count)
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(topic, message)
         print(f"> Published message to {topic} with result: {result}.")
