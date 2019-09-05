@@ -1,0 +1,17 @@
+steps:
+  # build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/check-dstat', '.']
+  # push the container image to Container Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/check-dstat']
+  # Deploy container image to Cloud Run
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta', 'run', 'deploy', '${_DATA_GROUP}-check-dstat',
+         '--image', 'gcr.io/$PROJECT_ID/check-dstat',
+         '--region', 'us-central1',
+         '--platform', 'managed',
+         '--quiet']
+images:
+- gcr.io/$PROJECT_ID/check-dstat
