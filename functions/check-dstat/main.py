@@ -141,7 +141,8 @@ def index():
     try:
         dstat_result = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
     except:
-        return('Error: could not run dstat command', 400)
+        print(f"Error: could not run dstat command {dstat_cmd}.")
+        return('', 204)
 
     print(f"Dstat result: {dstat_result}.")
     json_result = json.loads(dstat_result)
