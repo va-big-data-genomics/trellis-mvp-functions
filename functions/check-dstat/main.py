@@ -138,7 +138,10 @@ def index():
         print(f"Dstat cmd: {dstat_cmd}.")
 
     #print(f'Hello {name}!')
-    dstat_result = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
+    try:
+        dstat_result = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
+    return('Error: could not run dstat command: {dstat_cmd}.', 400)
+
     print(f"Dstat result: {dstat_result}.")
     json_result = json.loads(dstat_result)
     print(f"Json resut: {json_result}.")
