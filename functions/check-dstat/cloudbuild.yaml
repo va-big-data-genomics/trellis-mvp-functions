@@ -9,6 +9,10 @@ steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta', 'run', 'deploy', '${_DATA_GROUP}-check-dstat',
+         '--build-arg', 'ENVIRONMENT=${_ENVIRONMENT}',
+         '--build-arg', 'FUNCTION_NAME=${_FUNCTION_NAME}',
+         '--build-arg', 'CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--build-arg', 'CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--image', 'gcr.io/$PROJECT_ID/check-dstat',
          '--region', 'us-central1',
          '--platform', 'managed',
