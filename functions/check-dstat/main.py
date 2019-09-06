@@ -118,7 +118,7 @@ def create_query(dstat_json):
 
 # [START run_pubsub_handler]
 @app.route('/', methods=['POST'])
-def index():
+def get_dstat_result():
     envelope = request.get_json()
     if not envelope:
         msg = 'no Pub/Sub message received'
@@ -131,6 +131,7 @@ def index():
         return f'Bad Request: {msg}', 400
 
     pubsub_message = envelope['message']
+    #print(pubsub_message)
 
     #name = 'World'
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
@@ -146,9 +147,9 @@ def index():
 
     print(f"Dstat result: {dstat_result}.")
     json_result = json.loads(dstat_result)
-    print(f"Json resut: {json_result}.")
+    print(f"Json result: {json_result}.")
 
-    query = create_query(json_result)
+    query = create_query(json_result[0])
     message = format_pubsub_message(query)
     return message
 
