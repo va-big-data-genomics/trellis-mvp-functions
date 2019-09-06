@@ -27,7 +27,7 @@ import subprocess
 from google.cloud import pubsub
 from google.cloud import storage
 
-
+"""
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 print(f"Environment: {ENVIRONMENT}.")
 if ENVIRONMENT == 'google-cloud':
@@ -41,12 +41,15 @@ if ENVIRONMENT == 'google-cloud':
 
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
-    DATA_GROUP = parsed_vars.get('DATA_GROUP')
     DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
     TRIGGER_TOPIC = parsed_vars.get('TOPIC_TRIGGERS')
 
     PUBLISHER = pubsub.PublisherClient()
+"""
 
+PROJECT_ID = 'gbsc-gcp-project-mvp-dev'
+DB_TOPIC = 'wgs35-db-queries'
+TRIGGER_TOPIC = 'wgs35-triggers'
 
 app = Flask(__name__)
 # [END run_pubsub_server_setup]
