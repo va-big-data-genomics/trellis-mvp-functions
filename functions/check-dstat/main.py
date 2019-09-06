@@ -180,20 +180,20 @@ def get_dstat_result():
         return f'Bad Request: {msg}', 400
 
     # Get credentials
-    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    #FUNCTION_NAME = os.environ['FUNCTION_NAME']
 
-    vars_blob = storage.Client() \
-                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                .get_blob(os.environ['CREDENTIALS_BLOB']) \
-                .download_as_string()
-    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+    #vars_blob = storage.Client() \
+    #            .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+    #            .get_blob(os.environ['CREDENTIALS_BLOB']) \
+    #            .download_as_string()
+    #parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     # Runtime variables
-    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
-    DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
-    TRIGGER_TOPIC = parsed_vars.get('TOPIC_TRIGGERS')
+    #PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
+    #DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    #TRIGGER_TOPIC = parsed_vars.get('TOPIC_TRIGGERS')
 
-    PUBLISHER = pubsub.PublisherClient()
+    #PUBLISHER = pubsub.PublisherClient()
 
 
     pubsub_message = envelope['message']
@@ -217,8 +217,8 @@ def get_dstat_result():
     query = create_query(json_result[0])
     message = format_pubsub_message(query)
     print(f"> Pubsub message: {message}.")
-    result = publish_to_topic(DB_TOPIC, message)
-    print(f"> Published message to {DB_TOPIC} with result: {result}.")
+    #result = publish_to_topic(DB_TOPIC, message)
+    #print(f"> Published message to {DB_TOPIC} with result: {result}.")
     #return message
 
     # Publish to message
