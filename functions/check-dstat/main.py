@@ -23,8 +23,29 @@ import json
 
 import subprocess
 
+from google.cloud import pubsub
+from google.cloud import storage
+
 app = Flask(__name__)
 # [END run_pubsub_server_setup]
+
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+
+    # Runtime variables
+    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
+    TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    DATA_GROUP = parsed_vars.get('DATA_GROUP')
+
+    PUBLISHER = pubsub.PublisherClient()
+
 
 def dash_to_camelcase(word):
     return re.sub(r'(?!^)-([a-zA-Z])', lambda m: m.group(1).upper(), word)
@@ -116,6 +137,13 @@ def create_query(dstat_json):
     return query
 
 
+def publish_to_topic(topic, data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    message = json.dumps(data).encode('utf-8')
+    result = PUBLISHER.publish(topic_path, data=message).result()
+    return result
+
+
 # [START run_pubsub_handler]
 @app.route('/', methods=['POST'])
 def get_dstat_result():
@@ -151,7 +179,12 @@ def get_dstat_result():
 
     query = create_query(json_result[0])
     message = format_pubsub_message(query)
-    return message
+    print(f"> Pubsub message: {message}.")
+    result = publish_to_topic(TOPIC, message)
+    print(f"> Published message to {TOPIC} with result: {result}.")
+    #return message
+
+    # Publish to message
 
     # Flush the stdout to avoid log buffering.
     sys.stdout.flush()
