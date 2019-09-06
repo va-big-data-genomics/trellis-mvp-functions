@@ -16,6 +16,7 @@ steps:
          '--image', 'gcr.io/$PROJECT_ID/check-dstat',
          '--region', 'us-central1',
          '--platform', 'managed',
+         '--no-allow-unauthenticated',
          '--quiet']
 images:
 - gcr.io/$PROJECT_ID/check-dstat
