@@ -47,9 +47,9 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 """
 
-PROJECT_ID = 'gbsc-gcp-project-mvp-dev'
-DB_TOPIC = 'wgs35-db-queries'
-TRIGGER_TOPIC = 'wgs35-triggers'
+#PROJECT_ID = 'gbsc-gcp-project-mvp-dev'
+#DB_TOPIC = 'wgs35-db-queries'
+#TRIGGER_TOPIC = 'wgs35-triggers'
 
 app = Flask(__name__)
 # [END run_pubsub_server_setup]
@@ -57,6 +57,25 @@ app = Flask(__name__)
 
 def dash_to_camelcase(word):
     return re.sub(r'(?!^)-([a-zA-Z])', lambda m: m.group(1).upper(), word)
+
+def get_credentials():
+    ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+    print(f"Environment: {ENVIRONMENT}.")
+    if ENVIRONMENT == 'google-cloud':
+        FUNCTION_NAME = os.environ['FUNCTION_NAME']
+
+        vars_blob = storage.Client() \
+                    .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                    .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                    .download_as_string()
+        parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+
+        # Runtime variables
+        PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
+        DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+        TRIGGER_TOPIC = parsed_vars.get('TOPIC_TRIGGERS')
+
+        PUBLISHER = pubsub.PublisherClient()
 
 def format_pubsub_message(query):
     message = {
@@ -160,8 +179,24 @@ def get_dstat_result():
         print(f'error: {msg}')
         return f'Bad Request: {msg}', 400
 
+    # Get credentials
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+
+    # Runtime variables
+    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
+    DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    TRIGGER_TOPIC = parsed_vars.get('TOPIC_TRIGGERS')
+
+    PUBLISHER = pubsub.PublisherClient()
+
+
     pubsub_message = envelope['message']
-    #print(pubsub_message)
 
     #name = 'World'
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
