@@ -27,8 +27,6 @@ import subprocess
 from google.cloud import pubsub
 from google.cloud import storage
 
-app = Flask(__name__)
-# [END run_pubsub_server_setup]
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 print(f"Environment: {ENVIRONMENT}.")
@@ -48,6 +46,10 @@ if ENVIRONMENT == 'google-cloud':
     TRIGGER_TOPIC = parsed_vars.get('TOPIC_TRIGGERS')
 
     PUBLISHER = pubsub.PublisherClient()
+
+
+app = Flask(__name__)
+# [END run_pubsub_server_setup]
 
 
 def dash_to_camelcase(word):
