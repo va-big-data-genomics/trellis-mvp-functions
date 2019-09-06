@@ -19,6 +19,7 @@ import os
 import re
 import pdb
 import sys
+import yaml
 import json
 
 import subprocess
@@ -30,6 +31,7 @@ app = Flask(__name__)
 # [END run_pubsub_server_setup]
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+print(f"Environment: {ENVIRONMENT}.")
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
 
