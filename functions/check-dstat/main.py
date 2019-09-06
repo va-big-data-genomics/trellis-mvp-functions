@@ -43,8 +43,9 @@ if ENVIRONMENT == 'google-cloud':
 
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
-    TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
+    DB_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    TRIGGER_TOPIC = parsed_vars.get('TOPIC_TRIGGERS')
 
     PUBLISHER = pubsub.PublisherClient()
 
@@ -58,8 +59,8 @@ def format_pubsub_message(query):
                           "resource": "query", 
                           "method": "POST",
                           "labels": ["Create", "Dstat", "Node", "Cypher", "Query"],
-                          "sentFrom": "wgs35-get-dstat-status",
-                          "publishTo": "wgs35-triggers",
+                          "sentFrom": FUNCTION_NAME,
+                          "publishTo": TRIGGER_TOPIC,
                },
                "body": {
                         "cypher": query,
@@ -73,12 +74,6 @@ def format_pubsub_message(query):
 
 def create_query(dstat_json):
     # Parse dstat_json
-
-    # I think: 
-    ## store outputs (dict) as text
-    ## stored events (list-of-dicts) as text
-    ## store each provider-attributes as key:value property
-
     property_strings = []
 
     # Convert script double quotes to single
@@ -182,8 +177,8 @@ def get_dstat_result():
     query = create_query(json_result[0])
     message = format_pubsub_message(query)
     print(f"> Pubsub message: {message}.")
-    result = publish_to_topic(TOPIC, message)
-    print(f"> Published message to {TOPIC} with result: {result}.")
+    result = publish_to_topic(DB_TOPIC, message)
+    print(f"> Published message to {DB_TOPIC} with result: {result}.")
     #return message
 
     # Publish to message
