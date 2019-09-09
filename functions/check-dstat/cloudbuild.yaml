@@ -1,10 +1,10 @@
 steps:
   # build the container image
-#- name: 'gcr.io/cloud-builders/docker'
-#  args: ['build', '-t', 'gcr.io/$PROJECT_ID/check-dstat', 'functions/check-dstat/']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/check-dstat', 'functions/check-dstat/']
   # push the container image to Container Registry
-#- name: 'gcr.io/cloud-builders/docker'
-#  args: ['push', 'gcr.io/$PROJECT_ID/check-dstat']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/check-dstat']
   # Deploy container image to Cloud Run
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
