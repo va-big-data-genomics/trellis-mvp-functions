@@ -244,7 +244,10 @@ class KillDuplicateJobs:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Duplicate", "Jobs", "Running"],
                               "sentFrom": self.function_name,
-                              "publishTo": self.env_vars['TOPIC_KILL_DUPLICATES'],
+                              "publishTo": [
+                                            self.env_vars['TOPIC_KILL_DUPLICATES'],
+                                            self.function_name]
+                              ]
                    }, 
                    "body": {
                         "cypher": (
@@ -495,6 +498,55 @@ class RelatedInputToJob:
                  f"CREATE (input)-[:INPUT_TO]->(job) " +
                   "RETURN job AS node")
         return query
+
+
+class RunDsubWhenJobStopped:
+    
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            "Job" in node.get("labels"),
+            node.get("status") == "STOPPED",
+            node.get("dstatCmd")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['TOPIC_DSTAT']
+        publish_to = self.env_vars['DB_QUERY_TOPIC']
+
+        messages = []
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "command",
+                              "method": "POST",
+                              "labels": ["Dstat", "Command"],
+                              "sentFrom": self.function_name,
+                   },
+                   "body": {
+                            "command": node["dstatCmd"]
+                   }
+        }
+        result = (topic, message)
+        messages.append(result)
+        return(messages)  
 
 
 def get_triggers(function_name, env_vars):
