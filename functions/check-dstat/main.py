@@ -158,8 +158,8 @@ def get_dstat_result():
     #print(pubsub_message)
 
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
-        dstat = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
-        data = json.loads(pubsub_message)
+        data = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
+        data = json.loads(data)
         print(f"Data: {data}.\n")
         header = data['header']
         body = data['body']
