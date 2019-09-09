@@ -157,12 +157,15 @@ def get_dstat_result():
     pubsub_message = envelope['message']
     #print(pubsub_message)
 
-    #name = 'World'
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
-        dstat_cmd = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
-        print(f"> Dstat cmd: {dstat_cmd}.")
+        dstat = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
+        data = json.loads(pubsub_message)
+        print(f"Data: {data}.\n")
+        header = data['header']
+        body = data['body']
 
-    #print(f'Hello {name}!')
+        dstat_cmd = body['command']
+
     try:
         dstat_result = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
     except:
