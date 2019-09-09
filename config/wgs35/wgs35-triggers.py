@@ -232,6 +232,11 @@ class KillDuplicateJobs:
 
 
     def compose_message(self, header, body, node):
+        """
+        Send results to 
+            1) kill-duplicates to kill jobs and 
+            2) triggers to mark job a duplicate in database
+        """
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
@@ -244,9 +249,11 @@ class KillDuplicateJobs:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Duplicate", "Jobs", "Running"],
                               "sentFrom": self.function_name,
+                              # Why am I publishing this to kill-duplicates 
+                              # and back to triggers?
                               "publishTo": [
                                             self.env_vars['TOPIC_KILL_DUPLICATES'],
-                                            self.function_name]
+                                            self.function_name
                               ]
                    }, 
                    "body": {
@@ -574,6 +581,9 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RelatedInputToJob(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RunDsubWhenJobStopped(
                                     function_name,
                                     env_vars))
     return triggers
