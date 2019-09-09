@@ -21,6 +21,7 @@ import pdb
 import sys
 import yaml
 import json
+import logging
 
 import subprocess
 
@@ -173,7 +174,11 @@ def get_dstat_result():
         return('', 204)
 
     print(f"> Dstat result: {dstat_result}.")
-    json_result = json.loads(dstat_result)
+    try:
+        json_result = json.loads(dstat_result)
+    except:
+        logging.error("> Could not load dstat result as json.")
+        return('', 204)
     print(f"> Json result: {json_result}.")
 
     query = create_query(json_result[0])
