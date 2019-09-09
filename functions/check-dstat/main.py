@@ -87,7 +87,6 @@ def create_query(dstat_json):
     for event in events:
         formatted_events.append(str(event))
     property_strings.append(f'dstat.events= {formatted_events}')
-    print(formatted_events)
 
     # Pop provider attributes to add all as properties
     provider_attributes = dstat_json.pop('provider-attributes')
@@ -161,7 +160,7 @@ def get_dstat_result():
     #name = 'World'
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
         dstat_cmd = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
-        print(f"Dstat cmd: {dstat_cmd}.")
+        print(f"> Dstat cmd: {dstat_cmd}.")
 
     #print(f'Hello {name}!')
     try:
@@ -170,9 +169,9 @@ def get_dstat_result():
         print(f"Error: could not run dstat command {dstat_cmd}.")
         return('', 204)
 
-    print(f"Dstat result: {dstat_result}.")
+    print(f"> Dstat result: {dstat_result}.")
     json_result = json.loads(dstat_result)
-    print(f"Json result: {json_result}.")
+    print(f"> Json result: {json_result}.")
 
     query = create_query(json_result[0])
     message = format_pubsub_message(query)
