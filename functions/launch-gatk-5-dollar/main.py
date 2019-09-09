@@ -273,6 +273,7 @@ def launch_gatk_5_dollar(event, context):
                                 f"--jobs '{job_dict['dsubJobId']}' " +
                                 f"--users '{job_dict['user']}' " +
                                  "--full " +
+                                 "--format json " +
                                  "--status '*'")
         
         # Reformat dict values as separate key/value pairs
