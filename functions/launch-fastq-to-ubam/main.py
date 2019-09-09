@@ -293,6 +293,7 @@ def launch_fastq_to_ubam(event, context):
                                 f"--jobs '{job_dict['dsubJobId']}' " +
                                 f"--users '{job_dict['user']}' " +
                                  "--full " +
+                                 "--format json " +
                                  "--status '*'")
 
         # Format inputs for neo4j database
