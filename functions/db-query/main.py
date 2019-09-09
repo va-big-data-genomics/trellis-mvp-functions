@@ -70,12 +70,11 @@ def format_pubsub_message(method, labels, query, results, perpetuate=None, retry
                         "results": results,
                }
     }
-    if perpetuate:
-        message['body'].update(perpetuate)
+    #if perpetuate:
+    #    message['body'].update(perpetuate)
     
-
     if retry_count:
-        header['retry-count']=retry_count
+        message['header']['retry-count'] = retry_count
 
     return message
 
