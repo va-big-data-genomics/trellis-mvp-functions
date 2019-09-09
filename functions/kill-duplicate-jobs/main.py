@@ -17,30 +17,8 @@ if ENVIRONMENT == 'google-cloud':
     PROJECT_ID = os.environ['GCP_PROJECT']
 
 
-def format_pubsub_message(job_dict, nodes):
-    message = {
-               "header": {
-                          "resource": "query", 
-                          "method": "POST",
-                          "labels": ["Job", "Delete", "Duplicates"],
-                          "sentFrom": f"{FUNCTION_NAME}",
-               },
-               "body": {
-                        "cypher": query, 
-                        "result-mode": "stats"
-               }
-    }
-    return message
-
-
-def publish_to_topic(publisher, project_id, topic, data):
-    topic_path = publisher.topic_path(project_id, topic)
-    message = json.dumps(data).encode('utf-8')
-    result = publisher.publish(topic_path, data=message).result()
-    return result
-
-
 def delete_instance(zone, name):
+    """DEPRECATED"""
     try:
         request = SERVICE.instances().delete(
                                              project = PROJECT_ID,
@@ -89,17 +67,14 @@ def kill_duplicate_jobs(event, context):
         # Send request to delete each duplicate job instance
         while True:
             try:
+                logging.info(f"> Attempting to shutdown {zone}:{name}.")
                 request = SERVICE.instances().delete(
                                                      project = PROJECT_ID,
                                                      zone = zone,
                                                      instance = name)
                 response = request.execute()
+                logging.info(f"> Response: {response}.")
                 break
             except ConnectionResetError as error:
                 logging.warn(f"> Encountered connection interruption: {error}.")
-        #while True:
-        #    result = delete_instance(zone, name)
-        #    if result == True:
-        #        break
-
         
