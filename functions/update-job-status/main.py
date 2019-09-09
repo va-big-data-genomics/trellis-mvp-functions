@@ -296,10 +296,7 @@ def update_job_status(event, context):
 
     print(f"> Database query: \"{query}\".")
 
-    if insert:
-        message = format_pubsub_message(query, publish_to=TOPIC_TRIGGERS)
-    else:
-        message = format_pubsub_message(query)
+    message = format_pubsub_message(query, publish_to=TOPIC_TRIGGERS)
     print(f"> Pubsub message: {message}.")
 
     result = publish_to_topic(DB_TOPIC, message)
