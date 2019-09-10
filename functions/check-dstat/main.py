@@ -96,17 +96,18 @@ def _create_query(dstat_json):
     regions = provider_attributes.pop('regions')
     #### ERROR: Can't get it formatted correctly
     #formatted_regions = []
-    #for region in regions:
-    #    print(region)
-    #    formatted_regions.append(json.dumps(region))
-    #property_strings.append(f'dstat.regions= {formatted_regions}')
+    for region in regions:
+        print(region)
+        region = region.replace('"', "'")
+        formatted_regions.append(json.dumps(region))
+    property_strings.append(f'dstat.regions= {formatted_regions}')
 
     for key, value in provider_attributes.items():
         if not value:
             continue
         neo4j_key = _dash_to_camelcase(key)
         if isinstance(value, str):
-            value.replace('"', "'")
+            value = value.replace('"', "'")
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
         elif isinstance(value, dict):
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
@@ -120,7 +121,7 @@ def _create_query(dstat_json):
 
         neo4j_key = _dash_to_camelcase(key)
         if isinstance(value, str):
-            value.replace('"', "'")
+            value = value.replace('"', "'")
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
         elif isinstance(value, dict):
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
