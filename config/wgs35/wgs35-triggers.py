@@ -606,15 +606,15 @@ class RelateDstatToJob:
     def _create_query(self, node):
         query = (
                  "MATCH (job:Dsub:Job " +
-                    "{{ " +
+                    "{ " +
                         f"dsubJobId:\"{node['jobId']}\", " +
                         f"instanceName:\"{node['instanceName']}\" " +
-                    "}}), " +
+                    "}), " +
                  "(dstat:Dstat " +
-                    "{{ " +
+                    "{ " +
                         f"jobId:\"{node['jobId']}\", " +
                         f"instanceName:\"{node['instanceName']}\" " +
-                    "}}) " +
+                    "}) " +
                   "WHERE NOT (job)-[:STATUS]->(dstat) " +
                   "CREATE (job)-[:STATUS]->(dstat) ")
         return query
