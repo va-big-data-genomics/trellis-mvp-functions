@@ -130,7 +130,7 @@ def _create_query(dstat_json):
     properties_string = ', '.join(property_strings)   
 
     query = (
-             f"MERGE (dstat:Dstat:Status {{ dsubJobId:\"{dstat_json['job-id']}\" }}) " +
+             f"MERGE (dstat:Dstat:Status {{ instanceName:\"{dstat_json['instance-name']}\" }}) " +
              f"ON CREATE SET {properties_string} " +
               "RETURN dstat AS node")
     return query
