@@ -159,6 +159,7 @@ def get_dstat_result():
         return f'Bad Request: {msg}', 400
 
     pubsub_message = envelope['message']
+    print(f"> Received pubsub message: {pubsub_message}.")
 
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
         data = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
