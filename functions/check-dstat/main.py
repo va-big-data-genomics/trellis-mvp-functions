@@ -51,10 +51,10 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
-def dash_to_camelcase(word):
+def _dash_to_camelcase(word):
     return re.sub(r'(?!^)-([a-zA-Z])', lambda m: m.group(1).upper(), word)
 
-def format_pubsub_message(query):
+def _format_pubsub_message(query):
     message = {
                "header": {
                           "resource": "query", 
@@ -73,7 +73,7 @@ def format_pubsub_message(query):
     return message
 
 
-def create_query(dstat_json):
+def _create_query(dstat_json):
     # Parse dstat_json
     property_strings = []
 
@@ -104,8 +104,9 @@ def create_query(dstat_json):
     for key, value in provider_attributes.items():
         if not value:
             continue
-        neo4j_key = dash_to_camelcase(key)
+        neo4j_key = _dash_to_camelcase(key)
         if isinstance(value, str):
+            value.replace('"', "'")
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
         elif isinstance(value, dict):
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
@@ -117,15 +118,15 @@ def create_query(dstat_json):
         if not value:
             continue
 
-        neo4j_key = dash_to_camelcase(key)
+        neo4j_key = _dash_to_camelcase(key)
         if isinstance(value, str):
+            value.replace('"', "'")
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
         elif isinstance(value, dict):
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
         else:
             property_strings.append(f'dstat.{neo4j_key}= {value}')
     properties_string = ', '.join(property_strings)   
-    #pdb.set_trace()
 
     query = (
              f"MERGE (dstat:Dstat:Status {{ dsubJobId:\"{dstat_json['job-id']}\" }}) " +
@@ -134,7 +135,7 @@ def create_query(dstat_json):
     return query
 
 
-def publish_to_topic(topic, data):
+def _publish_to_topic(topic, data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     message = json.dumps(data).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
@@ -156,7 +157,6 @@ def get_dstat_result():
         return f'Bad Request: {msg}', 400
 
     pubsub_message = envelope['message']
-    #print(pubsub_message)
 
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
         data = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
@@ -181,12 +181,11 @@ def get_dstat_result():
         return('', 204)
     print(f"> Json result: {json_result}.")
 
-    query = create_query(json_result[0])
-    message = format_pubsub_message(query)
+    query = _create_query(json_result[0])
+    message = _format_pubsub_message(query)
     print(f"> Pubsub message: {message}.")
-    result = publish_to_topic(DB_TOPIC, message)
+    result = _publish_to_topic(DB_TOPIC, message)
     print(f"> Published message to {DB_TOPIC} with result: {result}.")
-    #return message
 
     # Publish to message
 
@@ -210,6 +209,6 @@ if __name__ == '__main__':
 
     #with open('dstat_result.json', 'r') as fh:
     #    json_result = json.load(fh)
-    query = create_query(json_result[0])
-    message = format_pubsub_message(query)
+    query = _create_query(json_result[0])
+    message = _format_pubsub_message(query)
     print(message)
