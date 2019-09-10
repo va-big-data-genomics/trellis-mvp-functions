@@ -514,8 +514,6 @@ class RunDsubWhenJobStopped:
         self.function_name = function_name
         self.env_vars = env_vars
 
-
-
         reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
 
         if not node:
@@ -556,7 +554,7 @@ class RunDsubWhenJobStopped:
         messages.append(result)
         return(messages)  
 
-
+"""
 class RelateDstatToJob:
 
     def __init__(self, function_name, env_vars):
@@ -588,8 +586,7 @@ class RelateDstatToJob:
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
-        #query = self._create_query(node)
-        query = "test"
+        query = self._create_query(node)
         message = {
                    "header": {
                               "resource": "query",
@@ -605,7 +602,6 @@ class RelateDstatToJob:
         return([(topic, message)])   
 
 
-    """
     def _create_query(self, node):
         query = (
                  "MATCH (job:Dsub:Job " +
@@ -620,8 +616,7 @@ class RelateDstatToJob:
                     "}})" +
                   "WHERE NOT (job)-[:STATUS]->(dstat) " +
                   "CREATE (job)-[:STATUS]->(dstat) ")
-        return query
-    """
+"""
 
 def get_triggers(function_name, env_vars):
 
@@ -653,7 +648,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RunDsubWhenJobStopped(
                                     function_name,
                                     env_vars))
-    triggers.append(RelateDstatToJob(
-                                    function_name,
-                                    env_vars))
+    #triggers.append(RelateDstatToJob(
+    #                                function_name,
+    #                                env_vars))
     return triggers
