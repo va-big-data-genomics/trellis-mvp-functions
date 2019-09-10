@@ -556,6 +556,69 @@ class RunDsubWhenJobStopped:
         return(messages)  
 
 
+class RelateDstatToJob:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Dstat', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            node.get("jobId"),
+            node.get("instanceName")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Create", "Relationship", "Dstat", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "stats",
+                   }
+        }
+        return([(topic, message)])   
+
+
+    def _create_query(self, node):
+        query = (
+                 "MATCH (job:Dsub:Job " +
+                    "{{ " +
+                        f"dsubJobId:\"{node['jobId']}\", " +
+                        f"instanceName:\"{node['instanceName']}\" " +
+                    "}}), " +
+                 "(dstat:Dstat " +
+                    "{{ " +
+                        f"jobId:\"{node['jobId']}\", " +
+                        f"instanceName:\"{node['instanceName']}\" " +
+                    "}})" +
+                  "WHERE NOT (job)-[:STATUS]->(dstat) " +
+                  "CREATE (job)-[:STATUS]->(dstat) ")
+        return query
+
 def get_triggers(function_name, env_vars):
 
     triggers = []
@@ -584,6 +647,9 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RunDsubWhenJobStopped(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateDstatToJob(
                                     function_name,
                                     env_vars))
     return triggers
