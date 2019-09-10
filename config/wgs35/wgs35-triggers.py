@@ -1,3 +1,5 @@
+MAX_RETRIES = 10
+
 class AddFastqSetSize:
     """Add setSize property to Fastqs and send them back to 
     triggers to launch fastq-to-ubam.
@@ -285,13 +287,12 @@ class RequeueJobQuery:
 
 
     def check_conditions(self, header, body, node=None):
-        max_retries = 7
         reqd_header_labels = ['Query', 'Cypher', 'Update', 'Job', 'Node']
 
         conditions = [
             header.get('method') == "UPDATE",
             (not header.get('retry-count') 
-             or header.get('retry-count') < max_retries),
+             or header.get('retry-count') < MAX_RETRIES),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             not node
         ]
@@ -342,13 +343,12 @@ class RequeueRelationshipQuery:
         self.env_vars = env_vars
 
     def check_conditions(self, header, body, node=None):
-        max_retries = 7
         reqd_header_labels = ['Relationship', 'Create', 'Cypher', 'Query', ]
 
         conditions = [
             header.get('method') == "POST",
             (not header.get('retry-count') 
-             or header.get('retry-count') < max_retries),
+             or header.get('retry-count') < MAX_RETRIES),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             not node
         ]
