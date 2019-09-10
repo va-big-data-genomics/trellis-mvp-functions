@@ -97,7 +97,6 @@ def _create_query(dstat_json):
     #### ERROR: Can't get it formatted correctly
     formatted_regions = []
     for region in regions:
-        print(region)
         region = region.replace('"', "'")
         formatted_regions.append(region)
     property_strings.append(f'dstat.regions= {formatted_regions}')
