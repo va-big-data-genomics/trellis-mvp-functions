@@ -1,3 +1,5 @@
+import time
+
 MAX_RETRIES = 10
 
 class AddFastqSetSize:
@@ -332,6 +334,9 @@ class RequeueJobQuery:
         message['header'] = header
         message['body'] = body
 
+        # Wait 2 seconds before re-queueing
+        time.sleep(2)
+
         return([(topic, message)])
 
 
@@ -386,6 +391,9 @@ class RequeueRelationshipQuery:
 
         message['header'] = header
         message['body'] = body
+
+        # Wait 2 seconds before re-queueing
+        time.sleep(2)
 
         return([(topic, message)])   
 
