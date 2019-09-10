@@ -616,7 +616,7 @@ class RelateDstatToJob:
                         f"jobId:\"{node['jobId']}\", " +
                         f"instanceName:\"{node['instanceName']}\" " +
                     "}})" +
-                  "WHERE NOT (job)-[:STATUS]->(dstat)" +
+                  "WHERE NOT (job)-[:STATUS]->(dstat) " +
                   "CREATE (job)-[:STATUS]->(dstat) ")
         return query
 
