@@ -95,11 +95,11 @@ def _create_query(dstat_json):
     # Convert regions to list
     regions = provider_attributes.pop('regions')
     #### ERROR: Can't get it formatted correctly
-    #formatted_regions = []
+    formatted_regions = []
     for region in regions:
         print(region)
         region = region.replace('"', "'")
-        formatted_regions.append(json.dumps(region))
+        formatted_regions.append(region)
     property_strings.append(f'dstat.regions= {formatted_regions}')
 
     for key, value in provider_attributes.items():
