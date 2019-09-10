@@ -627,6 +627,7 @@ class RelateDstatToJob:
                   "CREATE (job)-[:STATUS]->(dstat) ")
         return query
 
+
 def get_triggers(function_name, env_vars):
 
     triggers = []
