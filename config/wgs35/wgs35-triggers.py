@@ -285,7 +285,7 @@ class RequeueJobQuery:
 
 
     def check_conditions(self, header, body, node=None):
-        max_retries = 3
+        max_retries = 7
         reqd_header_labels = ['Query', 'Cypher', 'Update', 'Job', 'Node']
 
         conditions = [
@@ -342,7 +342,7 @@ class RequeueRelationshipQuery:
         self.env_vars = env_vars
 
     def check_conditions(self, header, body, node=None):
-        max_retries = 3
+        max_retries = 7
         reqd_header_labels = ['Relationship', 'Create', 'Cypher', 'Query', ]
 
         conditions = [
