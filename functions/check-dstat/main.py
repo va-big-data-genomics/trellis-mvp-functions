@@ -54,6 +54,7 @@ if ENVIRONMENT == 'google-cloud':
 def _dash_to_camelcase(word):
     return re.sub(r'(?!^)-([a-zA-Z])', lambda m: m.group(1).upper(), word)
 
+
 def _format_pubsub_message(query):
     message = {
                "header": {
@@ -73,9 +74,15 @@ def _format_pubsub_message(query):
     return message
 
 
-def _create_query(dstat_json):
+def _create_query(dstat_cmd, dstat_json):
     # Parse dstat_json
     property_strings = []
+
+    # Add node labels as a property that can be accessed by triggers
+    property_strings.append('dstat.labels = ["Dstat", "Status"]')
+
+    # Add dstat command to properties so can be requeued by trigger
+    property_strings.append(f'dstat.command = "{dstat_cmd}"')
 
     # Convert script double quotes to single
     script = dstat_json.pop('script')
@@ -185,7 +192,7 @@ def get_dstat_result():
         return('', 204)
     print(f"{trunc_id}> Json result: {json_result}.")
 
-    query = _create_query(json_result[0])
+    query = _create_query(dstat_cmd, json_result[0])
     message = _format_pubsub_message(query)
     print(f"{trunc_id}> Pubsub message: {message}.")
     result = _publish_to_topic(DB_TOPIC, message)
