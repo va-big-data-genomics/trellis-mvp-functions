@@ -588,7 +588,8 @@ class RelateDstatToJob:
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
-        query = self._create_query(node)
+        #query = self._create_query(node)
+        query = "test"
         message = {
                    "header": {
                               "resource": "query",
@@ -604,6 +605,7 @@ class RelateDstatToJob:
         return([(topic, message)])   
 
 
+    """
     def _create_query(self, node):
         query = (
                  "MATCH (job:Dsub:Job " +
@@ -619,7 +621,7 @@ class RelateDstatToJob:
                   "WHERE NOT (job)-[:STATUS]->(dstat) " +
                   "CREATE (job)-[:STATUS]->(dstat) ")
         return query
-
+    """
 
 def get_triggers(function_name, env_vars):
 
