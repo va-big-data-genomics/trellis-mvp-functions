@@ -160,12 +160,12 @@ def get_dstat_result():
     pubsub_message = envelope['message']
     message_id = pubsub_message['message_id']
     trunc_id = message_id[-4:]
-    logging.info(f"{trunc_id}> Received pubsub message: {pubsub_message}.")
+    print(f"{trunc_id}> Received pubsub message: {pubsub_message}.")
 
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
         data = base64.b64decode(pubsub_message['data']).decode('utf-8').strip()
         data = json.loads(data)
-        logging.info(f"{trunc_id}> Data: {data}.\n")
+        print(f"{trunc_id}> Data: {data}.\n")
         header = data['header']
         body = data['body']
 
@@ -183,13 +183,13 @@ def get_dstat_result():
     except:
         logging.error(f"{trunc_id}> Could not load dstat result as json.")
         return('', 204)
-    logging.info(f"{trunc_id}> Json result: {json_result}.")
+    print(f"{trunc_id}> Json result: {json_result}.")
 
     query = _create_query(json_result[0])
     message = _format_pubsub_message(query)
-    logging.info(f"{trunc_id}> Pubsub message: {message}.")
+    print(f"{trunc_id}> Pubsub message: {message}.")
     result = _publish_to_topic(DB_TOPIC, message)
-    logging.info(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
+    print(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
 
     # Publish to message
 
