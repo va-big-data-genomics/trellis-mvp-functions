@@ -190,7 +190,7 @@ def get_dstat_result():
     message = _format_pubsub_message(query)
     logging.info(f"{trunc_id}> Pubsub message: {message}.")
     result = _publish_to_topic(DB_TOPIC, message)
-    loggings.info(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
+    logging.info(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
 
     # Publish to message
 
