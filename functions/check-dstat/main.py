@@ -183,24 +183,25 @@ def get_dstat_result():
         dstat_cmd = body['command']
 
     try:
-        dstat_result = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
+        dstat_results = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
     except:
         logging.error(f"{trunc_id}> Error: could not run dstat command {dstat_cmd}.")
         return('', 204)
 
-    print(f"{trunc_id}> Dstat result: {dstat_result}.")
+    print(f"{trunc_id}> Dstat results: {dstat_results}.")
     try:
-        json_result = json.loads(dstat_result)
+        json_results = json.loads(dstat_results)
     except:
         logging.error(f"{trunc_id}> Could not load dstat result as json.")
         return('', 204)
-    print(f"{trunc_id}> Json result: {json_result}.")
+    print(f"{trunc_id}> Json result: {json_results}.")
 
-    query = _create_query(dstat_cmd, json_result[0])
-    message = _format_pubsub_message(query, retry_count)
-    print(f"{trunc_id}> Pubsub message: {message}.")
-    result = _publish_to_topic(DB_TOPIC, message)
-    print(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
+    for json_result in json_results:
+        query = _create_query(dstat_cmd, json_result)
+        message = _format_pubsub_message(query, retry_count)
+        print(f"{trunc_id}> Pubsub message: {message}.")
+        result = _publish_to_topic(DB_TOPIC, message)
+        print(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
 
     # Publish to message
 
