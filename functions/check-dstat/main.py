@@ -138,7 +138,7 @@ def _create_query(dstat_cmd, dstat_json):
     properties_string = ', '.join(property_strings)   
 
     query = (
-             f"MERGE (dstat:Dstat:Status " +
+             f"MERGE (dstat:Dstat " +
              f"{{ instanceName:\"{provider_attributes['instance-name']}\" }}) " +
              f"ON CREATE SET {properties_string} " +
              f"ON MATCH SET dstat.statusMessage=\"{dstat_json['status-message']}\", " +
