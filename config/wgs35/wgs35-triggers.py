@@ -643,6 +643,8 @@ class RecheckDstat:
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
             node.get("status") == "RUNNING",
             node.get("command")
         ]
@@ -669,6 +671,14 @@ class RecheckDstat:
                             "command": node["command"]
                    }
         }
+        
+        # Add retry count
+        retry_count = header.get('retry-count')
+        if retry_count:
+            header['retry-count'] += 1
+        else:
+            header['retry-count'] = 1
+        
         return([(topic, message)])   
 
 
