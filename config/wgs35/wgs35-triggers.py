@@ -601,6 +601,7 @@ class RelateDstatToJob:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Dstat", "Cypher", "Query"],
                               "sentFrom": self.function_name,
+                              "trigger": "RelateDstatToJob",
                    },
                    "body": {
                             "cypher": query,
