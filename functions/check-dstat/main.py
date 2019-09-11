@@ -145,7 +145,7 @@ def _create_query(dstat_cmd, dstat_json):
              f"dstat.status=\"{dstat_json['status']}\", " +
              f"dstat.statusDetail=\"{dstat_json['status-detail']}\", " +
              f"dstat.endTime=\"{dstat_json['end-time']}\", " +
-             f"dstat.events=\"{dstat_json['events']}\" " +
+             f"dstat.events=\"{formatted_events}\" " +
               "RETURN dstat AS node")
     return query
 
