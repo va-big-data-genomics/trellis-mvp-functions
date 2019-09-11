@@ -666,6 +666,7 @@ class RecheckDstat:
                               "method": "POST",
                               "labels": ["Dstat", "Command"],
                               "sentFrom": self.function_name,
+                              "trigger": "RecheckDstat",
                    },
                    "body": {
                             "command": node["command"]
@@ -675,7 +676,7 @@ class RecheckDstat:
         # Add retry count
         retry_count = header.get('retry-count')
         if retry_count:
-            message["header"]["retry-count"] += 1
+            message["header"]["retry-count"] = retry_count + 1
         else:
             message["header"]["retry-count"] = 1
         
