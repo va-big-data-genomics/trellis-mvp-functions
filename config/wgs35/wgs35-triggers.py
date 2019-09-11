@@ -679,6 +679,9 @@ class RecheckDstat:
         else:
             header['retry-count'] = 1
         
+        # Wait 2 seconds before re-queueing
+        time.sleep(2)
+
         return([(topic, message)])   
 
 
