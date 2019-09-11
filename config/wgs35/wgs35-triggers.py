@@ -518,6 +518,8 @@ class RelatedInputToJob:
 class RunDsubWhenJobStopped:
     
     def __init__(self, function_name, env_vars):
+        """Launch dstat after dsub jobs finish.
+        """
 
         self.function_name = function_name
         self.env_vars = env_vars
@@ -544,7 +546,6 @@ class RunDsubWhenJobStopped:
 
     def compose_message(self, header, body, node):
         topic = self.env_vars['TOPIC_DSTAT']
-        publish_to = self.env_vars['DB_QUERY_TOPIC']
 
         messages = []
         # Requeue original message, updating sentFrom property
@@ -559,9 +560,7 @@ class RunDsubWhenJobStopped:
                             "command": node["dstatCmd"]
                    }
         }
-        result = (topic, message)
-        messages.append(result)
-        return(messages)  
+        return([(topic, message)])  
 
 
 class RelateDstatToJob:
@@ -626,6 +625,51 @@ class RelateDstatToJob:
                   "WHERE NOT (job)-[:STATUS]->(dstat) " +
                   "CREATE (job)-[:STATUS]->(dstat) ")
         return query
+
+
+class RecheckDstat:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Dstat', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            node.get("status") == "RUNNING",
+            node.get("command")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['TOPIC_DSTAT']
+
+        message = {
+                   "header": {
+                              "resource": "command",
+                              "method": "POST",
+                              "labels": ["Dstat", "Command"],
+                              "sentFrom": self.function_name,
+                   },
+                   "body": {
+                            "command": node["command"]
+                   }
+        }
+        return([(topic, message)])   
 
 
 def get_triggers(function_name, env_vars):
