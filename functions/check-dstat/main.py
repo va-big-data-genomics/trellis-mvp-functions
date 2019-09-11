@@ -55,7 +55,7 @@ def _dash_to_camelcase(word):
     return re.sub(r'(?!^)-([a-zA-Z])', lambda m: m.group(1).upper(), word)
 
 
-def _format_pubsub_message(query):
+def _format_pubsub_message(query, retry_count=None):
     message = {
                "header": {
                           "resource": "query", 
@@ -71,6 +71,8 @@ def _format_pubsub_message(query):
                         "result-split": "True",
                },
     }
+    if retry_count:
+        message['header']['retry-count'] = retry_count
     return message
 
 
@@ -176,6 +178,8 @@ def get_dstat_result():
         header = data['header']
         body = data['body']
 
+        retry_count = header.get('retry-count')
+
         dstat_cmd = body['command']
 
     try:
@@ -193,7 +197,7 @@ def get_dstat_result():
     print(f"{trunc_id}> Json result: {json_result}.")
 
     query = _create_query(dstat_cmd, json_result[0])
-    message = _format_pubsub_message(query)
+    message = _format_pubsub_message(query, retry_count)
     print(f"{trunc_id}> Pubsub message: {message}.")
     result = _publish_to_topic(DB_TOPIC, message)
     print(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
