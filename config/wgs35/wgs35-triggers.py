@@ -715,4 +715,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateDstatToJob(
                                     function_name,
                                     env_vars))
+    triggers.append(RecheckDstat(
+                                 function_name,
+                                 env_vars))
     return triggers
