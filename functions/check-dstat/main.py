@@ -141,11 +141,11 @@ def _create_query(dstat_cmd, dstat_json):
              f"MERGE (dstat:Dstat:Status " +
              f"{{ instanceName:\"{provider_attributes['instance-name']}\" }}) " +
              f"ON CREATE SET {properties_string} " +
-             f"ON MATCH SET dstat.endTime=\"{dstat_json['status-message']}\", " +
+             f"ON MATCH SET dstat.statusMessage=\"{dstat_json['status-message']}\", " +
              f"dstat.status=\"{dstat_json['status']}\", " +
              f"dstat.statusDetail=\"{dstat_json['status-detail']}\", " +
              f"dstat.endTime=\"{dstat_json['end-time']}\", " +
-             f"dstat.events=\"{formatted_events}\" " +
+             f"dstat.events={formatted_events} " +
               "RETURN dstat AS node")
     return query
 
