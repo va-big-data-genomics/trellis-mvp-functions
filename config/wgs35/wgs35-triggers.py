@@ -675,9 +675,9 @@ class RecheckDstat:
         # Add retry count
         retry_count = header.get('retry-count')
         if retry_count:
-            header['retry-count'] += 1
+            message["header"]["retry-count"] += 1
         else:
-            header['retry-count'] = 1
+            message["header"]["retry-count"] = 1
         
         # Wait 2 seconds before re-queueing
         time.sleep(2)
