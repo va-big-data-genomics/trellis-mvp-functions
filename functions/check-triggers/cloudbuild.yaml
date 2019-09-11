@@ -16,7 +16,7 @@ steps:
          '--project=${PROJECT_ID}',
          '--source=functions/check-triggers',
          '--memory=128MB',
-         '--max-instances=200',
+         '--max-instances=20',
          '--entry-point=check_triggers',
          '--runtime=python37',
          '--trigger-topic=${_TRIGGER_TOPIC}',

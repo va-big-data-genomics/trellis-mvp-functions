@@ -1,3 +1,7 @@
+import time
+
+MAX_RETRIES = 10
+
 class AddFastqSetSize:
     """Add setSize property to Fastqs and send them back to 
     triggers to launch fastq-to-ubam.
@@ -232,6 +236,11 @@ class KillDuplicateJobs:
 
 
     def compose_message(self, header, body, node):
+        """
+        Send results to 
+            1) kill-duplicates to kill jobs and 
+            2) triggers to mark job a duplicate in database
+        """
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
@@ -244,7 +253,12 @@ class KillDuplicateJobs:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Duplicate", "Jobs", "Running"],
                               "sentFrom": self.function_name,
-                              "publishTo": self.env_vars['TOPIC_KILL_DUPLICATES'],
+                              # Why am I publishing this to kill-duplicates 
+                              # and back to triggers?
+                              "publishTo": [
+                                            self.env_vars['TOPIC_KILL_DUPLICATES'],
+                                            self.function_name
+                              ]
                    }, 
                    "body": {
                         "cypher": (
@@ -275,13 +289,12 @@ class RequeueJobQuery:
 
 
     def check_conditions(self, header, body, node=None):
-        max_retries = 3
         reqd_header_labels = ['Query', 'Cypher', 'Update', 'Job', 'Node']
 
         conditions = [
             header.get('method') == "UPDATE",
             (not header.get('retry-count') 
-             or header.get('retry-count') < max_retries),
+             or header.get('retry-count') < MAX_RETRIES),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             not node
         ]
@@ -320,6 +333,9 @@ class RequeueJobQuery:
 
         message['header'] = header
         message['body'] = body
+
+        # Wait 2 seconds before re-queueing
+        time.sleep(2)
 
         return([(topic, message)])
 
@@ -332,13 +348,12 @@ class RequeueRelationshipQuery:
         self.env_vars = env_vars
 
     def check_conditions(self, header, body, node=None):
-        max_retries = 3
         reqd_header_labels = ['Relationship', 'Create', 'Cypher', 'Query', ]
 
         conditions = [
             header.get('method') == "POST",
             (not header.get('retry-count') 
-             or header.get('retry-count') < max_retries),
+             or header.get('retry-count') < MAX_RETRIES),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             not node
         ]
@@ -376,6 +391,9 @@ class RequeueRelationshipQuery:
 
         message['header'] = header
         message['body'] = body
+
+        # Wait 2 seconds before re-queueing
+        time.sleep(2)
 
         return([(topic, message)])   
 
@@ -497,6 +515,178 @@ class RelatedInputToJob:
         return query
 
 
+class RunDsubWhenJobStopped:
+    
+    def __init__(self, function_name, env_vars):
+        """Launch dstat after dsub jobs finish.
+        """
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            "Job" in node.get("labels"),
+            node.get("status") == "STOPPED",
+            node.get("dstatCmd")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['TOPIC_DSTAT']
+
+        messages = []
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "command",
+                              "method": "POST",
+                              "labels": ["Dstat", "Command"],
+                              "sentFrom": self.function_name,
+                   },
+                   "body": {
+                            "command": node["dstatCmd"]
+                   }
+        }
+        return([(topic, message)])  
+
+
+class RelateDstatToJob:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Dstat', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            node.get("jobId"),
+            node.get("instanceName")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Create", "Relationship", "Dstat", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateDstatToJob",
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "stats",
+                   }
+        }
+        return([(topic, message)])   
+
+
+    def _create_query(self, node):
+        query = (
+                 "MATCH (job:Dsub:Job " +
+                    "{ " +
+                        f"dsubJobId:\"{node['jobId']}\", " +
+                        f"instanceName:\"{node['instanceName']}\" " +
+                    "}), " +
+                 "(dstat:Dstat " +
+                    "{ " +
+                        f"jobId:\"{node['jobId']}\", " +
+                        f"instanceName:\"{node['instanceName']}\" " +
+                    "}) " +
+                  "WHERE NOT (job)-[:STATUS]->(dstat) " +
+                  "CREATE (job)-[:STATUS]->(dstat) ")
+        return query
+
+
+class RecheckDstat:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Dstat', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            node.get("status") == "RUNNING",
+            node.get("command")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['TOPIC_DSTAT']
+
+        message = {
+                   "header": {
+                              "resource": "command",
+                              "method": "POST",
+                              "labels": ["Dstat", "Command"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RecheckDstat",
+                   },
+                   "body": {
+                            "command": node["command"]
+                   }
+        }
+        
+        # Add retry count
+        retry_count = header.get('retry-count')
+        if retry_count:
+            message["header"]["retry-count"] = retry_count + 1
+        else:
+            message["header"]["retry-count"] = 1
+        
+        # Wait 2 seconds before re-queueing
+        time.sleep(2)
+
+        return([(topic, message)])   
+
+
 def get_triggers(function_name, env_vars):
 
     triggers = []
@@ -524,4 +714,13 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelatedInputToJob(
                                     function_name,
                                     env_vars))
+    triggers.append(RunDsubWhenJobStopped(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateDstatToJob(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RecheckDstat(
+                                 function_name,
+                                 env_vars))
     return triggers

@@ -75,8 +75,7 @@ def publish_to_topic(publisher, project_id, topic, data):
 
 def launch_dsub_task(dsub_args):
     try:
-        #dsub.commands.dsub.main('dsub', dsub_args)
-        dsub.main('dsub', dsub_args)
+        result = dsub.dsub_main('dsub', dsub_args)
     except ValueError as exception:
         print(exception)
         print(f'Error with dsub arguments: {dsub_args}')
@@ -86,7 +85,7 @@ def launch_dsub_task(dsub_args):
         for arg in dsub_args:
             print(arg)
         return(sys.exc_info())
-    return(1)
+    return(result)
 
 
 def get_datetime_stamp():
@@ -267,13 +266,13 @@ def launch_fastq_to_ubam(event, context):
         dsub_args.append("--dry-run")
 
     print(f"Launching dsub with args: {dsub_args}.")
-    result = launch_dsub_task(dsub_args)
-    print(f"Dsub result: '{result}'.")
+    dsub_result = launch_dsub_task(dsub_args)
+    print(f"Dsub result: {dsub_result}.")
 
     # Metadata to be perpetuated to ubams is written to file
     # Try until success
     metadata = {"setSize": set_size}
-    if result == 1 and metadata and not dry_run:
+    if 'job-id' in dsub_result.keys() and metadata and not dry_run:
         print(f"Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
         meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
@@ -283,8 +282,21 @@ def launch_fastq_to_ubam(event, context):
                 break
         print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
 
-    # Job metadata is formatted for neo4j & published
-    if result == 1:
+    
+    if 'job-id' in dsub_result.keys():
+        # Add dsub job ID to neo4j database node
+        job_dict['dsubJobId'] = dsub_result['job-id']
+        job_dict['dstatCmd'] = (
+                                 "dstat " +
+                                f"--project {job_dict['project']} " +
+                                f"--provider {job_dict['provider']} " +
+                                f"--jobs '{job_dict['dsubJobId']}' " +
+                                f"--users '{job_dict['user']}' " +
+                                 "--full " +
+                                 "--format json " +
+                                 "--status '*'")
+
+        # Format inputs for neo4j database
         for key, value in job_dict["inputs"].items():
             job_dict[f"input_{key}"] = value
         for key, value in job_dict["envs"].items():
