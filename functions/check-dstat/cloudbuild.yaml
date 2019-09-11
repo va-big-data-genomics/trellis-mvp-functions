@@ -1,0 +1,22 @@
+steps:
+  # build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/check-dstat', 'functions/check-dstat/']
+  # push the container image to Container Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/$PROJECT_ID/check-dstat']
+  # Deploy container image to Cloud Run
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta', 'run', 'deploy', '${_DATA_GROUP}-check-dstat',
+         '--set-env-vars', 'ENVIRONMENT=${_ENVIRONMENT}',
+         '--set-env-vars', 'FUNCTION_NAME=${_FUNCTION_NAME}',
+         '--set-env-vars', 'CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--set-env-vars', 'CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--image', 'gcr.io/$PROJECT_ID/check-dstat',
+         '--region', 'us-central1',
+         '--platform', 'managed',
+         '--no-allow-unauthenticated',
+         '--quiet']
+images:
+- gcr.io/$PROJECT_ID/check-dstat
