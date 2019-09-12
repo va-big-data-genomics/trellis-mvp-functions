@@ -217,7 +217,7 @@ def launch_gatk_5_dollar(event, context):
                 "plate": plate,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
-                "labels": ['Job', 'Cromwell'],
+                "labels": ['Job', 'Dsub', 'Cromwell'],
                 "inputIds": input_ids
     }
 
