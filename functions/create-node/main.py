@@ -149,7 +149,9 @@ def get_datetime_iso8601(date_string):
 
 def format_node_merge_query(db_dict, dry_run=False):
     # Create label string 
-    labels_str = ':'.join(db_dict['labels'])
+    tmp_labels = list(db_dict['labels'])
+    tmp_labels.remove('Blob')
+    labels_str = ':'.join(tmp_labels)
 
     # Create database ON CREATE string
     create_strings = []
@@ -183,7 +185,7 @@ def format_node_merge_query(db_dict, dry_run=False):
     merge_string = ', '.join(merge_strings)
 
     query = (
-        f"MERGE (node:{labels_str} {{ " +
+        f"MERGE (node:Blob:{labels_str} {{ " +
             f'bucket: "{db_dict["bucket"]}", ' +
             f'path: "{db_dict["path"]}" }}) ' +
         "ON CREATE SET node.nodeCreated = timestamp(), " +
