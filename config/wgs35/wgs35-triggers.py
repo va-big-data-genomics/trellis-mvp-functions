@@ -613,7 +613,7 @@ class RelateDstatToJob:
 
     def _create_query(self, node):
         query = (
-                 "MATCH (job:Dsub:Job " +
+                 "MATCH (job:Dsub " +
                     "{ " +
                         f"dsubJobId:\"{node['jobId']}\", " +
                         f"instanceName:\"{node['instanceName']}\" " +
