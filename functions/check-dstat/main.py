@@ -140,8 +140,8 @@ def _create_query(dstat_cmd, dstat_json):
     query = (
              f"MERGE (dstat:Dstat " +
               "{ " +
-                "instanceName:\"{provider_attributes['instance-name']}\", " +
-                "jobId:\"{dstat_json['job-id']}\" " +
+                f"instanceName:\"{provider_attributes['instance-name']}\", " +
+                f"jobId:\"{dstat_json['job-id']}\" " +
               "}) " +
              f"ON CREATE SET {properties_string} " +
              f"ON MATCH SET dstat.statusMessage=\"{dstat_json['status-message']}\", " +
