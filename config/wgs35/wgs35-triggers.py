@@ -210,7 +210,7 @@ class KillDuplicateJobs:
 
     def check_conditions(self, header, body, node):
         # Only trigger when job node is created
-        reqd_header_labels = ['Create', 'Job', 'Node']
+        reqd_header_labels = ['Update', 'Job', 'Node']
 
         required_labels = ['Job']
 
