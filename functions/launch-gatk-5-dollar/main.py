@@ -189,7 +189,7 @@ def launch_gatk_5_dollar(event, context):
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/***REMOVED***/wdl_runner:latest",
                 "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-                "diskSize": 1000,
+                #"diskSize": 1000,
                 "command": ("java " +
                             "-Dconfig.file=${CFG} " +
                             "-Dbackend.providers.JES.config.project=${MYproject} " +
@@ -236,7 +236,7 @@ def launch_gatk_5_dollar(event, context):
                  "--boot-disk-size", str(job_dict["bootDiskSize"]), 
                  "--image", job_dict["image"], 
                  "--logging", job_dict["logging"],
-                 "--disk-size", str(job_dict["diskSize"]),
+                 #"--disk-size", str(job_dict["diskSize"]),
                  "--command", job_dict["command"],
     ]
 
