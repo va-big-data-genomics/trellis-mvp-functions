@@ -253,12 +253,7 @@ class KillDuplicateJobs:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Duplicate", "Jobs", "Running"],
                               "sentFrom": self.function_name,
-                              # Why am I publishing this to kill-duplicates 
-                              # and back to triggers?
-                              "publishTo": [
-                                            self.env_vars['TOPIC_KILL_DUPLICATES'],
-                                            self.function_name
-                              ]
+                              "publishTo": self.env_vars['TOPIC_KILL_DUPLICATES']
                    }, 
                    "body": {
                         "cypher": (
