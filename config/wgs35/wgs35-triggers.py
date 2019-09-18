@@ -115,7 +115,6 @@ class CheckUbamCount:
                                        "AND NOT (n)-[:INPUT_TO]->(:Job:Cromwell {name: \"gatk-5-dollar\"}) " +
                                        "WITH n.sample AS sample, " +
                                        "n.readGroup AS readGroup, " +
-                                       "n.matePair AS matePair, " +
                                        "COLLECT(n) as allNodes " +
                                        "WITH head(allNodes) AS heads " +
                                        "UNWIND [heads] AS uniqueNodes " +
@@ -210,7 +209,7 @@ class KillDuplicateJobs:
 
     def check_conditions(self, header, body, node):
         # Only trigger when job node is created
-        reqd_header_labels = ['Create', 'Job', 'Node']
+        reqd_header_labels = ['Update', 'Job', 'Node']
 
         required_labels = ['Job']
 
@@ -253,12 +252,7 @@ class KillDuplicateJobs:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Duplicate", "Jobs", "Running"],
                               "sentFrom": self.function_name,
-                              # Why am I publishing this to kill-duplicates 
-                              # and back to triggers?
-                              "publishTo": [
-                                            self.env_vars['TOPIC_KILL_DUPLICATES'],
-                                            self.function_name
-                              ]
+                              "publishTo": self.env_vars['TOPIC_KILL_DUPLICATES']
                    }, 
                    "body": {
                         "cypher": (
@@ -613,7 +607,7 @@ class RelateDstatToJob:
 
     def _create_query(self, node):
         query = (
-                 "MATCH (job:Dsub:Job " +
+                 "MATCH (job:Dsub " +
                     "{ " +
                         f"dsubJobId:\"{node['jobId']}\", " +
                         f"instanceName:\"{node['instanceName']}\" " +
