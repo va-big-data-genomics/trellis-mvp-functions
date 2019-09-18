@@ -35,7 +35,7 @@ def delete_instance(zone, name):
         return False
 
 
-def kill_duplicate_jobs(event, context):
+def kill_jobs(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
     
     Update the metadata of a Blob specified by PubSub message.
