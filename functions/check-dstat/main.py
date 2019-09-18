@@ -116,6 +116,8 @@ def _create_query(dstat_cmd, dstat_json):
         neo4j_key = _dash_to_camelcase(key)
         if isinstance(value, str):
             value = value.replace('"', "'")
+            # Place new value in dstat dict for MERGE operations
+            dstat_json[key] = value
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
         elif isinstance(value, dict):
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
@@ -130,6 +132,8 @@ def _create_query(dstat_cmd, dstat_json):
         neo4j_key = _dash_to_camelcase(key)
         if isinstance(value, str):
             value = value.replace('"', "'")
+            # Place new value in dstat dict for MERGE operations
+            dstat_json[key] = value
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
         elif isinstance(value, dict):
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
@@ -139,7 +143,10 @@ def _create_query(dstat_cmd, dstat_json):
 
     query = (
              f"MERGE (dstat:Dstat " +
-             f"{{ instanceName:\"{provider_attributes['instance-name']}\" }}) " +
+              "{ " +
+                f"instanceName:\"{provider_attributes['instance-name']}\", " +
+                f"jobId:\"{dstat_json['job-id']}\" " +
+              "}) " +
              f"ON CREATE SET {properties_string} " +
              f"ON MATCH SET dstat.statusMessage=\"{dstat_json['status-message']}\", " +
              f"dstat.status=\"{dstat_json['status']}\", " +

@@ -2,6 +2,7 @@ import os
 import json
 import time
 import base64
+import logging
 
 from google.cloud import storage
 from googleapiclient import discovery
