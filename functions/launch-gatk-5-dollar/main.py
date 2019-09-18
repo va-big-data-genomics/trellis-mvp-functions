@@ -40,8 +40,8 @@ if ENVIRONMENT == 'google-cloud':
 def publish_to_topic(topic, data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     data = json.dumps(data).encode('utf-8')
-    PUBLISHER.publish(topic_path, data=data)
-
+    result = PUBLISHER.publish(topic_path, data=data)
+    return result
 
 def launch_dsub_task(dsub_args):
     try:
@@ -101,7 +101,7 @@ def launch_gatk_5_dollar(event, context):
     """
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    print(f"> Message: {pubsub_message}.")
+    print(f"> Received PubSub Message: {pubsub_message}.")
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
@@ -175,7 +175,7 @@ def launch_gatk_5_dollar(event, context):
         .get_bucket(OUT_BUCKET) \
         .blob(gatk_inputs_path) \
         .upload_from_string(json.dumps(gatk_inputs, indent=4))
-    print(f"Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
+    print(f"> Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
     workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
     job_dict = {
@@ -258,9 +258,9 @@ def launch_gatk_5_dollar(event, context):
     if job_dict['dryRun']:
         dsub_args.append("--dry-run")
 
-    print(f"Launching dsub with args: {dsub_args}.")
+    print(f"> Launching dsub with args: {dsub_args}.")
     dsub_result = launch_dsub_task(dsub_args)
-    print(f"Dsub result: {dsub_result}.")
+    print(f"> Dsub result: {dsub_result}.")
 
     # If job launch is successful, add job to database
     if 'job-id' in dsub_result.keys():
@@ -295,7 +295,9 @@ def launch_gatk_5_dollar(event, context):
                 "node": job_dict,
             }
         }
-        publish_to_topic(NEW_JOBS_TOPIC, message)  
+        print(f"> Pubsub message: {message}.")
+        result = publish_to_topic(NEW_JOBS_TOPIC, message)  
+        print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")
 
 
 # For local testing
