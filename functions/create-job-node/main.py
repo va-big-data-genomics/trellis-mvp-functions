@@ -33,7 +33,7 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
-def format_pubsub_message(query, perpetuate=None):
+def format_pubsub_message(query):
     message = {
                "header": {
                           "resource": "query",
@@ -49,9 +49,6 @@ def format_pubsub_message(query, perpetuate=None):
                         "result-split": "True",
                 },
     }
-    if perpetuate:
-        extension = {"perpetuate": perpetuate}
-        message['body'].update(extension)
     return message
 
 
