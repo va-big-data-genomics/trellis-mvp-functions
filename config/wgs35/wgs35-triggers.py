@@ -115,7 +115,6 @@ class CheckUbamCount:
                                        "AND NOT (n)-[:INPUT_TO]->(:Job:Cromwell {name: \"gatk-5-dollar\"}) " +
                                        "WITH n.sample AS sample, " +
                                        "n.readGroup AS readGroup, " +
-                                       "n.matePair AS matePair, " +
                                        "COLLECT(n) as allNodes " +
                                        "WITH head(allNodes) AS heads " +
                                        "UNWIND [heads] AS uniqueNodes " +
