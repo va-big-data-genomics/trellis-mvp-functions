@@ -56,7 +56,7 @@ if ENVIRONMENT == 'google-cloud':
                   #max_connections=NEO4J_MAX_CONN)
 
 
-def format_pubsub_message(method, labels, query, results, perpetuate=None, retry_count=None):
+def format_pubsub_message(method, labels, query, results, retry_count=None):
     labels.extend(["Database", "Result"])
     message = {
                "header": {
@@ -70,8 +70,6 @@ def format_pubsub_message(method, labels, query, results, perpetuate=None, retry
                         "results": results,
                }
     }
-    #if perpetuate:
-    #    message['body'].update(perpetuate)
     
     if retry_count:
         message['header']['retry-count'] = retry_count
@@ -143,7 +141,7 @@ def query_db(event, context):
     
     method = header['method']
     labels = header['labels']
-    topic = header.get('publishTo')
+    topics = header.get('publishTo')
     retry_count = header.get('retry-count')
 
     query = body['cypher']
@@ -160,13 +158,12 @@ def query_db(event, context):
             results = GRAPH.run(query).data()
         else:
             GRAPH.run(query)
-            results = None
-        print(f"> Query results: {results}.")
+            query_results = None
+        print(f"> Query results: {query_results}.")
     # Neo4j http connector
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
         # Add message back to queue
-        #result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
         result = republish_message(DB_QUERY_TOPIC, data)
         logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
         # Duplicate message flagged as warning
@@ -175,7 +172,6 @@ def query_db(event, context):
     except ServiceUnavailable as error:
         logging.warn(f"> Encountered Service Interrupion: {error}.")
         # Add message back to queue
-        #result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
         result = republish_message(DB_QUERY_TOPIC, data)
         logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
         # Duplicate message flagged as warning
@@ -185,14 +181,13 @@ def query_db(event, context):
         logging.warn(f"> Encountered connection interruption: {error}.")
         # Add message back to queue
         result = republish_message(DB_QUERY_TOPIC, data)
-        #result = publish_to_topic(DB_QUERY_TOPIC, pubsub_message)
         logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
         # Duplicate message flagged as warning
         logging.warn(f"> Requeued message: {pubsub_message}.")
         return
 
     # Return if not pubsub topic
-    if not topic:
+    if not topics:
         print("No Pub/Sub topic specified; result not published.")
 
         # Execution time block
@@ -202,32 +197,33 @@ def query_db(event, context):
         if time_threshold > 0:
             print(f"> Execution time exceeded {time_threshold} seconds.")
 
-        return results
-
-    # Perpetuate metadata in specified by "perpetuate" key
-    #perpetuate = body.get('perpetuate')
-
+        return query_results
     
-    if result_split == 'True':
-        if not results:
-            # If no results; send one message so triggers can respond to null
-            result = {}
-            message = format_pubsub_message(method, labels, query, result, retry_count=retry_count)
-            print(f"> Pubsub message: {message}.")
-            result = publish_to_topic(topic, message)
-            print(f"> Published message to {topic} with result: {result}.")
+    # Hack to convert single publishTo topics into lists
+    if isinstance(topics, str):
+        topics = [topics]
 
-        for result in results:
-            message = format_pubsub_message(method, labels, query, result, retry_count=retry_count)
+    for topic in topics:
+        if result_split == 'True':
+            if not query_results:
+                # If no results; send one message so triggers can respond to null
+                query_result = {}
+                message = format_pubsub_message(method, labels, query, query_result, retry_count=retry_count)
+                print(f"> Pubsub message: {message}.")
+                publish_result = publish_to_topic(topic, message)
+                print(f"> Published message to {topic} with result: {publish_result}.")
+
+            for result in query_results:
+                message = format_pubsub_message(method, labels, query, result, retry_count=retry_count)
+                print(f"> Pubsub message: {message}.")
+                publish_result = publish_to_topic(topic, message)
+                print(f"> Published message to {topic} with result: {publish_result}.")
+        else:
+            #message['body']['results'] = results
+            message = format_pubsub_message(method, labels, query, query_results, retry_count=retry_count)
             print(f"> Pubsub message: {message}.")
-            result = publish_to_topic(topic, message)
-            print(f"> Published message to {topic} with result: {result}.")
-    else:
-        #message['body']['results'] = results
-        message = format_pubsub_message(method, labels, query, results, retry_count=retry_count)
-        print(f"> Pubsub message: {message}.")
-        result = publish_to_topic(topic, message)
-        print(f"> Published message to {topic} with result: {result}.")
+            publish_result = publish_to_topic(topic, message)
+            print(f"> Published message to {topic} with result: {publish_result}.")
 
     # Execution time block
     end = datetime.now()
