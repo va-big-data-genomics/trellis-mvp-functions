@@ -780,7 +780,7 @@ class RelateFromPersonalisToSample:
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             # Check node-specific information
-            "Sample" in node.get("labels")
+            "Sample" in node.get("labels"),
             node.get("sample"),
             node.get("bucket")
         ]
