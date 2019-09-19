@@ -278,7 +278,7 @@ class KillDuplicateJobs:
         return([(topic, message)])
 
 
-class MarkJobAsDuplicate
+class MarkJobAsDuplicate:
 
     def __init__(self, function_name, env_vars):
 
@@ -854,6 +854,9 @@ def get_triggers(function_name, env_vars):
                                  function_name,
                                  env_vars))
     triggers.append(RelateFromPersonalisToSample(
+                                    function_name,
+                                    env_vars))
+    triggers.append(MarkJobAsDuplicate(
                                     function_name,
                                     env_vars))
     return triggers
