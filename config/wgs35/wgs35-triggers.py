@@ -326,8 +326,8 @@ class MarkJobAsDuplicate:
                               "sentFrom": self.function_name,
                    }, 
                    "body": {
-                        "cypher": query
-                        "result-mode": "stats",
+                        "cypher": query,
+                        "result-mode": "stats"
                    }
         }
         return([(topic, message)])
