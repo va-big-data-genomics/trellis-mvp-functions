@@ -343,7 +343,6 @@ class MarkJobAsDuplicate:
         return query
 
 
-
 class RequeueJobQuery:
 
     def __init__(self, function_name, env_vars):
@@ -492,6 +491,11 @@ class RelateOutputToJob:
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
+        node_id = node['id']
+        task_id = node['taskId']
+
+        query = self._create_query(node_id, task_id)
+
         # Requeue original message, updating sentFrom property
         message = {
                    "header": {
@@ -502,18 +506,22 @@ class RelateOutputToJob:
                               "publishTo": self.function_name
                    },
                    "body": {
-                            "cypher": (
-                                       f"MATCH (j:Job {{ taskId:\"{node['taskId']}\" }} ), " +
-                                       f"(node:Blob {{taskId:\"{node['taskId']}\", " +
-                                                    f"id:\"{node['id']}\" }}) " +
-                                       f"CREATE (j)-[:OUTPUT]->(node) " +
-                                        "RETURN node"),
+                            "cypher": query,
                             "result-mode": "data",
                             "result-structure": "list",
                             "result-split": "True"
                    }
         }
-        return([(topic, message)])   
+        return([(topic, message)]) 
+
+    def _create_query(self, node_id, task_id):
+        query = (
+                 f"MATCH (j:Job {{ taskId:\"{task_id}\" }} ), " +
+                 f"(node:Blob {{taskId:\"{task_id}\", " +
+                              f"id:\"{node_id}\" }}) " +
+                  "WHERE NOT j.Duplicate=True " +
+                  "CREATE (j)-[:OUTPUT]->(node) " +
+                  "RETURN node")
 
 
 class RelatedInputToJob:
