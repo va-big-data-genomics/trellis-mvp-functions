@@ -807,7 +807,7 @@ class RelateFromPersonalisToSample:
                               "sentFrom": self.function_name,
                    },
                    "body": {
-                            "cypher": query
+                            "cypher": query,
                             "result-mode": "stats"
                    }
         }
