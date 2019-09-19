@@ -250,7 +250,7 @@ class KillDuplicateJobs:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Duplicate", "Jobs", "Running"],
+                              "labels": ["Duplicate", "Jobs", "Running", "Cypher", "Query", ],
                               "sentFrom": self.function_name,
                               "publishTo": [
                                             self.env_vars['TOPIC_KILL_DUPLICATES'],
@@ -267,7 +267,8 @@ class KillDuplicateJobs:
                             "WITH n.inputHash AS hash, " +
                             "COLLECT(n) AS nodes " +
                             "WHERE SIZE(nodes) > 1 " +
-                            "RETURN tail(nodes) AS nodes"
+                            "UNWIND tail(nodes) AS node " +
+                            "RETURN node"
                         ),
                         "result-mode": "data",
                         "result-structure": "list",
@@ -275,6 +276,72 @@ class KillDuplicateJobs:
                    }
         }
         return([(topic, message)])
+
+
+class MarkJobAsDuplicate
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        # Only trigger when job node is created
+        reqd_header_labels = ['Duplicate', 'Jobs', 'Database', 'Result']
+
+        required_labels = ['Job']
+
+        if not node:
+            return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            set(required_labels).issubset(set(node.get('labels'))),
+            not "Duplicate" in node.get('labels')
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        """Mark duplicate job in the database.
+        """
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        instance_name = node['instanceName']
+
+        query = self._create_query(instance_name)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Mark", "Duplicate", "Job", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                   }, 
+                   "body": {
+                        "cypher": query
+                        "result-mode": "stats",
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, instance_name):
+        query = (
+                  "MATCH (n:Job) " +
+                 f"WHERE n.instanceName = \"{instance_name}\" " +
+                  "SET n.labels = n.labels + \"Duplicate\", " +
+                  "n:Marker, " +
+                  "n.duplicate=True")
+        return query
+
 
 
 class RequeueJobQuery:
