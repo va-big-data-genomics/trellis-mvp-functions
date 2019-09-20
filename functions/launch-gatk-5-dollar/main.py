@@ -222,7 +222,8 @@ def launch_gatk_5_dollar(event, context):
     }
 
     dsub_args = [
-                 "--name", job_dict["name"],
+                 #"--name", job_dict["name"],
+                 "--name", f"gatk-{job_dict['inputHash'][0:5]}",
                  "--label", f"sample={sample.lower()}",
                  "--label", f"trellis-id={task_id}",
                  "--label", f"plate={plate.lower()}",
