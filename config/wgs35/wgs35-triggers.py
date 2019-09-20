@@ -188,8 +188,7 @@ class GetFastqForUbam:
                                        "n.setSize AS set_size, " +
                                        "COLLECT(n) AS nodes " +
                                        "WHERE size(nodes) = 2 " + 
-                                       "RETURN [n IN nodes] AS nodes, "
-                                       "set_size/2 AS metadata_setSize"
+                                       "RETURN [n IN nodes] AS nodes"
                             ), 
                             "result-mode": "data",
                             "result-structure": "list",
