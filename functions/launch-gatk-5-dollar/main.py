@@ -226,6 +226,7 @@ def launch_gatk_5_dollar(event, context):
                  "--name", f"gatk-{job_dict['inputHash'][0:5]}",
                  "--label", f"sample={sample.lower()}",
                  "--label", f"trellis-id={task_id}",
+                 "--label", f"trellis-name={job_dict['name']}",
                  "--label", f"plate={plate.lower()}",
                  "--label", f"input-hash={trunc_nodes_hash}",
                  "--provider", job_dict["provider"], 
