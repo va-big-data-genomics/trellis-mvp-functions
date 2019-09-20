@@ -1,6 +1,6 @@
 import time
 
-MAX_RETRIES = 10
+MAX_RETRIES = 3
 
 class AddFastqSetSize:
     """Add setSize property to Fastqs and send them back to 
