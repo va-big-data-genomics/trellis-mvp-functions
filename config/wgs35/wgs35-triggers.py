@@ -509,7 +509,7 @@ class RelatedInputToJob:
         return query
 
 
-class RunDsubWhenJobStopped:
+class RunDstatWhenJobStopped:
     
     def __init__(self, function_name, env_vars):
         """Launch dstat after dsub jobs finish.
@@ -708,7 +708,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelatedInputToJob(
                                     function_name,
                                     env_vars))
-    triggers.append(RunDsubWhenJobStopped(
+    triggers.append(RunDstatWhenJobStopped(
                                     function_name,
                                     env_vars))
     triggers.append(RelateDstatToJob(
