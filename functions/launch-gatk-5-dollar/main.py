@@ -297,7 +297,7 @@ def launch_gatk_5_dollar(event, context):
         }
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(NEW_JOBS_TOPIC, message)  
-        print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")
+        print(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")
 
 
 # For local testing
