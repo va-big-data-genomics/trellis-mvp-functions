@@ -210,8 +210,8 @@ def get_dstat_result():
 
     for json_result in json_results:
         # Only update database once job has stopped
-        if json_result["status"] == "RUNNING":
-            continue
+        #if json_result["status"] == "RUNNING":
+        #    continue
         query = _create_query(dstat_cmd, json_result)
         message = _format_pubsub_message(query, retry_count)
         print(f"{trunc_id}> Pubsub message: {message}.")
