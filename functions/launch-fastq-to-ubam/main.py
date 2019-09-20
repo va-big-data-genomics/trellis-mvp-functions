@@ -226,7 +226,8 @@ def launch_fastq_to_ubam(event, context):
     }
 
     dsub_args = [
-        "--name", job_dict["name"],
+        #"--name", job_dict["name"],
+        "--name", f"fq2u-{job_dict['inputHash'][0:5]}",
         "--label", f"read-group={read_group}",
         "--label", f"sample={sample.lower()}",
         "--label", f"trellis-id={task_id}",
