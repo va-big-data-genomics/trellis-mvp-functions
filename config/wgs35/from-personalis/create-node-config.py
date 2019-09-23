@@ -4,6 +4,8 @@ import iso8601
 
 from datetime import datetime
 
+from google.cloud import storage
+
 def clean_metadata_dict(raw_dict):
     """Remove dict entries where the value is of type dict"""
     clean_dict = dict(raw_dict)
