@@ -135,15 +135,20 @@ def format_query(db_entry, dry_run=False):
     entry_strings = []
     for key, value in db_entry.items():
         if isinstance(value, str):
-            entry_strings.append(f'{key}: "{value}"')
+            entry_strings.append(f'node.{key}="{value}"')
         else:
-            entry_strings.append(f'{key}: {value}')
+            entry_strings.append(f'node.{key}={value}')
     entry_string = ', '.join(entry_strings)
 
     # Format as cypher query
-    query = (
-             f"CREATE (node:{labels_str} " +
-             f"{{ {entry_string}, nodeCreated: timestamp() }}) " +
+    #query = (
+    #         f"CREATE (node:{labels_str} " +
+    #         f"{{ {entry_string}, nodeCreated: timestamp() }}) " +
+    #          "RETURN node")
+    query = (f"MERGE (node:Job:{labels_str} {{ taskId:\"{db_entry['taskId']}\" }}) " +
+              "ON CREATE SET " +
+                f"{entry_string}, " +
+                 "nodeCreated: timestamp() " +
               "RETURN node")
     return query
 
