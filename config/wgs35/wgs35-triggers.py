@@ -872,10 +872,11 @@ class RelateFromPersonalisToSample:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
                               "sentFrom": self.function_name,
+                              "publishTo": self.function_name   # Requeue message if fails initially
                    },
                    "body": {
                             "cypher": query,
-                            "result-mode": "data",
+                            "result-mode": "data",              # Allow message to be requeued
                             "result-structure": "list",
                             "result-split": "True"
                    }
