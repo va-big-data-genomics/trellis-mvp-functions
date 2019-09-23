@@ -759,7 +759,7 @@ class RecheckDstat:
         return([(topic, message)])   
 
 
-class RelateFromPersonalisToSample:
+class RelateSampleToFromPersonalis:
 
     def __init__(self, function_name, env_vars):
 
@@ -820,6 +820,73 @@ class RelateFromPersonalisToSample:
                   "(b:Blob:FromPersonalis) " +
                   "WHERE b.sample = j.sample " +
                   "AND b.bucket = j.bucket " +
+                  "AND NOT \"Sample\" IN labels(b) " +
+                  "MERGE (j)-[:HAS]->(b)")
+        return query
+
+
+class RelateFromPersonalisToSample:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            "FromPersonalis" in node.get("labels"),
+            not "Sample" in node.get("labels"),
+            node.get("sample"),
+            node.get("bucket")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "stats"
+                   }
+        }
+        return([(topic, message)])  
+
+    def _create_query(self, blob_node):
+        sample = node['sample']
+        bucket = node['bucket']
+        path = node['path']
+        query = (
+                 f"MATCH (j:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                  "(b:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
                   "AND NOT \"Sample\" IN labels(b) " +
                   "MERGE (j)-[:HAS]->(b)")
         return query
