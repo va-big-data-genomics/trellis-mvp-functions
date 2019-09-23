@@ -77,14 +77,12 @@ def launch_dsub_task(dsub_args):
     try:
         result = dsub.dsub_main('dsub', dsub_args)
     except ValueError as exception:
-        print(exception)
-        print(f'Error with dsub arguments: {dsub_args}')
-        return(exception)
+        raise(f'> Error with dsub arguments: {dsub_args}')
     except:
-        print("Unexpected error:", sys.exc_info())
-        for arg in dsub_args:
-            print(arg)
-        return(sys.exc_info())
+        raise("> Unexpected error:", sys.exc_info())
+        #for arg in dsub_args:
+        #    print(arg)
+        #return(sys.exc_info())
     return(result)
 
 
