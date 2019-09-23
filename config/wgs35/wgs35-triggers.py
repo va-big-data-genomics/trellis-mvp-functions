@@ -1,6 +1,6 @@
 import time
 
-MAX_RETRIES = 10
+MAX_RETRIES = 3
 
 class AddFastqSetSize:
     """Add setSize property to Fastqs and send them back to 
@@ -188,8 +188,7 @@ class GetFastqForUbam:
                                        "n.setSize AS set_size, " +
                                        "COLLECT(n) AS nodes " +
                                        "WHERE size(nodes) = 2 " + 
-                                       "RETURN [n IN nodes] AS nodes, "
-                                       "set_size/2 AS metadata_setSize"
+                                       "RETURN [n IN nodes] AS nodes"
                             ), 
                             "result-mode": "data",
                             "result-structure": "list",
@@ -587,7 +586,7 @@ class RelatedInputToJob:
         return query
 
 
-class RunDsubWhenJobStopped:
+class RunDstatWhenJobStopped:
     
     def __init__(self, function_name, env_vars):
         """Launch dstat after dsub jobs finish.
@@ -922,7 +921,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelatedInputToJob(
                                     function_name,
                                     env_vars))
-    triggers.append(RunDsubWhenJobStopped(
+    triggers.append(RunDstatWhenJobStopped(
                                     function_name,
                                     env_vars))
     triggers.append(RelateDstatToJob(
