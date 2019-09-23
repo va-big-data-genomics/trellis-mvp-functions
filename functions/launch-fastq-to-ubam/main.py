@@ -216,7 +216,7 @@ def launch_fastq_to_ubam(event, context):
                 "dryRun": dry_run,
                 #"preemptible": "3",
                 #"retries": "3",
-                "preemptible": False
+                "preemptible": False,
                 "sample": sample,
                 "plate": plate,
                 "readGroup": read_group,
