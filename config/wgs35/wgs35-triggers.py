@@ -875,7 +875,9 @@ class RelateFromPersonalisToSample:
                    },
                    "body": {
                             "cypher": query,
-                            "result-mode": "stats"
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
                    }
         }
         return([(topic, message)])  
@@ -885,9 +887,10 @@ class RelateFromPersonalisToSample:
         bucket = node['bucket']
         path = node['path']
         query = (
-                 f"MATCH (j:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
-                 f"(b:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
-                  "MERGE (j)-[:HAS]->(b)")
+                 f"MATCH (job:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                 f"(node:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
+                  "MERGE (job)-[:HAS]->(node) " +
+                  "RETURN node")
         return query
 
 
