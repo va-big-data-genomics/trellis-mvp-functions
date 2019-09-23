@@ -222,9 +222,11 @@ def launch_gatk_5_dollar(event, context):
     }
 
     dsub_args = [
-                 "--name", job_dict["name"],
+                 #"--name", job_dict["name"],
+                 "--name", f"gatk-{job_dict['inputHash'][0:5]}",
                  "--label", f"sample={sample.lower()}",
                  "--label", f"trellis-id={task_id}",
+                 "--label", f"trellis-name={job_dict['name']}",
                  "--label", f"plate={plate.lower()}",
                  "--label", f"input-hash={trunc_nodes_hash}",
                  "--provider", job_dict["provider"], 
@@ -297,7 +299,7 @@ def launch_gatk_5_dollar(event, context):
         }
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(NEW_JOBS_TOPIC, message)  
-        print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")
+        print(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")
 
 
 # For local testing

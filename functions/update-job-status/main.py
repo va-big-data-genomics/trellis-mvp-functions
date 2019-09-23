@@ -82,33 +82,6 @@ class InsertOperation:
         self.start_time_epoch = get_seconds_from_epoch(timestamp)
 
 
-    def compose_instance_query(self):
-        """NOT IN USE! Create a separate Instance node to store VM metadata.
-        """
-        query = (
-            "MERGE (node:Instance {taskId: " + 
-                    f"\"{self.task_id}\"" + 
-                    "}) " + 
-            "ON CREATE SET " +
-            f"node.status = \"{self.status}\", " +
-            f"node.instanceName = \"{self.name}\", " +
-            f"node.instanceId = {self.id}, " +
-            f"node.sample = \"{self.sample}\", " +
-            f"node.jobName = \"{self.job_name}\", " + 
-            f"node.plate = \"{self.plate}\", " +
-            f"node.startTime = \"{self.start_time}\", " +
-            f"node.startTimeEpoch = {self.start_time_epoch}, " +
-            f"node.project = \"{self.project}\", " +
-            f"node.zone = \"{self.zone}\", " +
-            f"node.machineType = \"{self.machine_type}\", " +
-            f"node.duplicateNameZones = [] " +
-            "ON MATCH SET " +
-            "node.duplicateNameZones = node.duplicateNameZones + " +
-                                        f"\"{self.name},{self.zone}\" " +
-            "RETURN node")
-        return query
-
-
     def compose_job_query(self):
         """Merge instance metadata with Job node.
         """
