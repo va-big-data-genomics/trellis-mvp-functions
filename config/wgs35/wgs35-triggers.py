@@ -880,7 +880,7 @@ class RelateFromPersonalisToSample:
         }
         return([(topic, message)])  
 
-    def _create_query(self, blob_node):
+    def _create_query(self, node):
         sample = node['sample']
         bucket = node['bucket']
         path = node['path']
