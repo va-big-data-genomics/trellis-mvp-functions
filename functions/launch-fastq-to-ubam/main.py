@@ -214,8 +214,9 @@ def launch_fastq_to_ubam(event, context):
                 },
                 "taskId": task_id,
                 "dryRun": dry_run,
-                "preemptible": "3",
-                "retries": "3",
+                #"preemptible": "3",
+                #"retries": "3",
+                "preemptible": False
                 "sample": sample,
                 "plate": plate,
                 "readGroup": read_group,
@@ -244,8 +245,8 @@ def launch_fastq_to_ubam(event, context):
         "--disk-size", str(job_dict["diskSize"]),
         "--command", job_dict["command"],
         # 4 total attempts; 3 preemptible, final 1 full-price
-        "--preemptible", job_dict["preemptible"],
-        "--retries", job_dict["retries"] 
+        #"--preemptible", job_dict["preemptible"],
+        #"--retries", job_dict["retries"] 
     ]
 
     # Argument lists
