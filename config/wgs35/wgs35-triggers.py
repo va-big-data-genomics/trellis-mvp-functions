@@ -886,8 +886,7 @@ class RelateFromPersonalisToSample:
         path = node['path']
         query = (
                  f"MATCH (j:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
-                  "(b:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
-                  "AND NOT \"Sample\" IN labels(b) " +
+                 f"(b:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
                   "MERGE (j)-[:HAS]->(b)")
         return query
 
