@@ -232,3 +232,5 @@ def query_db(event, context):
     if time_threshold > 0:
         print(f"> Execution time exceeded {time_threshold} seconds.")
 
+if __name__ == "__main__":
+    main()
