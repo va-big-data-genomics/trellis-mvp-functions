@@ -172,7 +172,7 @@ class DeleteOperation:
         return self.compose_job_query()
 
 
-def format_pubsub_message(query, publish_to=None, perpetuate=None):
+def format_pubsub_message(query, publish_to=None):
     message = {
                "header": {
                           "resource": "query",
@@ -190,9 +190,6 @@ def format_pubsub_message(query, publish_to=None, perpetuate=None):
     if publish_to:
         extension = {"publishTo": publish_to}
         message['header'].update(extension)
-    if perpetuate:
-        extension = {"perpetuate": perpetuate}
-        message['body'].update(extension)
     return message
 
 
