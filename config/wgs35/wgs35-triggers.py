@@ -45,6 +45,7 @@ class AddFastqSetSize:
                               "method": "UPDATE",
                               "labels": ["Cypher", "Query", "Set", "Properties"], 
                               "sentFrom": self.function_name,
+                              "trigger": "AddFastqSetSize",
                               "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                    },
                    "body": {
@@ -106,6 +107,7 @@ class CheckUbamCount:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Ubam", "GATK", "Nodes"],
                               "sentFrom": self.function_name,
+                              "trigger": "CheckUbamCount",
                               "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
                    },
                    "body": {
@@ -177,6 +179,7 @@ class GetFastqForUbam:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Fastq", "Nodes"],
                               "sentFrom": self.function_name,
+                              "trigger": "GetFastqForUbam",
                               "publishTo": self.env_vars['TOPIC_FASTQ_TO_UBAM'],
                    },
                    "body": {
@@ -251,6 +254,7 @@ class KillDuplicateJobs:
                               "method": "VIEW",
                               "labels": ["Duplicate", "Jobs", "Running", "Cypher", "Query", ],
                               "sentFrom": self.function_name,
+                              "trigger": "KillDuplicateJobs",
                               "publishTo": [
                                             self.env_vars['TOPIC_KILL_JOBS'],
                                             self.env_vars['DB_QUERY_TOPIC']
@@ -323,6 +327,7 @@ class MarkJobAsDuplicate:
                               "method": "UPDATE",
                               "labels": ["Mark", "Duplicate", "Job", "Cypher", "Query"],
                               "sentFrom": self.function_name,
+                              "trigger": "MarkJobAsDuplicate"
                    }, 
                    "body": {
                         "cypher": query,
@@ -383,6 +388,7 @@ class RequeueJobQuery:
             header['retry-count'] = 1
 
         header['sentFrom'] = self.function_name
+        header['trigger'] = "RequeueJobQuery"
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
         header['labels'].remove('Database')
@@ -441,6 +447,7 @@ class RequeueRelationshipQuery:
             header['retry-count'] = 1
         
         header['sentFrom'] = self.function_name
+        header['trigger'] = "RequeueRelationshipQuery"
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
         header['labels'].remove('Database')
@@ -502,6 +509,7 @@ class RelateOutputToJob:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
+                              "trigger": "RelateOutputToJob",
                               "publishTo": self.function_name
                    },
                    "body": {
@@ -564,6 +572,7 @@ class RelatedInputToJob:
                                   "method": "POST",
                                   "labels": ["Create", "Relationship", "Input", "Cypher", "Query"],
                                   "sentFrom": self.function_name,
+                                  "trigger": "RelatedInputToJob",
                                   "publishTo": self.function_name
                        },
                        "body": {
@@ -626,6 +635,7 @@ class RunDstatWhenJobStopped:
                               "method": "POST",
                               "labels": ["Dstat", "Command"],
                               "sentFrom": self.function_name,
+                              "trigger": "RunDstatWhenJobStopped"
                    },
                    "body": {
                             "command": node["dstatCmd"]
@@ -804,6 +814,7 @@ class RelateSampleToFromPersonalis:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Sample", "Cypher", "Query"],
                               "sentFrom": self.function_name,
+                              "trigger": "RelateSampleToFromPersonalis"
                    },
                    "body": {
                             "cypher": query,
@@ -871,6 +882,7 @@ class RelateFromPersonalisToSample:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
                               "sentFrom": self.function_name,
+                              "trigger": "RelateFromPersonalisToSample",
                               "publishTo": self.function_name   # Requeue message if fails initially
                    },
                    "body": {
