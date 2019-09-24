@@ -252,7 +252,7 @@ class KillDuplicateJobs:
                               "labels": ["Duplicate", "Jobs", "Running", "Cypher", "Query", ],
                               "sentFrom": self.function_name,
                               "publishTo": [
-                                            self.env_vars['TOPIC_KILL_DUPLICATES'],
+                                            self.env_vars['TOPIC_KILL_JOBS'],
                                             self.env_vars['DB_QUERY_TOPIC']
                               ]
                    }, 
