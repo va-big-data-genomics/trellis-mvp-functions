@@ -529,6 +529,7 @@ class RelateOutputToJob:
                   "WHERE NOT j.Duplicate=True " +
                   "CREATE (j)-[:OUTPUT]->(node) " +
                   "RETURN node")
+        return query
 
 
 class RelatedInputToJob:
