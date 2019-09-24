@@ -256,8 +256,8 @@ class KillDuplicateJobs:
                               "sentFrom": self.function_name,
                               "trigger": "KillDuplicateJobs",
                               "publishTo": [
-                                            self.env_vars['TOPIC_KILL_JOB'],
-                                            self.env_vars['DB_QUERY_TOPIC']
+                                            self.env_vars['TOPIC_KILL_JOB'], # Kill job
+                                            self.function_name               # Label job as duplicate
                               ]
                    }, 
                    "body": {
