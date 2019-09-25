@@ -15,7 +15,7 @@ steps:
          '${_DATA_GROUP}-triggers',
          '--project=${PROJECT_ID}',
          '--source=functions/check-triggers',
-         '--memory=128MB',
+         '--memory=256MB',
          '--max-instances=20',
          '--entry-point=check_triggers',
          '--runtime=python37',
