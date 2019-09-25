@@ -77,14 +77,13 @@ def launch_dsub_task(dsub_args):
     try:
         result = dsub.dsub_main('dsub', dsub_args)
     except ValueError as exception:
-        print(exception)
-        print(f'Error with dsub arguments: {dsub_args}')
-        return(exception)
+        raise(f'> Error with dsub arguments: {dsub_args}')
     except:
-        print("Unexpected error:", sys.exc_info())
-        for arg in dsub_args:
-            print(arg)
-        return(sys.exc_info())
+        print("> Unexpected error:", sys.exc_info())
+        raise
+        #for arg in dsub_args:
+        #    print(arg)
+        #return(sys.exc_info())
     return(result)
 
 
@@ -215,6 +214,8 @@ def launch_fastq_to_ubam(event, context):
                 },
                 "taskId": task_id,
                 "dryRun": dry_run,
+                #"preemptible": "3",
+                #"retries": "3",
                 "preemptible": False,
                 "sample": sample,
                 "plate": plate,
@@ -226,10 +227,12 @@ def launch_fastq_to_ubam(event, context):
     }
 
     dsub_args = [
-        "--name", job_dict["name"],
+        #"--name", job_dict["name"],
+        "--name", f"fq2u-{job_dict['inputHash'][0:5]}",
         "--label", f"read-group={read_group}",
         "--label", f"sample={sample.lower()}",
         "--label", f"trellis-id={task_id}",
+        "--label", f"trellis-name={job_dict['name']}",
         "--label", f"plate={plate.lower()}",
         "--label", f"input-hash={trunc_nodes_hash}",
         "--provider", job_dict["provider"], 
@@ -242,7 +245,10 @@ def launch_fastq_to_ubam(event, context):
         "--image", job_dict["image"], 
         "--logging", job_dict["logging"],
         "--disk-size", str(job_dict["diskSize"]),
-        "--command", job_dict["command"]
+        "--command", job_dict["command"],
+        # 4 total attempts; 3 preemptible, final 1 full-price
+        #"--preemptible", job_dict["preemptible"],
+        #"--retries", job_dict["retries"] 
     ]
 
     # Argument lists
@@ -260,8 +266,8 @@ def launch_fastq_to_ubam(event, context):
                           f"{key}={value}"])
 
     # Optional flags
-    if job_dict['preemptible']:
-        dsub_args.append("--preemptible")
+    #if job_dict['preemptible']:
+    #    dsub_args.append("--preemptible")
     if job_dict['dryRun']:
         dsub_args.append("--dry-run")
 

@@ -1,0 +1,13 @@
+CREATE INDEX ON :Blob(bucket, path)
+CREATE INDEX ON :Blob(id)
+CREATE INDEX ON :Blob(sample)
+CREATE INDEX ON :Blob(taskId, id)
+CREATE INDEX ON :Fastq(plate)
+CREATE INDEX ON :Fastq(sample)
+CREATE INDEX ON :Job(name)
+CREATE INDEX ON :Job(sample, name, inputHash, status)
+CREATE INDEX ON :Job(taskId)
+CREATE INDEX ON :Job(instanceName)                      # Mark duplicates
+CREATE INDEX ON :Ubam(sample)
+CREATE INDEX ON :Dstat(instanceName, jobId)
+CREATE INDEX ON :Dsub(dsubJobId, instanceName)

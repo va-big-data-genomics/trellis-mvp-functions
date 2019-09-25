@@ -1,6 +1,6 @@
 import time
 
-MAX_RETRIES = 10
+MAX_RETRIES = 3
 
 class AddFastqSetSize:
     """Add setSize property to Fastqs and send them back to 
@@ -45,6 +45,7 @@ class AddFastqSetSize:
                               "method": "UPDATE",
                               "labels": ["Cypher", "Query", "Set", "Properties"], 
                               "sentFrom": self.function_name,
+                              "trigger": "AddFastqSetSize",
                               "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                    },
                    "body": {
@@ -106,6 +107,7 @@ class CheckUbamCount:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Ubam", "GATK", "Nodes"],
                               "sentFrom": self.function_name,
+                              "trigger": "CheckUbamCount",
                               "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
                    },
                    "body": {
@@ -177,6 +179,7 @@ class GetFastqForUbam:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Fastq", "Nodes"],
                               "sentFrom": self.function_name,
+                              "trigger": "GetFastqForUbam",
                               "publishTo": self.env_vars['TOPIC_FASTQ_TO_UBAM'],
                    },
                    "body": {
@@ -188,8 +191,7 @@ class GetFastqForUbam:
                                        "n.setSize AS set_size, " +
                                        "COLLECT(n) AS nodes " +
                                        "WHERE size(nodes) = 2 " + 
-                                       "RETURN [n IN nodes] AS nodes, "
-                                       "set_size/2 AS metadata_setSize"
+                                       "RETURN [n IN nodes] AS nodes"
                             ), 
                             "result-mode": "data",
                             "result-structure": "list",
@@ -250,9 +252,13 @@ class KillDuplicateJobs:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Duplicate", "Jobs", "Running"],
+                              "labels": ["Duplicate", "Jobs", "Running", "Cypher", "Query", ],
                               "sentFrom": self.function_name,
-                              "publishTo": self.env_vars['TOPIC_KILL_DUPLICATES']
+                              "trigger": "KillDuplicateJobs",
+                              "publishTo": [
+                                            self.env_vars['TOPIC_KILL_JOB'], # Kill job
+                                            self.function_name               # Label job as duplicate
+                              ]
                    }, 
                    "body": {
                         "cypher": (
@@ -264,7 +270,8 @@ class KillDuplicateJobs:
                             "WITH n.inputHash AS hash, " +
                             "COLLECT(n) AS nodes " +
                             "WHERE SIZE(nodes) > 1 " +
-                            "RETURN tail(nodes) AS nodes"
+                            "UNWIND tail(nodes) AS node " +
+                            "RETURN node"
                         ),
                         "result-mode": "data",
                         "result-structure": "list",
@@ -272,6 +279,72 @@ class KillDuplicateJobs:
                    }
         }
         return([(topic, message)])
+
+
+class MarkJobAsDuplicate:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        # Only trigger when job node is created
+        reqd_header_labels = ['Duplicate', 'Jobs', 'Database', 'Result']
+
+        required_labels = ['Job']
+
+        if not node:
+            return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            set(required_labels).issubset(set(node.get('labels'))),
+            not "Duplicate" in node.get('labels')
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        """Mark duplicate job in the database.
+        """
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        instance_name = node['instanceName']
+
+        query = self._create_query(instance_name)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Mark", "Duplicate", "Job", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "MarkJobAsDuplicate"
+                   }, 
+                   "body": {
+                        "cypher": query,
+                        "result-mode": "stats"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, instance_name):
+        query = (
+                  "MATCH (n:Job) " +
+                 f"WHERE n.instanceName = \"{instance_name}\" " +
+                  "SET n.labels = n.labels + \"Duplicate\", " +
+                  "n:Marker, " +
+                  "n.duplicate=True")
+        return query
 
 
 class RequeueJobQuery:
@@ -315,6 +388,7 @@ class RequeueJobQuery:
             header['retry-count'] = 1
 
         header['sentFrom'] = self.function_name
+        header['trigger'] = "RequeueJobQuery"
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
         header['labels'].remove('Database')
@@ -373,6 +447,7 @@ class RequeueRelationshipQuery:
             header['retry-count'] = 1
         
         header['sentFrom'] = self.function_name
+        header['trigger'] = "RequeueRelationshipQuery"
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
         header['labels'].remove('Database')
@@ -400,7 +475,7 @@ class RelateOutputToJob:
         self.env_vars = env_vars
 
     def check_conditions(self, header, body, node):
-        reqd_header_labels = ['Create', 'Node', 'Cypher', 'Query', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Cypher', 'Query', 'Database', 'Result']
 
         if not node:
                 return False
@@ -422,6 +497,11 @@ class RelateOutputToJob:
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
+        node_id = node['id']
+        task_id = node['taskId']
+
+        query = self._create_query(node_id, task_id)
+
         # Requeue original message, updating sentFrom property
         message = {
                    "header": {
@@ -429,21 +509,27 @@ class RelateOutputToJob:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
+                              "trigger": "RelateOutputToJob",
                               "publishTo": self.function_name
                    },
                    "body": {
-                            "cypher": (
-                                       f"MATCH (j:Job {{ taskId:\"{node['taskId']}\" }} ), " +
-                                       f"(node:Blob {{taskId:\"{node['taskId']}\", " +
-                                                    f"id:\"{node['id']}\" }}) " +
-                                       f"CREATE (j)-[:OUTPUT]->(node) " +
-                                        "RETURN node"),
+                            "cypher": query,
                             "result-mode": "data",
                             "result-structure": "list",
                             "result-split": "True"
                    }
         }
-        return([(topic, message)])   
+        return([(topic, message)]) 
+
+    def _create_query(self, node_id, task_id):
+        query = (
+                 f"MATCH (j:Job {{ taskId:\"{task_id}\" }} ), " +
+                 f"(node:Blob {{taskId:\"{task_id}\", " +
+                              f"id:\"{node_id}\" }}) " +
+                  "WHERE NOT j.Duplicate=True " +
+                  "CREATE (j)-[:OUTPUT]->(node) " +
+                  "RETURN node")
+        return query
 
 
 class RelatedInputToJob:
@@ -487,6 +573,7 @@ class RelatedInputToJob:
                                   "method": "POST",
                                   "labels": ["Create", "Relationship", "Input", "Cypher", "Query"],
                                   "sentFrom": self.function_name,
+                                  "trigger": "RelatedInputToJob",
                                   "publishTo": self.function_name
                        },
                        "body": {
@@ -509,7 +596,7 @@ class RelatedInputToJob:
         return query
 
 
-class RunDsubWhenJobStopped:
+class RunDstatWhenJobStopped:
     
     def __init__(self, function_name, env_vars):
         """Launch dstat after dsub jobs finish.
@@ -549,6 +636,7 @@ class RunDsubWhenJobStopped:
                               "method": "POST",
                               "labels": ["Dstat", "Command"],
                               "sentFrom": self.function_name,
+                              "trigger": "RunDstatWhenJobStopped"
                    },
                    "body": {
                             "command": node["dstatCmd"]
@@ -681,6 +769,144 @@ class RecheckDstat:
         return([(topic, message)])   
 
 
+class RelateSampleToFromPersonalis:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            "Sample" in node.get("labels"),
+            node.get("sample"),
+            node.get("bucket")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Create", "Relationship", "Sample", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateSampleToFromPersonalis"
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "stats"
+                   }
+        }
+        return([(topic, message)])  
+
+    def _create_query(self, sample_node):
+        sample = sample_node['sample']
+        query = (
+                 f"MATCH (j:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                  "(b:Blob:FromPersonalis) " +
+                  "WHERE b.sample = j.sample " +
+                  "AND b.bucket = j.bucket " +
+                  "AND NOT \"Sample\" IN labels(b) " +
+                  "MERGE (j)-[:HAS]->(b)")
+        return query
+
+
+class RelateFromPersonalisToSample:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            "FromPersonalis" in node.get("labels"),
+            not "Sample" in node.get("labels"),
+            node.get("sample"),
+            node.get("bucket")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateFromPersonalisToSample",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",              # Allow message to be requeued
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])  
+
+    def _create_query(self, node):
+        sample = node['sample']
+        bucket = node['bucket']
+        path = node['path']
+        query = (
+                 f"MATCH (job:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                 f"(node:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
+                  "MERGE (job)-[:HAS]->(node) " +
+                  "RETURN node")
+        return query
+
+
 def get_triggers(function_name, env_vars):
 
     triggers = []
@@ -708,7 +934,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelatedInputToJob(
                                     function_name,
                                     env_vars))
-    triggers.append(RunDsubWhenJobStopped(
+    triggers.append(RunDstatWhenJobStopped(
                                     function_name,
                                     env_vars))
     triggers.append(RelateDstatToJob(
@@ -717,4 +943,11 @@ def get_triggers(function_name, env_vars):
     triggers.append(RecheckDstat(
                                  function_name,
                                  env_vars))
+    triggers.append(RelateFromPersonalisToSample(
+                                    function_name,
+                                    env_vars))
+    triggers.append(MarkJobAsDuplicate(
+                                    function_name,
+                                    env_vars))
     return triggers
+

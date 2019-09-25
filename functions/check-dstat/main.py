@@ -180,7 +180,7 @@ def get_dstat_result():
 
     pubsub_message = envelope['message']
     message_id = pubsub_message['message_id']
-    trunc_id = message_id[-4:]
+    trunc_id = message_id[-7:]
     print(f"{trunc_id}> Received pubsub message: {pubsub_message}.")
 
     if isinstance(pubsub_message, dict) and 'data' in pubsub_message:
@@ -209,13 +209,14 @@ def get_dstat_result():
     print(f"{trunc_id}> Json result: {json_results}.")
 
     for json_result in json_results:
+        # Only update database once job has stopped
+        #if json_result["status"] == "RUNNING":
+        #    continue
         query = _create_query(dstat_cmd, json_result)
         message = _format_pubsub_message(query, retry_count)
         print(f"{trunc_id}> Pubsub message: {message}.")
         result = _publish_to_topic(DB_TOPIC, message)
         print(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
-
-    # Publish to message
 
     # Flush the stdout to avoid log buffering.
     sys.stdout.flush()
