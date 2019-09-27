@@ -526,7 +526,8 @@ class RelateOutputToJob:
                  f"MATCH (j:Job {{ taskId:\"{task_id}\" }} ), " +
                  f"(node:Blob {{taskId:\"{task_id}\", " +
                               f"id:\"{node_id}\" }}) " +
-                  "WHERE NOT j.Duplicate=True " +
+                  "WHERE NOT EXISTS(j.duplicate) " +
+                  "OR NOT j.duplicate=True " +
                   "CREATE (j)-[:OUTPUT]->(node) " +
                   "RETURN node")
         return query
@@ -681,7 +682,7 @@ class RelateDstatToJob:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Create", "Relationship", "Dstat", "Cypher", "Query"],
+                              "labels": ["Create", "Dstat", "Relationship", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateDstatToJob",
                    },
