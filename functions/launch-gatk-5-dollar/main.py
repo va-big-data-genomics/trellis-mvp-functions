@@ -240,6 +240,7 @@ def launch_gatk_5_dollar(event, context):
                  "--logging", job_dict["logging"],
                  "--disk-size", str(job_dict["diskSize"]),
                  "--command", job_dict["command"],
+                 "--use-private-address",
     ]
 
     # Argument lists
