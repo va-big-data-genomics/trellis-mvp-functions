@@ -246,7 +246,7 @@ def launch_fastq_to_ubam(event, context):
         "--logging", job_dict["logging"],
         "--disk-size", str(job_dict["diskSize"]),
         "--command", job_dict["command"],
-        "--use-private-address",
+        #"--use-private-address",
         # 4 total attempts; 3 preemptible, final 1 full-price
         #"--preemptible", job_dict["preemptible"],
         #"--retries", job_dict["retries"] 
