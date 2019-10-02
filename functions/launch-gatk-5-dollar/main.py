@@ -240,6 +240,7 @@ def launch_gatk_5_dollar(event, context):
                  "--logging", job_dict["logging"],
                  "--disk-size", str(job_dict["diskSize"]),
                  "--command", job_dict["command"],
+                 "--network", "trellis-neo4j-dev",
                  #"--use-private-address",
     ]
 
