@@ -43,6 +43,7 @@ def publish_to_topic(topic, data):
     result = PUBLISHER.publish(topic_path, data=data)
     return result
 
+
 def launch_dsub_task(dsub_args):
     try:
         result = dsub.dsub_main('dsub', dsub_args)
@@ -56,6 +57,7 @@ def launch_dsub_task(dsub_args):
             print(arg)
         return(sys.exc_info())
     return(result)
+
 
 def get_datetime_stamp():
     now = datetime.now()
@@ -187,14 +189,14 @@ def launch_gatk_5_dollar(event, context):
                 "minRam": 6.5,
                 "preemptible": False,
                 "bootDiskSize": 20,
-                "image": f"gcr.io/{PROJECT_ID}/***REMOVED***/wdl_runner:latest",
+                "image": f"gcr.io/{PROJECT_ID}/broadinstitute/cromwell:46",
                 "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 100,
                 "command": ("java " +
                             "-Dconfig.file=${CFG} " +
-                            "-Dbackend.providers.PAPIv2.config.project=${PROJECT} " +
-                            "-Dbackend.providers.PAPIv2.config.root=${ROOT} " +
-                            "-jar /cromwell/cromwell.jar " +
+                            "-Dbackend.providers.${BACKEND_PROVIDER}.config.project=${PROJECT} " +
+                            "-Dbackend.providers.${BACKEND_PROVIDER}.config.root=${ROOT} " +
+                            "-jar /app/cromwell.jar " +
                             "run ${WDL} " +
                             "--inputs ${INPUT} " +
                             "--options ${OPTION}"
@@ -209,6 +211,7 @@ def launch_gatk_5_dollar(event, context):
                 "envs": {
                          "PROJECT": PROJECT_ID,
                          "ROOT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output",
+                         "BACKEND_PROVIDER": "PAPIv2"
                 },
                 "preemptible": False,
                 "dryRun": dry_run,
