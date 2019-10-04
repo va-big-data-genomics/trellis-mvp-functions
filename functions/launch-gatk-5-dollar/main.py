@@ -192,8 +192,8 @@ def launch_gatk_5_dollar(event, context):
                 "diskSize": 100,
                 "command": ("java " +
                             "-Dconfig.file=${CFG} " +
-                            "-Dbackend.providers.JES.config.project=${MYproject} " +
-                            "-Dbackend.providers.JES.config.root=${ROOT} " +
+                            "-Dbackend.providers.PAPIv2.config.project=${PROJECT} " +
+                            "-Dbackend.providers.PAPIv2.config.root=${ROOT} " +
                             "-jar /cromwell/cromwell.jar " +
                             "run ${WDL} " +
                             "--inputs ${INPUT} " +
@@ -207,7 +207,7 @@ def launch_gatk_5_dollar(event, context):
                            "INPUT": f"gs://{OUT_BUCKET}/{gatk_inputs_path}",
                 },
                 "envs": {
-                         "MYproject": PROJECT_ID,
+                         "PROJECT": PROJECT_ID,
                          "ROOT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output",
                 },
                 "preemptible": False,
