@@ -30,7 +30,8 @@ if ENVIRONMENT == 'google-cloud':
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
     TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
-    GATK_INPUTS_PATH = parsed_vars['GATK_HG38_INPUTS']
+    GATK_INPUTS_DIR = parsed_vars['GATK_INPUTS_DIR']
+    GATK_HG38_INPUTS = parsed_vars['GATK_HG38_INPUTS']
     NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
     # Establish PubSub connection
@@ -161,7 +162,7 @@ def launch_gatk_5_dollar(event, context):
     # Load inputs JSON from GCS
     gatk_input_template = storage.Client(project=PROJECT_ID) \
         .get_bucket(TRELLIS_BUCKET) \
-        .blob(GATK_INPUTS_PATH) \
+        .blob(GATK_HG38_INPUTS) \
         .download_as_string()
     gatk_inputs = json.loads(gatk_input_template)
 
@@ -179,7 +180,7 @@ def launch_gatk_5_dollar(event, context):
         .upload_from_string(json.dumps(gatk_inputs, indent=4))
     print(f"> Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
-    workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
+    #workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
@@ -202,10 +203,10 @@ def launch_gatk_5_dollar(event, context):
                             "--options ${OPTION}"
                 ),
                 "inputs": {
-                           "CFG": f"gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/google-adc.conf", 
-                           "OPTION": f"gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/generic.google-papi.options.json",
-                           "WDL": f"gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/fc_germline_single_sample_workflow.wdl",
-                           "SUBWDL": f"gs://{TRELLIS_BUCKET}/{workflow_inputs_path}/tasks_pipelines/*.wdl",
+                           "CFG": f"gs://{TRELLIS_BUCKET}/{GATK_INPUTS_DIR}/google-adc.conf", 
+                           "OPTION": f"gs://{TRELLIS_BUCKET}/{GATK_INPUTS_DIR}/generic.google-papi.options.json",
+                           "WDL": f"gs://{TRELLIS_BUCKET}/{GATK_INPUTS_DIR}/fc_germline_single_sample_workflow.wdl",
+                           "SUBWDL": f"gs://{TRELLIS_BUCKET}/{GATK_INPUTS_DIR}/tasks_pipelines/*.wdl",
                            "INPUT": f"gs://{OUT_BUCKET}/{gatk_inputs_path}",
                 },
                 "envs": {
