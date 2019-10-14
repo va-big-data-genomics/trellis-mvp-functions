@@ -186,7 +186,7 @@ def launch_gatk_5_dollar(event, context):
                 "regions": REGIONS,
                 "project": PROJECT_ID,
                 "minCores": 1,
-                "minRam": 6.5,
+                "minRam": 10,
                 "preemptible": False,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/cromwell:46",
@@ -225,7 +225,6 @@ def launch_gatk_5_dollar(event, context):
     }
 
     dsub_args = [
-                 #"--name", job_dict["name"],
                  "--name", f"gatk-{job_dict['inputHash'][0:5]}",
                  "--label", f"sample={sample.lower()}",
                  "--label", f"trellis-id={task_id}",
@@ -244,8 +243,9 @@ def launch_gatk_5_dollar(event, context):
                  "--disk-size", str(job_dict["diskSize"]),
                  "--command", job_dict["command"],
                  "--network", "trellis-neo4j-dev",
-                 "--subnetwork", "trellis-neo4j-dev-west1"
-                 #"--use-private-address",
+                 "--subnetwork", "trellis-neo4j-dev-west1",
+                 "--use-private-address",
+                 "--enable-stackdriver-monitoring",
     ]
 
     # Argument lists
