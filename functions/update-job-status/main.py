@@ -86,7 +86,7 @@ class InsertOperation:
         """Merge instance metadata with Job node.
         """
         query = (
-            "MATCH (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
+            "MERGE (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
             "SET " +
                 f"node.status = \"{self.status}\", " +
                 f"node.instanceName = \"{self.name}\", " +
@@ -135,26 +135,10 @@ class DeleteOperation:
         service = domain.split('.')[0]
         self.stopped_by = service
 
-    def compose_instance_query(self):
-        """DEPRECATED"""
-        query = (
-                 "MATCH (node:Instance) " +
-                f"WHERE node.instanceId = {self.id} " +
-                f"AND node.instanceName = \"{self.name}\" " +
-                f"SET node.stopTime = \"{self.stop_time}\", " +
-                f"node.stopTimeEpoch = {self.stop_time_epoch}, " + 
-                f"node.status = \"{self.status}\", " +
-                 "node.durationMinutes = " +
-                    "duration.inSeconds(datetime(node.startTime), datetime(node.stopTime)).minutes " +
-                 "RETURN node")
-        return query
-
 
     def compose_job_query(self):
         query = (
-                 "MATCH (node:Job) " +
-                f"WHERE node.instanceId = {self.id} " +
-                f"AND node.instanceName = \"{self.name}\" " +
+                f"MERGE (node:Job {{ instanceId:{self.id}, instanceName:\"{self.name}\" }} ) " +
                  "SET " +
                     f"node.stopTime = \"{self.stop_time}\", " +
                     f"node.stopTimeEpoch = {self.stop_time_epoch}, " +
