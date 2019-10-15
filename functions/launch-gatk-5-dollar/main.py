@@ -159,6 +159,25 @@ def launch_gatk_5_dollar(event, context):
         ubams.append(ubam_path)
         input_ids.append(input_id)
 
+    # Load Pipeline API (PAPI) options JSON from GCS
+    gatk_input_template = storage.Client(project=PROJECT_ID) \
+        .get_bucket(TRELLIS_BUCKET) \
+        .blob(GATK_HG38_INPUTS) \
+        .download_as_string()
+    papi_options = json.loads(papi_options)
+
+    # Add Trellis ID to Cromwell workers
+    default_runtime = papi_options["default_runtime_attributes"]
+    default_runtime["google_labels"] = {"trellis-id": task_id}
+
+    # Write workflow-specific PAPI options to GCS
+    papi_options_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/{sample}.google-papi.options.json"
+    papi_options_blob = storage.Client(project=PROJECT_ID) \
+        .get_bucket(OUT_BUCKET) \
+        .blob(gatk_inputs_path) \
+        .upload_from_string(json.dumps(papi_options, indent=4))
+    print(f"> Create PAPI options blob at gs://{OUT_BUCKET}/{papi_options_path}.")
+
     # Load inputs JSON from GCS
     gatk_input_template = storage.Client(project=PROJECT_ID) \
         .get_bucket(TRELLIS_BUCKET) \
@@ -172,7 +191,7 @@ def launch_gatk_5_dollar(event, context):
     gatk_inputs['germline_single_sample_workflow.flowcell_unmapped_bams'] = ubams
     gatk_inputs['germline_single_sample_workflow.final_vcf_base_name'] = sample
 
-    # Write JSON to GCS
+    # Write inputs JSON to GCS
     gatk_inputs_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/inputs.json"
     gatk_inputs_blob = storage.Client(project=PROJECT_ID) \
         .get_bucket(OUT_BUCKET) \
@@ -204,7 +223,7 @@ def launch_gatk_5_dollar(event, context):
                 ),
                 "inputs": {
                            "CFG": f"gs://{TRELLIS_BUCKET}/{GATK_INPUTS_DIR}/google-adc.conf", 
-                           "OPTION": f"gs://{TRELLIS_BUCKET}/{GATK_INPUTS_DIR}/generic.google-papi.options.json",
+                           "OPTION": f"gs://{OUT_BUCKET}/{papi_options_path}",
                            "WDL": f"gs://{TRELLIS_BUCKET}/{GATK_INPUTS_DIR}/fc_germline_single_sample_workflow.wdl",
                            "SUBWDL": f"gs://{TRELLIS_BUCKET}/{GATK_INPUTS_DIR}/tasks_pipelines/*.wdl",
                            "INPUT": f"gs://{OUT_BUCKET}/{gatk_inputs_path}",
