@@ -32,6 +32,7 @@ if ENVIRONMENT == 'google-cloud':
     TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
     GATK_INPUTS_DIR = parsed_vars['GATK_INPUTS_DIR']
     GATK_HG38_INPUTS = parsed_vars['GATK_HG38_INPUTS']
+    GATK_PAPI_INPUTS = parsed_vars['GATK_PAPI_INPUTS']
     NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
     # Establish PubSub connection
@@ -160,9 +161,9 @@ def launch_gatk_5_dollar(event, context):
         input_ids.append(input_id)
 
     # Load Pipeline API (PAPI) options JSON from GCS
-    gatk_input_template = storage.Client(project=PROJECT_ID) \
+    papi_options_template = storage.Client(project=PROJECT_ID) \
         .get_bucket(TRELLIS_BUCKET) \
-        .blob(GATK_HG38_INPUTS) \
+        .blob(GATK_PAPI_INPUTS) \
         .download_as_string()
     papi_options = json.loads(papi_options)
 
