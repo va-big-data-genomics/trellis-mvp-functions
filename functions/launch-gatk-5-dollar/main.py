@@ -168,10 +168,9 @@ def launch_gatk_5_dollar(event, context):
     papi_options = json.loads(papi_options_template)
 
     # Add Trellis ID to Cromwell workers
-    default_runtime = papi_options["default_runtime_attributes"]
-    default_runtime["google_labels"] = {
-                                        "trellis-id": task_id,
-                                        "sample": sample
+    papi_options["google_labels"] = {
+                                     "trellis-id": task_id,
+                                     "sample": sample
     }
 
     # Write workflow-specific PAPI options to GCS
