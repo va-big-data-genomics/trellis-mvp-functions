@@ -165,7 +165,7 @@ def launch_gatk_5_dollar(event, context):
         .get_bucket(TRELLIS_BUCKET) \
         .blob(GATK_PAPI_INPUTS) \
         .download_as_string()
-    papi_options = json.loads(papi_options)
+    papi_options = json.loads(papi_options_template)
 
     # Add Trellis ID to Cromwell workers
     default_runtime = papi_options["default_runtime_attributes"]
