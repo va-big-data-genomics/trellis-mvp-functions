@@ -178,7 +178,7 @@ def launch_gatk_5_dollar(event, context):
     papi_options_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/{sample}.google-papi.options.json"
     papi_options_blob = storage.Client(project=PROJECT_ID) \
         .get_bucket(OUT_BUCKET) \
-        .blob(gatk_inputs_path) \
+        .blob(papi_options_path) \
         .upload_from_string(json.dumps(papi_options, indent=4))
     print(f"> Create PAPI options blob at gs://{OUT_BUCKET}/{papi_options_path}.")
 
