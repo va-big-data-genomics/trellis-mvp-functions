@@ -168,10 +168,11 @@ def launch_gatk_5_dollar(event, context):
     papi_options = json.loads(papi_options_template)
 
     # Add Trellis ID to Cromwell workers
-    papi_options["google_labels"] = {
-                                     "trellis-id": task_id,
-                                     "sample": sample
-    }
+    # NOTE: Doesn't work. Don't know where these are supposed to go.
+    #papi_options["google_labels"] = {
+    #                                 "trellis-id": task_id,
+    #                                 "sample": sample
+    #}
 
     # Write workflow-specific PAPI options to GCS
     papi_options_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/{sample}.google-papi.options.json"
