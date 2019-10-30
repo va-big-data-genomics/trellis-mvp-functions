@@ -908,6 +908,153 @@ class RelateFromPersonalisToSample:
         return query
 
 
+# Track GATK workflow steps in database
+class MergeCromwellWorkflowStep:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            node.get('cromwellWorkflowId'),  # Validate this is Cromwell step
+            node.get('wdlCallAlias'),        # Get step name
+            node.get('wdlTaskName'),
+            node.get('status') == 'RUNNING'     # Only merge when attempt starts
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Merge", "Cromwell", "Node", "Step", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "MergeCromwellWorkflowStep",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",              # Allow message to be requeued
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])  
+
+    def _create_query(self, node):
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+        wdl_task_name = node['wdlTaskName']
+        query = (
+                 "MERGE (node:CromwellStep {" +
+                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                    f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                 "} " +
+                 "ON CREATE SET " +
+                    f"node.wdlTaskName= \"{wdl_task_name}\" " +
+                 "RETURN node"
+        )
+        return query 
+
+
+class AddWorkflowIdToCromwellWorkflow:
+
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            node.get('cromwellWorkflowId'),  # Need to add to Cromwell master
+            node.get('trellisTaskId'),        # Use to match Cromwell master
+            node.get('wdlCallAlias') == "ScatterIntervalList",
+            node.get('basename') == "1scattered.interval_list",
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Update", "CromwellWorkflow", "Node", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "AddWorkflowIdToCromwellWorkflow",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",              # Allow message to be requeued
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])  
+
+
+    def _create_query(self, node):
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        trellis_task_id = node['trellisTaskId']
+        query = (
+                 "MATCH (node:CromwellWorkflow) " +
+                f"WHERE node.trellisTaskId = \"{trellis_task_id}\" " +
+                f"SET node.cromwellWorkflowId = \"{cromwell_workflow_id}\" " +
+                 "RETURN node"
+        )
+        return query 
+
+
 def get_triggers(function_name, env_vars):
 
     triggers = []
@@ -948,6 +1095,12 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(MarkJobAsDuplicate(
+                                    function_name,
+                                    env_vars))
+    triggers.append(MergeCromwellWorkflowStep(
+                                    function_name,
+                                    env_vars))
+    triggers.append(AddWorkflowIdToCromwellWorkflow(
                                     function_name,
                                     env_vars))
     return triggers
