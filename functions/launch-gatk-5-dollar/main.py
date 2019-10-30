@@ -66,14 +66,6 @@ def get_datetime_stamp():
     return datestamp
 
 
-def parse_case_results(results):
-    """20190701: DEPRECATED with new cypher query
-    """
-    #'results': [{'CASE WHEN ': [{node_metadata}]}]
-    results = results[0]
-    return list(results.values())[0]
-
-
 def format_create_node_query(db_entry, dry_run=False):
     labels_str = ':'.join(db_entry['labels'])
 
@@ -221,7 +213,7 @@ def launch_gatk_5_dollar(event, context):
                 "plate": plate,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
-                "labels": ['Job', 'Dsub', 'Cromwell'],
+                "labels": ['Job', 'Dsub', 'CromwellWorkflow'],
                 "inputIds": input_ids
     }
 
@@ -296,7 +288,7 @@ def launch_gatk_5_dollar(event, context):
         message = {
             "header": {
                 "method": "POST",
-                "labels": ["Create", "Job", "Cromwell", "Command", "Args"],
+                "labels": ["Create", "Job", "CromwellWorkflow", "Command", "Args"],
                 "resource": "job-metadata",
                 "sentFrom": f"{FUNCTION_NAME}",
             },
