@@ -51,6 +51,8 @@ class InsertOperation:
         self.plate = None
         self.status = "RUNNING"
 
+        self.cromwell_fields = {}
+
         payload = data['protoPayload']
         resource = data['resource']
 
@@ -58,14 +60,27 @@ class InsertOperation:
         # labels: [{0: {key: "trellis-id", value: "1907-5fxf7"}}]
         labels = payload['request']['labels']
         for label in labels:
-            if label['key'] == 'trellis-id':
-                self.task_id = label['value']
-            elif label['key'] == 'sample':
-                self.sample = label['value']
-            elif label['key'] == 'job-name':
-                self.job_name = label['value']
-            elif label['key'] == 'plate':
-                self.plate = label['value']
+            key = label['key']
+            value = label['value']
+
+            if key == 'trellis-id':
+                self.task_id = value
+            elif key == 'sample':
+                self.sample = value
+            elif key == 'job-name':
+                self.job_name = value
+            elif key == 'plate':
+                self.plate = value
+            
+            # Get Cromwell specific metadata values
+            elif key == 'cromwell-workflow-id':
+                self.cromwell_fields[key] = value
+            elif key == 'goog-pipelines-worker':
+                self.cromwell_fields[key] = value
+            elif key == 'wdl-call-alias':
+                self.cromwell_fields[key] = value
+            elif key == 'wdl-task-name':
+                self.cromwell_fields[key] = value
 
         self.name = payload['request']['name']
 
@@ -85,6 +100,16 @@ class InsertOperation:
     def compose_job_query(self):
         """Merge instance metadata with Job node.
         """
+
+        cromwell_strings = []
+        for key, value in self.cromwell_fields:
+            query_str = f"node.{key} = \"{value}\""
+            cromwell_strings.append(query_str)
+        if cromwell_strings:
+            cromwell_query_str = ", ".join(cromwell_strings)
+        else:
+            cromwell_query_str = ''
+
         query = (
             "MERGE (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
             "SET " +
@@ -95,13 +120,10 @@ class InsertOperation:
                 f"node.startTimeEpoch = {self.start_time_epoch}, " +
                 f"node.zone = \"{self.zone}\", " +
                 f"node.machineType = \"{self.machine_type}\" " +
+                # Add Cromwell metadata fields, if present
+                f"{cromwell_query_str} " +
             "RETURN node")
         return query
-
-
-    def compose_query(self):
-        # Specify active query function
-        return self.compose_job_query()
 
 
 class DeleteOperation:
@@ -149,11 +171,6 @@ class DeleteOperation:
                         "datetime(node.stopTime)).minutes " +
                  "RETURN node")
         return query
-
-
-    def compose_query(self):
-        # Specify active query function
-        return self.compose_job_query()
 
 
 def format_pubsub_message(query, publish_to=None):
@@ -239,7 +256,7 @@ def update_job_status(event, context):
         job_op = DeleteOperation(data)
     else:
         raise ValueError(f"Request type not supported: {request_type}.")
-    query = job_op.compose_query()
+    query = job_op.compose_job_query()
 
     # If an instance cannot be found (i.e. already deleted), 
     # delete operation will not return an instance ID.
