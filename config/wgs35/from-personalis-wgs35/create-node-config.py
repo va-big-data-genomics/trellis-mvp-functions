@@ -14,16 +14,16 @@ def trellis_metadata_groupdict(db_dict, groupdict):
     return {
             'sample': groupdict['sample'],
             'trellisTask': groupdict['trellis_task'],
-            'taskId': groupdict['task_id'],
+            'trellisTaskId': groupdict['trellis_task_id'],
             'plate': groupdict['plate'],
     }
 
 
-def gatk_metadata_groupdict(db_dict, groupdict):
+def cromwell_metadata_groupdict(db_dict, groupdict):
     return {
-            'gatkWorkflow': groupdict['gatk_workflow'],
-            'gatkJobId': groupdict['gatk_job_id'],
-            'gatkTask': groupdict['gatk_task'],
+            'cromwellWorkflowName': groupdict['cromwell_workflow_name'],
+            'cromwellWorkflowId': groupdict['cromwell_workflow_id'],
+            'wdlCallAlias': groupdict['wdl_call_alias'],
     }
 
 
@@ -73,8 +73,9 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": [r"^(?P<plate>\w+)/(?P<sample>\w+)/(?P<trellis_task>\w+(?:-\w+)+)/(?P<task_id>\w+(?:-\w+)+)/.*"],
-            "Gatk": [r"^(?P<plate>\w+)/(?P<sample>\w+)/gatk-5-dollar/(?P<task_id>\w+(?:-\w+)+)/output/(?P<gatk_workflow>\w+(?:_\w+)+)/(?P<gatk_job_id>\w+(?:-\w+)+)/call-(?P<gatk_task>\w+)/.*"],
+            "Blob": [r"^(?P<plate>\w+)/(?P<sample>\w+)/(?P<trellis_task>\w+(?:-\w+)+)/(?P<trellis_task_id>\w+(?:-\w+)+)/.*"],
+            "Cromwell": [r"^(?P<plate>\w+)/(?P<sample>\w+)/gatk-5-dollar/(?P<task_id>\w+(?:-\w+)+)/output/(?P<cromwell_workflow_name>\w+(?:_\w+)+)/(?P<cromwell_workflow_id>\w+(?:-\w+)+)/call-(?P<wdl_call_alias>\w+)/.*"],
+            "Gatk": [r"^(?P<plate>\w+)/(?P<sample>\w+)/gatk-5-dollar/.*"],
             "Vcf": [
                     ".*\\.vcf.gz$", 
                     ".*\\.vcf$",
@@ -135,8 +136,8 @@ class NodeKinds:
                                 "Shard": [
                                           shard_index_name_1,
                                 ],
-                                "Gatk": [
-                                         gatk_metadata_groupdict,
+                                "Cromwell": [
+                                         cromwell_metadata_groupdict,
                                 ],
                                 "Ubam": [
                                          read_group_name_1,
