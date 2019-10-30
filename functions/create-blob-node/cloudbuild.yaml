@@ -1,6 +1,6 @@
 steps:
 - name: 'ubuntu'
-  args: ['cp', '-r', 'config/wgs35', 'functions/create-node/']
+  args: ['cp', '-r', 'config/wgs35', 'functions/create-blob-node/']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
@@ -8,7 +8,7 @@ steps:
          'deploy',
          '${_DATA_GROUP}-create-node-${_BUCKET_SHORT_NAME}-${_OPERATION_SHORT_NAME}',
          '--project=${PROJECT_ID}',
-         '--source=functions/create-node',
+         '--source=functions/create-blob-node',
          '--memory=128MB',
          '--max-instances=100',
          '--entry-point=create_node_query',
