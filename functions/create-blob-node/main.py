@@ -38,7 +38,7 @@ def format_pubsub_message(query):
                "header": {
                           "resource": "query", 
                           "method": "POST",
-                          "labels": ["Node", "Blob", "Create", "Cypher", "Query"],
+                          "labels": ["Create", "Blob", "Node", "Cypher", "Query"],
                           "sentFrom": f"{FUNCTION_NAME}",
                           "publishTo": f"{DATA_GROUP}-triggers",
                },
@@ -195,27 +195,6 @@ def format_node_merge_query(db_dict, dry_run=False):
             'node.nodeIteration = "merged", ' +
             f"{merge_string} " + 
         "RETURN node") 
-    return query
-
-
-def format_node_query(db_entry, dry_run=False):
-    """DEPRECATED"""
-    # Create label string
-    labels_str = ':'.join(db_entry['labels'])
-
-    # Create database entry string
-    entry_strings = []
-    for key, value in db_entry.items():
-        if isinstance(value, str):
-            entry_strings.append(f'{key}: "{value}"')
-        else:
-            entry_strings.append(f'{key}: {value}')
-    entry_string = ', '.join(entry_strings)
-
-    # Format as cypher query
-    query = (
-             f"CREATE (node:{labels_str} {{ {entry_string} }}) " +
-              "RETURN node")
     return query
 
 
