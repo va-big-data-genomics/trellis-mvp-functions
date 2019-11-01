@@ -1600,7 +1600,7 @@ def get_triggers(function_name, env_vars):
                                     env_vars))
     triggers.append(MergeCromwellStepToAttempt(
                                     function_name,
-                                    env_Vars))
+                                    env_vars))
     triggers.append(RelateCromwellAttemptToPreviousAttempt(
                                     function_name,
                                     env_vars))
