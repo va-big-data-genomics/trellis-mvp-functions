@@ -416,13 +416,14 @@ class RequeueRelationshipQuery:
         self.env_vars = env_vars
 
     def check_conditions(self, header, body, node=None):
-        reqd_header_labels = ['Relationship', 'Create', 'Cypher', 'Query', ]
+        reqd_header_labels = ['Relationship', 'Cypher', 'Query', ]
 
         conditions = [
             header.get('method') == "POST",
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
+            "Merge" in header.get('labels') or "Create" in heaader.get('labels'),
             not node
         ]
 
@@ -933,6 +934,7 @@ class MergeCromwellWorkflowStep:
             node.get('wdlCallAlias'),        # Get step name
             node.get('wdlTaskName'),
             node.get('status') == 'RUNNING'     # Only merge when attempt starts
+            'CromwellAttempt' in node.get('labels')
         ]
 
         for condition in conditions:
@@ -952,7 +954,7 @@ class MergeCromwellWorkflowStep:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Merge", "Cromwell", "Node", "Step", "Cypher", "Query"],
+                              "labels": ["Merge", "CromwellStep", "Node", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "MergeCromwellWorkflowStep",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -964,7 +966,7 @@ class MergeCromwellWorkflowStep:
                             "result-split": "True"
                    }
         }
-        return([(topic, message)])  
+        return([(topic, message)])
 
     def _create_query(self, node):
         cromwell_workflow_id = node['cromwellWorkflowId']
@@ -977,13 +979,86 @@ class MergeCromwellWorkflowStep:
                  "} " +
                  "ON CREATE SET " +
                     f"node.wdlTaskName= \"{wdl_task_name}\" " +
+                     "node.nodeIteration=\"initial\" " +
+                 "ON MERGE SET " +
+                     "node.nodeIteration=\"merged\" " +
+                 "RETURN node"
+        )
+        return query 
+
+
+class SetCromwellAttemptLabel:
+    
+
+    def __init__(self, function_name, env_vars):
+
+            self.function_name = function_name
+            self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            node.get('cromwellWorkflowId'),  # Validate this is Cromwell step
+            node.get('wdlCallAlias'),        # Get step name
+            node.get('wdlTaskName'),
+            node.get('status') == 'RUNNING',     # Only merge when attempt starts
+            not 'CromwellAttempt' in node.get('labels')
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Set", "CromwellAttempt", "Node", "Label", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "SetCromwellAttemptLabel",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "stats",              # Allow message to be requeued
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, node):
+        instance_name = node['instanceName']
+        query = (
+                 "MATCH (node:Job) " +
+                f"WHERE node.instanceName = \"{instance_name}\" " +
+                 "SET node :CromwellAttempt " +
                  "RETURN node"
         )
         return query 
 
 
 class AddWorkflowIdToCromwellWorkflow:
-
 
     def __init__(self, function_name, env_vars):
 
@@ -1004,10 +1079,11 @@ class AddWorkflowIdToCromwellWorkflow:
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             # Check node-specific information
-            node.get('cromwellWorkflowId'),  # Need to add to Cromwell master
+            node.get('cromwellWorkflowId'),   # Need to add to Cromwell master
             node.get('trellisTaskId'),        # Use to match Cromwell master
             node.get('wdlCallAlias') == "ScatterIntervalList",
             node.get('basename') == "1scattered.interval_list",
+            "CromwellAttempt" in node.get('labels')
         ]
 
         for condition in conditions:
@@ -1055,6 +1131,414 @@ class AddWorkflowIdToCromwellWorkflow:
         return query 
 
 
+class RelateCromwellStepToWorkflow:
+
+
+    def __init__(self, function_name, env_vars):
+        '''Relate first Cromwell step to parent workflow.
+
+        This trigger is activated only after Trellis has run a query 
+        trying to relate the new step to the most recent step in the 
+        workflow and gotten a null result. This indicates it is 
+        the first step in the workflow and should be related
+        '''
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        # TODO: Change these
+        reqd_header_labels = ['Merge', 'Relationship', 'CromwellStep', 'Database', 'Result']
+
+        if node:
+            return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Avoid infinite loop of queries from this trigger
+            not 'CromwellWorkflow' in header.get('labels'),
+            # Check node-specific information
+            'CromwellStep' in node.get('labels'),
+            node.get('cromwellWorkflowId'),
+            node.get('nodeIteration') == "initial", # Only relate on creation
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Merge", "Relationship", "CromwellStep", "CromwellWorkflow", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCromwellStepToWorkflow",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "stats",
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, node):
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+        query = (
+                 f"MATCH " +
+                    "(w:CromwellWorkflow {{ " +
+                        "cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                    "}}), " +
+                    "(s:CromwellStep {{ " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
+                        f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                    "}}) " +
+                 "MERGE (w)-[:LED_TO]->(s)"
+        )
+        return query 
+
+
+class RelateCromwellStepToStep:
+
+
+    def __init__(self, function_name, env_vars):
+        '''Relate new Cromwell step to most recent step in workflow.
+        '''
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        # TODO: Change these
+        reqd_header_labels = ['Merge', 'CromwellStep', 'Node', 'Database', 'Result']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            'CromwellStep' in node.get('labels'),
+            node.get('cromwellWorkflowId'),
+            node.get('nodeIteration') == "initial", # Only relate on creation
+
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Merge", "Relationship", "CromwellStep", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCromwellStepToStep",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "stats",
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, node):
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+        query = (
+                 f"MATCH " +
+                    "(workflow:CromwellWorkflow {{ " +
+                        "cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                    "}}), " +
+                    "(step:CromwellStep {{ " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                    "}}), " +
+                    "(newStep:CromwellStep {{ " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
+                        f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                    "}}) " +
+                 "WITH workflow, step " +
+                 "MATCH (workflow)-[:LED_TO]->(step) " +
+                 "WHERE NOT (step)-[:LED_TO]->(:CromwellStep) " +
+                 "MERGE (step)-[:LED_TO]->(newStep)" 
+        )
+        return query 
+
+
+class MergeCromwellStepToAttempt:
+
+
+    def __init__(self, function_name, env_vars):
+        '''Relate new Cromwell step to most recent step in workflow.
+        '''
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        # TODO: Change these
+        reqd_header_labels = ['Set', 'CromwellAttempt', 'Node', 'Label', 'Database', 'Result']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            'CromwellAttempt' in node.get('labels'),
+            node.get('cromwellWorkflowId'),
+            node.get('wdlCallAlias'),
+            node.get('instanceName')
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Merge", "CromwellStep", "Relationship", "CromwellAttempt", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCromwellStepToAttempt",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",              # Allow message to be requeued
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, node):
+        instance_name = node['instanceName']
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+        query = (
+                 f"MATCH (attempt:Job {{ instanceName: \"{instance_name}\" }}) " +
+                  "MERGE (step:CromwellStep {{ " +
+                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                    f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                  "}})-[:HAS_ATTEMPT]->(attempt) " +
+                  "RETURN step"
+        )
+        return query 
+
+
+class RelateCromwellAttemptToPreviousAttempt:
+
+    def __init__(self, function_name, env_vars):
+        '''Relate new Cromwell attempt to last attempt in step.
+        '''
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        # TODO: Change these
+        reqd_header_labels = ['Set', 'CromwellAttempt', 'Node', 'Label', 'Database', 'Result']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            'CromwellAttempt' in node.get('labels'),
+            node.get('cromwellWorkflowId'),
+            node.get('wdlCallAlias'),
+            node.get('instanceName')
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+    
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Relate", "CromwellAttempt", "PreviousAttempt", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCromwellAttemptToPreviousAttempt",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",              # Allow message to be requeued
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, node):
+        instance_name = node['instanceName']
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+        query = (
+                 "MATCH (step:CromwellStep {{ " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                        f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                    "}})-[:HAS_ATTEMPT]->(oldAttempt:CromwellAttempt), " +
+                   f"(newAttempt:Job {{ instanceName: \"{instance_name}\" }}) " +
+                 "MERGE (newAttempt)-[:AFTER]->(oldAttempt) "
+                 "RETURN oldAttempt"
+        )
+        return query 
+
+
+class DeleteCromwellStepHasAttemptRelationship:
+    
+
+    def __init__(self, function_name, env_vars):
+        '''Relate new Cromwell step to most recent step in workflow.
+        '''
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        # TODO: Change these
+        reqd_header_labels = ['Relate', 'CromwellAttempt', 'PreviousAttempt', 'Database', 'Result']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            # Check node-specific information
+            'CromwellAttempt' in node.get('labels'),
+            node.get('cromwellWorkflowId'),
+            node.get('wdlCallAlias'),
+            node.get('instanceName')
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Delete", "CromwellStep", "Relationship", "CromwellAttempt", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "DeleteCromwellStepHasAttemptRelationship",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",              # Allow message to be requeued
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, node):
+        instance_name = node['instanceName']
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+        query = (
+                  "MATCH (step:CromwellStep {{ " +
+                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                    f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                  "}})-[r:HAS_ATTEMPT]->(attempt: Job {{ " +
+                    f"instanceName: \"{instance_name}\" " +
+                  "}}) " +
+                  "DELETE r " +
+                  "RETURN attempt"
+        )
+        return query 
+
+
 def get_triggers(function_name, env_vars):
 
     triggers = []
@@ -1097,10 +1581,30 @@ def get_triggers(function_name, env_vars):
     triggers.append(MarkJobAsDuplicate(
                                     function_name,
                                     env_vars))
+
+    # Track GATK workflow steps
     triggers.append(MergeCromwellWorkflowStep(
                                     function_name,
                                     env_vars))
     triggers.append(AddWorkflowIdToCromwellWorkflow(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCromwellStepToWorkflow(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCromwellStepToStep(
+                                    function_name,
+                                    env_vars))
+    triggers.append(SetCromwellAttemptLabel(
+                                    function_name,
+                                    env_vars))
+    triggers.append(MergeCromwellStepToAttempt(
+                                    function_name,
+                                    env_Vars))
+    triggers.append(RelateCromwellAttemptToPreviousAttempt(
+                                    function_name,
+                                    env_vars))
+    triggers.append(DeleteCromwellStepHasAttemptRelationship(
                                     function_name,
                                     env_vars))
     return triggers
