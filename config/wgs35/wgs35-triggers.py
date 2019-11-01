@@ -423,7 +423,7 @@ class RequeueRelationshipQuery:
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            "Merge" in header.get('labels') or "Create" in heaader.get('labels'),
+            "Merge" in header.get('labels') or "Create" in header.get('labels'),
             not node
         ]
 
