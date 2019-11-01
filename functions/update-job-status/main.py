@@ -102,7 +102,7 @@ class InsertOperation:
         """
 
         cromwell_strings = []
-        for key, value in self.cromwell_fields:
+        for key, value in self.cromwell_fields.items():
             query_str = f"node.{key} = \"{value}\""
             cromwell_strings.append(query_str)
         if cromwell_strings:
