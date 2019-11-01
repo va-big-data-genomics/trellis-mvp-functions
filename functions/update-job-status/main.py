@@ -121,7 +121,7 @@ class InsertOperation:
                 f"node.startTime = \"{self.start_time}\", " +
                 f"node.startTimeEpoch = {self.start_time_epoch}, " +
                 f"node.zone = \"{self.zone}\", " +
-                f"node.machineType = \"{self.machine_type}\" " +
+                f"node.machineType = \"{self.machine_type}\", " +
                 # Add Cromwell metadata fields, if present
                 f"{cromwell_query_str} " +
             "RETURN node")
