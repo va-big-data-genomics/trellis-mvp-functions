@@ -74,13 +74,13 @@ class InsertOperation:
             
             # Get Cromwell specific metadata values
             elif key == 'cromwell-workflow-id':
-                self.cromwell_fields[key] = value
+                self.cromwell_fields['cromwellWorkflowId'] = value
             elif key == 'goog-pipelines-worker':
-                self.cromwell_fields[key] = value
+                self.cromwell_fields['googPipelinesWorker'] = value
             elif key == 'wdl-call-alias':
-                self.cromwell_fields[key] = value
+                self.cromwell_fields['wdlCallAlias'] = value
             elif key == 'wdl-task-name':
-                self.cromwell_fields[key] = value
+                self.cromwell_fields['wdlTaskName'] = value
 
         self.name = payload['request']['name']
 
