@@ -1151,7 +1151,7 @@ class RelateCromwellStepToWorkflow:
         # TODO: Change these
         reqd_header_labels = ['Merge', 'Relationship', 'CromwellStep', 'Database', 'Result']
 
-        if node:
+        if not node:
             return False
 
         conditions = [
@@ -1301,7 +1301,7 @@ class RelateCromwellStepToStep:
         return query 
 
 
-class MergeCromwellStepToAttempt:
+class CreateCromwellStepFromAttempt:
 
 
     def __init__(self, function_name, env_vars):
@@ -1598,7 +1598,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(SetCromwellAttemptLabel(
                                     function_name,
                                     env_vars))
-    triggers.append(MergeCromwellStepToAttempt(
+    triggers.append(CreateCromwellStepFromAttempt(
                                     function_name,
                                     env_vars))
     triggers.append(RelateCromwellAttemptToPreviousAttempt(
