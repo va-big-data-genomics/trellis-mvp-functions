@@ -1,0 +1,14 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'logging',
+         'sinks',
+         'create',
+         'instances-delete-pipelines-worker',
+         'pubsub.googleapis.com/projects/***REMOVED***-dev/topics/wgs35-update-job-status',
+         '--log-filter=\'resource.type="gce_instance"\'',
+         '--log-filter=\'protoPayload.serviceName="compute.googleapis.com"\'',
+         '--log-filter=\'protoPayload.request."@type"="type.googleapis.com/compute.instances.delete"\'',
+         '--log-filter=\'protoPayload.resourceName:"google-pipelines-worker"\'
+  ]
