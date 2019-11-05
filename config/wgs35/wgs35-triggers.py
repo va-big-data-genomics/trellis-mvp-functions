@@ -910,7 +910,7 @@ class RelateFromPersonalisToSample:
 
 
 # Track GATK workflow steps in database
-'''
+"""
 class MergeCromwellWorkflowStep:
 
     def __init__(self, function_name, env_vars):
@@ -989,7 +989,7 @@ class MergeCromwellWorkflowStep:
                  "RETURN node"
         )
         return query 
-'''
+"""
 
 class AddWorkflowIdToCromwellWorkflow:
 
