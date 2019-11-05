@@ -6,4 +6,5 @@ steps:
          'create',
          'wgs35-delete-instance',
          'pubsub.googleapis.com/projects/***REMOVED***-dev/topics/wgs35-log-delete-instance',
-         '--log-filter', 'resource.type="gce_instance"']
+         '--log-filter', 'resource.type="gce_instance"',
+         '--log-filter', 'protoPayload.serviceName="compute.googleapis.com"']
