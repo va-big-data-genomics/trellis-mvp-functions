@@ -38,8 +38,8 @@ def format_pubsub_message(query, publish_to=None):
     message = {
                "header": {
                           "resource": "query",
-                          "method": "UPDATE", 
-                          "labels": ['Update', 'Job', 'Node', 'Query', 'Cypher'], 
+                          "method": "Create",
+                          "labels": ['Create', 'Job', 'CromwellAttempt', 'Node', 'Query', 'Cypher'], 
                           "sentFrom": f"{FUNCTION_NAME}",
                },
                "body": {
@@ -154,7 +154,7 @@ def log_insert_cromwell_instance(event, context):
     query = (
         "MERGE (node:Job {instanceName:" + f"\"{instance_name}\"" + "}) " +
         "ON CREATE SET " +
-             "node.labels = [\"Job\"] " +
+             "node.labels = [\"Job\", \"CromwellAttempt\", \"GcpInstance\"] " +
         "SET " +
             f"node.status = \"{status}\", " +
             f"node.instanceName = \"{instance_name}\", " +
