@@ -1519,9 +1519,9 @@ def get_triggers(function_name, env_vars):
                                     env_vars))
 
     # Track GATK workflow steps
-    triggers.append(MergeCromwellWorkflowStep(
-                                    function_name,
-                                    env_vars))
+    #triggers.append(MergeCromwellWorkflowStep(
+    #                                function_name,
+    #                                env_vars))
     triggers.append(AddWorkflowIdToCromwellWorkflow(
                                     function_name,
                                     env_vars))
