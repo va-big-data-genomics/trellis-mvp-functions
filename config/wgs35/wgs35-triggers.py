@@ -910,9 +910,13 @@ class RelateFromPersonalisToSample:
 
 
 # Track GATK workflow steps in database
+'''
 class MergeCromwellWorkflowStep:
 
     def __init__(self, function_name, env_vars):
+        '''
+            Triggered by: Create :CromwellAttempt
+        '''
 
         self.function_name = function_name
         self.env_vars = env_vars
@@ -985,11 +989,14 @@ class MergeCromwellWorkflowStep:
                  "RETURN node"
         )
         return query 
-
+'''
 
 class AddWorkflowIdToCromwellWorkflow:
 
     def __init__(self, function_name, env_vars):
+        '''
+            Triggered by: Blob created by GATK workflow.
+        '''
 
         self.function_name = function_name
         self.env_vars = env_vars
@@ -1078,7 +1085,7 @@ class RelateCromwellStepToWorkflow:
 
     def check_conditions(self, header, body, node):
         # TODO: Change these
-        reqd_header_labels = ['Create', 'Relationship', 'CromwellStep', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'CromwellStep', 'Node', 'Database', 'Result']
 
         if not node:
             return False
@@ -1115,7 +1122,7 @@ class RelateCromwellStepToWorkflow:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Merge", "Relationship", "CromwellStep", "CromwellWorkflow", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "CromwellStep", "CromwellWorkflow", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToWorkflow",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -1158,7 +1165,7 @@ class RelateCromwellStepToStep:
 
     def check_conditions(self, header, body, node):
         # TODO: Change these
-        reqd_header_labels = ['Merge', 'CromwellStep', 'Node', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'CromwellStep', 'Node', 'Database', 'Result']
 
         if not node:
             return False
@@ -1194,7 +1201,7 @@ class RelateCromwellStepToStep:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Merge", "Relationship", "CromwellStep", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "CromwellStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToStep",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -1243,7 +1250,7 @@ class CreateCromwellStepFromAttempt:
 
     def check_conditions(self, header, body, node):
         # TODO: Change these
-        reqd_header_labels = ['Set', 'CromwellAttempt', 'Node', 'Label', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'Job', 'CromwellAttempt', 'Node', 'Label', 'Database', 'Result']
 
         if not node:
             return False
@@ -1279,7 +1286,7 @@ class CreateCromwellStepFromAttempt:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Merge", "CromwellStep", "Relationship", "CromwellAttempt", "Cypher", "Query"],
+                              "labels": ["Create", "Node", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToAttempt",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -1321,7 +1328,7 @@ class RelateCromwellAttemptToPreviousAttempt:
 
     def check_conditions(self, header, body, node):
         # TODO: Change these
-        reqd_header_labels = ['Set', 'CromwellAttempt', 'Node', 'Label', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'CromwellAttempt', 'Job', 'Node', 'Label', 'Database', 'Result']
 
         if not node:
             return False
@@ -1356,7 +1363,7 @@ class RelateCromwellAttemptToPreviousAttempt:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Relate", "CromwellAttempt", "PreviousAttempt", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "CromwellAttempt", "PreviousAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellAttemptToPreviousAttempt",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -1400,7 +1407,7 @@ class DeleteCromwellStepHasAttemptRelationship:
 
     def check_conditions(self, header, body, node):
         # TODO: Change these
-        reqd_header_labels = ['Relate', 'CromwellAttempt', 'PreviousAttempt', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'Relationship', 'CromwellAttempt', 'PreviousAttempt', 'Database', 'Result']
 
         if not node:
             return False
@@ -1436,7 +1443,7 @@ class DeleteCromwellStepHasAttemptRelationship:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Delete", "CromwellStep", "Relationship", "CromwellAttempt", "Cypher", "Query"],
+                              "labels": ["Delete", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "DeleteCromwellStepHasAttemptRelationship",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -1522,9 +1529,6 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RelateCromwellStepToStep(
-                                    function_name,
-                                    env_vars))
-    triggers.append(SetCromwellAttemptLabel(
                                     function_name,
                                     env_vars))
     triggers.append(CreateCromwellStepFromAttempt(
