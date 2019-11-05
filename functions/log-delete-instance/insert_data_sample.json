@@ -1,0 +1,283 @@
+{
+  "protoPayload": {
+    "@type": "type.googleapis.com/google.cloud.audit.AuditLog",
+    "authenticationInfo": {
+      "principalEmail": "service-133012913968@genomics-api.google.com.iam.gserviceaccount.com"
+    },
+    "requestMetadata": {
+      "callerIp": "2002:a05:6600:fc7:0:0:0:0",
+      "callerSuppliedUserAgent": "google-api-go-client/0.5",
+      "requestAttributes": {
+        "time": "2019-07-08T22:21:00.037Z",
+        "auth": {}
+      },
+      "destinationAttributes": {}
+    },
+    "serviceName": "compute.googleapis.com",
+    "methodName": "v1.compute.instances.insert",
+    "authorizationInfo": [
+      {
+        "permission": "compute.instances.create",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/zones/us-west1-b/instances/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+          "type": "compute.instances"
+        }
+      },
+      {
+        "permission": "compute.disks.create",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/zones/us-west1-b/disks/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+          "type": "compute.disks"
+        }
+      },
+      {
+        "permission": "compute.disks.setLabels",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/zones/us-west1-b/disks/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+          "type": "compute.disks"
+        }
+      },
+      {
+        "permission": "compute.disks.create",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/zones/us-west1-b/disks/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f-1",
+          "type": "compute.disks"
+        }
+      },
+      {
+        "permission": "compute.disks.setLabels",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/zones/us-west1-b/disks/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f-1",
+          "type": "compute.disks"
+        }
+      },
+      {
+        "permission": "compute.subnetworks.use",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/regions/us-west1/subnetworks/default",
+          "type": "compute.subnetworks"
+        }
+      },
+      {
+        "permission": "compute.subnetworks.useExternalIp",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/regions/us-west1/subnetworks/default",
+          "type": "compute.subnetworks"
+        }
+      },
+      {
+        "permission": "compute.instances.setMetadata",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/zones/us-west1-b/instances/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+          "type": "compute.instances"
+        }
+      },
+      {
+        "permission": "compute.instances.setLabels",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/zones/us-west1-b/instances/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+          "type": "compute.instances"
+        }
+      },
+      {
+        "permission": "compute.instances.setServiceAccount",
+        "granted": true,
+        "resourceAttributes": {
+          "service": "compute",
+          "name": "projects/***REMOVED***-test/zones/us-west1-b/instances/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+          "type": "compute.instances"
+        }
+      }
+    ],
+    "resourceName": "projects/133012913968/zones/us-west1-b/instances/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+    "request": {
+      "serviceAccounts": [
+        {
+          "scopes": [
+            "https://www.googleapis.com/auth/bigquery",
+            "https://www.googleapis.com/auth/compute",
+            "https://www.googleapis.com/auth/devstorage.full_control",
+            "https://www.googleapis.com/auth/genomics",
+            "https://www.googleapis.com/auth/logging.write",
+            "https://www.googleapis.com/auth/monitoring.write"
+          ],
+          "email": "default"
+        }
+      ],
+      "name": "google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+      "disks": [
+        {
+          "boot": true,
+          "type": "PERSISTENT",
+          "autoDelete": true,
+          "initializeParams": {
+            "diskSizeGb": "20",
+            "labels": [
+              {
+                "value": "v0-3-2",
+                "key": "dsub-version"
+              },
+              {
+                "key": "goog-pipelines-worker",
+                "value": "true"
+              },
+              {
+                "value": "gatk-5-dol--trellis--190708-215555-39",
+                "key": "job-id"
+              },
+              {
+                "key": "job-name",
+                "value": "gatk-5-dollar"
+              },
+              {
+                "value": "ship5142639",
+                "key": "sample"
+              },
+              {
+                "value": "190708-215554-090-5f9cd7a3",
+                "key": "trellis-id"
+              },
+              {
+                "value": "trellis",
+                "key": "user-id"
+              }
+            ],
+            "sourceImage": "projects/cos-cloud/global/images/family/cos-stable"
+          }
+        },
+        {
+          "autoDelete": true,
+          "initializeParams": {
+            "diskSizeGb": "1000",
+            "labels": [
+              {
+                "key": "dsub-version",
+                "value": "v0-3-2"
+              },
+              {
+                "value": "true",
+                "key": "goog-pipelines-worker"
+              },
+              {
+                "value": "gatk-5-dol--trellis--190708-215555-39",
+                "key": "job-id"
+              },
+              {
+                "value": "gatk-5-dollar",
+                "key": "job-name"
+              },
+              {
+                "key": "sample",
+                "value": "ship5142639"
+              },
+              {
+                "value": "190708-215554-090-5f9cd7a3",
+                "key": "trellis-id"
+              },
+              {
+                "key": "user-id",
+                "value": "trellis"
+              }
+            ],
+            "sourceImage": "projects/cloud-genomics-pipelines/global/images/blank",
+            "diskType": "zones/us-west1-b/diskTypes/pd-standard"
+          },
+          "deviceName": "datadisk",
+          "type": "PERSISTENT"
+        }
+      ],
+      "@type": "type.googleapis.com/compute.instances.insert",
+      "machineType": "zones/us-west1-b/machineTypes/custom-1-6656",
+      "scheduling": {
+        "automaticRestart": false
+      },
+      "labels": [
+        {
+          "value": "v0-3-2",
+          "key": "dsub-version"
+        },
+        {
+          "key": "goog-pipelines-worker",
+          "value": "true"
+        },
+        {
+          "value": "gatk-5-dol--trellis--190708-215555-39",
+          "key": "job-id"
+        },
+        {
+          "key": "job-name",
+          "value": "gatk-5-dollar"
+        },
+        {
+          "value": "ship5142639",
+          "key": "sample"
+        },
+        {
+          "key": "trellis-id",
+          "value": "190708-215554-090-5f9cd7a3"
+        },
+        {
+          "key": "user-id",
+          "value": "trellis"
+        }
+      ]
+    },
+    "response": {
+      "@type": "type.googleapis.com/operation",
+      "startTime": "2019-07-08T15:20:59.777-07:00",
+      "progress": "0",
+      "zone": "https://www.googleapis.com/compute/v1/projects/***REMOVED***-test/zones/us-west1-b",
+      "insertTime": "2019-07-08T15:20:59.775-07:00",
+      "user": "service-133012913968@genomics-api.google.com.iam.gserviceaccount.com",
+      "selfLink": "https://www.googleapis.com/compute/v1/projects/***REMOVED***-test/zones/us-west1-b/operations/operation-1562624458247-58d32dbc04eca-902a33b3-4dff83a1",
+      "targetLink": "https://www.googleapis.com/compute/v1/projects/***REMOVED***-test/zones/us-west1-b/instances/google-pipelines-worker-c50d685a98458d37ab65edc39efdb69f",
+      "operationType": "insert",
+      "selfLinkWithId": "https://www.googleapis.com/compute/v1/projects/***REMOVED***-test/zones/us-west1-b/operations/1773258966408527652",
+      "status": "RUNNING",
+      "name": "operation-1562624458247-58d32dbc04eca-902a33b3-4dff83a1",
+      "targetId": "1012478124934201125",
+      "id": "1773258966408527652"
+    },
+    "resourceLocation": {
+      "currentLocations": [
+        "us-west1-b"
+      ]
+    }
+  },
+  "insertId": "-oos74qe15rf8",
+  "resource": {
+    "type": "gce_instance",
+    "labels": {
+      "instance_id": "1012478124934201125",
+      "zone": "us-west1-b",
+      "project_id": "***REMOVED***-test"
+    }
+  },
+  "timestamp": "2019-07-08T22:20:58.306Z",
+  "severity": "NOTICE",
+  "logName": "projects/***REMOVED***-test/logs/cloudaudit.googleapis.com%2Factivity",
+  "operation": {
+    "id": "operation-1562624458247-58d32dbc04eca-902a33b3-4dff83a1",
+    "producer": "type.googleapis.com",
+    "first": true
+  },
+  "receiveTimestamp": "2019-07-08T22:21:00.082937200Z"
+}
