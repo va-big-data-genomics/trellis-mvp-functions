@@ -4,5 +4,6 @@ steps:
          'logging',
          'sinks',
          'create',
-         'instances-delete-pipelines-worker',
-         'pubsub.googleapis.com/projects/gbsc-gcp-project-mvp-dev/topics/wgs35-update-job-status']
+         'wgs35-delete-instance',
+         'pubsub.googleapis.com/projects/gbsc-gcp-project-mvp-dev/topics/wgs35-log-delete-instance',
+         '--log-filter=\'resource.type=\"gce_instance\"\'']
