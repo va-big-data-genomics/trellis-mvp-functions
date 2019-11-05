@@ -918,7 +918,7 @@ class MergeCromwellWorkflowStep:
         self.env_vars = env_vars
 
     def check_conditions(self, header, body, node):
-        reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'Job', 'CromwellAttempt', 'Node', 'Database', 'Result']
 
         if not node:
             return False
@@ -954,7 +954,7 @@ class MergeCromwellWorkflowStep:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Merge", "CromwellStep", "Node", "Cypher", "Query"],
+                              "labels": ["Create", "CromwellStep", "Node", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "MergeCromwellWorkflowStep",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -982,77 +982,6 @@ class MergeCromwellWorkflowStep:
                      "node.nodeIteration=\"initial\" " +
                  "ON MERGE SET " +
                      "node.nodeIteration=\"merged\" " +
-                 "RETURN node"
-        )
-        return query 
-
-
-class SetCromwellAttemptLabel:
-    
-
-    def __init__(self, function_name, env_vars):
-
-            self.function_name = function_name
-            self.env_vars = env_vars
-
-
-    def check_conditions(self, header, body, node):
-        reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
-
-        if not node:
-            return False
-
-        conditions = [
-            # Check that message has appropriate headers
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
-            # Check that retry count has not been met/exceeded
-            (not header.get('retry-count') 
-             or header.get('retry-count') < MAX_RETRIES),
-            # Check node-specific information
-            node.get('cromwellWorkflowId'),  # Validate this is Cromwell step
-            node.get('wdlCallAlias'),        # Get step name
-            node.get('wdlTaskName'),
-            node.get('status') == 'RUNNING',     # Only merge when attempt starts
-            not 'CromwellAttempt' in node.get('labels')
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True
-
-
-    def compose_message(self, header, body, node):
-        topic = self.env_vars['DB_QUERY_TOPIC']
-
-        query = self._create_query(node)
-
-        # Requeue original message, updating sentFrom property
-        message = {
-                   "header": {
-                              "resource": "query",
-                              "method": "UPDATE",
-                              "labels": ["Set", "CromwellAttempt", "Node", "Label", "Cypher", "Query"],
-                              "sentFrom": self.function_name,
-                              "trigger": "SetCromwellAttemptLabel",
-                              "publishTo": self.function_name   # Requeue message if fails initially
-                   },
-                   "body": {
-                            "cypher": query,
-                            "result-mode": "stats",              # Allow message to be requeued
-                   }
-        }
-        return([(topic, message)])
-
-
-    def _create_query(self, node):
-        instance_name = node['instanceName']
-        query = (
-                 "MATCH (node:Job) " +
-                f"WHERE node.instanceName = \"{instance_name}\" " +
-                 "SET node :CromwellAttempt " +
                  "RETURN node"
         )
         return query 
@@ -1149,7 +1078,7 @@ class RelateCromwellStepToWorkflow:
 
     def check_conditions(self, header, body, node):
         # TODO: Change these
-        reqd_header_labels = ['Merge', 'Relationship', 'CromwellStep', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'Relationship', 'CromwellStep', 'Database', 'Result']
 
         if not node:
             return False
