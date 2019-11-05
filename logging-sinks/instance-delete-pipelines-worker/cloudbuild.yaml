@@ -3,6 +3,12 @@ steps:
   args: [
          'logging',
          'sinks',
+         'delete',
+         'wgs35-delete-instance']
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'logging',
+         'sinks',
          'create',
          'wgs35-delete-instance',
          'pubsub.googleapis.com/projects/gbsc-gcp-project-mvp-dev/topics/wgs35-log-delete-instance',
