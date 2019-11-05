@@ -1,10 +1,10 @@
 steps:
-- name: 'gcr.io/cloud-builders/gcloud'
-  args: [
-         'logging',
-         'sinks',
-         'delete',
-         'wgs35-delete-instance']
+#- name: 'gcr.io/cloud-builders/gcloud'
+#  args: [
+#         'logging',
+#         'sinks',
+#         'delete',
+#         'wgs35-delete-instance']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'logging',
