@@ -1250,7 +1250,7 @@ class CreateCromwellStepFromAttempt:
 
     def check_conditions(self, header, body, node):
         # TODO: Change these
-        reqd_header_labels = ['Create', 'Job', 'CromwellAttempt', 'Node', 'Label', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'Job', 'CromwellAttempt', 'Node', 'Database', 'Result']
 
         if not node:
             return False
