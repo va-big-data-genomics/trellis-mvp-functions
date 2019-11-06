@@ -155,6 +155,7 @@ def log_insert_cromwell_instance(event, context):
         "MERGE (node:Job {instanceName:" + f"\"{instance_name}\"" + "}) " +
         "ON CREATE SET " +
              "node.labels = [\"Job\", \"CromwellAttempt\", \"GcpInstance\"] " +
+             "node:CromwellAttempt:GcpInstance "
         "SET " +
             f"node.status = \"{status}\", " +
             f"node.instanceName = \"{instance_name}\", " +

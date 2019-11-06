@@ -104,6 +104,7 @@ class InsertTrellisOperation:
             "MERGE (node:Job {taskId:" + f"\"{self.task_id}\"" + "}) " +
             "ON CREATE SET " +
                  "node.labels = [\"Job\", \"GcpInstance\"] " +
+                 "node:GcpInstance " +
             "SET " +
                 f"node.status = \"{self.status}\", " +
                 f"node.instanceName = \"{self.name}\", " +
