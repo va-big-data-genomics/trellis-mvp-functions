@@ -1288,7 +1288,7 @@ class CreateCromwellStepFromAttempt:
                               "method": "POST",
                               "labels": ["Create", "Node", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateCromwellStepToAttempt",
+                              "trigger": "CreateCromwellStepFromAttempt",
                               "publishTo": self.function_name   # Requeue message if fails initially
                    },
                    "body": {
