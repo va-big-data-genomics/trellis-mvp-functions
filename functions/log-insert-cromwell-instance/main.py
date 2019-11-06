@@ -38,7 +38,7 @@ def format_pubsub_message(query, publish_to=None):
     message = {
                "header": {
                           "resource": "query",
-                          "method": "Create",
+                          "method": "POST",
                           "labels": ['Create', 'Job', 'CromwellAttempt', 'Node', 'Query', 'Cypher'], 
                           "sentFrom": f"{FUNCTION_NAME}",
                },
