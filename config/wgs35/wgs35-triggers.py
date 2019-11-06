@@ -1140,13 +1140,13 @@ class RelateCromwellStepToWorkflow:
         wdl_call_alias = node['wdlCallAlias']
         query = (
                  f"MATCH " +
-                    "(w:CromwellWorkflow {{ " +
+                    "(w:CromwellWorkflow { " +
                         "cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
-                    "}}), " +
-                    "(s:CromwellStep {{ " +
+                    "}), " +
+                    "(s:CromwellStep { " +
                         f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                         f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                    "}}) " +
+                    "}) " +
                  "MERGE (w)-[:LED_TO]->(s)"
         )
         return query 
@@ -1219,16 +1219,16 @@ class RelateCromwellStepToStep:
         wdl_call_alias = node['wdlCallAlias']
         query = (
                  f"MATCH " +
-                    "(workflow:CromwellWorkflow {{ " +
+                    "(workflow:CromwellWorkflow { " +
                         "cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
-                    "}}), " +
-                    "(step:CromwellStep {{ " +
+                    "}), " +
+                    "(step:CromwellStep { " +
                         f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
-                    "}}), " +
-                    "(newStep:CromwellStep {{ " +
+                    "}), " +
+                    "(newStep:CromwellStep { " +
                         f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                         f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                    "}}) " +
+                    "}) " +
                  "WITH workflow, step " +
                  "MATCH (workflow)-[:LED_TO]->(step) " +
                  "WHERE NOT (step)-[:LED_TO]->(:CromwellStep) " +
@@ -1309,7 +1309,7 @@ class CreateCromwellStepFromAttempt:
                  "MATCH (attempt:Job { " +
                     f"instanceName: \"{instance_name}\" }}) " +
                   "MERGE (step:CromwellStep { " +
-                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
                   "})-[:HAS_ATTEMPT]->(attempt) " +
                   "RETURN step"
@@ -1385,7 +1385,7 @@ class RelateCromwellAttemptToPreviousAttempt:
         wdl_call_alias = node['wdlCallAlias']
         query = (
                  "MATCH (step:CromwellStep {{ " +
-                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                         f"wdlCallAlias: \"{wdl_call_alias}\" " +
                     "}})-[:HAS_ATTEMPT]->(oldAttempt:CromwellAttempt), " +
                    f"(newAttempt:Job {{ instanceName: \"{instance_name}\" }}) " +
@@ -1464,12 +1464,12 @@ class DeleteCromwellStepHasAttemptRelationship:
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
         query = (
-                  "MATCH (step:CromwellStep {{ " +
-                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                  "MATCH (step:CromwellStep { " +
+                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                  "}})-[r:HAS_ATTEMPT]->(attempt: Job {{ " +
+                  "})-[r:HAS_ATTEMPT]->(attempt: Job { " +
                     f"instanceName: \"{instance_name}\" " +
-                  "}}) " +
+                  "}) " +
                   "DELETE r " +
                   "RETURN attempt"
         )
