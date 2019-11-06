@@ -1306,11 +1306,12 @@ class CreateCromwellStepFromAttempt:
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
         query = (
-                 f"MATCH (attempt:Job {{ instanceName: \"{instance_name}\" }}) " +
-                  "MERGE (step:CromwellStep {{ " +
+                 f"MATCH (attempt:Job { " +
+                    f"instanceName: \"{instance_name}\" }}) " +
+                  "MERGE (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                  "}})-[:HAS_ATTEMPT]->(attempt) " +
+                  "})-[:HAS_ATTEMPT]->(attempt) " +
                   "RETURN step"
         )
         return query 
