@@ -148,7 +148,7 @@ def format_query(db_entry, dry_run=False):
     #         f"CREATE (node:{labels_str} " +
     #         f"{{ {entry_string}, nodeCreated: timestamp() }}) " +
     #          "RETURN node")
-    query = (f"MERGE (node:Job:{labels_str} {{ taskId:\"{db_entry['taskId']}\" }}) " +
+    query = (f"MERGE (node:Job:{labels_str} {{ trellisTaskId:\"{db_entry['trellisTaskId']}\" }}) " +
               "ON CREATE SET " +
                 f"{entry_string}, " +
                  "node.nodeCreated= timestamp() " +
