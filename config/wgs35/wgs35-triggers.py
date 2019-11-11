@@ -534,7 +534,7 @@ class RelateTrellisOutputToJob:
         return query
 
 
-class RelatedInputToJob:
+class RelateTrellisInputToJob:
 
     def __init__(self, function_name, env_vars):
 
@@ -1500,7 +1500,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateTrellisOutputToJob(
                                     function_name,
                                     env_vars))
-    triggers.append(RelatedInputToJob(
+    triggers.append(RelateTrellisInputToJob(
                                     function_name,
                                     env_vars))
     triggers.append(RunDstatWhenJobStopped(
