@@ -468,7 +468,7 @@ class RequeueRelationshipQuery:
         return([(topic, message)])   
 
 
-class RelateOutputToJob:
+class RelateTrellisOutputToJob:
 
     def __init__(self, function_name, env_vars):
 
@@ -484,7 +484,7 @@ class RelateOutputToJob:
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             node.get("nodeIteration") == "initial",
-            node.get("taskId"),
+            node.get("trellisTaskId"),
             node.get("id")
         ]
 
@@ -499,7 +499,7 @@ class RelateOutputToJob:
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         node_id = node['id']
-        task_id = node['taskId']
+        task_id = node['trellisTaskId']
 
         query = self._create_query(node_id, task_id)
 
@@ -524,8 +524,8 @@ class RelateOutputToJob:
 
     def _create_query(self, node_id, task_id):
         query = (
-                 f"MATCH (j:Job {{ taskId:\"{task_id}\" }} ), " +
-                 f"(node:Blob {{taskId:\"{task_id}\", " +
+                 f"MATCH (j:Job {{ trellisTaskId:\"{task_id}\" }} ), " +
+                 f"(node:Blob {{trellisTaskId:\"{task_id}\", " +
                               f"id:\"{node_id}\" }}) " +
                   "WHERE NOT EXISTS(j.duplicate) " +
                   "OR NOT j.duplicate=True " +
@@ -566,7 +566,8 @@ class RelatedInputToJob:
         messages = []
         for input_id in node["inputIds"]:
             # Create a separate message for each related node
-            query = self._create_query(node, input_id)
+            trellis_task_id = node['trellisTaskId']
+            query = self._create_query(trellis_task_id, input_id)
 
             # Requeue original message, updating sentFrom property
             message = {
@@ -589,10 +590,10 @@ class RelatedInputToJob:
             messages.append(result)
         return(messages)  
 
-    def _create_query(self, job_node, input_id):
+    def _create_query(self, trellis_task_id, input_id):
         query = (
                  f"MATCH (input:Blob {{ id:\"{input_id}\" }}), " +
-                 f"(job:Job {{ taskId:\"{job_node['taskId']}\"  }}) " +
+                 f"(job:Job {{ trellisTaskId:\"{trellis_task_id}\"  }}) " +
                  f"CREATE (input)-[:INPUT_TO]->(job) " +
                   "RETURN job AS node")
         return query
@@ -1496,7 +1497,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RequeueRelationshipQuery(
                                     function_name,
                                     env_vars))
-    triggers.append(RelateOutputToJob(
+    triggers.append(RelateTrellisOutputToJob(
                                     function_name,
                                     env_vars))
     triggers.append(RelatedInputToJob(
