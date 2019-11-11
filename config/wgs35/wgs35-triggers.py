@@ -1019,7 +1019,6 @@ class AddWorkflowIdToCromwellWorkflow:
             node.get('trellisTaskId'),        # Use to match Cromwell master
             node.get('wdlCallAlias') == "ScatterIntervalList",
             node.get('basename') == "1scattered.interval_list",
-            "CromwellAttempt" in node.get('labels')
         ]
 
         for condition in conditions:
@@ -1141,7 +1140,7 @@ class RelateCromwellStepToWorkflow:
         query = (
                  f"MATCH " +
                     "(w:CromwellWorkflow { " +
-                        "cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
                     "}), " +
                     "(s:CromwellStep { " +
                         f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
@@ -1152,7 +1151,7 @@ class RelateCromwellStepToWorkflow:
         return query 
 
 
-class RelateCromwellStepToStep:
+class RelateCromwellStepToPreviousStep:
 
 
     def __init__(self, function_name, env_vars):
@@ -1203,7 +1202,7 @@ class RelateCromwellStepToStep:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "CromwellStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateCromwellStepToStep",
+                              "trigger": "RelateCromwellStepToPreviousStep",
                               "publishTo": self.function_name   # Requeue message if fails initially
                    },
                    "body": {
