@@ -208,7 +208,7 @@ def launch_gatk_5_dollar(event, context):
                 },
                 "preemptible": False,
                 "dryRun": dry_run,
-                "taskId": task_id,
+                "trellisTaskId": task_id,
                 "sample": sample,
                 "plate": plate,
                 "name": task_name,
