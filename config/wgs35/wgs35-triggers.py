@@ -1528,7 +1528,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateCromwellStepToWorkflow(
                                     function_name,
                                     env_vars))
-    triggers.append(RelateCromwellStepToStep(
+    triggers.append(RelateCromwellStepToPreviousStep(
                                     function_name,
                                     env_vars))
     triggers.append(CreateCromwellStepFromAttempt(
