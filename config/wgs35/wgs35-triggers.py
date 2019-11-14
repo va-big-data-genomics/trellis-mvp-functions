@@ -1226,7 +1226,7 @@ class RelateCromwellWorkflowToStep:
                         f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
                     "}), " +
                     "(step:CromwellStep { " +
-                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
                     "}) " +
                   "WITH COLLECT(step) AS steps, min(step.startTimeEpoch) AS minTime " +
                   "UNWIND steps AS step " +
