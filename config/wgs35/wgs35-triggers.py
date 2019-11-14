@@ -1040,7 +1040,7 @@ class AddWorkflowIdToCromwellWorkflow:
                    "header": {
                               "resource": "query",
                               "method": "UPDATE",
-                              "labels": ["Update", "CromwellWorkflow", "Node", "Cypher", "Query"],
+                              "labels": ["Update", "CromwellWorkflow", "CromwellWorkflowId","Node", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "AddWorkflowIdToCromwellWorkflow",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -1067,6 +1067,7 @@ class AddWorkflowIdToCromwellWorkflow:
         return query 
 
 
+"""
 class RelateCromwellStepToWorkflow:
 
 
@@ -1149,7 +1150,90 @@ class RelateCromwellStepToWorkflow:
                     "}) " +
                  "MERGE (w)-[:LED_TO]->(s)"
         )
-        return query 
+        return query
+"""
+
+class RelateCromwellWorkflowToStep:
+   
+
+    def __init__(self, function_name, env_vars):
+        '''Relate first Cromwell step to parent workflow.
+
+        This trigger is activated only after Trellis has run a query 
+        trying to relate the new step to the most recent step in the 
+        workflow and gotten a null result. This indicates it is 
+        the first step in the workflow and should be related
+        '''
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ["Update", "CromwellWorkflow", "CromwellWorkflowId", "Node", "Database", "Result"]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count')
+                or header.get('retry-count') < MAX_RETRIES),
+            # Only apply to :CromwellWorkflow nodes with ID
+            'CromwellWorkflow' in node.get('labels'),
+            node.get('cromwellWorkflowId'),
+            # Check that workflow has not already been linked to steps
+            (not node.get('cromwellStepConnected') 
+                or node.get('cromwellStepConnected') != True)
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        query = self._create_query(node)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Create", "Relationship", "CromwellWorkflow", "CromwellStep", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCromwellWorkflowToStep",
+                              "publishTo": self.function_name   # Requeue message if fails initially
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "stats",
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, node):
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        query = (
+                 f"MATCH " +
+                    "(workflow:CromwellWorkflow { " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                    "}), " +
+                    "(step:CromwellStep { " +
+                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
+                    "}) " +
+                  "WITH COLLECT(step) AS steps, min(step.startTimeEpoch) AS minTime " +
+                  "UNWIND steps AS step " +
+                  "WHERE step.startTimeEpoch = minTime " +
+                  "MERGE (workflow)-[:LED_TO]->(step)"
+        )
+        return query
 
 
 class RelateCromwellStepToPreviousStep:
@@ -1214,7 +1298,8 @@ class RelateCromwellStepToPreviousStep:
         return([(topic, message)])
 
 
-    def _create_query(self, node):
+    def __create_query(self, node):
+        """DEPRECATED"""
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
         query = (
@@ -1235,6 +1320,26 @@ class RelateCromwellStepToPreviousStep:
                  "MERGE (step)-[:LED_TO]->(newStep)" 
         )
         return query 
+
+
+    def _create_query(self, node):
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+
+        query = (
+                 "MATCH (previousStep:CromwellStep { " +
+                            f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                        "}), " +
+                        "(currentStep:CromwellStep { " +
+                            f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
+                            f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                        "}) " +
+                f"WHERE NOT previousStep.wdlCallAlias = \"{wdl_call_alias}\" " +
+                 "WITH COLLECT(previousSteps) AS steps, min(previousSteps.startTimeEpoch) AS minTime " +
+                 "UNWIND steps AS step " +
+                 "WHERE step.startTimeEpoch = minTime " +
+                 "MERGE (step)-[:LED_TO]->(currentStep)")
+        return query
 
 
 class CreateCromwellStepFromAttempt:
@@ -1265,7 +1370,8 @@ class CreateCromwellStepFromAttempt:
             'CromwellAttempt' in node.get('labels'),
             node.get('cromwellWorkflowId'),
             node.get('wdlCallAlias'),
-            node.get('instanceName')
+            node.get('instanceName'),
+            node.get('startTimeEpoch')
         ]
 
         for condition in conditions:
@@ -1305,13 +1411,16 @@ class CreateCromwellStepFromAttempt:
         instance_name = node['instanceName']
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
+        start_time_epoch = node['startTimeEpoch']
         query = (
                  "MATCH (attempt:Job { " +
                     f"instanceName: \"{instance_name}\" }}) " +
                   "MERGE (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                  "})-[:HAS_ATTEMPT]->(attempt) " +
+                  "}) " +
+                 f"ON CREATE SET step.startTimeEpoch = {start_time_epoch} " +
+                  "CREATE (step)-[:HAS_ATTEMPT]->(attempt) " +
                   "RETURN step"
         )
         return query 
@@ -1519,16 +1628,19 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
 
-    # Track GATK workflow steps
+    ### Track GATK workflow steps
     #triggers.append(MergeCromwellWorkflowStep(
     #                                function_name,
     #                                env_vars))
     triggers.append(AddWorkflowIdToCromwellWorkflow(
                                     function_name,
                                     env_vars))
-    triggers.append(RelateCromwellStepToWorkflow(
+    #triggers.append(RelateCromwellStepToWorkflow(
+    #                                function_name,
+    #                                env_vars))
+    triggers.append(RelateCromwellWorkflowToStep(
                                     function_name,
-                                    env_vars))
+                                    env_Vars))
     triggers.append(RelateCromwellStepToPreviousStep(
                                     function_name,
                                     env_vars))
