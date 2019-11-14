@@ -1420,7 +1420,7 @@ class CreateCromwellStepFromAttempt:
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
                   "}) " +
                  f"ON CREATE SET step.startTimeEpoch = {start_time_epoch} " +
-                  "CREATE (step)-[:HAS_ATTEMPT]->(attempt) " +
+                  "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
                   "RETURN step"
         )
         return query 
