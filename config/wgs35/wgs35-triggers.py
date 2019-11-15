@@ -1212,7 +1212,9 @@ class RelateCromwellWorkflowToStep:
                    },
                    "body": {
                             "cypher": query,
-                            "result-mode": "stats",
+                            "result-mode": "data",              # Allow message to be requeued
+                            "result-structure": "list",
+                            "result-split": "True"
                    }
         }
         return([(topic, message)])
@@ -1232,7 +1234,8 @@ class RelateCromwellWorkflowToStep:
                   "UNWIND steps AS step " +
                   "MATCH (step) " +
                   "WHERE step.startTimeEpoch = minTime " +
-                  "MERGE (workflow)-[:LED_TO]->(step)"
+                  "MERGE (workflow)-[:LED_TO]->(step) " +
+                  "RETURN workflow"
         )
         return query
 
@@ -1293,7 +1296,9 @@ class RelateCromwellStepToPreviousStep:
                    },
                    "body": {
                             "cypher": query,
-                            "result-mode": "stats",
+                            "result-mode": "data",              # Allow message to be requeued
+                            "result-structure": "list",
+                            "result-split": "True"
                    }
         }
         return([(topic, message)])
@@ -1318,7 +1323,8 @@ class RelateCromwellStepToPreviousStep:
                  "WITH workflow, step " +
                  "MATCH (workflow)-[:LED_TO]->(step) " +
                  "WHERE NOT (step)-[:LED_TO]->(:CromwellStep) " +
-                 "MERGE (step)-[:LED_TO]->(newStep)" 
+                 "MERGE (step)-[:LED_TO]->(newStep) " +
+                 "RETURN newStep"
         )
         return query 
 
