@@ -1477,11 +1477,13 @@ class RelateCromwellAttemptToPreviousAttempt:
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
         query = (
-                 "MATCH (step:CromwellStep {{ " +
+                 "MATCH (step:CromwellStep { " +
                         f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                         f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                    "}})-[:HAS_ATTEMPT]->(oldAttempt:CromwellAttempt), " +
-                   f"(newAttempt:Job {{ instanceName: \"{instance_name}\" }}) " +
+                    "})-[:HAS_ATTEMPT]->(oldAttempt:CromwellAttempt), " +
+                    "(newAttempt:Job { " +
+                        f"instanceName: \"{instance_name}\" " +
+                    "}) " +
                  "MERGE (newAttempt)-[:AFTER]->(oldAttempt) "
                  "RETURN oldAttempt"
         )
