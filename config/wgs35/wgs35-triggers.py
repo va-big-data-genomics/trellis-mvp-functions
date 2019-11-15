@@ -1484,7 +1484,7 @@ class RelateCromwellAttemptToPreviousAttempt:
                     "(newAttempt:Job { " +
                         f"instanceName: \"{instance_name}\" " +
                     "}) " +
-                 "WHERE oldAttempt.instanceName<>\"{instance_name}\" " +
+                f"WHERE oldAttempt.instanceName<>\"{instance_name}\" " +
                  "MERGE (newAttempt)-[:AFTER]->(oldAttempt) " +
                  "RETURN oldAttempt"
         )
