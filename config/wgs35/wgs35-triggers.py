@@ -1289,7 +1289,7 @@ class RelateCromwellStepToPreviousStep:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Create", "Relationship", "CromwellStep", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "CromwellStep", "PreviousStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToPreviousStep",
                               "publishTo": self.function_name   # Requeue message if fails initially
@@ -1302,31 +1302,6 @@ class RelateCromwellStepToPreviousStep:
                    }
         }
         return([(topic, message)])
-
-
-    def __create_query(self, node):
-        """DEPRECATED"""
-        cromwell_workflow_id = node['cromwellWorkflowId']
-        wdl_call_alias = node['wdlCallAlias']
-        query = (
-                 f"MATCH " +
-                    "(workflow:CromwellWorkflow { " +
-                        "cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
-                    "}), " +
-                    "(step:CromwellStep { " +
-                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
-                    "}), " +
-                    "(newStep:CromwellStep { " +
-                        f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
-                        f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                    "}) " +
-                 "WITH workflow, step " +
-                 "MATCH (workflow)-[:LED_TO]->(step) " +
-                 "WHERE NOT (step)-[:LED_TO]->(:CromwellStep) " +
-                 "MERGE (step)-[:LED_TO]->(newStep) " +
-                 "RETURN newStep"
-        )
-        return query 
 
 
     def _create_query(self, node):
@@ -1345,7 +1320,8 @@ class RelateCromwellStepToPreviousStep:
                  "WITH COLLECT(previousSteps) AS steps, min(previousSteps.startTimeEpoch) AS minTime " +
                  "UNWIND steps AS step " +
                  "WHERE step.startTimeEpoch = minTime " +
-                 "MERGE (step)-[:LED_TO]->(currentStep)")
+                 "MERGE (step)-[:LED_TO]->(currentStep) " +
+                 "RETURN currentStep")
         return query
 
 
@@ -1422,11 +1398,11 @@ class CreateCromwellStepFromAttempt:
         query = (
                  "MATCH (attempt:Job { " +
                     f"instanceName: \"{instance_name}\" }}) " +
-                  "MERGE (step:CromwellStep { " +
+                 "MERGE (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
                   "}) " +
-                 f"ON CREATE SET step.startTimeEpoch = {start_time_epoch} " +
+                f"ON CREATE SET step.startTimeEpoch = {start_time_epoch} " +
                   "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
                   "RETURN step"
         )
@@ -1445,7 +1421,7 @@ class RelateCromwellAttemptToPreviousAttempt:
 
     def check_conditions(self, header, body, node):
         # TODO: Change these
-        reqd_header_labels = ['Create', 'CromwellAttempt', 'Job', 'Node', 'Label', 'Database', 'Result']
+        reqd_header_labels = ['Create', 'Job', 'CromwellAttempt', 'Node', 'Database', 'Result']
 
         if not node:
             return False
@@ -1470,6 +1446,7 @@ class RelateCromwellAttemptToPreviousAttempt:
                 return False
         return True
     
+
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
