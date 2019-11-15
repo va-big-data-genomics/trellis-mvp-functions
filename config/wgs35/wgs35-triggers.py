@@ -1228,9 +1228,9 @@ class RelateCromwellWorkflowToStep:
                     "(step:CromwellStep { " +
                         f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
                     "}) " +
-                  "WITH COLLECT(step) AS steps, min(step.startTimeEpoch) AS minTime " +
+                  "WITH workflow, COLLECT(step) AS steps, min(step.startTimeEpoch) AS minTime " +
                   "UNWIND steps AS step " +
-                  "MATCH step " +
+                  "MATCH (step) " +
                   "WHERE step.startTimeEpoch = minTime " +
                   "MERGE (workflow)-[:LED_TO]->(step)"
         )
