@@ -1230,6 +1230,7 @@ class RelateCromwellWorkflowToStep:
                     "}) " +
                   "WITH COLLECT(step) AS steps, min(step.startTimeEpoch) AS minTime " +
                   "UNWIND steps AS step " +
+                  "MATCH step " +
                   "WHERE step.startTimeEpoch = minTime " +
                   "MERGE (workflow)-[:LED_TO]->(step)"
         )
