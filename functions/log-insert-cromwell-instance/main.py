@@ -120,7 +120,9 @@ def log_insert_cromwell_instance(event, context):
         
         # Get Cromwell specific metadata values
         if key == 'cromwell-workflow-id':
-            cromwell_fields['cromwellWorkflowId'] = value
+            # Chop 'cromwell-' prefix for consistency
+            cromwell_id = value.split('cromwell-')[1]
+            cromwell_fields['cromwellWorkflowId'] = cromwell_id
         elif key == 'goog-pipelines-worker':
             cromwell_fields['googPipelinesWorker'] = value
         elif key == 'wdl-call-alias':
