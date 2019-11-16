@@ -1317,10 +1317,10 @@ class RelateCromwellStepToPreviousStep:
                             f"wdlCallAlias: \"{wdl_call_alias}\" " +
                         "}) " +
                 f"WHERE NOT previousStep.wdlCallAlias = \"{wdl_call_alias}\" " +
-                 "WITH COLLECT(previousStep) AS steps, min(previousStep.startTimeEpoch) AS minTime " +
+                 "WITH currentStep, COLLECT(previousStep) AS steps, max(previousStep.startTimeEpoch) AS maxTime " +
                  "UNWIND steps AS step " +
                  "MATCH (step) " +
-                 "WHERE step.startTimeEpoch = minTime " +
+                 "WHERE step.startTimeEpoch = maxTime " +
                  "MERGE (step)-[:LED_TO]->(currentStep) " +
                  "RETURN currentStep AS node")
         return query
