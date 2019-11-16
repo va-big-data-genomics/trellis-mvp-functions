@@ -1512,9 +1512,9 @@ class RelateCromwellAttemptToPreviousAttempt:
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
                  "}), " +
                  "(currentAttempt:Job { " +
-                    f"instanceName: \"{instanceName}\" " +
+                    f"instanceName: \"{instance_name}\" " +
                  "}) " +
-                f"WHERE NOT previousStep.instanceName = \"{instanceName}\" " +
+                f"WHERE NOT previousStep.instanceName = \"{instance_name}\" " +
                  "AND previousAttempt.startTimeEpoch < currentAttempt.startTimeEpoch " +
                  "WITH currentAttempt, COLLECT(previousAttempt) AS attempts, max(previousStep.startTimeEpoch) AS maxTime " +
                  "UNWIND attempts AS attempt " +
