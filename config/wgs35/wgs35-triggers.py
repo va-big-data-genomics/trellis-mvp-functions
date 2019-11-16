@@ -1404,7 +1404,10 @@ class CreateCromwellStepFromAttempt:
                   "}) " +
                  "ON CREATE SET " +
                     f"step.startTimeEpoch = {start_time_epoch}, " +
-                     "step.labels = [\"CromwellStep\"] " +
+                     "step.labels = [\"CromwellStep\"], " +
+                     "step.nodeIteration = \"initial\" " +
+                 "ON MATCH SET " +
+                     "setp.nodeIteration = \"merged\" " +
                  "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
                  "RETURN step AS node"
         )
