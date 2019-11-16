@@ -1235,7 +1235,7 @@ class RelateCromwellWorkflowToStep:
                   "MATCH (step) " +
                   "WHERE step.startTimeEpoch = minTime " +
                   "MERGE (workflow)-[:LED_TO]->(step) " +
-                  "RETURN workflow"
+                  "RETURN workflow AS node"
         )
         return query
 
@@ -1321,7 +1321,7 @@ class RelateCromwellStepToPreviousStep:
                  "UNWIND steps AS step " +
                  "WHERE step.startTimeEpoch = minTime " +
                  "MERGE (step)-[:LED_TO]->(currentStep) " +
-                 "RETURN currentStep")
+                 "RETURN currentStep AS node")
         return query
 
 
@@ -1402,9 +1402,11 @@ class CreateCromwellStepFromAttempt:
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
                   "}) " +
-                f"ON CREATE SET step.startTimeEpoch = {start_time_epoch} " +
-                  "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
-                  "RETURN step"
+                 "ON CREATE SET " +
+                    f"step.startTimeEpoch = {start_time_epoch} " +
+                     "step.labels = [\"CromwellStep\"] " +
+                 "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
+                 "RETURN step AS node"
         )
         return query 
 
@@ -1486,7 +1488,7 @@ class RelateCromwellAttemptToPreviousAttempt:
                     "}) " +
                 f"WHERE oldAttempt.instanceName<>\"{instance_name}\" " +
                  "MERGE (newAttempt)-[:AFTER]->(oldAttempt) " +
-                 "RETURN oldAttempt"
+                 "RETURN oldAttempt AS node"
         )
         return query 
 
@@ -1567,7 +1569,7 @@ class DeleteCromwellStepHasAttemptRelationship:
                     f"instanceName: \"{instance_name}\" " +
                   "}) " +
                   "DELETE r " +
-                  "RETURN attempt"
+                  "RETURN attempt AS node"
         )
         return query 
 
