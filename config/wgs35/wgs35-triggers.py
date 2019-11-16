@@ -1407,7 +1407,7 @@ class CreateCromwellStepFromAttempt:
                      "step.labels = [\"CromwellStep\"], " +
                      "step.nodeIteration = \"initial\" " +
                  "ON MATCH SET " +
-                     "setp.nodeIteration = \"merged\" " +
+                     "step.nodeIteration = \"merged\" " +
                  "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
                  "RETURN step AS node"
         )
