@@ -1565,18 +1565,18 @@ class DeleteCromwellStepHasAttemptRelationship:
 
 
     def _create_query(self, node):
-        instance_name = node['instanceName']
+        #instance_name = node['instanceName']
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
         query = (
                   "MATCH (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                  "})-[r:HAS_ATTEMPT]->(attempt: Job { " +
-                    f"instanceName: \"{instance_name}\" " +
-                  "}) " +
+                  "})-[:HAS_ATTEMPT]->(newAttempt:CromwellAttempt)-[r:AFTER]->(oldAttempt:CromwellAttempt) " +
+                  "WITH step, newAttempt, oldAttempt " +
+                  "MATCH (step)-[r:HAS_ATTEMPT]->(oldAttempt) " +
                   "DELETE r " +
-                  "RETURN attempt AS node"
+                  "RETURN newAttempt AS node"
         )
         return query 
 
