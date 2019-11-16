@@ -1481,7 +1481,7 @@ class RelateCromwellAttemptToPreviousAttempt:
         return([(topic, message)])
 
 
-    def _create_query(self, node):
+    def __create_query(self, node):
         instance_name = node['instanceName']
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
@@ -1494,10 +1494,35 @@ class RelateCromwellAttemptToPreviousAttempt:
                         f"instanceName: \"{instance_name}\" " +
                     "}) " +
                 f"WHERE oldAttempt.instanceName<>\"{instance_name}\" " +
+                 "AND oldAttempt.startTimeEpoch < newAttempt.startTimeEpoch"
                  "MERGE (newAttempt)-[:AFTER]->(oldAttempt) " +
                  "RETURN oldAttempt AS node"
         )
-        return query 
+        return query
+
+
+    def _create_query(self, node):
+        instance_name = node['instanceName']
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+
+        query = (
+                 "MATCH (previousAttempt:CromwellAttempt { " +
+                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
+                    f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                 "}), " +
+                 "(currentAttempt:Job { " +
+                    f"instanceName: \"{instanceName}\" " +
+                 "}) " +
+                f"WHERE NOT previousStep.instanceName = \"{instanceName}\" " +
+                 "AND previousAttempt.startTimeEpoch < currentAttempt.startTimeEpoch " +
+                 "WITH currentAttempt, COLLECT(previousAttempt) AS attempts, max(previousStep.startTimeEpoch) AS maxTime " +
+                 "UNWIND attempts AS attempt " +
+                 "MATCH (attempt) " +
+                 "WHERE attempt.startTimeEpoch = maxTime " +
+                 "MERGE (currentAttempt)-[:AFTER]->(previousAttempt) " +
+                 "RETURN currentAttempt AS node")
+        return query
 
 
 class DeleteCromwellStepHasAttemptRelationship:
