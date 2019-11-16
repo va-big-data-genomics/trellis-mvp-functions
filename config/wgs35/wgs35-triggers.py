@@ -1490,7 +1490,7 @@ class RelateCromwellAttemptToPreviousAttempt:
                         f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                         f"wdlCallAlias: \"{wdl_call_alias}\" " +
                     "})-[:HAS_ATTEMPT]->(oldAttempt:CromwellAttempt), " +
-                    "(newAttempt:Job { " +
+                    "(newAttempt:CromwellAttempt { " +
                         f"instanceName: \"{instance_name}\" " +
                     "}) " +
                 f"WHERE oldAttempt.instanceName<>\"{instance_name}\" " +
@@ -1572,7 +1572,7 @@ class DeleteCromwellStepHasAttemptRelationship:
                   "MATCH (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                  "})-[:HAS_ATTEMPT]->(newAttempt:CromwellAttempt)-[r:AFTER]->(oldAttempt:CromwellAttempt) " +
+                  "})-[:HAS_ATTEMPT]->(newAttempt:CromwellAttempt)-[:AFTER]->(oldAttempt:CromwellAttempt) " +
                   "WITH step, newAttempt, oldAttempt " +
                   "MATCH (step)-[r:HAS_ATTEMPT]->(oldAttempt) " +
                   "DELETE r " +
@@ -1646,8 +1646,8 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateCromwellAttemptToPreviousAttempt(
                                     function_name,
                                     env_vars))
-    triggers.append(DeleteCromwellStepHasAttemptRelationship(
-                                    function_name,
-                                    env_vars))
+    #triggers.append(DeleteCromwellStepHasAttemptRelationship(
+    #                                function_name,
+    #                                env_vars))
     return triggers
 
