@@ -1176,6 +1176,8 @@ class RelateCromwellWorkflowToStep:
             return False
 
         conditions = [
+            # Check that message has appropriate headers
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Check that retry count has not been met/exceeded
             (not header.get('retry-count')
                 or header.get('retry-count') < MAX_RETRIES),
@@ -1317,6 +1319,7 @@ class RelateCromwellStepToPreviousStep:
                             f"wdlCallAlias: \"{wdl_call_alias}\" " +
                         "}) " +
                 f"WHERE NOT previousStep.wdlCallAlias = \"{wdl_call_alias}\" " +
+                 "AND previousStep.startTimeEpoch < currentStep.startTimeEpoch " +
                  "WITH currentStep, COLLECT(previousStep) AS steps, max(previousStep.startTimeEpoch) AS maxTime " +
                  "UNWIND steps AS step " +
                  "MATCH (step) " +
