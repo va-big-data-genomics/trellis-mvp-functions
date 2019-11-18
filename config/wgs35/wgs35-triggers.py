@@ -485,7 +485,8 @@ class RelateTrellisOutputToJob:
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             node.get("nodeIteration") == "initial",
             node.get("trellisTaskId"),
-            node.get("id")
+            node.get("id"),
+            not node.get("wdlCallAlias")
         ]
 
         for condition in conditions:
@@ -508,9 +509,9 @@ class RelateTrellisOutputToJob:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Create", "Relationship", "Output", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "Trellis", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateOutputToJob",
+                              "trigger": "RelateTrellisOutputToJob",
                               "publishTo": self.function_name
                    },
                    "body": {
@@ -574,9 +575,9 @@ class RelateTrellisInputToJob:
                        "header": {
                                   "resource": "query",
                                   "method": "POST",
-                                  "labels": ["Create", "Relationship", "Input", "Cypher", "Query"],
+                                  "labels": ["Create", "Relationship", "Trellis", "Input", "Cypher", "Query"],
                                   "sentFrom": self.function_name,
-                                  "trigger": "RelatedInputToJob",
+                                  "trigger": "RelatedTrellisInputToJob",
                                   "publishTo": self.function_name
                        },
                        "body": {
@@ -597,6 +598,7 @@ class RelateTrellisInputToJob:
                  f"CREATE (input)-[:INPUT_TO]->(job) " +
                   "RETURN job AS node")
         return query
+
 
 
 class RunDstatWhenJobStopped:
@@ -911,6 +913,83 @@ class RelateFromPersonalisToSample:
 
 
 # Track GATK workflow steps in database
+class RelateCromwellOutputToStep:
+
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Cypher', 'Query', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            node.get("nodeIteration") == "initial",
+            node.get("trellisTaskId"),
+            node.get("id"),
+            node.get("wdlCallAlias")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        node_id = node['id']
+        task_id = node['trellisTaskId']
+
+        query = self._create_query(node_id, task_id)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Create", "Relationship", "CromwellStep", "Output", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCromwellOutputToStep",
+                              "publishTo": self.function_name
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)]) 
+
+    def _create_query(self, node_id, task_id):
+        node_id = node['id']
+        cromwell_workflow_id = node['cromwellWorkflowId']
+        wdl_call_alias = node['wdlCallAlias']
+        query = (
+                 "MATCH (step:CromwellStep { " +
+                    f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
+                    f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                 "}), " +
+                 "(node:Blob { " +
+                    f"cromwellWorkflowId:\"{cromwell_workflow_id}\", " +
+                    f"wdlCallAlias: \"{wdl_call_alias}\", " +
+                    f"id:\"{node_id}\" " +
+                 "}) " +
+                 "WHERE NOT EXISTS(step.duplicate) " +
+                 "OR NOT step.duplicate=True " +
+                 "CREATE (step)-[:OUTPUT]->(node) " +
+                 "RETURN node")
+        return query
+
+
 class AddWorkflowIdToCromwellWorkflow:
 
     def __init__(self, function_name, env_vars):
@@ -1634,6 +1713,9 @@ def get_triggers(function_name, env_vars):
                                     env_vars))
 
     ### Track GATK workflow steps
+    triggers.append(RelateCromwellOutputToStep(
+                                    function_name,
+                                    env_vars))
     triggers.append(AddWorkflowIdToCromwellWorkflow(
                                     function_name,
                                     env_vars))
