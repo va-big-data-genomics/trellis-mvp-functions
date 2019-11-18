@@ -1579,13 +1579,13 @@ class RelateCromwellAttemptToPreviousAttempt:
                  "(currentAttempt:Job { " +
                     f"instanceName: \"{instance_name}\" " +
                  "}) " +
-                f"WHERE NOT previousStep.instanceName = \"{instance_name}\" " +
+                f"WHERE NOT previousAttempt.instanceName = \"{instance_name}\" " +
                  "AND previousAttempt.startTimeEpoch < currentAttempt.startTimeEpoch " +
-                 "WITH currentAttempt, COLLECT(previousAttempt) AS attempts, max(previousStep.startTimeEpoch) AS maxTime " +
+                 "WITH currentAttempt, COLLECT(previousAttempt) AS attempts, max(previousAttempt.startTimeEpoch) AS maxTime " +
                  "UNWIND attempts AS attempt " +
                  "MATCH (attempt) " +
                  "WHERE attempt.startTimeEpoch = maxTime " +
-                 "MERGE (currentAttempt)-[:AFTER]->(previousAttempt) " +
+                 "MERGE (currentAttempt)-[:AFTER]->(attempt) " +
                  "RETURN currentAttempt AS node")
         return query
 
