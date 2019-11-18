@@ -1501,6 +1501,7 @@ class RelateCromwellStepToAttempt:
                  "WHERE attempt.startTimeEpoch = maxTime " +
                  "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
                  "RETURN step AS node")
+        return query
   
 
 class RelateCromwellAttemptToPreviousAttempt:
