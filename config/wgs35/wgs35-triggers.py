@@ -965,7 +965,7 @@ class RelateCromwellOutputToStep:
         }
         return([(topic, message)]) 
 
-    def _create_query(self, node, task_id):
+    def _create_query(self, node):
         node_id = node['id']
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
