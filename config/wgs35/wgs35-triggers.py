@@ -600,7 +600,6 @@ class RelateTrellisInputToJob:
         return query
 
 
-
 class RunDstatWhenJobStopped:
     
     def __init__(self, function_name, env_vars):
@@ -945,10 +944,7 @@ class RelateCromwellOutputToStep:
     def compose_message(self, header, body, node):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
-        node_id = node['id']
-        task_id = node['trellisTaskId']
-
-        query = self._create_query(node_id, task_id)
+        query = self._create_query(node)
 
         # Requeue original message, updating sentFrom property
         message = {
@@ -969,7 +965,7 @@ class RelateCromwellOutputToStep:
         }
         return([(topic, message)]) 
 
-    def _create_query(self, node_id, task_id):
+    def _create_query(self, node, task_id):
         node_id = node['id']
         cromwell_workflow_id = node['cromwellWorkflowId']
         wdl_call_alias = node['wdlCallAlias']
