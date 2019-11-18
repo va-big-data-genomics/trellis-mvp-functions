@@ -1652,8 +1652,11 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateCromwellAttemptToPreviousAttempt(
                                     function_name,
                                     env_vars))
-    #triggers.append(DeleteRelationshipCromwellStepHasAttempt(
-    #                                function_name,
-    #                                env_vars))
+    triggers.append(RelateCromwellStepToAttempt(
+                                    function_name,
+                                    env_vars))
+    triggers.append(DeleteRelationshipCromwellStepHasAttempt(
+                                    function_name,
+                                    env_vars))
     return triggers
 
