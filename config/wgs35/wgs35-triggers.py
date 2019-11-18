@@ -1446,7 +1446,7 @@ class RelateCromwellStepToAttempt:
             'CromwellStep' in node.get('labels'),
             node.get('cromwellWorkflowId'),
             node.get('wdlCallAlias'),
-            node.get('nodeIteration') == 'initial'8
+            node.get('nodeIteration') == 'initial'
         ]
 
         for condition in conditions:
