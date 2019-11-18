@@ -1581,7 +1581,7 @@ class DeleteRelationshipCromwellStepHasAttempt:
                   "MATCH (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                  "})-[:HAS_ATTEMPT]->(newAttempt:CromwellAttempt)-[*:AFTER]->(oldAttempt:CromwellAttempt) " +
+                  "})-[:HAS_ATTEMPT]->(newAttempt:CromwellAttempt)-[:AFTER*..5]->(oldAttempt:CromwellAttempt) " +
                   "WITH step, newAttempt, oldAttempt " +
                   "MATCH (step)-[r:HAS_ATTEMPT]->(oldAttempt) " +
                   "DELETE r " +
