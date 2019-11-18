@@ -977,11 +977,11 @@ class RelateCromwellOutputToStep:
                  "(node:Blob { " +
                     f"cromwellWorkflowId:\"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\", " +
-                    f"id:\"{node_id}\" " +
+                    f"id: \"{node_id}\" " +
                  "}) " +
-                 "WHERE NOT EXISTS(step.duplicate) " +
-                 "OR NOT step.duplicate=True " +
-                 "CREATE (step)-[:OUTPUT]->(node) " +
+                 #"WHERE NOT EXISTS(step.duplicate) " +
+                 #"OR NOT step.duplicate=True " +
+                 "MERGE (step)-[:OUTPUT]->(node) " +
                  "RETURN node")
         return query
 
