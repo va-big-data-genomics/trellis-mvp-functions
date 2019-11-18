@@ -1412,7 +1412,6 @@ class CreateCromwellStepFromAttempt:
                      "step.nodeIteration = \"initial\" " +
                  "ON MATCH SET " +
                      "step.nodeIteration = \"merged\" " +
-                 #"MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
                  "RETURN step AS node"
         )
         return query 
@@ -1488,7 +1487,7 @@ class RelateCromwellStepToAttempt:
 
         query = (
                  "MATCH (step:CromwellStep { " +
-                            f"cromwellWorkflowId: \"{cromwell_workflow_id}\" " +
+                            f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                             f"wdlCallAlias: \"{wdl_call_alias}\" " +
                         "}), " +
                         "(attempt:CromwellAttempt { " +
