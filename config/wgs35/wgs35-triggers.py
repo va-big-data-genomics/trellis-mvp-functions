@@ -968,15 +968,17 @@ class RelateCromwellOutputToStep:
     def _create_query(self, node):
         node_id = node['id']
         cromwell_workflow_id = node['cromwellWorkflowId']
-        wdl_call_alias = node['wdlCallAlias'].lower()
+        
+        step_wdl_call_alias = node['wdlCallAlias'].lower()
+        blob_wdl_call_alias = node['wdlCallAlias']
         query = (
                  "MATCH (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
-                    f"wdlCallAlias: \"{wdl_call_alias}\" " +
+                    f"wdlCallAlias: \"{step_wdl_call_alias}\" " +
                  "}), " +
                  "(node:Blob { " +
                     f"cromwellWorkflowId:\"{cromwell_workflow_id}\", " +
-                    f"wdlCallAlias: \"{wdl_call_alias}\", " +
+                    f"wdlCallAlias: \"{blob_wdl_call_alias}\", " +
                     f"id: \"{node_id}\" " +
                  "}) " +
                  #"WHERE NOT EXISTS(step.duplicate) " +
