@@ -968,7 +968,7 @@ class RelateCromwellOutputToStep:
     def _create_query(self, node):
         node_id = node['id']
         cromwell_workflow_id = node['cromwellWorkflowId']
-        wdl_call_alias = node['wdlCallAlias']
+        wdl_call_alias = node['wdlCallAlias'].lower()
         query = (
                  "MATCH (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
