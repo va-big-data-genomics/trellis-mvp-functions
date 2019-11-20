@@ -225,7 +225,7 @@ def log_insert_trellis_instance(event, context):
     start_time_epoch = get_seconds_from_epoch(timestamp)
 
     query = (
-        "MERGE (node:Job {taskId:" + f"\"{task_id}\"" + "}) " +
+        "MERGE (node:Job {trellisTaskId:" + f"\"{task_id}\"" + "}) " +
         "ON CREATE SET " +
              "node.labels = [\"Job\"] " +
         "SET " +
