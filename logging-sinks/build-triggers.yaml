@@ -1,7 +1,7 @@
 name: "wgs35-sink-create-insert-trellis-worker"
 github:
     owner: "pbilling"
-    name: "trellis-mvp-wgs-35000"
+    name: "pbilling/trellis-mvp-wgs-35000"
     push: 
         branch: "develop|feat-"
 filename: "logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml"
@@ -9,7 +9,7 @@ filename: "logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbu
 name: "wgs35-sink-update-insert-trellis-worker"
 github:
     owner: "pbilling"
-    name: "trellis-mvp-wgs-35000"
+    name: "pbilling/trellis-mvp-wgs-35000"
     push:
         branch: "develop|feat-"
 filename: "logging-sinks/instance-insert-trellis-pipelines-worker/update-cloudbuild.yaml"
