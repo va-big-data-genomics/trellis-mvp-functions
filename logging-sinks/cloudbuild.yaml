@@ -5,4 +5,4 @@ steps:
              'builds',
              'triggers',
              'import',
-             'logging-sinks/build-triggers.yaml']
+             '--source=logging-sinks/build-triggers.yaml']
