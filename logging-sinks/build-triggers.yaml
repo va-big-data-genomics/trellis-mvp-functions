@@ -1,5 +1,5 @@
 name: "wgs35-sink-create-insert-trellis-worker"
-description: "Create logging sink for Trellis workers."
+description: "sink: Create logging sink for Trellis workers."
 github:
     owner: "pbilling"
     name: "trellis-mvp-wgs-35000"
@@ -8,7 +8,7 @@ github:
 filename: "logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml"
 ---
 name: "wgs35-sink-update-insert-trellis-worker"
-description: "Update logging sink for Trellis workers."
+description: "sink: Update logging sink for Trellis workers."
 github:
     owner: "pbilling"
     name: "trellis-mvp-wgs-35000"
