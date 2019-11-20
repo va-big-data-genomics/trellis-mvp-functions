@@ -5,7 +5,7 @@ github:
     push: 
         branch: "develop|feat-"
 filename: "logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml"
---
+---
 name: "wgs35-sink-update-insert-trellis-worker"
 github:
     owner: "pbilling"
