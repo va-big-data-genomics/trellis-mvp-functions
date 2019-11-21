@@ -5,6 +5,9 @@ github:
     name: "trellis-mvp-wgs-35000"
     push: 
         branch: "develop|feat-"
+included_files: 
+    - "logging-sinks/dev-build-triggers.yaml"
+    - "logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml"
 filename: "logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml"
 ---
 name: "wgs35-sink-update-insert-trellis-worker"
@@ -14,6 +17,9 @@ github:
     name: "trellis-mvp-wgs-35000"
     push:
         branch: "develop|feat-"
+included_files: 
+    - "logging-sinks/dev-build-triggers.yaml"
+    - "logging-sinks/instance-insert-trellis-pipelines-worker/update-cloudbuild.yaml"
 filename: "logging-sinks/instance-insert-trellis-pipelines-worker/update-cloudbuild.yaml"
 ---
 name: "wgs35-sink-create-insert-cromwell-worker"
@@ -23,6 +29,9 @@ github:
     name: "trellis-mvp-wgs-35000"
     push: 
         branch: "develop|feat-"
+included_files: 
+    - "logging-sinks/dev-build-triggers.yaml"
+    - "logging-sinks/instance-insert-cromwell-pipelines-worker/create-cloudbuild.yaml"
 filename: "logging-sinks/instance-insert-cromwell-pipelines-worker/create-cloudbuild.yaml"
 ---
 name: "wgs35-sink-update-insert-cromwell-worker"
@@ -32,6 +41,9 @@ github:
     name: "trellis-mvp-wgs-35000"
     push:
         branch: "develop|feat-"
+included_files: 
+    - "logging-sinks/dev-build-triggers.yaml"
+    - "logging-sinks/instance-insert-cromwell-pipelines-worker/update-cloudbuild.yaml"
 filename: "logging-sinks/instance-insert-cromwell-pipelines-worker/update-cloudbuild.yaml"
 ---
 name: "wgs35-sink-create-delete-pipelines-worker"
@@ -41,6 +53,9 @@ github:
     name: "trellis-mvp-wgs-35000"
     push: 
         branch: "develop|feat-"
+included_files: 
+    - "logging-sinks/dev-build-triggers.yaml"
+    - "logging-sinks/instance-delete-pipelines-worker/create-cloudbuild.yaml"
 filename: "logging-sinks/instance-delete-pipelines-worker/create-cloudbuild.yaml"
 ---
 name: "wgs35-sink-update-delete-pipelines-worker"
