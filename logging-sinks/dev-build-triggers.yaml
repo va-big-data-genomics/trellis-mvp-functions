@@ -50,4 +50,7 @@ github:
     name: "trellis-mvp-wgs-35000"
     push:
         branch: "develop|feat-"
+included_files: 
+    - "logging-sinks/dev-build-triggers.yaml"
+    - "logging-sinks/instance-delete-pipelines-worker/update-cloudbuild.yaml"
 filename: "logging-sinks/instance-delete-pipelines-worker/update-cloudbuild.yaml"
