@@ -11,3 +11,5 @@ CREATE INDEX ON :Job(instanceName)                      # Mark duplicates
 CREATE INDEX ON :Ubam(sample)
 CREATE INDEX ON :Dstat(instanceName, jobId)
 CREATE INDEX ON :Dsub(dsubJobId, instanceName)
+CREATE INDEX ON :CromwellStep(cromwellWorkflowId)
+CREATE INDEX ON :CromwellStep(cromwellWorkflowId, wdlCallAlias)
