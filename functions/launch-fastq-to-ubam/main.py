@@ -212,7 +212,7 @@ def launch_fastq_to_ubam(event, context):
                 "outputs": {
                             "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
                 },
-                "taskId": task_id,
+                "trellisTaskId": task_id,
                 "dryRun": dry_run,
                 #"preemptible": "3",
                 #"retries": "3",

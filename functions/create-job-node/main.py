@@ -29,6 +29,7 @@ if ENVIRONMENT == 'google-cloud':
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
     TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
+    TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
 
     PUBLISHER = pubsub.PublisherClient()
 
@@ -40,7 +41,7 @@ def format_pubsub_message(query):
                           "method": "POST", 
                           "labels": ['Create', 'Job', 'Node', 'Query', 'Cypher'], 
                           "sentFrom": f"{FUNCTION_NAME}",
-                          "publishTo": f"{DATA_GROUP}-triggers",
+                          "publishTo": f"{TOPIC_TRIGGERS}",
                },
                "body": {
                         "cypher": query, 
@@ -147,7 +148,7 @@ def format_query(db_entry, dry_run=False):
     #         f"CREATE (node:{labels_str} " +
     #         f"{{ {entry_string}, nodeCreated: timestamp() }}) " +
     #          "RETURN node")
-    query = (f"MERGE (node:Job:{labels_str} {{ taskId:\"{db_entry['taskId']}\" }}) " +
+    query = (f"MERGE (node:Job:{labels_str} {{ trellisTaskId:\"{db_entry['trellisTaskId']}\" }}) " +
               "ON CREATE SET " +
                 f"{entry_string}, " +
                  "node.nodeCreated= timestamp() " +
