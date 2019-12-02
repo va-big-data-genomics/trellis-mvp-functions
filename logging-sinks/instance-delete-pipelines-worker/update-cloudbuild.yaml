@@ -5,6 +5,6 @@ steps:
          'sinks',
          'update',
          'wgs35-sink-delete-instance',
-         'pubsub.googleapis.com/projects/***REMOVED***-dev/topics/wgs35-log-delete-instance',
+         'pubsub.googleapis.com/projects/${PROJECT_ID}/topics/wgs35-log-delete-instance',
          '--log-filter', 'resource.type="gce_instance" AND protoPayload.serviceName="compute.googleapis.com" AND protoPayload.request."@type"="type.googleapis.com/compute.instances.delete" AND protoPayload.resourceName:"google-pipelines-worker"'
   ]
