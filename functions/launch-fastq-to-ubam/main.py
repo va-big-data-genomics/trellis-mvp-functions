@@ -25,11 +25,15 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+
     REGIONS = parsed_vars['DSUB_REGIONS']
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
-    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+    NETWORK = parsed_vars['DSUB_NETWORK']
+    SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
+
 
     PUBLISHER = pubsub.PublisherClient()
 
@@ -224,6 +228,8 @@ def launch_fastq_to_ubam(event, context):
                 "inputHash": trunc_nodes_hash,
                 "labels": ["Job", "Dsub"],
                 "inputIds": input_ids,
+                "network": NETWORK,
+                "subnetwork": SUBNETWORK,
     }
 
     dsub_args = [
@@ -247,8 +253,8 @@ def launch_fastq_to_ubam(event, context):
         "--disk-size", str(job_dict["diskSize"]),
         "--command", job_dict["command"],
         "--use-private-address",
-        "--network", "trellis-neo4j-dev",
-        "--subnetwork", "trellis-neo4j-dev-west1"
+        "--network", job_dict["network"],
+        "--subnetwork", job_dict["subnetwork"],
         # 4 total attempts; 3 preemptible, final 1 full-price
         #"--preemptible", job_dict["preemptible"],
         #"--retries", job_dict["retries"] 
