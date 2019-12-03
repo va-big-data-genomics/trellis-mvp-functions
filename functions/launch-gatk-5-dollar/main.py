@@ -29,6 +29,9 @@ if ENVIRONMENT == 'google-cloud':
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
+    NETWORK = parsed_vars['DSUB_NETWORK']
+    SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
+
     TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
     GATK_INPUTS_DIR = parsed_vars['GATK_INPUTS_DIR']
     GATK_HG38_INPUTS = parsed_vars['GATK_HG38_INPUTS']
@@ -237,7 +240,9 @@ def launch_gatk_5_dollar(event, context):
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
                 "labels": ['Job', 'Dsub', 'CromwellWorkflow'],
-                "inputIds": input_ids
+                "inputIds": input_ids,
+                "network": NETWORK,
+                "subnetwork": SUBNETWORK,
     }
 
     dsub_args = [
@@ -258,8 +263,8 @@ def launch_gatk_5_dollar(event, context):
                  "--logging", job_dict["logging"],
                  "--disk-size", str(job_dict["diskSize"]),
                  "--command", job_dict["command"],
-                 "--network", "trellis-neo4j-dev",
-                 "--subnetwork", "trellis-neo4j-dev-west1",
+                 "--network", job_dict["network"],
+                 "--subnetwork", job_dict["subnetwork"],
                  "--use-private-address",
                  "--enable-stackdriver-monitoring",
     ]
