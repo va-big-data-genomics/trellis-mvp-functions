@@ -151,17 +151,17 @@ def format_query(db_entry, dry_run=False):
     
     # TODO: Merge on :Job label to be
     query = (
-             f"MERGE (node:Job { " +
+             "MERGE (node:Job { " +
                 f"trellisTaskId:\"{db_entry['trellisTaskId']}\" " +
-              "}) " +
-              "ON CREATE SET " +
+             "}) " +
+             "ON CREATE SET " +
                 f"node :{labels_str} " +
                 f"{entry_string}, " +
                 "node.nodeCreated= timestamp() " +
-              "ON MATCH SET " +
+             "ON MATCH SET " +
                 f"node :{labels_str} " +
                 f"{entry_string} " +
-              "RETURN node")
+             "RETURN node")
     return query
 
 
