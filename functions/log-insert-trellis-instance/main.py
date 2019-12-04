@@ -145,7 +145,7 @@ def log_insert_trellis_instance(event, context):
         "MERGE (node:Job {trellisTaskId:" + f"\"{task_id}\"" + "}) " +
         "ON CREATE SET " +
              # Unique to creation
-             "node.labels = [\"Job\"] " +
+             "node.labels = [\"Job\"], " +
              # Non-unique
             f"node.status = \"{status}\", " +
             f"node.instanceName = \"{instance_name}\", " +
