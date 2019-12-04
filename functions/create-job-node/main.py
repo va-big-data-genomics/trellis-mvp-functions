@@ -132,7 +132,7 @@ def get_datetime_iso8601(date_string):
 def format_query(db_entry, dry_run=False):
     labels = list(db_entry['labels'])
     labels.remove('Job')
-    labels_str = ':'.join(db_entry['labels'])
+    labels_str = ':'.join(labels)
 
     # Create database entry string
     entry_strings = []
@@ -148,10 +148,19 @@ def format_query(db_entry, dry_run=False):
     #         f"CREATE (node:{labels_str} " +
     #         f"{{ {entry_string}, nodeCreated: timestamp() }}) " +
     #          "RETURN node")
-    query = (f"MERGE (node:Job:{labels_str} {{ trellisTaskId:\"{db_entry['trellisTaskId']}\" }}) " +
+    
+    # TODO: Merge on :Job label to be
+    query = (
+             f"MERGE (node:Job { " +
+                f"trellisTaskId:\"{db_entry['trellisTaskId']}\" " +
+              "}) " +
               "ON CREATE SET " +
+                f"node :{labels_str} " +
                 f"{entry_string}, " +
-                 "node.nodeCreated= timestamp() " +
+                "node.nodeCreated= timestamp() " +
+              "ON MATCH SET " +
+                f"node :{labels_str} " +
+                f"{entry_string} " +
               "RETURN node")
     return query
 
