@@ -155,11 +155,11 @@ def format_query(db_entry, dry_run=False):
                 f"trellisTaskId:\"{db_entry['trellisTaskId']}\" " +
              "}) " +
              "ON CREATE SET " +
-                f"node :{labels_str} " +
+                f"node :{labels_str}, " +
                 f"{entry_string}, " +
                 "node.nodeCreated= timestamp() " +
              "ON MATCH SET " +
-                f"node :{labels_str} " +
+                f"node :{labels_str}, " +
                 f"{entry_string} " +
              "RETURN node")
     return query
