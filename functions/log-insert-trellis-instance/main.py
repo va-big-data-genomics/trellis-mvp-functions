@@ -144,8 +144,17 @@ def log_insert_trellis_instance(event, context):
     query = (
         "MERGE (node:Job {trellisTaskId:" + f"\"{task_id}\"" + "}) " +
         "ON CREATE SET " +
+             # Unique to creation
              "node.labels = [\"Job\"] " +
-        "SET " +
+             # Non-unique
+            f"node.status = \"{status}\", " +
+            f"node.instanceName = \"{instance_name}\", " +
+            f"node.instanceId = {instance_id}, " +
+            f"node.startTime = \"{start_time}\", " +
+            f"node.startTimeEpoch = {start_time_epoch}, " +
+            f"node.zone = \"{zone}\", " +
+            f"node.machineType = \"{machine_type}\" " +
+        "ON MATCH SET " +
             f"node.status = \"{status}\", " +
             f"node.instanceName = \"{instance_name}\", " +
             f"node.instanceId = {instance_id}, " +
