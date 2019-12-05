@@ -530,7 +530,7 @@ class RelateTrellisOutputToJob:
                               f"id:\"{node_id}\" }}) " +
                   "WHERE NOT EXISTS(j.duplicate) " +
                   "OR NOT j.duplicate=True " +
-                  "CREATE (j)-[:OUTPUT]->(node) " +
+                  "MERGE (j)-[:OUTPUT]->(node) " +
                   "RETURN node")
         return query
 
