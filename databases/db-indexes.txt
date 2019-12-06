@@ -1,15 +1,21 @@
-CREATE INDEX ON :Blob(bucket, path)
-CREATE INDEX ON :Blob(id)
-CREATE INDEX ON :Blob(sample)
-CREATE INDEX ON :Blob(taskId, id)
+CREATE INDEX ON :Blob(bucket, path) # [RelateFromPersonalisToSample]
+CREATE INDEX ON :Blob(id)           # [RelateTrellisInputToJob]
+CREATE INDEX ON :Blob(sample)       # [RelateSampleToFromPersonalis, RelateFromPersonalisToSample]
+CREATE INDEX ON :Blob(taskId, id)   # [RelateTrellisOutputToJob]
 CREATE INDEX ON :Fastq(plate)
-CREATE INDEX ON :Fastq(sample)
+CREATE INDEX ON :Fastq(sample)      # [AddFastqSetSize,GetFastqForUbam]
 CREATE INDEX ON :Job(name)
-CREATE INDEX ON :Job(sample, name, inputHash, status)
-CREATE INDEX ON :Job(taskId)
-CREATE INDEX ON :Job(instanceName)                      # Mark duplicates
-CREATE INDEX ON :Ubam(sample)
-CREATE INDEX ON :Dstat(instanceName, jobId)
-CREATE INDEX ON :Dsub(dsubJobId, instanceName)
-CREATE INDEX ON :CromwellStep(cromwellWorkflowId)
-CREATE INDEX ON :CromwellStep(cromwellWorkflowId, wdlCallAlias)
+CREATE INDEX ON :Job(sample, name, inputHash, status) # [KillDuplicateJobs]
+CREATE INDEX ON :Job(trellisTaskId) # [RelateTrellisOutputToJob, RelateTrellisInputToJob]
+CREATE INDEX ON :Job(instanceName)  # [MarkJobAsDuplicate, CreateCromwellStepFromAttempt, RelateCromwellAttemptToPreviousAttempt, RelateCromwellStepToAttempt]
+CREATE INDEX ON :Ubam(sample)       # [CheckUbamCount]
+CREATE INDEX ON :Dstat(instanceName, jobId)     # [RelateDstatToJob]
+CREATE INDEX ON :Dsub(dsubJobId, instanceName)  # [RelateDstatToJob]
+# Cromwell indexes
+CREATE INDEX ON :CromwellStep(cromwellWorkflowId)   # [RelateCromwellWorkflowToStep]
+CREATE INDEX ON :CromwellStep(cromwellWorkflowId, wdlCallAlias) # [RelateCromwellOutputToStep]
+CREATE INDEX ON :Blob(cromwellWorkflowId, wdlCallAlias, id) # [RelateCromwellOutputToStep]
+CREATE INDEX ON :CromwellWorkflow(trellisTaskId) # [AddWorkflowidToCromwellWorkflow]
+CREATE INDEX ON :CromwellWorkflow(cromwellWorkflowId)  # [RelateCromwellWorkflowToStep, RelateCromwellStepToPreviousStep]
+CREATE INDEX ON :CromwellStep(cromwellWorkflowId, wdlCallAlias) # [RelateCromwellStepToPreviousStep, CreateCromwellStepFromAttempt, RelateCromwellStepToLatestAttempt, RelateCromwellStepToAttempt, DeleteRelationshipCromwellStepHasAttempt]
+CREATE INDEX ON :CromwellAttempt(cromwellWorkflowId, wdlCallAlias) # [RelateCromwellStepToLatestAttempt, RelateCromwellAttemptToPreviousAttempt]
