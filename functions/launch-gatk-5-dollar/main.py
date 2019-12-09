@@ -205,7 +205,7 @@ def launch_gatk_5_dollar(event, context):
                 "regions": REGIONS,
                 "project": PROJECT_ID,
                 "minCores": 1,
-                "minRam": 10,
+                "minRam": 9,
                 "preemptible": False,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/cromwell:46",
