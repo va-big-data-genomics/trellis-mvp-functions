@@ -114,7 +114,7 @@ class CheckUbamCount:
                             "cypher": (
                                        "MATCH (n:Ubam) " +
                                        f"WHERE n.sample=\"{sample}\" " +
-                                       "AND NOT (n)-[:INPUT_TO]->(:Job:Cromwell {name: \"gatk-5-dollar\"}) " +
+                                       "AND NOT (n)-[:INPUT_TO]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +
                                        "WITH n.sample AS sample, " +
                                        "n.readGroup AS readGroup, " +
                                        "COLLECT(n) as allNodes " +
