@@ -342,7 +342,7 @@ class MarkJobAsDuplicate:
                   "MATCH (n:Job) " +
                  f"WHERE n.instanceName = \"{instance_name}\" " +
                   "SET n.labels = n.labels + \"Duplicate\", " +
-                  "n:Marker, " +
+                  "n:Duplicate, " +
                   "n.duplicate=True")
         return query
 
