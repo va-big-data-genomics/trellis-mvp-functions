@@ -403,7 +403,7 @@ class RequeueJobQuery:
         message['body'] = body
 
         # Wait 2 seconds before re-queueing
-        time.sleep(2)
+        time.sleep(5)
 
         return([(topic, message)])
 
@@ -463,7 +463,7 @@ class RequeueRelationshipQuery:
         message['body'] = body
 
         # Wait 2 seconds before re-queueing
-        time.sleep(2)
+        time.sleep(5)
 
         return([(topic, message)])   
 
@@ -768,7 +768,7 @@ class RecheckDstat:
             message["header"]["retry-count"] = 1
         
         # Wait 2 seconds before re-queueing
-        time.sleep(2)
+        time.sleep(5)
 
         return([(topic, message)])   
 
