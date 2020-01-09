@@ -243,6 +243,7 @@ def launch_gatk_5_dollar(event, context):
                 "inputIds": input_ids,
                 "network": NETWORK,
                 "subnetwork": SUBNETWORK,
+                "timeout": "48h"
     }
 
     dsub_args = [
@@ -267,6 +268,7 @@ def launch_gatk_5_dollar(event, context):
                  "--subnetwork", job_dict["subnetwork"],
                  "--use-private-address",
                  "--enable-stackdriver-monitoring",
+                 "--timeout", job_dict["timeout"]
     ]
 
     # Argument lists
