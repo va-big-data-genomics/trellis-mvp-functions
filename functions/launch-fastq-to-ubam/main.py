@@ -2,9 +2,11 @@ import os
 import pdb
 import sys
 import json
+import time
 import uuid
 import yaml
 import base64
+import random
 import hashlib
 
 from google.cloud import storage
@@ -275,27 +277,32 @@ def launch_fastq_to_ubam(event, context):
                           f"{key}={value}"])
 
     # Optional flags
-    #if job_dict['preemptible']:
-    #    dsub_args.append("--preemptible")
     if job_dict['dryRun']:
         dsub_args.append("--dry-run")
 
-    print(f"Launching dsub with args: {dsub_args}.")
+    # Wait a random time interval to reduce overlapping db queries
+    #   because of ubam objects created at same time
+    random_wait = random.randrange(0,10)
+    print(f"> Waiting for {random_wait} seconds to launch job.")
+    time.sleep(random_wait)
+    
+    # Launch dsub job
+    print(f"> Launching dsub with args: {dsub_args}.")
     dsub_result = launch_dsub_task(dsub_args)
-    print(f"Dsub result: {dsub_result}.")
+    print(f"> Dsub result: {dsub_result}.")
 
     # Metadata to be perpetuated to ubams is written to file
     # Try until success
     metadata = {"setSize": set_size}
     if 'job-id' in dsub_result.keys() and metadata and not dry_run:
-        print(f"Metadata passed to output blobs: {metadata}.")
+        print(f"> Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
         meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
         while True:
             result = write_metadata_to_blob(meta_blob_path, metadata)
             if result == True:
                 break
-        print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
+        print(f"> Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
 
     
     if 'job-id' in dsub_result.keys():
