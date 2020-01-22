@@ -158,9 +158,20 @@ def log_insert_cromwell_instance(event, context):
             f"instanceName: \"{instance_name}\", " +
             f"instanceId: {instance_id} }} ) " +
         "ON CREATE SET " +
-             "node.labels = [\"Job\", \"CromwellAttempt\", \"GcpInstance\"], " +
-             "node:CromwellAttempt:GcpInstance "
-        "SET " +
+            # Unique to creation
+            "node.labels = [\"Job\", \"CromwellAttempt\", \"GcpInstance\"], " +
+            "node:CromwellAttempt:GcpInstance "
+            # Non-unique to creation
+            f"node.status = \"{status}\", " +
+            f"node.instanceName = \"{instance_name}\", " +
+            f"node.instanceId = {instance_id}, " +
+            f"node.startTime = \"{start_time}\", " +
+            f"node.startTimeEpoch = {start_time_epoch}, " +
+            f"node.zone = \"{zone}\", " +
+            f"node.machineType = \"{machine_type}\", " +
+            # Add Cromwell metadata fields, if present
+            f"{cromwell_query_str} " +
+        "ON MATCH SET " +
             f"node.status = \"{status}\", " +
             f"node.instanceName = \"{instance_name}\", " +
             f"node.instanceId = {instance_id}, " +

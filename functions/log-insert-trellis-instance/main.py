@@ -142,10 +142,21 @@ def log_insert_trellis_instance(event, context):
     start_time_epoch = get_seconds_from_epoch(timestamp)
 
     query = (
-        "MERGE (node:Job {trellisTaskId:" + f"\"{task_id}\"" + "}) " +
+        "MERGE (node:Job { " +
+            f"trellisTaskId: \"{task_id}\" " + 
+        "}) " +
         "ON CREATE SET " +
-             "node.labels = [\"Job\"] " +
-        "SET " +
+             # Unique to creation
+             "node.labels = [\"Job\"], " +
+             # Non-unique
+            f"node.status = \"{status}\", " +
+            f"node.instanceName = \"{instance_name}\", " +
+            f"node.instanceId = {instance_id}, " +
+            f"node.startTime = \"{start_time}\", " +
+            f"node.startTimeEpoch = {start_time_epoch}, " +
+            f"node.zone = \"{zone}\", " +
+            f"node.machineType = \"{machine_type}\" " +
+        "ON MATCH SET " +
             f"node.status = \"{status}\", " +
             f"node.instanceName = \"{instance_name}\", " +
             f"node.instanceId = {instance_id}, " +
