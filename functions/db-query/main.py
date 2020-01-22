@@ -3,6 +3,7 @@ import pdb
 import sys
 import json
 import math
+import time
 import yaml
 import base64
 import logging
@@ -125,6 +126,15 @@ def query_db(event, context):
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
+
+    # Load time in RFC 3339 format
+    # Description of RFC 3339: http://henry.precheur.org/python/rfc3339.html
+    # Pub/Sub message example: https://cloud.google.com/functions/docs/writing/background#functions-writing-background-hello-pubsub-python
+    published_time = datetime.datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
+    # Time from message publication to reception
+    publish_elapsed = datetime.datetime.now() - published_time
+    print("> Elapsed time to receive message after publication " +
+         f"(seconds): {publish_elapsed.total_seconds(.3f)}.")
     
     if type(data) == str:
         logging.warn("Message data not correctly loaded as JSON. " +
@@ -150,6 +160,8 @@ def query_db(event, context):
     result_split = body.get('result-split')
     
     try:
+        # Calculate elapsed time for each query & print
+        query_start = time.time()
         if result_mode == 'stats':
             print(f"> Running stats query: {query}")
             query_results = GRAPH.run(query).stats()
@@ -159,7 +171,9 @@ def query_db(event, context):
         else:
             GRAPH.run(query)
             query_results = None
+        query_elapsed = time.time() - start_time
         print(f"> Query results: {query_results}.")
+        print(f"> Elapsed time to run query: {elapsed_time:.3f}. Query: {query}.")
     # Neo4j http connector
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
