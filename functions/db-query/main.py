@@ -151,10 +151,10 @@ def query_db(event, context):
     
     try:
         if result_mode == 'stats':
-            print("> Running stats query.")
+            print(f"> Running stats query: {query}")
             query_results = GRAPH.run(query).stats()
         elif result_mode == 'data':
-            print("> Running data query.")
+            print(f"> Running data query: {query}")
             query_results = GRAPH.run(query).data()
         else:
             GRAPH.run(query)

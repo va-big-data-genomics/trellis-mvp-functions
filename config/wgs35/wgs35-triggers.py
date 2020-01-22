@@ -114,7 +114,7 @@ class CheckUbamCount:
                             "cypher": (
                                        "MATCH (n:Ubam) " +
                                        f"WHERE n.sample=\"{sample}\" " +
-                                       "AND NOT (n)-[:INPUT_TO]->(:Job:Cromwell {name: \"gatk-5-dollar\"}) " +
+                                       "AND NOT (n)-[:INPUT_TO]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +
                                        "WITH n.sample AS sample, " +
                                        "n.readGroup AS readGroup, " +
                                        "COLLECT(n) as allNodes " +
@@ -342,7 +342,7 @@ class MarkJobAsDuplicate:
                   "MATCH (n:Job) " +
                  f"WHERE n.instanceName = \"{instance_name}\" " +
                   "SET n.labels = n.labels + \"Duplicate\", " +
-                  "n:Marker, " +
+                  "n:Duplicate, " +
                   "n.duplicate=True")
         return query
 
@@ -403,7 +403,7 @@ class RequeueJobQuery:
         message['body'] = body
 
         # Wait 2 seconds before re-queueing
-        time.sleep(2)
+        time.sleep(5)
 
         return([(topic, message)])
 
@@ -463,7 +463,7 @@ class RequeueRelationshipQuery:
         message['body'] = body
 
         # Wait 2 seconds before re-queueing
-        time.sleep(2)
+        time.sleep(5)
 
         return([(topic, message)])   
 
@@ -530,7 +530,7 @@ class RelateTrellisOutputToJob:
                               f"id:\"{node_id}\" }}) " +
                   "WHERE NOT EXISTS(j.duplicate) " +
                   "OR NOT j.duplicate=True " +
-                  "CREATE (j)-[:OUTPUT]->(node) " +
+                  "MERGE (j)-[:OUTPUT]->(node) " +
                   "RETURN node")
         return query
 
@@ -768,7 +768,7 @@ class RecheckDstat:
             message["header"]["retry-count"] = 1
         
         # Wait 2 seconds before re-queueing
-        time.sleep(2)
+        time.sleep(5)
 
         return([(topic, message)])   
 
