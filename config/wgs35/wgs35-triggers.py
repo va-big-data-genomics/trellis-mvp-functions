@@ -66,6 +66,14 @@ class AddFastqSetSize:
 
 
 class CheckUbamCount:
+    """Trigger for launching GATK $5 Cromwell workflow.
+
+    Check whether all ubams for a sample are present, and
+    that they haven't already been input to a $4 workflow.
+
+    If so, send all ubam nodes metadata to the gatk-5-dollar
+    pub/sub topic.
+    """
 
     def __init__(self, function_name, env_vars):
         self.function_name = function_name
@@ -99,7 +107,8 @@ class CheckUbamCount:
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
-        set_size = node['setSize']
+
+        query = self._create_query(sample)
 
         message = {
                    "header": {
@@ -111,26 +120,30 @@ class CheckUbamCount:
                               "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
                    },
                    "body": {
-                            "cypher": (
-                                       "MATCH (n:Ubam) " +
-                                       f"WHERE n.sample=\"{sample}\" " +
-                                       "AND NOT (n)-[:INPUT_TO]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +
-                                       "WITH n.sample AS sample, " +
-                                       "n.readGroup AS readGroup, " +
-                                       "COLLECT(n) as allNodes " +
-                                       "WITH head(allNodes) AS heads " +
-                                       "UNWIND [heads] AS uniqueNodes " +
-                                       "WITH uniqueNodes.sample AS sample, " +
-                                       "uniqueNodes.setSize AS setSize, " +
-                                       "COLLECT(uniqueNodes) AS sampleNodes " +
-                                       "WHERE size(sampleNodes) = setSize " +
-                                       "RETURN sampleNodes AS nodes"),
+                            "cypher": query,
                             "result-mode": "data", 
                             "result-structure": "list",
                             "result-split": "True",
                    }
         }
         return([(topic, message)])
+
+
+    def _create_query(self, sample):
+        query = "MATCH (j:Job)-[:OUTPUT]->(n:Ubam) " +
+                f"WHERE j.sample=\"{sample}\" " +
+                "AND NOT (n)-[:INPUT_TO]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +
+                "WITH n.sample AS sample, " +
+                "n.readGroup AS readGroup, " +
+                "COLLECT(n) as allNodes " +
+                "WITH head(allNodes) AS heads " +
+                "UNWIND [heads] AS uniqueNodes " +
+                "WITH uniqueNodes.sample AS sample, " +
+                "uniqueNodes.setSize AS setSize, " +
+                "COLLECT(uniqueNodes) AS sampleNodes " +
+                "WHERE size(sampleNodes) = setSize " +
+                "RETURN sampleNodes AS nodes"
+        return query
 
 
 class GetFastqForUbam:
