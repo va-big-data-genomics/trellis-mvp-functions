@@ -74,7 +74,7 @@ def check_triggers(event, context, dry_run=False):
         status = trigger.check_conditions(header, body, node)
         if status == True:
             activated_triggers.append(trigger)
-            print(f'> Trigger ACTIVATED: {trigger}.')
+            print(f"> Trigger ACTIVATED: {trigger}.")
             #topic, message = trigger.compose_message(header, body, node)
             messages = trigger.compose_message(header, body, node)
             for message in messages:
@@ -86,4 +86,4 @@ def check_triggers(event, context, dry_run=False):
                 else:
                     result = publish_to_topic(topic, data)
                     print(f"> Published message to {topic} with result: {result}.")
-    return(activated_triggers)                
+    return(activated_triggers)  
