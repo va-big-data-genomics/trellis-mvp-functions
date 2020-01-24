@@ -136,8 +136,9 @@ def query_db(event, context):
     published_time = datetime.datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
     # Time from message publication to reception
     publish_elapsed = datetime.datetime.now() - published_time
-    print("> Elapsed time to receive message after publication " +
-         f"(seconds): {publish_elapsed.total_seconds(.3f)}.")
+    print(
+          "> Elapsed time to receive message after publication " +
+          f"(seconds): {publish_elapsed.total_seconds():3f}.")
     
     if type(data) == str:
         logging.warn("Message data not correctly loaded as JSON. " +
