@@ -39,13 +39,15 @@ if ENVIRONMENT == 'google-cloud':
 
     PUBLISHER = pubsub.PublisherClient()
 
-def format_pubsub_message(job_dict, nodes):
+def format_pubsub_message(job_dict, seed_id, event_id):
     message = {
                "header": {
                           "resource": "job-metadata", 
                           "method": "POST",
                           "labels": ["Create", "Job", "Dsub", "Node"],
                           "sentFrom": f"{FUNCTION_NAME}",
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{event_id}"
                },
                "body": {
                         "node": job_dict,
@@ -53,7 +55,7 @@ def format_pubsub_message(job_dict, nodes):
     }
     return message
 
-
+"""Deprecated (?)
 def format_relationship_message(start, end, name, bidirectional):
     message = {
         "header": {
@@ -70,6 +72,7 @@ def format_relationship_message(start, end, name, bidirectional):
         }
     }
     return message
+"""
 
 
 def publish_to_topic(publisher, project_id, topic, data):
@@ -125,6 +128,10 @@ def launch_fastq_to_ubam(event, context):
     print(f"> Data: {data}.")
     header = data['header']
     body = data['body']
+
+    # Get seed/event ID to track provenance of Trellis events
+    seed_id = header['seedId']
+    event_id = context['event_id']
 
     dry_run = header.get('dryRun')
     if not dry_run:
@@ -327,7 +334,11 @@ def launch_fastq_to_ubam(event, context):
             job_dict[f"output_{key}"] = value
 
         # Send job metadata to create-job-node function
-        message = format_pubsub_message(job_dict, nodes)
+        message = format_pubsub_message(
+                                        job_dict = job_dict, 
+                                        #nodes = nodes,
+                                        seed_id = seed_id,
+                                        event_id = event_id)
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(
                                   PUBLISHER,

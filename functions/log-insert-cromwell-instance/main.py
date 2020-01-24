@@ -34,13 +34,15 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
-def format_pubsub_message(query, publish_to=None):
+def format_pubsub_message(query, event_id, publish_to=None):
     message = {
                "header": {
                           "resource": "query",
                           "method": "POST",
                           "labels": ['Create', 'Job', 'CromwellAttempt', 'Node', 'Query', 'Cypher'], 
                           "sentFrom": f"{FUNCTION_NAME}",
+                          "seedId": f"{event_id}",
+                          "previousEventId": f"{event_id}"
                },
                "body": {
                         "cypher": query, 
@@ -103,6 +105,9 @@ def log_insert_cromwell_instance(event, context):
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
     print(f"> Data: {data}.")
+
+    # Get seed/event ID to track provenance of Trellis events
+    event_id = context['event_id']
 
     status = "RUNNING"
 
@@ -191,8 +196,10 @@ def log_insert_cromwell_instance(event, context):
         return
 
     print(f"> Database query: \"{query}\".")
-
-    message = format_pubsub_message(query, publish_to=TOPIC_TRIGGERS)
+    message = format_pubsub_message(
+                                    query = query,
+                                    event_id = event_id,
+                                    publish_to = TOPIC_TRIGGERS)
     print(f"> Pubsub message: {message}.")
 
     result = publish_to_topic(DB_TOPIC, message)

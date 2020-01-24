@@ -34,13 +34,15 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
-def format_pubsub_message(query, publish_to=None):
+def format_pubsub_message(query, event_id, publish_to=None):
     message = {
                "header": {
                           "resource": "query",
                           "method": "UPDATE", 
                           "labels": ['Update', 'Job', 'Node', 'Query', 'Cypher'], 
                           "sentFrom": f"{FUNCTION_NAME}",
+                          "seedId": f"{event_id}",
+                          "previousEventId": f"{event_id}"
                },
                "body": {
                         "cypher": query, 
@@ -106,6 +108,9 @@ def log_delete_instance(event, context):
 
     status = "STOPPED"
 
+    # Get seed/event ID to track provenance of Trellis events
+    event_id = context['event_id']
+    
     payload = data['protoPayload']
     resource = data['resource']
 
@@ -148,7 +153,10 @@ def log_delete_instance(event, context):
 
     print(f"> Database query: \"{query}\".")
 
-    message = format_pubsub_message(query, publish_to=TOPIC_TRIGGERS)
+    message = format_pubsub_message(
+                                    query = query,
+                                    event_id = event_id,
+                                    publish_to = TOPIC_TRIGGERS)
     print(f"> Pubsub message: {message}.")
 
     result = publish_to_topic(DB_TOPIC, message)
