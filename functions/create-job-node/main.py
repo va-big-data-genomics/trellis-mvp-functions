@@ -34,7 +34,7 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
-def format_pubsub_message(query):
+def format_pubsub_message(query, seed_id, event_id):
     message = {
                "header": {
                           "resource": "query",
@@ -42,6 +42,8 @@ def format_pubsub_message(query):
                           "labels": ['Create', 'Job', 'Node', 'Query', 'Cypher'], 
                           "sentFrom": f"{FUNCTION_NAME}",
                           "publishTo": f"{TOPIC_TRIGGERS}",
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{event_id}"
                },
                "body": {
                         "cypher": query, 
@@ -181,6 +183,9 @@ def write_job_node_query(event, context):
     header = data['header']
     body = data['body']
 
+    event_id = context['event_id']
+    seed_id = header['seedId']
+
     # Create dict of metadata to add to database node
     db_dict = clean_metadata_dict(body['node'])
 
@@ -192,7 +197,10 @@ def write_job_node_query(event, context):
     db_query = format_query(db_dict)
     print(f"> Database query: \"{db_query}\".")
 
-    message = format_pubsub_message(db_query)
+    message = format_pubsub_message(
+                                    query = db_query, 
+                                    seed_id = seed_id, 
+                                    event_id = event_id)
     print(f"> Pubsub message: {message}.")
     result = publish_to_topic(TOPIC, message)
     print(f"> Published message to {TOPIC} with result: {result}.")

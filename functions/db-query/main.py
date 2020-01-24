@@ -57,14 +57,17 @@ if ENVIRONMENT == 'google-cloud':
                   #max_connections=NEO4J_MAX_CONN)
 
 
-def format_pubsub_message(method, labels, query, results, retry_count=None):
+def format_pubsub_message(method, labels, query, results, 
+                          seed_id, event_id, retry_count=None):
     labels.extend(["Database", "Result"])
     message = {
                "header": {
                           "method": method,
                           "resource": "queryResult",
                           "labels": labels,
-                          "sentFrom": FUNCTION_NAME
+                          "sentFrom": FUNCTION_NAME,
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{event_id}"
                },
                "body": {
                         "cypher": query,
@@ -143,6 +146,10 @@ def query_db(event, context):
 
     header = data["header"]
     body = data["body"]
+
+    # Get seed/event ID to track provenance of Trellis events
+    seed_id = header["seedId"]
+    event_id = context["event_id"]
     
     # Check that resource is query
     if header['resource'] != 'query':
@@ -222,19 +229,40 @@ def query_db(event, context):
             if not query_results:
                 # If no results; send one message so triggers can respond to null
                 query_result = {}
-                message = format_pubsub_message(method, labels, query, query_result, retry_count=retry_count)
+                message = format_pubsub_message(
+                                                method = method, 
+                                                labels = labels, 
+                                                query = query, 
+                                                results = query_result, 
+                                                seed_id = seed_id,
+                                                event_id = event_id,
+                                                retry_count=retry_count)
                 print(f"> Pubsub message: {message}.")
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
 
             for result in query_results:
-                message = format_pubsub_message(method, labels, query, result, retry_count=retry_count)
+                message = format_pubsub_message(
+                                                method = method,
+                                                labels = labels,
+                                                query = query,
+                                                results = result, 
+                                                seed_id = seed_id,
+                                                event_id = event_id,
+                                                retry_count=retry_count)
                 print(f"> Pubsub message: {message}.")
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
         else:
             #message['body']['results'] = results
-            message = format_pubsub_message(method, labels, query, query_results, retry_count=retry_count)
+            message = format_pubsub_message(
+                                            method = method,
+                                            labels = labels,
+                                            query = query,
+                                            results = query_results,
+                                            seed_id = seed_id,
+                                            event_id = event_id,
+                                            retry_count=retry_count)
             print(f"> Pubsub message: {message}.")
             publish_result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {publish_result}.")
