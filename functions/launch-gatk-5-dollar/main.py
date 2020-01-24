@@ -42,6 +42,37 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
+def format_pubsub_message(job_dict, seed_id, event_id):
+    message = {
+               "header": {
+                          "resource": "job-metadata", 
+                          "method": "POST",
+                          "labels": ["Create", "Job", "Dsub", "Node"],
+                          "sentFrom": f"{FUNCTION_NAME}",
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{event_id}"
+               },
+               "body": {
+                        "node": job_dict,
+               }
+    }
+    return message
+    # Package job node and inputs into JSON message
+    message = {
+        "header": {
+            "resource": "job-metadata",
+            "method": "POST",
+            "labels": ["Create", "Job", "CromwellWorkflow", "Command", "Args"],
+            "sentFrom": f"{FUNCTION_NAME}",
+            "seedId": f"{seed_id}",
+            "previousEventId": f"{event_id}"
+        },
+        "body": {
+            "node": job_dict,
+        }
+    }
+    return message
+
 def publish_to_topic(topic, data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     data = json.dumps(data).encode('utf-8')
@@ -106,6 +137,9 @@ def launch_gatk_5_dollar(event, context):
     print(f"> Data: {data}.")
     header = data['header']
     body = data['body']
+
+    seed_id = header['seedId']
+    event_id = context['event_id']
 
     dry_run = header.get('dryRun')
     if not dry_run:
@@ -315,17 +349,10 @@ def launch_gatk_5_dollar(event, context):
             job_dict[f"env_{key}"] = value
 
         # Package job node and inputs into JSON message
-        message = {
-            "header": {
-                "method": "POST",
-                "labels": ["Create", "Job", "CromwellWorkflow", "Command", "Args"],
-                "resource": "job-metadata",
-                "sentFrom": f"{FUNCTION_NAME}",
-            },
-            "body": {
-                "node": job_dict,
-            }
-        }
+        message = format_pubsub_message(
+                                        job_dict = job_dict,
+                                        seed_id = seed_id,
+                                        event_id = event_id)
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(NEW_JOBS_TOPIC, message)  
         print(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")

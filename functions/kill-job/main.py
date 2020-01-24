@@ -6,10 +6,7 @@ import logging
 
 from google.cloud import storage
 from googleapiclient import discovery
-#from oauth2client.client import GoogleCredentials
 
-#credentials = GoogleCredentials.get_application_default()
-#SERVICE = discovery.build('compute', 'v1', credentials=credentials)
 SERVICE = discovery.build('compute', 'v1')
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
@@ -38,6 +35,10 @@ def kill_job(event, context):
 
     header = data['header']
     body = data['body']
+
+    # Not necessary since this function doesn't publish anything
+    #event_id = context['event_id']
+    #seed_id = header['seedId']
 
     job = body['results'].get('node')
     if not job:
