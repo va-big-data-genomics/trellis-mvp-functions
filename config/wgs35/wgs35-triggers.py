@@ -149,19 +149,20 @@ class LaunchGatk5Dollar:
             v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
                     check that sample is not related to an existing GATK $5 workflow. 
         """
-        query = "MATCH (s:Sample)-[*2]->(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " + #1
-                f"WHERE s.sample=\"{sample}\" " +                                               #2
-                "AND NOT (s)-[*4]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +        #3
-                "WITH n.sample AS sample, " +                                                   #4
-                "n.readGroup AS readGroup, " +                                                  #5
-                "COLLECT(n) as allNodes " +                                                     #6
-                "WITH head(allNodes) AS heads " +                                               #7
-                "UNWIND [heads] AS uniqueNodes " +                                              #8
-                "WITH uniqueNodes.sample AS sample, " +                                         #9
-                "uniqueNodes.setSize AS setSize, " +                                            #10
-                "COLLECT(uniqueNodes) AS sampleNodes " +                                        #11
-                "WHERE size(sampleNodes) = setSize " +                                          #12
-                "RETURN sampleNodes AS nodes"                                                   #13
+        query = (
+                 "MATCH (s:Sample)-[*2]->(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " + #1
+                 f"WHERE s.sample=\"{sample}\" " +                                               #2
+                 "AND NOT (s)-[*4]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +        #3
+                 "WITH n.sample AS sample, " +                                                   #4
+                 "n.readGroup AS readGroup, " +                                                  #5
+                 "COLLECT(n) as allNodes " +                                                     #6
+                 "WITH head(allNodes) AS heads " +                                               #7
+                 "UNWIND [heads] AS uniqueNodes " +                                              #8
+                 "WITH uniqueNodes.sample AS sample, " +                                         #9
+                 "uniqueNodes.setSize AS setSize, " +                                            #10
+                 "COLLECT(uniqueNodes) AS sampleNodes " +                                        #11
+                 "WHERE size(sampleNodes) = setSize " +                                          #12
+                 "RETURN sampleNodes AS nodes")                                                   #13
         return query
 
 
@@ -217,7 +218,7 @@ class LaunchFastqToUbam:
                               "publishTo": self.env_vars['TOPIC_FASTQ_TO_UBAM'],
                    },
                    "body": {
-                            "cypher": query
+                            "cypher": query,
                             "result-mode": "data",
                             "result-structure": "list",
                             "result-split": "True"
@@ -227,14 +228,15 @@ class LaunchFastqToUbam:
 
 
     def _create_query(self, sample):
-        query = "MATCH (n:Fastq) " + 
-                f"WHERE n.sample=\"{sample}\" " +
-                "AND NOT (n)-[*2]->(:Ubam) " +
-                "WITH n.readGroup AS read_group, " +
-                "n.setSize AS set_size, " +
-                "COLLECT(n) AS nodes " +
-                "WHERE size(nodes) = 2 " + 
-                "RETURN [n IN nodes] AS nodes"
+        query = (
+                 "MATCH (n:Fastq) " + 
+                 f"WHERE n.sample=\"{sample}\" " +
+                 "AND NOT (n)-[*2]->(:Ubam) " +
+                 "WITH n.readGroup AS read_group, " +
+                 "n.setSize AS set_size, " +
+                 "COLLECT(n) AS nodes " +
+                 "WHERE size(nodes) = 2 " + 
+                 "RETURN [n IN nodes] AS nodes")
         return query
 
 
