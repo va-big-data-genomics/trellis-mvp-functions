@@ -131,7 +131,7 @@ def launch_fastq_to_ubam(event, context):
 
     # Get seed/event ID to track provenance of Trellis events
     seed_id = header['seedId']
-    event_id = context['event_id']
+    event_id = context.event_id
 
     dry_run = header.get('dryRun')
     if not dry_run:

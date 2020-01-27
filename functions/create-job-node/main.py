@@ -183,7 +183,7 @@ def write_job_node_query(event, context):
     header = data['header']
     body = data['body']
 
-    event_id = context['event_id']
+    event_id = context.event_id
     seed_id = header['seedId']
 
     # Create dict of metadata to add to database node
