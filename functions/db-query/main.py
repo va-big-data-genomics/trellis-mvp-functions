@@ -133,9 +133,9 @@ def query_db(event, context):
     # Load time in RFC 3339 format
     # Description of RFC 3339: http://henry.precheur.org/python/rfc3339.html
     # Pub/Sub message example: https://cloud.google.com/functions/docs/writing/background#functions-writing-background-hello-pubsub-python
-    published_time = datetime.datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
+    published_time = datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
     # Time from message publication to reception
-    publish_elapsed = datetime.datetime.now() - published_time
+    publish_elapsed = datetime.now() - published_time
     print(
           "> Elapsed time to receive message after publication " +
           f"(seconds): {publish_elapsed.total_seconds():3f}.")
