@@ -11,6 +11,7 @@ steps:
          '--max-instances=20',
          '--entry-point=query_db',
          '--runtime=python37',
+         '--vpc-connector=trellis',
          '--trigger-topic=${_DATA_GROUP}-db-queries',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
