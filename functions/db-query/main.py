@@ -150,7 +150,7 @@ def query_db(event, context):
 
     # Get seed/event ID to track provenance of Trellis events
     seed_id = header["seedId"]
-    event_id = context["event_id"]
+    event_id = context.event_id
     
     # Check that resource is query
     if header['resource'] != 'query':

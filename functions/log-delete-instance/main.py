@@ -109,7 +109,7 @@ def log_delete_instance(event, context):
     status = "STOPPED"
 
     # Get seed/event ID to track provenance of Trellis events
-    event_id = context['event_id']
+    event_id = context.event_id
     
     payload = data['protoPayload']
     resource = data['resource']
