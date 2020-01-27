@@ -211,7 +211,7 @@ def create_node_query(event, context):
     print(f"> Event: {event}).")
     print(f"> Context: {context}.")
 
-    seed_id = context['event_id']
+    seed_id = context.event_id
 
     # Trellis config data
     name = event['name']
