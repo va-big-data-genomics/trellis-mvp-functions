@@ -139,7 +139,7 @@ def launch_gatk_5_dollar(event, context):
     body = data['body']
 
     seed_id = header['seedId']
-    event_id = context['event_id']
+    event_id = context.event_id
 
     dry_run = header.get('dryRun')
     if not dry_run:

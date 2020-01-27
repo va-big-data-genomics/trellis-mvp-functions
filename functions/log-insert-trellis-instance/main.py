@@ -107,7 +107,7 @@ def log_insert_trellis_instance(event, context):
     print(f"> Data: {data}.")
 
     # Get seed/event ID to track provenance of Trellis events
-    event_id = context['event_id']
+    event_id = context.event_id
 
     status = "RUNNING"
 
