@@ -34,7 +34,7 @@ class AddFastqSetSize:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
@@ -47,6 +47,8 @@ class AddFastqSetSize:
                               "sentFrom": self.function_name,
                               "trigger": "AddFastqSetSize",
                               "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                           "cypher": (
@@ -103,7 +105,7 @@ class LaunchGatk5Dollar:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         """Send full set of ubams to GATK task"""
         topic = self.env_vars['DB_QUERY_TOPIC']
 
@@ -119,6 +121,8 @@ class LaunchGatk5Dollar:
                               "sentFrom": self.function_name,
                               "trigger": "LaunchGatk5Dollar",
                               "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -201,7 +205,7 @@ class LaunchFastqToUbam:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
@@ -216,6 +220,8 @@ class LaunchFastqToUbam:
                               "sentFrom": self.function_name,
                               "trigger": "LaunchFastqToUbam",
                               "publishTo": self.env_vars['TOPIC_FASTQ_TO_UBAM'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -275,7 +281,7 @@ class KillDuplicateJobs:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         """
         Send results to 
             1) kill-duplicates to kill jobs and 
@@ -297,7 +303,9 @@ class KillDuplicateJobs:
                               "publishTo": [
                                             self.env_vars['TOPIC_KILL_JOB'], # Kill job
                                             self.function_name               # Label job as duplicate
-                              ]
+                              ],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    }, 
                    "body": {
                         "cypher": (
@@ -351,7 +359,7 @@ class MarkJobAsDuplicate:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         """Mark duplicate job in the database.
         """
         topic = self.env_vars['DB_QUERY_TOPIC']
@@ -366,7 +374,9 @@ class MarkJobAsDuplicate:
                               "method": "UPDATE",
                               "labels": ["Mark", "Duplicate", "Job", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "MarkJobAsDuplicate"
+                              "trigger": "MarkJobAsDuplicate",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    }, 
                    "body": {
                         "cypher": query,
@@ -413,7 +423,7 @@ class RequeueJobQuery:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         # Requeue original message, updating sentFrom property
@@ -430,6 +440,8 @@ class RequeueJobQuery:
         header['trigger'] = "RequeueJobQuery"
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
+        header['previousEventId'] = context.event_id
+        
         header['labels'].remove('Database')
         header['labels'].remove('Result')
 
@@ -473,7 +485,7 @@ class RequeueRelationshipQuery:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         # Requeue original message, updating sentFrom property
@@ -490,6 +502,8 @@ class RequeueRelationshipQuery:
         header['trigger'] = "RequeueRelationshipQuery"
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
+        header['previousEventId'] = context.event_id
+
         header['labels'].remove('Database')
         header['labels'].remove('Result')
 
@@ -535,7 +549,7 @@ class RelateTrellisOutputToJob:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         node_id = node['id']
@@ -551,7 +565,9 @@ class RelateTrellisOutputToJob:
                               "labels": ["Create", "Relationship", "Trellis", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateTrellisOutputToJob",
-                              "publishTo": self.function_name
+                              "publishTo": self.function_name,
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -600,7 +616,7 @@ class RelateTrellisInputToJob:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         messages = []
@@ -617,7 +633,9 @@ class RelateTrellisInputToJob:
                                   "labels": ["Create", "Relationship", "Trellis", "Input", "Cypher", "Query"],
                                   "sentFrom": self.function_name,
                                   "trigger": "RelatedTrellisInputToJob",
-                                  "publishTo": self.function_name
+                                  "publishTo": self.function_name,
+                                  "seedId": header["seedId"],
+                                  "previousEventId": context.event_id,
                        },
                        "body": {
                                 "cypher": query,
@@ -668,7 +686,7 @@ class RunDstatWhenJobStopped:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['TOPIC_DSTAT']
 
         messages = []
@@ -679,7 +697,9 @@ class RunDstatWhenJobStopped:
                               "method": "POST",
                               "labels": ["Dstat", "Command"],
                               "sentFrom": self.function_name,
-                              "trigger": "RunDstatWhenJobStopped"
+                              "trigger": "RunDstatWhenJobStopped",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "command": node["dstatCmd"]
@@ -716,7 +736,7 @@ class RelateDstatToJob:
         return True    
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -727,6 +747,8 @@ class RelateDstatToJob:
                               "labels": ["Create", "Dstat", "Relationship", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateDstatToJob",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -783,7 +805,7 @@ class RecheckDstat:
         return True    
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['TOPIC_DSTAT']
 
         message = {
@@ -793,6 +815,8 @@ class RecheckDstat:
                               "labels": ["Dstat", "Command"],
                               "sentFrom": self.function_name,
                               "trigger": "RecheckDstat",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "command": node["command"]
@@ -846,7 +870,7 @@ class RelateSampleToFromPersonalis:
         return True    
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -858,7 +882,9 @@ class RelateSampleToFromPersonalis:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Sample", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateSampleToFromPersonalis"
+                              "trigger": "RelateSampleToFromPersonalis",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -914,7 +940,7 @@ class RelateFromPersonalisToSample:
         return True    
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -927,7 +953,9 @@ class RelateFromPersonalisToSample:
                               "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateFromPersonalisToSample",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -980,7 +1008,7 @@ class RelateCromwellOutputToStep:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -993,7 +1021,9 @@ class RelateCromwellOutputToStep:
                               "labels": ["Create", "Relationship", "CromwellStep", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellOutputToStep",
-                              "publishTo": self.function_name
+                              "publishTo": self.function_name,
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1065,7 +1095,7 @@ class AddWorkflowIdToCromwellWorkflow:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1078,7 +1108,9 @@ class AddWorkflowIdToCromwellWorkflow:
                               "labels": ["Update", "CromwellWorkflow", "CromwellWorkflowId","Node", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "AddWorkflowIdToCromwellWorkflow",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1146,7 +1178,7 @@ class RelateCromwellWorkflowToStep:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1159,7 +1191,9 @@ class RelateCromwellWorkflowToStep:
                               "labels": ["Create", "Relationship", "CromwellWorkflow", "CromwellStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellWorkflowToStep",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1230,7 +1264,7 @@ class RelateCromwellStepToPreviousStep:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1243,7 +1277,9 @@ class RelateCromwellStepToPreviousStep:
                               "labels": ["Create", "Relationship", "CromwellStep", "PreviousStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToPreviousStep",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1318,7 +1354,7 @@ class CreateCromwellStepFromAttempt:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1331,7 +1367,9 @@ class CreateCromwellStepFromAttempt:
                               "labels": ["Create", "Node", "CromwellStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "CreateCromwellStepFromAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1405,7 +1443,7 @@ class RelateCromwellStepToLatestAttempt:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1418,7 +1456,9 @@ class RelateCromwellStepToLatestAttempt:
                               "labels": ["Create", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1491,7 +1531,7 @@ class RelateCromwellAttemptToPreviousAttempt:
         return True
     
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1504,7 +1544,9 @@ class RelateCromwellAttemptToPreviousAttempt:
                               "labels": ["Create", "Relationship", "CromwellAttempt", "PreviousAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellAttemptToPreviousAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1581,7 +1623,7 @@ class RelateCromwellStepToAttempt:
         return True
     
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1594,7 +1636,9 @@ class RelateCromwellStepToAttempt:
                               "labels": ["Create", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellAttemptToPreviousAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1664,7 +1708,7 @@ class DeleteRelationshipCromwellStepHasAttempt:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1677,7 +1721,9 @@ class DeleteRelationshipCromwellStepHasAttempt:
                               "labels": ["Delete", "Relationship", "CromwellStep", "PreviousAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "DeleteRelationshipCromwellStepHasAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
