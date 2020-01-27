@@ -76,7 +76,7 @@ def check_triggers(event, context, dry_run=False):
             activated_triggers.append(trigger)
             print(f"> Trigger ACTIVATED: {trigger}.")
             #topic, message = trigger.compose_message(header, body, node)
-            messages = trigger.compose_message(header, body, node)
+            messages = trigger.compose_message(header, body, node, context)
             for message in messages:
                 topic = message[0]
                 data = message[1]
