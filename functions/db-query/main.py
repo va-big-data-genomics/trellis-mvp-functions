@@ -56,6 +56,7 @@ if ENVIRONMENT == 'google-cloud':
                   password=NEO4J_PASSPHRASE)
                   #max_connections=NEO4J_MAX_CONN)
 
+QUERY_ELAPSED_MAX = 0.300
 
 def format_pubsub_message(method, labels, query, results, seed_id, event_id, retry_count=None):
     labels.extend(["Database", "Result"])
@@ -188,7 +189,9 @@ def query_db(event, context):
             query_results = None
         query_elapsed = time.time() - query_start
         print(f"> Query results: {query_results}.")
-        print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
+        #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
+        if query_elapsed > QUERY_ELAPSED_MAX:
+            print(f"> Elapsed time to run query ({query_elapsed:.3f}) exceeded {QUERY_ELAPSED_MAX:.3f}. Query: {query}.")
     # Neo4j http connector
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
