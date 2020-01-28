@@ -129,7 +129,7 @@ def query_db(event, context):
     data = json.loads(pubsub_message)
     print(f"> Received pubsub message: {data}.")
     print(f"> Context: {context}.")
-    print(f"> Data: {data}.")
+    #print(f"> Data: {data}.")
 
     # Load time in RFC 3339 format
     # Description of RFC 3339: http://henry.precheur.org/python/rfc3339.html
