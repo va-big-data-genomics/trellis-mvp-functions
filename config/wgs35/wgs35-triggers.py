@@ -971,9 +971,9 @@ class RelateFromPersonalisToSample:
         bucket = node['bucket']
         path = node['path']
         query = (
-                 f"MATCH (job:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                 f"MATCH (sample:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
                  f"(node:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
-                  "MERGE (job)-[:HAS]->(node) " +
+                  "MERGE (sample)-[:HAS]->(node) " +
                   "RETURN node")
         return query
 
