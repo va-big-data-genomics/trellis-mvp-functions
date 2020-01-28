@@ -188,7 +188,7 @@ def query_db(event, context):
             query_results = None
         query_elapsed = time.time() - query_start
         print(f"> Query results: {query_results}.")
-        print(f"> Elapsed time to run query: {elapsed_time:.3f}. Query: {query}.")
+        print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
     # Neo4j http connector
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
