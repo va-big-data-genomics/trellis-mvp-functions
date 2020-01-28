@@ -134,9 +134,13 @@ def query_db(event, context):
     # Pub/Sub message example: https://cloud.google.com/functions/docs/writing/background#functions-writing-background-hello-pubsub-python
     try:
         published_time = datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
-    except ValueError:
+    except ValueError as exception:
         try:
             published_time = datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%SZ')
+        except:
+            raise
+    except:
+        raise
     # Time from message publication to reception
     publish_elapsed = datetime.now() - published_time
     print(
