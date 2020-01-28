@@ -160,8 +160,11 @@ def query_db(event, context):
     body = data["body"]
 
     # Get seed/event ID to track provenance of Trellis events
-    seed_id = header["seedId"]
     event_id = context.event_id
+    # If message comes from a CRON job there won't be a seedId
+    seed_id = header.get("seedId")
+    if not seed_id:
+        seed_id = event_id
     
     # Check that resource is query
     if header['resource'] != 'query':
