@@ -146,7 +146,7 @@ def query_db(event, context):
 
     # Time from message publication to reception
     publish_elapsed = datetime.now() - published_time
-    if publish_elapsed.total_seconds() > PUBSUB_ELAPSED_MAX
+    if publish_elapsed.total_seconds() > PUBSUB_ELAPSED_MAX:
         print(
               f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
               f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
