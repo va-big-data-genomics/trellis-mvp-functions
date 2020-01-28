@@ -57,6 +57,7 @@ if ENVIRONMENT == 'google-cloud':
                   #max_connections=NEO4J_MAX_CONN)
 
 QUERY_ELAPSED_MAX = 0.300
+PUBSUB_ELAPSED_MAX = 10
 
 def format_pubsub_message(method, labels, query, results, seed_id, event_id, retry_count=None):
     labels.extend(["Database", "Result"])
@@ -125,8 +126,8 @@ def query_db(event, context):
     start = datetime.now()
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    print(f"> Received pubsub message: {pubsub_message}.")
     data = json.loads(pubsub_message)
+    print(f"> Received pubsub message: {data}.")
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
 
@@ -142,11 +143,13 @@ def query_db(event, context):
             raise
     except:
         raise
+
     # Time from message publication to reception
     publish_elapsed = datetime.now() - published_time
-    print(
-          "> Time to receive message after publication " +
-          f"(seconds): {publish_elapsed.total_seconds():3f}.")
+    if publish_elapsed.total_seconds() > PUBSUB_ELAPSED_MAX
+        print(
+              f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
+              f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
     
     if type(data) == str:
         logging.warn("Message data not correctly loaded as JSON. " +
