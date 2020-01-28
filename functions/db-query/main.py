@@ -57,8 +57,7 @@ if ENVIRONMENT == 'google-cloud':
                   #max_connections=NEO4J_MAX_CONN)
 
 
-def format_pubsub_message(method, labels, query, results, 
-                          seed_id, event_id, retry_count=None):
+def format_pubsub_message(method, labels, query, results, seed_id, event_id, retry_count=None):
     labels.extend(["Database", "Result"])
     message = {
                "header": {
@@ -179,7 +178,7 @@ def query_db(event, context):
         else:
             GRAPH.run(query)
             query_results = None
-        query_elapsed = time.time() - start_time
+        query_elapsed = time.time() - query_start
         print(f"> Query results: {query_results}.")
         print(f"> Elapsed time to run query: {elapsed_time:.3f}. Query: {query}.")
     # Neo4j http connector
