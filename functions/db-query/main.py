@@ -145,7 +145,7 @@ def query_db(event, context):
     # Time from message publication to reception
     publish_elapsed = datetime.now() - published_time
     print(
-          "> Elapsed time to receive message after publication " +
+          "> Time to receive message after publication " +
           f"(seconds): {publish_elapsed.total_seconds():3f}.")
     
     if type(data) == str:
@@ -191,7 +191,7 @@ def query_db(event, context):
         print(f"> Query results: {query_results}.")
         #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
         if query_elapsed > QUERY_ELAPSED_MAX:
-            print(f"> Elapsed time to run query ({query_elapsed:.3f}) exceeded {QUERY_ELAPSED_MAX:.3f}. Query: {query}.")
+            print(f"> Time to run query ({query_elapsed:.3f}) exceeded {QUERY_ELAPSED_MAX:.3f}. Query: {query}.")
     # Neo4j http connector
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
