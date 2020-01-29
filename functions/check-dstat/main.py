@@ -55,7 +55,7 @@ def _dash_to_camelcase(word):
     return re.sub(r'(?!^)-([a-zA-Z])', lambda m: m.group(1).upper(), word)
 
 
-def _format_pubsub_message(query, retry_count=None):
+def _format_pubsub_message(query, event_id, retry_count=None):
     message = {
                "header": {
                           "resource": "query", 
@@ -63,6 +63,8 @@ def _format_pubsub_message(query, retry_count=None):
                           "labels": ["Create", "Dstat", "Node", "Cypher", "Query"],
                           "sentFrom": FUNCTION_NAME,
                           "publishTo": TRIGGER_TOPIC,
+                          "seedId": f"{event_id}",
+                          "previousEventId": f"{event_id}"
                },
                "body": {
                         "cypher": query,
@@ -213,7 +215,10 @@ def get_dstat_result():
         #if json_result["status"] == "RUNNING":
         #    continue
         query = _create_query(dstat_cmd, json_result)
-        message = _format_pubsub_message(query, retry_count)
+        message = _format_pubsub_message(
+                                         query = query,
+                                         event_id = message_id,
+                                         retry_count = retry_count)
         print(f"{trunc_id}> Pubsub message: {message}.")
         result = _publish_to_topic(DB_TOPIC, message)
         print(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")

@@ -3,6 +3,7 @@ import pdb
 import sys
 import json
 import math
+import time
 import yaml
 import base64
 import logging
@@ -55,15 +56,19 @@ if ENVIRONMENT == 'google-cloud':
                   password=NEO4J_PASSPHRASE)
                   #max_connections=NEO4J_MAX_CONN)
 
+QUERY_ELAPSED_MAX = 0.300
+PUBSUB_ELAPSED_MAX = 10
 
-def format_pubsub_message(method, labels, query, results, retry_count=None):
+def format_pubsub_message(method, labels, query, results, seed_id, event_id, retry_count=None):
     labels.extend(["Database", "Result"])
     message = {
                "header": {
                           "method": method,
                           "resource": "queryResult",
                           "labels": labels,
-                          "sentFrom": FUNCTION_NAME
+                          "sentFrom": FUNCTION_NAME,
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{event_id}"
                },
                "body": {
                         "cypher": query,
@@ -121,10 +126,30 @@ def query_db(event, context):
     start = datetime.now()
 
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    print(f"> Received pubsub message: {pubsub_message}.")
     data = json.loads(pubsub_message)
+    print(f"> Received pubsub message: {data}.")
     print(f"> Context: {context}.")
-    print(f"> Data: {data}.")
+    #print(f"> Data: {data}.")
+
+    # Load time in RFC 3339 format
+    # Description of RFC 3339: http://henry.precheur.org/python/rfc3339.html
+    # Pub/Sub message example: https://cloud.google.com/functions/docs/writing/background#functions-writing-background-hello-pubsub-python
+    try:
+        published_time = datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
+    except ValueError as exception:
+        try:
+            published_time = datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%SZ')
+        except:
+            raise
+    except:
+        raise
+
+    # Time from message publication to reception
+    publish_elapsed = datetime.now() - published_time
+    if publish_elapsed.total_seconds() > PUBSUB_ELAPSED_MAX:
+        print(
+              f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
+              f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
     
     if type(data) == str:
         logging.warn("Message data not correctly loaded as JSON. " +
@@ -133,6 +158,13 @@ def query_db(event, context):
 
     header = data["header"]
     body = data["body"]
+
+    # Get seed/event ID to track provenance of Trellis events
+    event_id = context.event_id
+    # If message comes from a CRON job there won't be a seedId
+    seed_id = header.get("seedId")
+    if not seed_id:
+        seed_id = event_id
     
     # Check that resource is query
     if header['resource'] != 'query':
@@ -150,6 +182,8 @@ def query_db(event, context):
     result_split = body.get('result-split')
     
     try:
+        # Calculate elapsed time for each query & print
+        query_start = time.time()
         if result_mode == 'stats':
             print(f"> Running stats query: {query}")
             query_results = GRAPH.run(query).stats()
@@ -159,7 +193,11 @@ def query_db(event, context):
         else:
             GRAPH.run(query)
             query_results = None
+        query_elapsed = time.time() - query_start
         print(f"> Query results: {query_results}.")
+        #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
+        if query_elapsed > QUERY_ELAPSED_MAX:
+            print(f"> Time to run query ({query_elapsed:.3f}) exceeded {QUERY_ELAPSED_MAX:.3f}. Query: {query}.")
     # Neo4j http connector
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
@@ -208,19 +246,40 @@ def query_db(event, context):
             if not query_results:
                 # If no results; send one message so triggers can respond to null
                 query_result = {}
-                message = format_pubsub_message(method, labels, query, query_result, retry_count=retry_count)
+                message = format_pubsub_message(
+                                                method = method, 
+                                                labels = labels, 
+                                                query = query, 
+                                                results = query_result, 
+                                                seed_id = seed_id,
+                                                event_id = event_id,
+                                                retry_count=retry_count)
                 print(f"> Pubsub message: {message}.")
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
 
             for result in query_results:
-                message = format_pubsub_message(method, labels, query, result, retry_count=retry_count)
+                message = format_pubsub_message(
+                                                method = method,
+                                                labels = labels,
+                                                query = query,
+                                                results = result, 
+                                                seed_id = seed_id,
+                                                event_id = event_id,
+                                                retry_count=retry_count)
                 print(f"> Pubsub message: {message}.")
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
         else:
             #message['body']['results'] = results
-            message = format_pubsub_message(method, labels, query, query_results, retry_count=retry_count)
+            message = format_pubsub_message(
+                                            method = method,
+                                            labels = labels,
+                                            query = query,
+                                            results = query_results,
+                                            seed_id = seed_id,
+                                            event_id = event_id,
+                                            retry_count=retry_count)
             print(f"> Pubsub message: {message}.")
             publish_result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {publish_result}.")
