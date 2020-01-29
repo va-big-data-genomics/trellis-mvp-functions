@@ -165,7 +165,7 @@ def log_insert_cromwell_instance(event, context):
         "ON CREATE SET " +
             # Unique to creation
             "node.labels = [\"Job\", \"CromwellAttempt\", \"GcpInstance\"], " +
-            "node:CromwellAttempt:GcpInstance "
+            "node:CromwellAttempt:GcpInstance, " +
             # Non-unique to creation
             f"node.status = \"{status}\", " +
             f"node.instanceName = \"{instance_name}\", " +
