@@ -33,7 +33,7 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
 
 
-def format_pubsub_message(query):
+def format_pubsub_message(query, seed_id):
     message = {
                "header": {
                           "resource": "query", 
@@ -41,6 +41,8 @@ def format_pubsub_message(query):
                           "labels": ["Create", "Blob", "Node", "Cypher", "Query"],
                           "sentFrom": f"{FUNCTION_NAME}",
                           "publishTo": f"{DATA_GROUP}-triggers",
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{seed_id}"
                },
                "body": {
                         "cypher": query,
@@ -209,6 +211,8 @@ def create_node_query(event, context):
     print(f"> Event: {event}).")
     print(f"> Context: {context}.")
 
+    seed_id = context.event_id
+
     # Trellis config data
     name = event['name']
     bucket_name = event['bucket']
@@ -271,7 +275,7 @@ def create_node_query(event, context):
     db_query = format_node_merge_query(db_dict)
     print(f"> Database query: \"{db_query}\".")
 
-    message = format_pubsub_message(db_query)
+    message = format_pubsub_message(db_query, seed_id)
     print(f"> Pubsub message: {message}.")
     result = publish_to_topic(TOPIC, message)
     print(f"> Published message to {TOPIC} with result: {result}.")

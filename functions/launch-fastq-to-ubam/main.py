@@ -2,9 +2,11 @@ import os
 import pdb
 import sys
 import json
+import time
 import uuid
 import yaml
 import base64
+import random
 import hashlib
 
 from google.cloud import storage
@@ -37,13 +39,15 @@ if ENVIRONMENT == 'google-cloud':
 
     PUBLISHER = pubsub.PublisherClient()
 
-def format_pubsub_message(job_dict, nodes):
+def format_pubsub_message(job_dict, seed_id, event_id):
     message = {
                "header": {
                           "resource": "job-metadata", 
                           "method": "POST",
                           "labels": ["Create", "Job", "Dsub", "Node"],
                           "sentFrom": f"{FUNCTION_NAME}",
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{event_id}"
                },
                "body": {
                         "node": job_dict,
@@ -51,7 +55,7 @@ def format_pubsub_message(job_dict, nodes):
     }
     return message
 
-
+"""Deprecated (?)
 def format_relationship_message(start, end, name, bidirectional):
     message = {
         "header": {
@@ -68,6 +72,7 @@ def format_relationship_message(start, end, name, bidirectional):
         }
     }
     return message
+"""
 
 
 def publish_to_topic(publisher, project_id, topic, data):
@@ -123,6 +128,10 @@ def launch_fastq_to_ubam(event, context):
     print(f"> Data: {data}.")
     header = data['header']
     body = data['body']
+
+    # Get seed/event ID to track provenance of Trellis events
+    seed_id = header['seedId']
+    event_id = context.event_id
 
     dry_run = header.get('dryRun')
     if not dry_run:
@@ -275,27 +284,32 @@ def launch_fastq_to_ubam(event, context):
                           f"{key}={value}"])
 
     # Optional flags
-    #if job_dict['preemptible']:
-    #    dsub_args.append("--preemptible")
     if job_dict['dryRun']:
         dsub_args.append("--dry-run")
 
-    print(f"Launching dsub with args: {dsub_args}.")
+    # Wait a random time interval to reduce overlapping db queries
+    #   because of ubam objects created at same time
+    random_wait = random.randrange(0,10)
+    print(f"> Waiting for {random_wait} seconds to launch job.")
+    time.sleep(random_wait)
+    
+    # Launch dsub job
+    print(f"> Launching dsub with args: {dsub_args}.")
     dsub_result = launch_dsub_task(dsub_args)
-    print(f"Dsub result: {dsub_result}.")
+    print(f"> Dsub result: {dsub_result}.")
 
     # Metadata to be perpetuated to ubams is written to file
     # Try until success
     metadata = {"setSize": set_size}
     if 'job-id' in dsub_result.keys() and metadata and not dry_run:
-        print(f"Metadata passed to output blobs: {metadata}.")
+        print(f"> Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
         meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
         while True:
             result = write_metadata_to_blob(meta_blob_path, metadata)
             if result == True:
                 break
-        print(f"Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
+        print(f"> Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
 
     
     if 'job-id' in dsub_result.keys():
@@ -320,7 +334,11 @@ def launch_fastq_to_ubam(event, context):
             job_dict[f"output_{key}"] = value
 
         # Send job metadata to create-job-node function
-        message = format_pubsub_message(job_dict, nodes)
+        message = format_pubsub_message(
+                                        job_dict = job_dict, 
+                                        #nodes = nodes,
+                                        seed_id = seed_id,
+                                        event_id = event_id)
         print(f"> Pubsub message: {message}.")
         result = publish_to_topic(
                                   PUBLISHER,

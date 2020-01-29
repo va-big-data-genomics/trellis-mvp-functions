@@ -34,7 +34,7 @@ class AddFastqSetSize:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
@@ -47,6 +47,8 @@ class AddFastqSetSize:
                               "sentFrom": self.function_name,
                               "trigger": "AddFastqSetSize",
                               "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                           "cypher": (
@@ -65,7 +67,15 @@ class AddFastqSetSize:
         return([(topic, message)])
 
 
-class CheckUbamCount:
+class LaunchGatk5Dollar:
+    """Trigger for launching GATK $5 Cromwell workflow.
+
+    Check whether all ubams for a sample are present, and
+    that they haven't already been input to a $5 workflow.
+
+    If so, send all ubam nodes metadata to the gatk-5-dollar
+    pub/sub topic.
+    """
 
     def __init__(self, function_name, env_vars):
         self.function_name = function_name
@@ -77,6 +87,7 @@ class CheckUbamCount:
         reqd_header_labels = ['Relationship', 'Database', 'Result']
         required_labels = ['Ubam']
 
+        # If there are no results; trigger is not activated
         if not node:
             return False
 
@@ -94,12 +105,13 @@ class CheckUbamCount:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         """Send full set of ubams to GATK task"""
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
-        set_size = node['setSize']
+
+        query = self._create_query(sample)
 
         message = {
                    "header": {
@@ -107,24 +119,13 @@ class CheckUbamCount:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Ubam", "GATK", "Nodes"],
                               "sentFrom": self.function_name,
-                              "trigger": "CheckUbamCount",
+                              "trigger": "LaunchGatk5Dollar",
                               "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
-                            "cypher": (
-                                       "MATCH (n:Ubam) " +
-                                       f"WHERE n.sample=\"{sample}\" " +
-                                       "AND NOT (n)-[:INPUT_TO]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +
-                                       "WITH n.sample AS sample, " +
-                                       "n.readGroup AS readGroup, " +
-                                       "COLLECT(n) as allNodes " +
-                                       "WITH head(allNodes) AS heads " +
-                                       "UNWIND [heads] AS uniqueNodes " +
-                                       "WITH uniqueNodes.sample AS sample, " +
-                                       "uniqueNodes.setSize AS setSize, " +
-                                       "COLLECT(uniqueNodes) AS sampleNodes " +
-                                       "WHERE size(sampleNodes) = setSize " +
-                                       "RETURN sampleNodes AS nodes"),
+                            "cypher": query,
                             "result-mode": "data", 
                             "result-structure": "list",
                             "result-split": "True",
@@ -133,7 +134,43 @@ class CheckUbamCount:
         return([(topic, message)])
 
 
-class GetFastqForUbam:
+    def _create_query(self, sample):
+        """Check if all ubams for a sample are in the database & send to GATK $5 function.
+
+        Description of query, by line:
+            (1-2)  Find all ubams associated with this ubams sample.
+            (3)    Check that there is not an existing GATK $5 workflow for this sample.
+            (4-6)  Collect all ubams by sample/read group.
+            (7-8)  In case there are duplicate ubams, only get the first node of each 
+                    group of unique sample/read group ubams.
+            (9-11) Group all the ubams with the same sample and setSize, where setSize
+                    indicates how many ubams should be present for this sample.
+            (12)   Check that the count of bams with unique read groups matches the 
+                    expected number of bams.
+            (13)   Return number of ubam nodes.
+
+        Update notes:
+            v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
+                    check that sample is not related to an existing GATK $5 workflow. 
+        """
+        query = (
+                 "MATCH (s:Sample)-[*2]->(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " + #1
+                 f"WHERE s.sample=\"{sample}\" " +                                               #2
+                 "AND NOT (s)-[*4]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +        #3
+                 "WITH n.sample AS sample, " +                                                   #4
+                 "n.readGroup AS readGroup, " +                                                  #5
+                 "COLLECT(n) as allNodes " +                                                     #6
+                 "WITH head(allNodes) AS heads " +                                               #7
+                 "UNWIND [heads] AS uniqueNodes " +                                              #8
+                 "WITH uniqueNodes.sample AS sample, " +                                         #9
+                 "uniqueNodes.setSize AS setSize, " +                                            #10
+                 "COLLECT(uniqueNodes) AS sampleNodes " +                                        #11
+                 "WHERE size(sampleNodes) = setSize " +                                          #12
+                 "RETURN sampleNodes AS nodes")                                                   #13
+        return query
+
+
+class LaunchFastqToUbam:
 
     def __init__(self, function_name, env_vars):
 
@@ -168,10 +205,12 @@ class GetFastqForUbam:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
+
+        query = self._create_query(sample)
 
         message = {
                    "header": {
@@ -179,26 +218,32 @@ class GetFastqForUbam:
                               "method": "VIEW",
                               "labels": ["Cypher", "Query", "Fastq", "Nodes"],
                               "sentFrom": self.function_name,
-                              "trigger": "GetFastqForUbam",
+                              "trigger": "LaunchFastqToUbam",
                               "publishTo": self.env_vars['TOPIC_FASTQ_TO_UBAM'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
-                            "cypher": (
-                                       "MATCH (n:Fastq) " + 
-                                       f"WHERE n.sample=\"{sample}\" " +
-                                       "AND NOT (n)-[*2]->(:Ubam) " +
-                                       "WITH n.readGroup AS read_group, " +
-                                       "n.setSize AS set_size, " +
-                                       "COLLECT(n) AS nodes " +
-                                       "WHERE size(nodes) = 2 " + 
-                                       "RETURN [n IN nodes] AS nodes"
-                            ), 
+                            "cypher": query,
                             "result-mode": "data",
                             "result-structure": "list",
                             "result-split": "True"
                    }
         }
         return([(topic, message)])
+
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (n:Fastq) " + 
+                 f"WHERE n.sample=\"{sample}\" " +
+                 "AND NOT (n)-[*2]->(:Ubam) " +
+                 "WITH n.readGroup AS read_group, " +
+                 "n.setSize AS set_size, " +
+                 "COLLECT(n) AS nodes " +
+                 "WHERE size(nodes) = 2 " + 
+                 "RETURN [n IN nodes] AS nodes")
+        return query
 
 
 class KillDuplicateJobs:
@@ -225,7 +270,7 @@ class KillDuplicateJobs:
             node.get('instanceName'),
             node.get('instanceId'),
             node.get('inputHash'),
-            node.get('status') == 'RUNNING',
+            node.get('status') == 'RUNNING', # Where does this status come from?
         ]
 
         for condition in conditions:
@@ -236,7 +281,7 @@ class KillDuplicateJobs:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         """
         Send results to 
             1) kill-duplicates to kill jobs and 
@@ -258,7 +303,9 @@ class KillDuplicateJobs:
                               "publishTo": [
                                             self.env_vars['TOPIC_KILL_JOB'], # Kill job
                                             self.function_name               # Label job as duplicate
-                              ]
+                              ],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    }, 
                    "body": {
                         "cypher": (
@@ -312,7 +359,7 @@ class MarkJobAsDuplicate:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         """Mark duplicate job in the database.
         """
         topic = self.env_vars['DB_QUERY_TOPIC']
@@ -327,7 +374,9 @@ class MarkJobAsDuplicate:
                               "method": "UPDATE",
                               "labels": ["Mark", "Duplicate", "Job", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "MarkJobAsDuplicate"
+                              "trigger": "MarkJobAsDuplicate",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    }, 
                    "body": {
                         "cypher": query,
@@ -374,7 +423,7 @@ class RequeueJobQuery:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         # Requeue original message, updating sentFrom property
@@ -391,6 +440,8 @@ class RequeueJobQuery:
         header['trigger'] = "RequeueJobQuery"
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
+        header['previousEventId'] = context.event_id
+        
         header['labels'].remove('Database')
         header['labels'].remove('Result')
 
@@ -434,7 +485,7 @@ class RequeueRelationshipQuery:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         # Requeue original message, updating sentFrom property
@@ -451,6 +502,8 @@ class RequeueRelationshipQuery:
         header['trigger'] = "RequeueRelationshipQuery"
         header['resource'] = 'query'
         header['publishTo'] = self.function_name
+        header['previousEventId'] = context.event_id
+
         header['labels'].remove('Database')
         header['labels'].remove('Result')
 
@@ -479,7 +532,7 @@ class RelateTrellisOutputToJob:
         reqd_header_labels = ['Create', 'Blob', 'Node', 'Cypher', 'Query', 'Database', 'Result']
 
         if not node:
-                return False
+            return False
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
@@ -496,7 +549,7 @@ class RelateTrellisOutputToJob:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         node_id = node['id']
@@ -512,7 +565,9 @@ class RelateTrellisOutputToJob:
                               "labels": ["Create", "Relationship", "Trellis", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateTrellisOutputToJob",
-                              "publishTo": self.function_name
+                              "publishTo": self.function_name,
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -561,7 +616,7 @@ class RelateTrellisInputToJob:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         messages = []
@@ -578,7 +633,9 @@ class RelateTrellisInputToJob:
                                   "labels": ["Create", "Relationship", "Trellis", "Input", "Cypher", "Query"],
                                   "sentFrom": self.function_name,
                                   "trigger": "RelatedTrellisInputToJob",
-                                  "publishTo": self.function_name
+                                  "publishTo": self.function_name,
+                                  "seedId": header["seedId"],
+                                  "previousEventId": context.event_id,
                        },
                        "body": {
                                 "cypher": query,
@@ -629,7 +686,7 @@ class RunDstatWhenJobStopped:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['TOPIC_DSTAT']
 
         messages = []
@@ -640,7 +697,9 @@ class RunDstatWhenJobStopped:
                               "method": "POST",
                               "labels": ["Dstat", "Command"],
                               "sentFrom": self.function_name,
-                              "trigger": "RunDstatWhenJobStopped"
+                              "trigger": "RunDstatWhenJobStopped",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "command": node["dstatCmd"]
@@ -677,7 +736,7 @@ class RelateDstatToJob:
         return True    
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -688,6 +747,8 @@ class RelateDstatToJob:
                               "labels": ["Create", "Dstat", "Relationship", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateDstatToJob",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -744,7 +805,7 @@ class RecheckDstat:
         return True    
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['TOPIC_DSTAT']
 
         message = {
@@ -754,6 +815,8 @@ class RecheckDstat:
                               "labels": ["Dstat", "Command"],
                               "sentFrom": self.function_name,
                               "trigger": "RecheckDstat",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "command": node["command"]
@@ -807,7 +870,7 @@ class RelateSampleToFromPersonalis:
         return True    
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -819,7 +882,9 @@ class RelateSampleToFromPersonalis:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Sample", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateSampleToFromPersonalis"
+                              "trigger": "RelateSampleToFromPersonalis",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -875,7 +940,7 @@ class RelateFromPersonalisToSample:
         return True    
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -888,7 +953,9 @@ class RelateFromPersonalisToSample:
                               "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateFromPersonalisToSample",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -904,9 +971,9 @@ class RelateFromPersonalisToSample:
         bucket = node['bucket']
         path = node['path']
         query = (
-                 f"MATCH (job:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                 f"MATCH (sample:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
                  f"(node:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
-                  "MERGE (job)-[:HAS]->(node) " +
+                  "MERGE (sample)-[:HAS]->(node) " +
                   "RETURN node")
         return query
 
@@ -941,7 +1008,7 @@ class RelateCromwellOutputToStep:
                 return False
         return True
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -954,7 +1021,9 @@ class RelateCromwellOutputToStep:
                               "labels": ["Create", "Relationship", "CromwellStep", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellOutputToStep",
-                              "publishTo": self.function_name
+                              "publishTo": self.function_name,
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1026,7 +1095,7 @@ class AddWorkflowIdToCromwellWorkflow:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1039,7 +1108,9 @@ class AddWorkflowIdToCromwellWorkflow:
                               "labels": ["Update", "CromwellWorkflow", "CromwellWorkflowId","Node", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "AddWorkflowIdToCromwellWorkflow",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1107,7 +1178,7 @@ class RelateCromwellWorkflowToStep:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1120,7 +1191,9 @@ class RelateCromwellWorkflowToStep:
                               "labels": ["Create", "Relationship", "CromwellWorkflow", "CromwellStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellWorkflowToStep",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1191,7 +1264,7 @@ class RelateCromwellStepToPreviousStep:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1204,7 +1277,9 @@ class RelateCromwellStepToPreviousStep:
                               "labels": ["Create", "Relationship", "CromwellStep", "PreviousStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToPreviousStep",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1279,7 +1354,7 @@ class CreateCromwellStepFromAttempt:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1292,7 +1367,9 @@ class CreateCromwellStepFromAttempt:
                               "labels": ["Create", "Node", "CromwellStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "CreateCromwellStepFromAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1366,7 +1443,7 @@ class RelateCromwellStepToLatestAttempt:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1379,7 +1456,9 @@ class RelateCromwellStepToLatestAttempt:
                               "labels": ["Create", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1452,7 +1531,7 @@ class RelateCromwellAttemptToPreviousAttempt:
         return True
     
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1465,7 +1544,9 @@ class RelateCromwellAttemptToPreviousAttempt:
                               "labels": ["Create", "Relationship", "CromwellAttempt", "PreviousAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellAttemptToPreviousAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1542,7 +1623,7 @@ class RelateCromwellStepToAttempt:
         return True
     
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1555,7 +1636,9 @@ class RelateCromwellStepToAttempt:
                               "labels": ["Create", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellAttemptToPreviousAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1625,7 +1708,7 @@ class DeleteRelationshipCromwellStepHasAttempt:
         return True
 
 
-    def compose_message(self, header, body, node):
+    def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         query = self._create_query(node)
@@ -1638,7 +1721,9 @@ class DeleteRelationshipCromwellStepHasAttempt:
                               "labels": ["Delete", "Relationship", "CromwellStep", "PreviousAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "DeleteRelationshipCromwellStepHasAttempt",
-                              "publishTo": self.function_name   # Requeue message if fails initially
+                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
                    },
                    "body": {
                             "cypher": query,
@@ -1673,10 +1758,10 @@ def get_triggers(function_name, env_vars):
     triggers.append(AddFastqSetSize(
                                     function_name,
                                     env_vars))
-    triggers.append(CheckUbamCount(
+    triggers.append(LaunchGatk5Dollar(
                                     function_name,
                                     env_vars))
-    triggers.append(GetFastqForUbam(
+    triggers.append(LaunchFastqToUbam(
                                     function_name,
                                     env_vars))
     triggers.append(KillDuplicateJobs(
