@@ -154,9 +154,9 @@ class LaunchGatk5Dollar:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:Sample {sample:\"{sample}\")-[:HAS]-(:Fastq)-[:INPUT_TO]->" +       #1   
+                 f"MATCH (s:Sample {{sample:\"{sample}\"}})-[:HAS]-(:Fastq)-[:INPUT_TO]->" +       #1   
                         "(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " +                #2
-                 f"OPTIONAL MATCH (j:Job {sample:\"{sample}\", name:\"gatk-5-dollar\"}) " +     #3
+                 f"OPTIONAL MATCH (j:Job {{sample:\"{sample}\", name:\"gatk-5-dollar\"}}) " +     #3
                  "WITH COLLECT(n) AS allNodes, " +                                              #4
                        "j, " +                                                                  #5
                        "s.sample AS sample, " +                                                 #6
