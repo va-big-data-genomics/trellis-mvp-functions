@@ -8,6 +8,8 @@ CREATE INDEX ON :Job(name)
 CREATE INDEX ON :Job(sample, name, inputHash, status) # [KillDuplicateJobs]
 CREATE INDEX ON :Job(trellisTaskId) # [RelateTrellisOutputToJob, RelateTrellisInputToJob]
 CREATE INDEX ON :Job(instanceName)  # [MarkJobAsDuplicate, CreateCromwellStepFromAttempt, RelateCromwellAttemptToPreviousAttempt, RelateCromwellStepToAttempt]
+CREATE INDEX ON :Job(instanceId, instanceName)
+CREATE INDEX ON :Job(name, sample) 
 CREATE INDEX ON :Ubam(sample)       # [CheckUbamCount]
 CREATE INDEX ON :Dstat(instanceName, jobId)     # [RelateDstatToJob]
 CREATE INDEX ON :Dsub(dsubJobId, instanceName)  # [RelateDstatToJob]
@@ -18,3 +20,4 @@ CREATE INDEX ON :Blob(cromwellWorkflowId, wdlCallAlias, id) # [RelateCromwellOut
 CREATE INDEX ON :CromwellWorkflow(trellisTaskId) # [AddWorkflowidToCromwellWorkflow]
 CREATE INDEX ON :CromwellWorkflow(cromwellWorkflowId)  # [RelateCromwellWorkflowToStep, RelateCromwellStepToPreviousStep]
 CREATE INDEX ON :CromwellAttempt(cromwellWorkflowId, wdlCallAlias) # [RelateCromwellStepToLatestAttempt, RelateCromwellAttemptToPreviousAttempt]
+CREATE INDEX ON :Sample(sample)
