@@ -138,35 +138,51 @@ class LaunchGatk5Dollar:
         """Check if all ubams for a sample are in the database & send to GATK $5 function.
 
         Description of query, by line:
-            (1-2)  Find all ubams associated with this ubams sample.
-            (3)    Check that there is not an existing GATK $5 workflow for this sample.
-            (4-6)  Collect all ubams by sample/read group.
-            (7-8)  In case there are duplicate ubams, only get the first node of each 
+            (1-2)   Find all ubams associated with this ubams sample.
+            (3,8)   Check that there is not an existing GATK $5 workflow for this sample.
+            (4-7)   Collect all ubams by sample/read group.
+            (9-10)  In case there are duplicate ubams, only get the first node of each 
                     group of unique sample/read group ubams.
-            (9-11) Group all the ubams with the same sample and setSize, where setSize
+            (11-13) Group all the ubams with the same sample and setSize, where setSize
                     indicates how many ubams should be present for this sample.
-            (12)   Check that the count of bams with unique read groups matches the 
+            (14)    Check that the count of bams with unique read groups matches the 
                     expected number of bams.
-            (13)   Return number of ubam nodes.
+            (15)    Return number of ubam nodes.
 
         Update notes:
             v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 "MATCH (s:Sample)-[*2]->(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " + #1
-                 f"WHERE s.sample=\"{sample}\" " +                                               #2
-                 "AND NOT (s)-[*4]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +        #3
-                 "WITH n.sample AS sample, " +                                                   #4
-                 "n.readGroup AS readGroup, " +                                                  #5
-                 "COLLECT(n) as allNodes " +                                                     #6
-                 "WITH head(allNodes) AS heads " +                                               #7
-                 "UNWIND [heads] AS uniqueNodes " +                                              #8
-                 "WITH uniqueNodes.sample AS sample, " +                                         #9
-                 "uniqueNodes.setSize AS setSize, " +                                            #10
-                 "COLLECT(uniqueNodes) AS sampleNodes " +                                        #11
-                 "WHERE size(sampleNodes) = setSize " +                                          #12
-                 "RETURN sampleNodes AS nodes")                                                   #13
+                 f"MATCH (s:Sample {sample:\"{sample}\")-[:HAS]-(:Fastq)-[:INPUT_TO]->" +       #1   
+                        "(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " +                #2
+                 f"OPTIONAL MATCH (j:Job {sample:\"{sample}\", name:\"gatk-5-dollar\"}) " +     #3
+                 "WITH COLLECT(n) AS allNodes, " +                                              #4
+                       "j, " +                                                                  #5
+                       "s.sample AS sample, " +                                                 #6
+                       "n.readGroup AS readGroup " +                                            #7
+                 "WHERE NOT EXISTS(j.sample) " +                                                #8
+                 "WITH head(allNodes) AS heads " +                                              #9
+                 "UNWIND [heads] AS uniqueNodes " +                                             #10
+                 "WITH uniqueNodes.sample AS sample, " +                                        #11
+                      "uniqueNodes.setSize AS setSize, " +                                      #12
+                      "COLLECT(uniqueNodes) AS sampleNodes " +                                  #13
+                 "WHERE size(sampleNodes) = setSize " +                                         #14
+                 "RETURN sampleNodes AS nodes")                                                 #15
+
+                 #"MATCH (s:Sample)-[*2]->(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " + #1
+                 #f"WHERE s.sample=\"{sample}\" " +                                               #2
+                 #"AND NOT (s)-[*4]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +        #3
+                 #"WITH n.sample AS sample, " +                                                   #4
+                 #"n.readGroup AS readGroup, " +                                                  #5
+                 #"COLLECT(n) as allNodes " +                                                     #6
+                 #"WITH head(allNodes) AS heads " +                                               #7
+                 #"UNWIND [heads] AS uniqueNodes " +                                              #8
+                 #"WITH uniqueNodes.sample AS sample, " +                                         #9
+                 #"uniqueNodes.setSize AS setSize, " +                                            #10
+                 #"COLLECT(uniqueNodes) AS sampleNodes " +                                        #11
+                 #"WHERE size(sampleNodes) = setSize " +                                          #12
+                 #"RETURN sampleNodes AS nodes")                                                   #13
         return query
 
 
