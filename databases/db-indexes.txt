@@ -2,6 +2,7 @@ CREATE INDEX ON :Blob(bucket, path) # [RelateFromPersonalisToSample]
 CREATE INDEX ON :Blob(id)           # [RelateTrellisInputToJob]
 CREATE INDEX ON :Blob(sample)       # [RelateSampleToFromPersonalis, RelateFromPersonalisToSample]
 CREATE INDEX ON :Blob(taskId, id)   # [RelateTrellisOutputToJob]
+CREATE INDEX ON :Blob(bucket, name, size, id, crc32c) # [db-query-index]
 CREATE INDEX ON :Fastq(plate)
 CREATE INDEX ON :Fastq(sample)      # [AddFastqSetSize,GetFastqForUbam]
 CREATE INDEX ON :Job(name)
