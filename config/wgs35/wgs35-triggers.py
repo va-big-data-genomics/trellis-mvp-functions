@@ -156,12 +156,10 @@ class LaunchGatk5Dollar:
         query = (
                  f"MATCH (s:Sample {{sample:\"{sample}\"}})-[:HAS]-(:Fastq)-[:INPUT_TO]->" +       #1   
                         "(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " +                #2
-                 f"OPTIONAL MATCH (j:Job {{sample:\"{sample}\", name:\"gatk-5-dollar\"}}) " +     #3
-                 "WITH COLLECT(n) AS allNodes, " +                                              #4
-                       "j, " +                                                                  #5
+                 "WHERE NOT (n)-[:INPUT_TO]->(:Job {name:\"gatk-5-dollar\"}) " +     #3
+                 "WITH COLLECT(DISTINCT n) AS allNodes, " +                                              #4                                                               #5
                        "s.sample AS sample, " +                                                 #6
-                       "n.readGroup AS readGroup " +                                            #7
-                 "WHERE NOT EXISTS(j.sample) " +                                                #8
+                       "n.readGroup AS readGroup " +                                            #7                                            #8
                  "WITH head(allNodes) AS heads " +                                              #9
                  "UNWIND [heads] AS uniqueNodes " +                                             #10
                  "WITH uniqueNodes.sample AS sample, " +                                        #11
