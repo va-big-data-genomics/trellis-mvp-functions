@@ -7,6 +7,8 @@ The value of performing whole-genome sequencing is that it generates sequencing 
 
 In order to discover these genetic variants, the sequencing reads must be processed and analyzed by a large set of applications that are organized as a single pipeline. We use the GATK best-practices pipeline, developed by the Broad Institute to do this variant calling for all of the autosomal chromosomes (1-22). This pipeline should be applied to the sequencing reads of every sample as soon as all its data has been uploaded to our cloud bucket. In addition to the GATK pipeline, we also run several applications to generate quality-control metrics, and are planning on adding additional workflows to detect variants in the mitochondrial genome (MT), sex chromosomes (X,Y) and structural variants (insertions, deletions, and copy number variants).
 
+The challenge, is that is also generates a lot more data; about 70 GB of sequencing reads data per sample. [Add more]
+
 ## Trellis
 
 ### How Trellis tracks data
@@ -24,15 +26,10 @@ We developed Trellis as an asynchronous, event-driven data management system des
 Jobs are launched when a database trigger corresponding to that job is activated. Database triggers can be activated by node metadata and have two parts; a set of metadata conditions that must be satisfied by the node, and a query that will be run against the database if the trigger is activated. The metadata conditions are used to determine that the data object that is associated with the node is an appropriate input to the job that will be launched. For instance, in the case of FastQC jobs, the input should be an object of filetype fastq or bam. The database query checks that the context of the node, i.e. the other nodes it is related to, is appropriate for running the job. If a fastq object has already been used as input to a Fastq job that is currently running, then it is inappropriate to launch another FastQC job for the same object. 
 
 
+#### Architecture
+Trellis is constructed as a system of serverless functions, connected to a graph database.
+
 In order to automate the process of tracking these data objects and launching the appropriate workflows, we developed Trellis as an event-driven data management system
-
-The challenge, is that is also generates a lot more data; about 70 GB of sequencing reads data per sample.
-
-
-
-Trellis is an event-driven data management system that runs on serverless functions and uses a Neo4j graph database to store metadata.
-
-Trellis serverless data management framework for variant calling of VA MVP whole-genome sequencing data.
 
 
 ## Update Notes
