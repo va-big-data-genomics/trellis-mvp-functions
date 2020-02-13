@@ -233,6 +233,7 @@ def launch_gatk_5_dollar(event, context):
     print(f"> Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
     #workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
+    unique_task_label = "Gatk5Dollar"
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
@@ -273,7 +274,11 @@ def launch_gatk_5_dollar(event, context):
                 "plate": plate,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
-                "labels": ['Job', 'Dsub', 'CromwellWorkflow'],
+                "labels": [
+                            'Job',
+                            'Dsub',
+                            'CromwellWorkflow',
+                            unique_task_label],
                 "inputIds": input_ids,
                 "network": NETWORK,
                 "subnetwork": SUBNETWORK,
