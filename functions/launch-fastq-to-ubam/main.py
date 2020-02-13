@@ -55,25 +55,6 @@ def format_pubsub_message(job_dict, seed_id, event_id):
     }
     return message
 
-"""Deprecated (?)
-def format_relationship_message(start, end, name, bidirectional):
-    message = {
-        "header": {
-            "resource": "relationship",
-            "method": "POST",
-            "labels": ["Job", "Create", "Relationship", "Input"],
-            "sentFrom": f"{FUNCTION_NAME}"
-        },
-        "body": {
-            "startNode": start,
-            "endNode": end,
-            "name": name,
-            "bidirectional": bidirectional
-        }
-    }
-    return message
-"""
-
 
 def publish_to_topic(publisher, project_id, topic, data):
     topic_path = publisher.topic_path(project_id, topic)
@@ -194,6 +175,7 @@ def launch_fastq_to_ubam(event, context):
 
 
     # Define logging & outputs after task_id
+    unique_task_label = "FastqToUbam"
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
@@ -235,7 +217,7 @@ def launch_fastq_to_ubam(event, context):
                 "readGroup": read_group,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
-                "labels": ["Job", "Dsub"],
+                "labels": ["Job", "Dsub", unique_task_label],
                 "inputIds": input_ids,
                 "network": NETWORK,
                 "subnetwork": SUBNETWORK,
