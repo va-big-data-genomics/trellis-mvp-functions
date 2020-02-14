@@ -1,0 +1,103 @@
+name: gcf-{repo_owner}-trellis-{data_group}-create-job-node
+description: gcf-{data_group}-create-job-node
+github:
+    owner: {repo_owner}
+    name: {repo_name}
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/create-job-node/*
+filename: functions/create-job-node/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _DATA_GROUP: {data_group}
+    _ENVIRONMENT: google-cloud
+---
+name: gcf-{repo_owner}-trellis-{data_group}-triggers
+description: gcf-{data_group}-triggers
+github:
+    owner: {repo_owner}
+    name: {repo_name}
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/check-triggers/*
+    - config/{data_group}/{data_group}-triggers.py
+filename: functions/check-triggers/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _DATA_GROUP: {data_group}
+    _ENVIRONMENT: google-cloud
+    _TRIGGER_TOPIC: {data_group}-triggers
+---
+name: gcf-{repo_owner}-trellis-{data_group}-kill-job
+description: gcf-{data_group}-kill-job
+github:
+    owner: {repo_owner}
+    name: {repo_name}
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/kill-job/*
+filename: functions/kill-job/cloudbuild.yaml
+substitutions:
+    _DATA_GROUP: {data_group}
+    _ENVIRONMENT: google-cloud
+    _TRIGGER_TOPIC: {data_group}-kill-job
+---
+name: gcf-{repo_owner}-trellis-{data_group}-db-query
+description: gcf-{data_group}-db-query
+github:
+    owner: {repo_owner}
+    name: {repo_name}
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/db-query/*
+filename: functions/db-query/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _DATA_GROUP: {data_group}
+    _ENVIRONMENT: google-cloud
+---
+name: gcf-{repo_owner}-trellis-{data_group}-check-dstat
+description: gcf-{data_group}-check-dstat
+github:
+    owner: {repo_owner}
+    name: {repo_name}
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/check-dstat/*
+filename: functions/check-dstat/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _DATA_GROUP: {data_group}
+    _ENVIRONMENT: google-cloud
+    _FUNCTION_NAME: {data_group}-check-dstat
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
