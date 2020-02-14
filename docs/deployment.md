@@ -29,6 +29,13 @@ gcloud config set project my-project
 
 3. From the command-line, use the "cd" command to navigate to the root of the forked Trellis repo (e.g. "cd /Users/me/trellis")
 4. Navigate to the gcp-build-triggers/templates directory.
+5. For each yaml file, replace the bracketed keywords with your project values.
+6. Run the following command to deploy each trigger:
+
+```
+gcloud beta builds triggers import --source=trigger.yaml
+```
+7. Navigate to the Cloud Build panel and check that each trigger has been deployed. If builds are not automatically triggered, trigger them automatically.
 
 ```
 cd gcp-build-triggers
