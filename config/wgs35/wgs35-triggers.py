@@ -110,8 +110,9 @@ class LaunchGatk5Dollar:
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
+        event_id = context.event_id
 
-        query = self._create_query(sample)
+        query = self._create_query(sample, event_id)
 
         message = {
                    "header": {
@@ -134,7 +135,7 @@ class LaunchGatk5Dollar:
         return([(topic, message)])
 
 
-    def _create_query(self, sample):
+    def _create_query(self, sample, event_id):
         """Check if all ubams for a sample are in the database & send to GATK $5 function.
 
         Description of query, by line:
@@ -154,33 +155,36 @@ class LaunchGatk5Dollar:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:Sample {{sample:\"{sample}\"}})-[:HAS]->(:Fastq)-[:INPUT_TO]->" +       #1   
-                        "(:Job)-[:OUTPUT]->(n:Ubam) " +                #2
-                 "WHERE NOT (n)-[:INPUT_TO]->(:Job:CromwellWorkflow) " +     #3
-                 "WITH COLLECT(DISTINCT n) AS allNodes, " +                                              #4                                                               #5
-                       "s.sample AS sample, " +                                                 #6
-                       "n.readGroup AS readGroup " +                                            #7                                            #8
-                 "WITH head(allNodes) AS heads " +                                              #9
-                 "UNWIND [heads] AS uniqueNodes " +                                             #10
-                 "WITH uniqueNodes.sample AS sample, " +                                        #11
-                      "uniqueNodes.setSize AS setSize, " +                                      #12
-                      "COLLECT(uniqueNodes) AS sampleNodes " +                                  #13
-                 "WHERE size(sampleNodes) = setSize " +                                         #14
-                 "RETURN sampleNodes AS nodes")                                                 #15
-
-                 #"MATCH (s:Sample)-[*2]->(:Job {name:\"fastq-to-ubam\"})-[:OUTPUT]->(n:Ubam) " + #1
-                 #f"WHERE s.sample=\"{sample}\" " +                                               #2
-                 #"AND NOT (s)-[*4]->(:Job:CromwellWorkflow {name: \"gatk-5-dollar\"}) " +        #3
-                 #"WITH n.sample AS sample, " +                                                   #4
-                 #"n.readGroup AS readGroup, " +                                                  #5
-                 #"COLLECT(n) as allNodes " +                                                     #6
-                 #"WITH head(allNodes) AS heads " +                                               #7
-                 #"UNWIND [heads] AS uniqueNodes " +                                              #8
-                 #"WITH uniqueNodes.sample AS sample, " +                                         #9
-                 #"uniqueNodes.setSize AS setSize, " +                                            #10
-                 #"COLLECT(uniqueNodes) AS sampleNodes " +                                        #11
-                 #"WHERE size(sampleNodes) = setSize " +                                          #12
-                 #"RETURN sampleNodes AS nodes")                                                   #13
+                 f"MATCH (s:Sample {{sample:\"{sample}\"}})" +      #1
+                    "-[:HAS]->(:Fastq)" +                           #2
+                    "-[:INPUT_TO]->(:Job)" +                        #3
+                    "-[:OUTPUT]->(n:Ubam) " +                       #4
+                 "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " + #5
+                 "WITH s.sample AS sample, " +                      #6
+                       "n.readGroup AS readGroup, " +               #8
+                       "COLLECT(DISTINCT n) AS allNodes " +
+                 "WITH head(allNodes) AS heads " +                  #9
+                 "UNWIND [heads] AS uniqueNodes " +                 #10
+                 "WITH uniqueNodes.sample AS sample, " +            #11
+                      "uniqueNodes.setSize AS setSize, " +          #12
+                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
+                 "WHERE size(sampleNodes) = setSize " +             #14
+                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
+                            "sample: sample, " +                    #16
+                            "nodeCreated: datetime(), " +           #17
+                            "nodeCreatedEpoch: " +                  #18
+                                "datetime().epochSeconds, " +
+                            f"eventId: {event_id} }}) " +           #19
+                 "WITH sampleNodes, " +                             #20
+                      "sample, " +
+                      "j.eventId AS eventId " +                     #21
+                      "j.nodeCreatedEpoch AS epochTime " +          #22
+                 "UNWIND sampleNodes AS sampleNode " +              #23
+                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
+                            "sample: sample, " +                    #25
+                            "eventId: eventId}) " +                 #26
+                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
+                 "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
 
@@ -194,6 +198,7 @@ class LaunchFastqToUbam:
 
     def check_conditions(self, header, body, node):
 
+        # Don't need to wait until
         required_labels = [
                            'Blob', 
                            'Fastq', 
@@ -223,8 +228,10 @@ class LaunchFastqToUbam:
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         sample = node['sample']
+        read_group = node['readGroup']
+        event_id = context.event_id
 
-        query = self._create_query(sample)
+        query = self._create_query(sample, read_group, event_id)
 
         message = {
                    "header": {
@@ -247,16 +254,34 @@ class LaunchFastqToUbam:
         return([(topic, message)])
 
 
-    def _create_query(self, sample):
+    def _create_query(self, sample, read_group, event_id):
         query = (
-                 "MATCH (n:Fastq) " + 
-                 f"WHERE n.sample=\"{sample}\" " +
-                 "AND NOT (n)-[*2]->(:Ubam) " +
-                 "WITH n.readGroup AS read_group, " +
-                 "n.setSize AS set_size, " +
-                 "COLLECT(n) AS nodes " +
-                 "WHERE size(nodes) = 2 " + 
-                 "RETURN [n IN nodes] AS nodes")
+                 "MATCH (n:Fastq { " +
+                            f"sample:\"{sample}\", " +
+                            f"readGroup:{read_group}) " +
+                 "WHERE NOT " +
+                    "(n)-[:INPUT_TO]->(:JobRequest:FastqToUbam) " +
+                 "WITH n.sample AS sample, " +
+                      "n.matePair AS matePair, " +
+                      "n.setSize AS setSize, "
+                      "COLLECT(n) AS matePairNodes " +
+                 "WITH sample, " +
+                      "COLLECT(head(matePairNodes)) AS uniqueMatePairs " +
+                 "WHERE size(uniqueMatePairs) = 2 " + 
+                 "CREATE (j:JobRequest:FastqToUbam { " +
+                            "sample:sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds " +
+                            f"eventId: {event_id} }}) " +
+                 "WITH uniqueMatePairs, " +
+                     "sample, " +
+                     "j.eventId AS eventId " +
+                "UNWIND uniqueMatePairs AS uniqueMatePair " +
+                "MATCH (jobReq:JobRequest:FastqToUbam { " +
+                            "sample: sample, " +
+                            "eventId: eventId}) " +
+                "MERGE (uniqueMatePair)-[:INPUT_TO]->(jobReq) " +
+                "RETURN DISTINCT(uniqueMatePairs) AS nodes"
         return query
 
 
@@ -658,7 +683,7 @@ class RelateTrellisInputToJob:
                                 "result-split": "True"
                        }
             }
-            result = (topic, message)
+            return [(topic, message)]
             messages.append(result)
         return(messages)  
 
@@ -668,6 +693,108 @@ class RelateTrellisInputToJob:
                  f"(job:Job {{ trellisTaskId:\"{trellis_task_id}\"  }}) " +
                  f"CREATE (input)-[:INPUT_TO]->(job) " +
                   "RETURN job AS node")
+        return query
+
+
+class RelateJobToJobRequest:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+        '''Input is job node after it has been related to inputs nodes.
+        '''
+
+        reqd_header_labels = ["Create", "Relationship", "Trellis", "Input"]
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            "Job" in node.get("labels"),
+            node.get("inputIds"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        messages = []
+        
+        input_ids = node["inputIds"]
+        trellis_task_id = node["trellisTaskId"]
+
+        query = self._create_query(trellis_task_id, input_id)
+
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Create", "Relationship", "Trellis", "Input", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelatedTrellisInputToJob",
+                              "publishTo": self.function_name,
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)]) 
+
+    def _create_query(self, trellis_task_id, input_id):
+        '''
+            Query objectives:
+                * find job node for this job
+                * find input blobs for this job
+                * find job request(s) for those input blobs
+                * check that job request is not related to job
+                * Check that inputs to job are same as inputs to job request
+        '''
+
+        query = (
+                 f"MATCH (b:Blob)-[:INPUT_TO]->(j:Job {trellis_task_id})" +
+                 # Get job requests for this task
+                 "(b)-[r:INPUT_TO]->(jr:JobRequest {name: j.name}) " +
+                 # Filter job requests already related to jobs
+                 "WHERE NOT (jr)-[:TRIGGERED]->(:Job) " +
+                 "WITH j, jr, " +
+                 "COLLECT(b) AS blobs, " +
+                 "COLLECT(r) as rels " +
+                 # Check that job request has same inputs as job
+                 "WHERE size(rels) = size(blobs) " +
+                 "MERGE (jr)-[:TRIGGERED]->(j)"
+
+
+        # Working query from Friday 02/14
+        MATCH (b:Test:Blob)-[:INPUT_TO]->(j:Test:Job {case:"notSameInputs"}),
+        (b)-[:INPUT_TO]->(jr:JobRequest:Test {case:"notSameInputs"}),
+        (b2:Blob:Test)-[:INPUT_TO]->(jr)
+        WHERE NOT (jr)-[:TRIGGERED]->(:Job)
+        WITH j, jr,
+        COLLECT(DISTINCT b) AS jobInputs,
+        COLLECT(DISTINCT b2) AS requestInputs
+        WITH j, jr, jobInputs,
+        FILTER(b in jobInputs WHERE NOT b in requestInputs) AS mismatches,
+        FILTER(b in requestInputs WHERE NOT b in jobInputs) AS mismatches2
+        WHERE size(mismatches) = size(mismatches2) = 0
+        RETURN jobInputs, j, jr
+
+
         return query
 
 
