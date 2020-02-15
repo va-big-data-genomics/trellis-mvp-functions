@@ -22,3 +22,4 @@ CREATE INDEX ON :CromwellWorkflow(trellisTaskId) # [AddWorkflowidToCromwellWorkf
 CREATE INDEX ON :CromwellWorkflow(cromwellWorkflowId)  # [RelateCromwellWorkflowToStep, RelateCromwellStepToPreviousStep]
 CREATE INDEX ON :CromwellAttempt(cromwellWorkflowId, wdlCallAlias) # [RelateCromwellStepToLatestAttempt, RelateCromwellAttemptToPreviousAttempt]
 CREATE INDEX ON :Sample(sample)
+CREATE INDEX ON :JobRequest(sample, eventId)
