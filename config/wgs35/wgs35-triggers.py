@@ -271,16 +271,17 @@ class LaunchFastqToUbam:
                  "CREATE (j:JobRequest:FastqToUbam { " +
                             "sample:sample, " +
                             "nodeCreated: datetime(), " +
-                            "nodeCreatedEpoch: datetime().epochSeconds " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
                             f"eventId: {event_id} }}) " +
                  "WITH uniqueMatePairs, " +
+                     "j, " +
                      "sample, " +
                      "j.eventId AS eventId " +
                 "UNWIND uniqueMatePairs AS uniqueMatePair " +
-                "MATCH (jobReq:JobRequest:FastqToUbam { " +
-                            "sample: sample, " +
-                            "eventId: eventId}) " +
-                "MERGE (uniqueMatePair)-[:INPUT_TO]->(jobReq) " +
+                #"MATCH (jobReq:JobRequest:FastqToUbam { " +
+                #            "sample: sample, " +
+                #            "eventId: eventId}) " +
+                "MERGE (uniqueMatePair)-[:INPUT_TO]->(j) " +
                 "RETURN DISTINCT(uniqueMatePairs) AS nodes")
         return query
 
