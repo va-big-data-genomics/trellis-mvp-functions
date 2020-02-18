@@ -714,8 +714,7 @@ class RelateJobToJobRequest:
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            "Job" in node.get("labels"),
-            node.get("inputIds"),
+            "Job" in node.get("labels")
         ]
 
         for condition in conditions:
@@ -730,10 +729,9 @@ class RelateJobToJobRequest:
 
         messages = []
         
-        input_ids = node["inputIds"]
         trellis_task_id = node["trellisTaskId"]
 
-        query = self._create_query(trellis_task_id, input_id)
+        query = self._create_query(trellis_task_id)
 
         # Requeue original message, updating sentFrom property
         message = {
@@ -756,7 +754,7 @@ class RelateJobToJobRequest:
         }
         return([(topic, message)]) 
 
-    def _create_query(self, trellis_task_id, input_id):
+    def _create_query(self, trellis_task_id):
         '''
             Query objectives:
                 * find job node for this job
@@ -766,35 +764,21 @@ class RelateJobToJobRequest:
                 * Check that inputs to job are same as inputs to job request
         '''
 
+        # NOTE: If this doesn't work, I can try also try using the
+        # input IDs attached to the job node to find input blobs
         query = (
-                 f"MATCH (b:Blob)-[:INPUT_TO]->(j:Job {trellis_task_id})" +
-                 # Get job requests for this task
-                 "(b)-[r:INPUT_TO]->(jr:JobRequest {name: j.name}) " +
-                 # Filter job requests already related to jobs
-                 "WHERE NOT (jr)-[:TRIGGERED]->(:Job) " +
-                 "WITH j, jr, " +
-                 "COLLECT(b) AS blobs, " +
-                 "COLLECT(r) as rels " +
-                 # Check that job request has same inputs as job
-                 "WHERE size(rels) = size(blobs) " +
-                 "MERGE (jr)-[:TRIGGERED]->(j)"
-
-
-        # Working query from Friday 02/14
-        MATCH (b:Test:Blob)-[:INPUT_TO]->(j:Test:Job {case:"notSameInputs"}),
-        (b)-[:INPUT_TO]->(jr:JobRequest:Test {case:"notSameInputs"}),
-        (b2:Blob:Test)-[:INPUT_TO]->(jr)
-        WHERE NOT (jr)-[:TRIGGERED]->(:Job)
-        WITH j, jr,
-        COLLECT(DISTINCT b) AS jobInputs,
-        COLLECT(DISTINCT b2) AS requestInputs
-        WITH j, jr, jobInputs,
-        FILTER(b in jobInputs WHERE NOT b in requestInputs) AS mismatches,
-        FILTER(b in requestInputs WHERE NOT b in jobInputs) AS mismatches2
-        WHERE size(mismatches) = size(mismatches2) = 0
-        RETURN jobInputs, j, jr
-
-
+            "MATCH (b:Blob)-[:INPUT_TO]->(j:Job {{ trellisTaskId: \"{trellis_task_id}\" }}), " +
+            "(b)-[:INPUT_TO]->(jr:JobRequest {name: j.name}), " +
+            "(b2:Blob)-[:INPUT_TO]->(jr) " +
+            "WHERE NOT (jr)-[:TRIGGERED]->(:Job) " +
+            "WITH j, jr, " +
+            "COLLECT(DISTINCT b) AS jobInputs, " +
+            "COLLECT(DISTINCT b2) AS requestInputs " +
+            "WITH j, jr, jobInputs, requestInputs, " +
+            "[b in jobInputs WHERE NOT b in requestInputs] AS mismatches, " +
+            "[b in requestInputs WHERE NOT b in jobInputs] AS mismatches2 " +
+            "WHERE size(mismatches) = size(mismatches2) = 0 " +
+            "MERGE (jr)-[:TRIGGERED]->(j)")
         return query
 
 
