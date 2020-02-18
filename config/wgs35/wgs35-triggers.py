@@ -799,7 +799,7 @@ class RelateTrellisInputToJob:
                                 "result-split": "True"
                        }
             }
-            return [(topic, message)]
+            result = (topic, message)
             messages.append(result)
         return(messages)  
 
