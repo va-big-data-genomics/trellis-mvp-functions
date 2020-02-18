@@ -174,6 +174,7 @@ class LaunchGatk5Dollar:
                             "nodeCreated: datetime(), " +           #17
                             "nodeCreatedEpoch: " +                  #18
                                 "datetime().epochSeconds, " +
+                            "name: \"gatk-5-dollar\", " +
                             f"eventId: {event_id} }}) " +           #19
                  "WITH sampleNodes, " +                             #20
                       "sample, " +
@@ -272,6 +273,7 @@ class LaunchFastqToUbam:
                             "sample:sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"fastq-to-ubam\", " +
                             f"eventId: {event_id} }}) " +
                  "WITH uniqueMatePairs, " +
                      "j, " +
