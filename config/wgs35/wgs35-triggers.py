@@ -258,7 +258,7 @@ class LaunchFastqToUbam:
         query = (
                  "MATCH (n:Fastq { " +
                             f"sample:\"{sample}\", " +
-                            f"readGroup:{read_group}) " +
+                            f"readGroup:{read_group} }}) " +
                  "WHERE NOT " +
                     "(n)-[:INPUT_TO]->(:JobRequest:FastqToUbam) " +
                  "WITH n.sample AS sample, " +
