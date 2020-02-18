@@ -1880,13 +1880,17 @@ class DeleteRelationshipCromwellStepHasAttempt:
 def get_triggers(function_name, env_vars):
 
     triggers = []
-    triggers.append(AddFastqSetSize(
-                                    function_name,
-                                    env_vars))
+    
+    ### Launch jobs
     triggers.append(LaunchGatk5Dollar(
                                     function_name,
                                     env_vars))
     triggers.append(LaunchFastqToUbam(
+                                    function_name,
+                                    env_vars))
+
+    ### Other
+    triggers.append(AddFastqSetSize(
                                     function_name,
                                     env_vars))
     triggers.append(KillDuplicateJobs(
@@ -1898,25 +1902,32 @@ def get_triggers(function_name, env_vars):
     triggers.append(RequeueRelationshipQuery(
                                     function_name,
                                     env_vars))
+    triggers.append(RunDstatWhenJobStopped(
+                                    function_name,
+                                    env_vars))
+
+    triggers.append(RecheckDstat(
+                                    function_name,
+                                    env_vars))
+
+    triggers.append(MarkJobAsDuplicate(
+                                    function_name,
+                                    env_vars))
+
+    ### Relationship triggers
     triggers.append(RelateTrellisOutputToJob(
                                     function_name,
                                     env_vars))
     triggers.append(RelateTrellisInputToJob(
                                     function_name,
                                     env_vars))
-    triggers.append(RunDstatWhenJobStopped(
+    triggers.append(RelateJobToJobRequest(
                                     function_name,
                                     env_vars))
     triggers.append(RelateDstatToJob(
                                     function_name,
                                     env_vars))
-    triggers.append(RecheckDstat(
-                                    function_name,
-                                    env_vars))
     triggers.append(RelateFromPersonalisToSample(
-                                    function_name,
-                                    env_vars))
-    triggers.append(MarkJobAsDuplicate(
                                     function_name,
                                     env_vars))
 
