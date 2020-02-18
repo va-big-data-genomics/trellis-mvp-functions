@@ -560,6 +560,119 @@ class RequeueRelationshipQuery:
         return([(topic, message)])   
 
 
+class RunDstatWhenJobStopped:
+    
+    def __init__(self, function_name, env_vars):
+        """Launch dstat after dsub jobs finish.
+        """
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            "Job" in node.get("labels"),
+            node.get("status") == "STOPPED",
+            node.get("dstatCmd")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['TOPIC_DSTAT']
+
+        messages = []
+        # Requeue original message, updating sentFrom property
+        message = {
+                   "header": {
+                              "resource": "command",
+                              "method": "POST",
+                              "labels": ["Dstat", "Command"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RunDstatWhenJobStopped",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "command": node["dstatCmd"]
+                   }
+        }
+        return([(topic, message)])  
+
+
+class RecheckDstat:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Create', 'Dstat', 'Node', 'Database', 'Result']
+
+        if not node:
+                return False
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            node.get("status") == "RUNNING",
+            node.get("command")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True    
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['TOPIC_DSTAT']
+
+        message = {
+                   "header": {
+                              "resource": "command",
+                              "method": "POST",
+                              "labels": ["Dstat", "Command"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RecheckDstat",
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "command": node["command"]
+                   }
+        }
+        
+        # Add retry count
+        retry_count = header.get('retry-count')
+        if retry_count:
+            message["header"]["retry-count"] = retry_count + 1
+        else:
+            message["header"]["retry-count"] = 1
+        
+        # Wait 2 seconds before re-queueing
+        time.sleep(5)
+
+        return([(topic, message)])   
+
+
+# Relationship triggers
 class RelateTrellisOutputToJob:
 
     def __init__(self, function_name, env_vars):
@@ -782,57 +895,6 @@ class RelateJobToJobRequest:
         return query
 
 
-class RunDstatWhenJobStopped:
-    
-    def __init__(self, function_name, env_vars):
-        """Launch dstat after dsub jobs finish.
-        """
-
-        self.function_name = function_name
-        self.env_vars = env_vars
-
-    def check_conditions(self, header, body, node):
-        reqd_header_labels = ['Update', 'Job', 'Node', 'Database', 'Result']
-
-        if not node:
-                return False
-
-        conditions = [
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
-            "Job" in node.get("labels"),
-            node.get("status") == "STOPPED",
-            node.get("dstatCmd")
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True
-
-    def compose_message(self, header, body, node, context):
-        topic = self.env_vars['TOPIC_DSTAT']
-
-        messages = []
-        # Requeue original message, updating sentFrom property
-        message = {
-                   "header": {
-                              "resource": "command",
-                              "method": "POST",
-                              "labels": ["Dstat", "Command"],
-                              "sentFrom": self.function_name,
-                              "trigger": "RunDstatWhenJobStopped",
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
-                   },
-                   "body": {
-                            "command": node["dstatCmd"]
-                   }
-        }
-        return([(topic, message)])  
-
-
 class RelateDstatToJob:
 
     def __init__(self, function_name, env_vars):
@@ -900,70 +962,14 @@ class RelateDstatToJob:
         return query
 
 
-class RecheckDstat:
-
-    def __init__(self, function_name, env_vars):
-
-        self.function_name = function_name
-        self.env_vars = env_vars
-
-
-    def check_conditions(self, header, body, node):
-        reqd_header_labels = ['Create', 'Dstat', 'Node', 'Database', 'Result']
-
-        if not node:
-                return False
-
-        conditions = [
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
-            (not header.get('retry-count') 
-             or header.get('retry-count') < MAX_RETRIES),
-            node.get("status") == "RUNNING",
-            node.get("command")
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True    
-
-
-    def compose_message(self, header, body, node, context):
-        topic = self.env_vars['TOPIC_DSTAT']
-
-        message = {
-                   "header": {
-                              "resource": "command",
-                              "method": "POST",
-                              "labels": ["Dstat", "Command"],
-                              "sentFrom": self.function_name,
-                              "trigger": "RecheckDstat",
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
-                   },
-                   "body": {
-                            "command": node["command"]
-                   }
-        }
-        
-        # Add retry count
-        retry_count = header.get('retry-count')
-        if retry_count:
-            message["header"]["retry-count"] = retry_count + 1
-        else:
-            message["header"]["retry-count"] = 1
-        
-        # Wait 2 seconds before re-queueing
-        time.sleep(5)
-
-        return([(topic, message)])   
-
-
 class RelateSampleToFromPersonalis:
 
     def __init__(self, function_name, env_vars):
+        '''NOTE: Currently not in use(?)
+
+            I'm not sure why I created this. It seems like it's
+            redundant with RelateFromPersonalisToSample.
+        '''
 
         self.function_name = function_name
         self.env_vars = env_vars
@@ -1914,7 +1920,7 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
 
-    ### Relationship triggers
+    ### Trellis Relationship triggers
     triggers.append(RelateTrellisOutputToJob(
                                     function_name,
                                     env_vars))
