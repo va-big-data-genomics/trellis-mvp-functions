@@ -57,7 +57,7 @@ class AddFastqSetSize:
                                      "WITH n.sample AS sample, " +
                                      "COLLECT(n) AS nodes " +
                                      "UNWIND nodes AS node " +
-                                     "SET node.setSize = size(nodes)" +
+                                     "SET node.setSize = size(nodes) " +
                                      "RETURN node"),
                           "result-mode": "data",
                           "result-structure": "list",
