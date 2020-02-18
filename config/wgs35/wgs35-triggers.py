@@ -178,7 +178,7 @@ class LaunchGatk5Dollar:
                             f"eventId: {event_id} }}) " +           #19
                  "WITH sampleNodes, " +                             #20
                       "sample, " +
-                      "j.eventId AS eventId " +                     #21
+                      "j.eventId AS eventId, " +                     #21
                       "j.nodeCreatedEpoch AS epochTime " +          #22
                  "UNWIND sampleNodes AS sampleNode " +              #23
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
