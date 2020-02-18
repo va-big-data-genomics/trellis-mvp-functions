@@ -58,7 +58,7 @@ class AddFastqSetSize:
                                      "COLLECT(n) AS nodes " +
                                      "UNWIND nodes AS node " +
                                      "SET node.setSize = size(nodes)" +
-                                     "RETURN node "),
+                                     "RETURN node"),
                           "result-mode": "data",
                           "result-structure": "list",
                           "result-split": "True",
