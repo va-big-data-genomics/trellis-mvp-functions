@@ -281,7 +281,7 @@ class LaunchFastqToUbam:
                             "sample: sample, " +
                             "eventId: eventId}) " +
                 "MERGE (uniqueMatePair)-[:INPUT_TO]->(jobReq) " +
-                "RETURN DISTINCT(uniqueMatePairs) AS nodes"
+                "RETURN DISTINCT(uniqueMatePairs) AS nodes")
         return query
 
 
@@ -767,7 +767,7 @@ class RelateJobToJobRequest:
         # NOTE: If this doesn't work, I can try also try using the
         # input IDs attached to the job node to find input blobs
         query = (
-            "MATCH (b:Blob)-[:INPUT_TO]->(j:Job {{ trellisTaskId: \"{trellis_task_id}\" }}), " +
+            f"MATCH (b:Blob)-[:INPUT_TO]->(j:Job {{ trellisTaskId: \"{trellis_task_id}\" }}), " +
             "(b)-[:INPUT_TO]->(jr:JobRequest {name: j.name}), " +
             "(b2:Blob)-[:INPUT_TO]->(jr) " +
             "WHERE NOT (jr)-[:TRIGGERED]->(:Job) " +
