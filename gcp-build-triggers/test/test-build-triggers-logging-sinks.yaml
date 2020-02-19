@@ -1,0 +1,65 @@
+name: sink-subio-trellis-wgs35-create-insert-trellis-worker
+description: sink-create-insert-trellis-worker
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push: 
+        branch: release-
+included_files: 
+    - logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml
+filename: logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml
+---
+name: sink-subio-trellis-wgs35-update-insert-trellis-worker
+description: sink-update-insert-trellis-worker
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-
+included_files: 
+    - logging-sinks/instance-insert-trellis-pipelines-worker/update-cloudbuild.yaml
+filename: logging-sinks/instance-insert-trellis-pipelines-worker/update-cloudbuild.yaml
+---
+name: sink-subio-trellis-wgs35-create-insert-cromwell-worker
+description: sink-create-insert-cromwell-worker
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push: 
+        branch: release-
+included_files: 
+    - logging-sinks/instance-insert-cromwell-pipelines-worker/create-cloudbuild.yaml
+filename: logging-sinks/instance-insert-cromwell-pipelines-worker/create-cloudbuild.yaml
+---
+name: sink-subio-trellis-wgs35-update-insert-cromwell-worker
+description: sink-update-insert-cromwell-worker
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-
+included_files: 
+    - logging-sinks/instance-insert-cromwell-pipelines-worker/update-cloudbuild.yaml
+filename: logging-sinks/instance-insert-cromwell-pipelines-worker/update-cloudbuild.yaml
+---
+name: sink-subio-trellis-wgs35-create-delete-pipelines-worker
+description: sink-create-delete-pipelines-worker
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push: 
+        branch: release-
+included_files: 
+    - logging-sinks/instance-delete-pipelines-worker/create-cloudbuild.yaml
+filename: logging-sinks/instance-delete-pipelines-worker/create-cloudbuild.yaml
+---
+name: sink-subio-trellis-wgs35-update-delete-pipelines-worker
+description: sink-update-delete-pipelines-worker
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-
+included_files: 
+    - logging-sinks/instance-delete-pipelines-worker/update-cloudbuild.yaml
+filename: logging-sinks/instance-delete-pipelines-worker/update-cloudbuild.yaml

@@ -1,0 +1,87 @@
+name: gcf-subio-trellis-wgs35-create-blob-node-from-personalis-final
+description: gcf-wgs35-create-blob-node-from-personalis-final
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-*
+included_files:
+    - functions/create-blob-node/*
+    - config/wgs35/from-personalis/*
+filename: functions/create-blob-node/cloudbuild.yaml
+substitutions:
+    _BUCKET_SHORT_NAME: from-personalis
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
+    _OPERATION_SHORT_NAME: final
+    _TRELLIS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_OPERATION: finalize
+    _TRIGGER_RESOURCE: gbsc-gcp-project-mvp-test-from-personalis
+---
+name: gcf-subio-trellis-wgs35-create-blob-node-from-personalis-meta
+description: gcf-wgs35-create-blob-node-from-personalis-meta
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-*
+included_files:
+    - functions/create-blob-node/*
+    - config/wgs35/from-personalis/*
+filename: functions/create-blob-node/cloudbuild.yaml
+substitutions:
+    _BUCKET_SHORT_NAME: from-personalis
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
+    _OPERATION_SHORT_NAME: meta
+    _TRELLIS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_OPERATION: metadataUpdate
+    _TRIGGER_RESOURCE: gbsc-gcp-project-mvp-test-from-personalis
+---
+name: gcf-subio-trellis-wgs35-create-blob-node-from-wgs35-final
+description: gcf-wgs35-create-blob-node-from-wgs35-final
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-*
+included_files:
+    - functions/create-blob-node/*
+    - config/wgs35/from-personalis-wgs35/*
+filename: functions/create-blob-node/cloudbuild.yaml
+substitutions:
+    _BUCKET_SHORT_NAME: wgs35
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
+    _OPERATION_SHORT_NAME: final
+    _TRELLIS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_OPERATION: finalize
+    _TRIGGER_RESOURCE: gbsc-gcp-project-mvp-test-from-personalis-wgs35
+---
+name: gcf-subio-trellis-wgs35-create-blob-node-from-wgs35-meta
+description: gcf-wgs35-create-blob-node-from-wgs35-meta
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-*
+included_files:
+    - functions/create-blob-node/*
+    - config/wgs35/from-personalis-wgs35/*
+filename: functions/create-blob-node/cloudbuild.yaml
+substitutions:
+    _BUCKET_SHORT_NAME: wgs35
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
+    _OPERATION_SHORT_NAME: meta
+    _TRELLIS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_OPERATION: metadataUpdate
+    _TRIGGER_RESOURCE: gbsc-gcp-project-mvp-test-from-personalis-wgs35
