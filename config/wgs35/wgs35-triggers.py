@@ -213,7 +213,7 @@ class LaunchFastqToUbam:
             node.get('setSize'),
             node.get('sample'),
             isinstance(node.get('readGroup'), int),
-            node.get('matePair'),
+            node.get('matePair') == 1,
             set(required_labels).issubset(set(node.get('labels'))),
         ]
 
