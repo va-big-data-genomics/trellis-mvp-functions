@@ -674,6 +674,21 @@ class RecheckDstat:
 
         return([(topic, message)])   
 
+# Launch QC tasks
+class LaunchFastqc:
+
+
+class LaunchFlagstat:
+
+
+class LaunchVcfstats:
+
+
+class LaunchTextToTable:
+
+
+class RunBigQueryImport:
+
 
 # Relationship triggers
 class RelateTrellisOutputToJob:
