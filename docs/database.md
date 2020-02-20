@@ -156,4 +156,4 @@ Do you want to continue (Y/n)?  y
 Deleted [https://www.googleapis.com/compute/v1/projects/***REMOVED***/zones/us-west1-a/instances/scratch-instance].
 ```
 
-## D. 
+## D. Create the Neo4j instance
