@@ -1,0 +1,2 @@
+dsub==0.2.5
+google-cloud-pubsub==0.30.1
