@@ -131,6 +131,7 @@ def launch_fastq_to_ubam(event, context):
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
 
+    # Create pretty-unique hash value based on input nodes
     # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
     sorted_nodes = sorted(nodes, key = lambda i: i['id'])
     nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
@@ -139,12 +140,11 @@ def launch_fastq_to_ubam(event, context):
     trunc_nodes_hash = str(nodes_hash)[:8]
     task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
 
-    #pdb.set_trace()
-
     # TODO: Implement QC checking to make sure fastqs match
     set_sizes = []
     fastq_fields = []
     fastqs = {}
+    
     # inputIds used to create relationships via trigger
     input_ids = []
     for node in nodes:
