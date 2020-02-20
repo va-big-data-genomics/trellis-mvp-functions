@@ -1939,6 +1939,9 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateFromPersonalisToSample(
                                     function_name,
                                     env_vars))
+    triggers.append(RelateSampleToFromPersonalis(
+                                    function_name,
+                                    env_vars))
 
     ### Track GATK workflow steps
     triggers.append(RelateCromwellOutputToStep(
