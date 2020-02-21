@@ -3,16 +3,11 @@ import sys
 import json
 import base64
 
+from google.cloud import pubsub
+
 from datetime import datetime
 
 from dsub.commands import dsub
-
-#project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', '')
-#zones = os.environ.get('ZONES', '')
-#out_bucket = os.environ.get('DSUB_OUT_BUCKET', '')
-#log_bucket = os.environ.get('DSUB_LOG_BUCKET', '')
-out_root = os.environ.get('DSUB_OUT_ROOT', '')
-DSUB_USER = os.environ.get('DSUB_USER', '')
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
@@ -86,6 +81,18 @@ def get_datetime_stamp():
     return datestamp
 
 
+def make_unique_task_id(nodes, datetime_stamp):
+    # Create pretty-unique hash value based on input nodes
+    # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
+    sorted_nodes = sorted(nodes, key = lambda i: i['id'])
+    nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
+    nodes_hash = hashlib.sha256(nodes_str.encode('utf-8')).hexdigest()
+    print(nodes_hash)
+    trunc_nodes_hash = str(nodes_hash)[:8]
+    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
+    return(task_id)
+
+
 def launch_fastqc(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
@@ -110,10 +117,11 @@ def launch_fastqc(event, context):
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
     # Create pretty-unique hash value based on input nodes
-    node_hash = hashlib.sha256(node['id'].encode('utf-8')).hexdigest()
-    print(node_hash)
-    trunc_node_hash = str(node_hash)[:8]
-    task_id = f"{datetime_stamp}-{trunc_node_hash}"
+    #node_hash = hashlib.sha256(node['id'].encode('utf-8')).hexdigest()
+    #print(node_hash)
+    #trunc_node_hash = str(node_hash)[:8]
+    #task_id = f"{datetime_stamp}-{trunc_node_hash}"
+    task_id = make_unique_task_id([node], datetime_stamp)
 
     # Database entry variables
     plate = node['plate']
@@ -235,7 +243,6 @@ if __name__ == "__main__":
     project_id = "gbsc-gcp-project-mvp-dev"
     zones =  "us-west1*"
     out_bucket = "gbsc-gcp-project-mvp-dev-from-personalis-qc"
-    out_root = "dsub"
 
     data = {"resource": "blob", "gcp-metadata": {"bucket": "gbsc-gcp-project-mvp-dev-from-personalis", "contentLanguage": "en", "contentType": "application/octet-stream", "crc32c": "XPwmhA==", "etag": "CMTx8Y/t8+ACEAE=", "generation": "1552093034608836", "id": "gbsc-gcp-project-mvp-dev-from-personalis/SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam/1552093034608836", "kind": "storage#object", "md5Hash": "qm+p+AbPhpyXwmXtAQ/fkA==", "mediaLink": "https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/SHIP4420818%2FAlignments%2FSHIP4420818_chromosome_Y.recal.bam?generation=1552093034608836&alt=media", "metadata": {"goog-reserved-file-mtime": "1527072114"}, "metageneration": "1", "name": "SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam", "selfLink": "https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/SHIP4420818%2FAlignments%2FSHIP4420818_chromosome_Y.recal.bam", "size": "921001444", "storageClass": "REGIONAL", "timeCreated": "2019-03-09T00:57:14.607Z", "timeStorageClassUpdated": "2019-03-09T00:57:14.607Z", "updated": "2019-03-09T00:57:14.607Z"}, "trellis-metadata": {"path": "SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam", "dirname": "SHIP4420818/Alignments", "basename": "SHIP4420818_chromosome_Y.recal.bam", "extension": "recal.bam", "time-created-epoch": 1552093034.607, "time-updated-epoch": 1552093034.607, "time-created-iso": "2019-03-09T00:57:14.607000+00:00", "time-updated-iso": "2019-03-09T00:57:14.607000+00:00", "labels": ["Bam", "WGS_9000", "Blob"], "sample": "SHIP4420818", "chromosome": "Y"}}
     data = json.dumps(data)
