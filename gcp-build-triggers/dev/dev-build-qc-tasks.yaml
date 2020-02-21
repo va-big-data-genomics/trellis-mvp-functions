@@ -1,0 +1,15 @@
+name: gcf-StanfordBioinformatics-trellis-wgs35-launch-bam-fastqc
+description: gcf-wgs35-launch-bam-fastqc
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/launch-bam-fastqc/*
+filename: functions/launch-bam-fastqc/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
