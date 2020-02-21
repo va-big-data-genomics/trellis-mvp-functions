@@ -746,7 +746,7 @@ class LaunchBamFastqc:
                  f"AND node.id =\"{blob_id}\" " +
                  "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BamFastqc) " +
                  "CREATE (jr:JobRequest:BamFastqc { " +
-                            "sample: nodes.sample, " +
+                            "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"BamFastqc\", " +
