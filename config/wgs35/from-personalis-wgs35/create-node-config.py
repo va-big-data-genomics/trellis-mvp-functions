@@ -115,6 +115,7 @@ class NodeKinds:
             "IntervalList": [".*\\.interval_list$"],
             "Json": [".*\\.json$"],
             "Merged": [".*/call-MergeVCFs/.*"],
+            "Fastqc": [".*/bam-fastqc/.*"]
         }
 
         self.label_functions = {
