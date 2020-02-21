@@ -164,7 +164,7 @@ def launch_fastqc(event, context):
     }
 
     dsub_args = [
-        "--name", f"fastqc-{job_dict['inputHash'][0:5]}"},
+        "--name", f"fastqc-{job_dict['inputHash'][0:5]}",
         "--label", f"sample={sample.lower()}",
         "--label", f"trellis-id={task_id}",
         "--label", f"trellis-name={job_dict['name']}",
