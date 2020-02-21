@@ -689,8 +689,6 @@ class LaunchBamFastqc:
         required_labels = [
                            'Blob', 
                            'Bam',
-                           'Aligned',
-                           'Sorted', 
                            'WGS35', 
                            'Gatk']
 
