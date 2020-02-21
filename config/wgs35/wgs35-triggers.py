@@ -743,7 +743,7 @@ class LaunchBamFastqc:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (nodes:Blob:Bam:Aligned:Sorted {{id: \"{blob_id}\" }}) " +
+                 f"MATCH ()-[:OUTPUT]->(nodes:Blob:Bam:Aligned:Sorted {{id: \"{blob_id}\" }}) " +
                  "WHERE NOT (nodes)-[:INPUT_TO]->(:JobRequest:BamFastqc) " +
                  "CREATE (semaphore:JobRequest:BamFastqc { " +
                             "sample: nodes.sample, " +
