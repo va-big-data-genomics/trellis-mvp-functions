@@ -139,6 +139,7 @@ def launch_fastqc(event, context):
     sample = node['sample']
     basename = node['basename']
 
+    task_name = "bam-fastqc"
     unique_task_label = "BamFastqc"
     job_dict = {
              "provider": "google-v2",
@@ -147,7 +148,7 @@ def launch_fastqc(event, context):
              "project": PROJECT_ID,
              "minCores": 1,
              "image": f"gcr.io/{PROJECT_ID}/fastqc:1.01",
-             "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{unique_task_label}/{task_id}/logs",
+             "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
              "diskSize": 1000,
              "script": "lib/fastqc.sh",
              "envs": {
@@ -157,12 +158,12 @@ def launch_fastqc(event, context):
                     "INPUT": f"gs://{bucket}/{path}"
              },
              "outputs": {
-                    "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{unique_task_label}/{task_id}/output/{basename}.fastqc_data.txt"
+                    "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{basename}.fastqc_data.txt"
              },
              "trellisTaskId": task_id,
              "sample": sample,
              "plate": plate,
-             "name": unique_task_label,
+             "name": task_name,
              "inputHash": trunc_nodes_hash,
              "labels": ["Job", "Dsub", unique_task_label],
              "inputIds": [node['id']],
