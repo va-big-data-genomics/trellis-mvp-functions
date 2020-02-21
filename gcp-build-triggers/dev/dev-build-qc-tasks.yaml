@@ -11,6 +11,6 @@ filename: functions/launch-bam-fastqc/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
     _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
-    _TRIGGER_TOPIC: wgs35-launch-bam-fastqc
+    _TRIGGER_TOPIC: wgs35-bam-fastqc
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
