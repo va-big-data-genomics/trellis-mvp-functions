@@ -141,7 +141,7 @@ def launch_fastqc(event, context):
 
     unique_task_label = "BamFastqc"
     job_dict = {
-             "provide": "google-v2",
+             "provider": "google-v2",
              "user": DSUB_USER,
              "regions": REGIONS,
              "project": PROJECT_ID,
