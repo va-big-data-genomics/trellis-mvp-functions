@@ -675,7 +675,85 @@ class RecheckDstat:
         return([(topic, message)])   
 
 # Launch QC tasks
-class LaunchFastqc:
+class LaunchBamFastqc:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        # Don't need to wait until
+        required_labels = [
+                           'Blob', 
+                           'Bam',
+                           'Aligned',
+                           'Sorted', 
+                           'WGS35', 
+                           'Gatk']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("id"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        event_id = context.event_id
+
+        query = self._create_query(blob_id, event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Trigger", "FastQC", "Bam", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "LaunchBamFastqc",
+                              "publishTo": self.env_vars['TOPIC_BAM_FASTQC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, blob_id, event_id):
+        query = (
+                 f"MATCH (nodes:Blob:Bam:Aligned:Sorted {{id: \"{blob_id}\" }}) " +
+                 "WHERE NOT (nodes)-[:INPUT_TO]->(:JobRequest:BamFastqc) " +
+                 "CREATE (semaphore:JobRequest:BamFastqc { " +
+                            "sample: nodes.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"BamFastqc\", " +
+                            f"eventId: {event_id} }}) " +
+                 "MERGE (nodes)-[:INPUT_TO]->(jr) " +
+                 "RETURN nodes"
+        return query
 
 
 class LaunchFlagstat:
@@ -1905,11 +1983,16 @@ def get_triggers(function_name, env_vars):
 
     triggers = []
     
-    ### Launch jobs
+    ### Launch variant-calling jobs
     triggers.append(LaunchGatk5Dollar(
                                     function_name,
                                     env_vars))
     triggers.append(LaunchFastqToUbam(
+                                    function_name,
+                                    env_vars))
+
+    ## Launch QC jobs
+    triggers.append(LaunchBamFastqc(
                                     function_name,
                                     env_vars))
 
