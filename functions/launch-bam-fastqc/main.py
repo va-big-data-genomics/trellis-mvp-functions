@@ -150,7 +150,7 @@ def launch_fastqc(event, context):
              "image": f"gcr.io/{PROJECT_ID}/fastqc:1.01",
              "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
              "diskSize": 1000,
-             "script": "lib/fastqc.sh",
+             "script": "fastqc.sh",
              "envs": {
                     "SAMPLE_ID": sample
              },
