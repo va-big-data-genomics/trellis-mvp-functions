@@ -133,7 +133,7 @@ def launch_fastqc(event, context):
     basename = node['basename']
 
     unique_task_label = "BamFastqc"
-    job_dict{
+    job_dict = {
              "provide": "google-v2",
              "user": DSUB_USER,
              "regions": REGIONS,
