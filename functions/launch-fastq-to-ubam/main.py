@@ -94,6 +94,18 @@ def write_metadata_to_blob(meta_blob_path, metadata):
         return False
 
 
+def make_unique_task_id(nodes, datetime_stamp):
+    # Create pretty-unique hash value based on input nodes
+    # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
+    sorted_nodes = sorted(nodes, key = lambda i: i['id'])
+    nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
+    nodes_hash = hashlib.sha256(nodes_str.encode('utf-8')).hexdigest()
+    print(nodes_hash)
+    trunc_nodes_hash = str(nodes_hash)[:8]
+    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
+    return(task_id)
+
+
 def launch_fastq_to_ubam(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
@@ -102,7 +114,6 @@ def launch_fastq_to_ubam(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
@@ -126,19 +137,9 @@ def launch_fastq_to_ubam(event, context):
     if len(nodes) != 2:
         raise ValueError(f"> Error: Need 2 fastqs; {len(nodes)} provided.")
 
-    # Dsub data
-    task_name = 'fastq-to-ubam'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-
-    # Create pretty-unique hash value based on input nodes
-    # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
-    sorted_nodes = sorted(nodes, key = lambda i: i['id'])
-    nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
-    nodes_hash = hashlib.sha256(nodes_str.encode('utf-8')).hexdigest()
-    print(nodes_hash)
-    trunc_nodes_hash = str(nodes_hash)[:8]
-    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
+    task_id = make_unique_task_id(nodes, datetime_stamp)
 
     # TODO: Implement QC checking to make sure fastqs match
     set_sizes = []
@@ -185,7 +186,7 @@ def launch_fastq_to_ubam(event, context):
                 "minRam": 7.5,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
-                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
+                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{unique_task_label}/{task_id}/logs",
                 "diskSize": 500,
                 "command": (
                             '/gatk/gatk ' +
@@ -205,7 +206,7 @@ def launch_fastq_to_ubam(event, context):
                 },
                 "inputs": fastqs,
                 "outputs": {
-                            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
+                            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{unique_task_label}/{task_id}/output/{sample}_{read_group}.ubam"
                 },
                 "trellisTaskId": task_id,
                 "dryRun": dry_run,
@@ -215,7 +216,7 @@ def launch_fastq_to_ubam(event, context):
                 "sample": sample,
                 "plate": plate,
                 "readGroup": read_group,
-                "name": task_name,
+                "name": unique_task_label,
                 "inputHash": trunc_nodes_hash,
                 "labels": ["Job", "Dsub", unique_task_label],
                 "inputIds": input_ids,
@@ -286,7 +287,7 @@ def launch_fastq_to_ubam(event, context):
     if 'job-id' in dsub_result.keys() and metadata and not dry_run:
         print(f"> Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
-        meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
+        meta_blob_path = f"{plate}/{sample}/{unique_task_label}/{task_id}/metadata/all-objects.json"
         while True:
             result = write_metadata_to_blob(meta_blob_path, metadata)
             if result == True:
