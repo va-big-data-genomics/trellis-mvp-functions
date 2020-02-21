@@ -741,18 +741,19 @@ class LaunchBamFastqc:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(nodes:Bam) " +
+                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Bam) " +
                  "WHERE s.wdlCallAlias=\"gatherbamfiles\" " +
-                 f"AND nodes.id =\"{blob_id}\" " +
-                 "AND NOT (nodes)-[:INPUT_TO]->(:JobRequest:BamFastqc) " +
-                 "CREATE (semaphore:JobRequest:BamFastqc { " +
+                 f"AND node.id =\"{blob_id}\" " +
+                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BamFastqc) " +
+                 "CREATE (jr:JobRequest:BamFastqc { " +
                             "sample: nodes.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"BamFastqc\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (nodes)-[:INPUT_TO]->(jr) " +
-                 "RETURN nodes")
+                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "RETURN node " +
+                 "LIMIT 1")
         return query
 
 
