@@ -758,16 +758,16 @@ class LaunchBamFastqc:
         return query
 
 
-class LaunchFlagstat:
+#class LaunchFlagstat:
 
 
-class LaunchVcfstats:
+#class LaunchVcfstats:
 
 
-class LaunchTextToTable:
+#class LaunchTextToTable:
 
 
-class RunBigQueryImport:
+#class RunBigQueryImport:
 
 
 # Relationship triggers
