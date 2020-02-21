@@ -97,7 +97,7 @@ def make_unique_task_id(nodes, datetime_stamp):
     print(nodes_hash)
     trunc_nodes_hash = str(nodes_hash)[:8]
     task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
-    return(task_id)
+    return(task_id, trunc_nodes_hash)
 
 
 def launch_fastqc(event, context):
@@ -128,7 +128,7 @@ def launch_fastqc(event, context):
     #print(node_hash)
     #trunc_node_hash = str(node_hash)[:8]
     #task_id = f"{datetime_stamp}-{trunc_node_hash}"
-    task_id = make_unique_task_id([node], datetime_stamp)
+    task_id, trunc_nodes_hash = make_unique_task_id([node], datetime_stamp)
 
     # Database entry variables
     plate = node['plate']
