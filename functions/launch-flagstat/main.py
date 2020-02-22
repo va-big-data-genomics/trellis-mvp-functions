@@ -27,6 +27,8 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+
     REGIONS = parsed_vars['DSUB_REGIONS']
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
@@ -34,13 +36,6 @@ if ENVIRONMENT == 'google-cloud':
     NETWORK = parsed_vars['DSUB_NETWORK']
     SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
 
-    TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
-    GATK_INPUTS_DIR = parsed_vars['GATK_INPUTS_DIR']
-    GATK_HG38_INPUTS = parsed_vars['GATK_HG38_INPUTS']
-    GATK_PAPI_INPUTS = parsed_vars['GATK_PAPI_INPUTS']
-    NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
-
-    # Establish PubSub connection
     PUBLISHER = pubsub.PublisherClient()
 
 def format_pubsub_message(job_dict, seed_id, event_id):
