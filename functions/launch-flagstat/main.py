@@ -145,7 +145,7 @@ def launch_flagstat(event, context):
         "minCores": 1,
         "image": f"gcr.io/{PROJECT_ID}/samtools:1.01",
         "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-        "command": "samtools flagstat ${INPUT} > ${OUTPUT}"
+        "command": "samtools flagstat ${INPUT} > ${OUTPUT}",
         "envs": {
             "SAMPLE_ID": sample
         },
