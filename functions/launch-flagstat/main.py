@@ -173,7 +173,7 @@ def launch_flagstat(event, context):
         "--project", job_dict["project"],
         "--min-cores", str(job_dict["minCores"]), 
         "--logging", job_dict["logging"],
-        "--image", job_dict["script"],
+        "--image", job_dict["image"],
         "--use-private-address",
         "--network", job_dict["network"],
         "--subnetwork", job_dict["subnetwork"],        
