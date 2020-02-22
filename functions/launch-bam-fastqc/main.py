@@ -116,6 +116,10 @@ def launch_fastqc(event, context):
     header = data['header']
     body = data['body']
 
+    # Get seed/event ID to track provenance of Trellis events
+    seed_id = header['seedId']
+    event_id = context.event_id
+
     node = body['results'].get('node')
     if not node:
         print("> No node provided. Exiting.")
@@ -123,11 +127,6 @@ def launch_fastqc(event, context):
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    # Create pretty-unique hash value based on input nodes
-    #node_hash = hashlib.sha256(node['id'].encode('utf-8')).hexdigest()
-    #print(node_hash)
-    #trunc_node_hash = str(node_hash)[:8]
-    #task_id = f"{datetime_stamp}-{trunc_node_hash}"
     task_id, trunc_nodes_hash = make_unique_task_id([node], datetime_stamp)
 
     # Database entry variables
