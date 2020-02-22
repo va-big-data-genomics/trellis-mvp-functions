@@ -132,7 +132,7 @@ def launch_flagstat(event, context):
     bucket = node['bucket']
     plate = node['plate']
     sample = node['sample']
-    path = node['path']=
+    path = node['path']
     basename = node['basename']
 
     task_name = 'flagstat'
