@@ -92,6 +92,7 @@ class NodeKinds:
                      ".*\\.txt$", 
                      ".*\\.duplicate_metrics$",
                      ".*\\.validation_report$",
+                     ".*\\.tsv",
             ],
             "Log": [".*\\.log$"],
             "Stderr": [".*\\/stderr$"],
@@ -115,7 +116,8 @@ class NodeKinds:
             "IntervalList": [".*\\.interval_list$"],
             "Json": [".*\\.json$"],
             "Merged": [".*/call-MergeVCFs/.*"],
-            "Fastqc": [".*/bam-fastqc/.*"]
+            "Fastqc": [".*/bam-fastqc/.*"],
+            "Flagstat": ["./*\\.flagstat\\.*"],
         }
 
         self.label_functions = {
