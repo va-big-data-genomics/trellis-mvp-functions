@@ -759,8 +759,88 @@ class LaunchBamFastqc:
         return query
 
 
-#class LaunchFlagstat:
+class LaunchFlagstat:
+    
+    def __init__(self, function_name, env_vars):
 
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        # Don't need to wait until
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Blob', 
+                           'Bam',
+                           'WGS35', 
+                           'Gatk']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("id"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        event_id = context.event_id
+
+        query = self._create_query(blob_id, event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Trigger", "Flagstat", "Bam", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "LaunchFlagstat",
+                              "publishTo": self.env_vars['TOPIC_FLAGSTAT'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, blob_id, event_id):
+        query = (
+                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Bam) " +
+                 "WHERE s.wdlCallAlias=\"gatherbamfiles\" " +
+                 f"AND node.id =\"{blob_id}\" " +
+                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:Flagstat) " +
+                 "CREATE (jr:JobRequest:Flagstat { " +
+                            "sample: node.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"Flagstat\", " +
+                            f"eventId: {event_id} }}) " +
+                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "RETURN node " +
+                 "LIMIT 1")
+        return query
 
 #class LaunchVcfstats:
 
@@ -1998,6 +2078,9 @@ def get_triggers(function_name, env_vars):
     triggers.append(LaunchBamFastqc(
                                     function_name,
                                     env_vars))
+    triggers.append(LaunchFlagstat(
+                                   function_name,
+                                   env_vars))
 
     ### Other
     triggers.append(AddFastqSetSize(
