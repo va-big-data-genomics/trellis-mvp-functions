@@ -61,7 +61,7 @@ class NodeKinds:
 
         self.match_patterns = {
             "WGS35": [".*"],
-            "Blob": [r"^(?P<plate>\w+)/(?P<sample>\w+)/(?P<trellis_task>\w+(?:-\w+)+)/(?P<trellis_task_id>\w+(?:-\w+)+)/.*"],
+            "Blob": [r"^(?P<plate>\w+)/(?P<sample>\w+)/(?P<trellis_task>\w+(?:-*\w*)+)/(?P<trellis_task_id>\w+(?:-\w+)+)/.*"],
             "Cromwell": [r"^(?P<plate>\w+)/(?P<sample>\w+)/gatk-5-dollar/(?P<task_id>\w+(?:-\w+)+)/output/(?P<cromwell_workflow_name>\w+(?:_\w+)+)/(?P<cromwell_workflow_id>\w+(?:-\w+)+)/call-(?P<wdl_call_alias>\w+)/.*"],
             "Gatk": [r"^(?P<plate>\w+)/(?P<sample>\w+)/gatk-5-dollar/.*"],
             "Vcf": [
