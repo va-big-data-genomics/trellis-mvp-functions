@@ -38,6 +38,7 @@ if ENVIRONMENT == 'google-cloud':
 
     PUBLISHER = pubsub.PublisherClient()
 
+
 def format_pubsub_message(job_dict, seed_id, event_id):
     message = {
                "header": {
@@ -103,7 +104,6 @@ def launch_fastqc(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
