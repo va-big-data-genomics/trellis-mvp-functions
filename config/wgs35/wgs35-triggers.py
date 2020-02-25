@@ -841,6 +841,7 @@ class LaunchFlagstat:
                  "LIMIT 1")
         return query
 
+
 class LaunchVcfstats:
     
     def __init__(self, function_name, env_vars):
@@ -1138,8 +1139,8 @@ class RelateJobToJobRequest:
         # input IDs attached to the job node to find input blobs
         query = (
             f"MATCH (b:Blob)-[:INPUT_TO]->(j:Job {{ trellisTaskId: \"{trellis_task_id}\" }}), " +
-            "(b)-[:INPUT_TO]->(jr:JobRequest {name: j.name}), " +
-            "(b2:Blob)-[:INPUT_TO]->(jr) " +
+            "(b)-[:INPUT_TO]->(jr:JobRequest {name: j.name}) " +
+            "MATCH (b2:Blob)-[:INPUT_TO]->(jr) " +
             "WHERE NOT (jr)-[:TRIGGERED]->(:Job) " +
             "WITH j, jr, " +
             "COLLECT(DISTINCT b) AS jobInputs, " +
