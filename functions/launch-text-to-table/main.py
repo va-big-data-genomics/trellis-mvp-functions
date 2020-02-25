@@ -104,7 +104,7 @@ def publish_to_topic(publisher, project_id, topic, data):
     result = publisher.publish(topic_path, data=message).result()
     return result
 
-    
+
 def launch_dsub_task(dsub_args):
     try:
         result = dsub.dsub_main('dsub', dsub_args)
@@ -209,8 +209,8 @@ def launch_text_to_table(event, context):
     task_id, trunc_nodes_hash = make_unique_task_id([node], datetime_stamp)
 
     bucket = node['bucket']
+    plate = node['plate']
     path = node['path']
-    
     sample = node['sample']
     basename = node['basename']
 
