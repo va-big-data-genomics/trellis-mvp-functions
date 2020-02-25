@@ -171,7 +171,7 @@ def launch_vcfstats(event, context):
     }
 
     dsub_args = [
-        "--name", f"flagstat-{job_dict['inputHash'][0:5]}",
+        "--name", f"{task_name}-{job_dict['inputHash'][0:5]}",
         "--label", f"sample={sample.lower()}",
         "--label", f"trellis-id={task_id}",
         "--label", f"trellis-name={job_dict['name']}",
