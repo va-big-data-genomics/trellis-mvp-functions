@@ -240,9 +240,9 @@ def launch_vcfstats(event, context):
         result = publish_to_topic(
                                   PUBLISHER,
                                   PROJECT_ID,
-                                  NEW_JOB_TOPIC,
+                                  NEW_JOBS_TOPIC,
                                   message) 
-        print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")  
+        print(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")  
 
 
 # For local testing
