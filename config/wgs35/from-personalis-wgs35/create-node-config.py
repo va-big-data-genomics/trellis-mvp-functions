@@ -120,6 +120,7 @@ class NodeKinds:
             "Fastqc": [".*/bam-fastqc/.*"],
             "Flagstat": [".*/flagstat/.*"],
             "Vcfstats": [".*/vcfstats/.*"],
+            "TextToTable": [".*/text-to-table/.*"],
         }
 
         self.label_functions = {
