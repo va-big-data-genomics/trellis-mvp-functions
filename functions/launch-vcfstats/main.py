@@ -33,10 +33,7 @@ if ENVIRONMENT == 'google-cloud':
     SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
 
     TRELLIS_BUCKET = parsed_vars['TRELLIS_BUCKET']
-    GATK_INPUTS_DIR = parsed_vars['GATK_INPUTS_DIR']
-    GATK_HG38_INPUTS = parsed_vars['GATK_HG38_INPUTS']
-    GATK_PAPI_INPUTS = parsed_vars['GATK_PAPI_INPUTS']
-    NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
     # Establish PubSub connection
     PUBLISHER = pubsub.PublisherClient()
@@ -240,9 +237,9 @@ def launch_vcfstats(event, context):
         result = publish_to_topic(
                                   PUBLISHER,
                                   PROJECT_ID,
-                                  NEW_JOBS_TOPIC,
+                                  NEW_JOB_TOPIC,
                                   message) 
-        print(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")  
+        print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")  
 
 
 # For local testing
