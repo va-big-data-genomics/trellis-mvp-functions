@@ -31,3 +31,20 @@ substitutions:
     _TRIGGER_TOPIC: wgs35-flagstat
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
+---
+name: gcf-StanfordBioinformatics-trellis-wgs35-launch-vcfstats
+description: gcf-wgs35-launch-vcfstats
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/launch-vcfstats/*
+filename: functions/launch-vcfstats/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
+    _TRIGGER_TOPIC: wgs35-vcfstats
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
