@@ -188,7 +188,7 @@ def launch_text_to_table(event, context):
              "minCores": 1,
              "image": f"gcr.io/{PROJECT_ID}/text-to-table:0.2.1",
              "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-             "command": "text2table -j ${JSON} -o ${OUTPUT} -v series=${SERIES},sample=${SAMPLE_ID} ${INPUT}"
+             "command": "text2table -j ${JSON} -o ${OUTPUT} -v series=${SERIES},sample=${SAMPLE_ID} ${INPUT}",
              "envs": {
                     "SAMPLE_ID": sample,
                     "SCHEMA": schema_name,
