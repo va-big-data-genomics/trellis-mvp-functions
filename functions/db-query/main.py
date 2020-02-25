@@ -209,8 +209,8 @@ def query_db(event, context):
         return
     except ServiceUnavailable as error:
         logging.warn(f"> Encountered Service Interrupion: {error}.")
-        # Remove this connection(?)
-        GRAPH = None
+        # Remove this connection(?) - causes UnboundLocalError
+        #GRAPH = None
         # Add message back to queue
         result = republish_message(DB_QUERY_TOPIC, data)
         logging.warn(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
