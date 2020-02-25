@@ -154,7 +154,7 @@ def launch_vcfstats(event, context):
             "INPUT": f"gs://{bucket}/{path}"
         },
         "outputs": {
-            "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.rtg.vcfstats.txt"
+            "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.rtg.vcfstats.data.txt"
         },
         "trellisTaskId": task_id,
         "sample": sample,
