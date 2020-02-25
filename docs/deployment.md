@@ -11,11 +11,16 @@
 ```
 https://console.cloud.google.com/cloud-build/triggers
 ```
-
+![Triggers section of the Cloud Build console](images/triggers.png)
 2. Use the left-hand navigation panel to navigate to the "Triggers" section of the Cloud Build console. 
+![Connect Repository button](images/connect.png)
 3. At the top of the page, click the "Connect Repository" button and select the "GitHub (Cloud Build GitHub App)". Click "Continue".
+![Authorization](images/authorize.png)
 4. From the GitHub Account drop-down menu, select the GitHub account which has the forked repo, or select "Add new account" to add it. Be aware that as part of this process you are granting Google access to this repo.
+5. Install Google Cloud Build if the GitHub App is not installed on any of your repositories.
+![Only select repositories](images/install.png)
 5. A window should pop up that prompts you to select a GitHub account and then either "All repositories" or "Only select repositories". Choose the account with the forked repo, then "Only select repositories" and find the forked repository from the drop-down. Click the "Install" button.
+![Connect Repository](images/select_repo.png)
 6. You should be reverted back to the "Connect repository" page of the Cloud Build console. Under select all repositories you should see the Trellis forked repo listed. Click the checkbox next to it, read the terms-of-service blurb and then click the checkbox next to that, and finally click the "Connect repository" button.
 7. After clicking, you should be transported to the "Create a push trigger" page. Click the "Skip for now" button near the bottom of the page content. Click "Continue" if prompted with a warning. Your forked Trellis repo has now been connected to Cloud Build!
 
@@ -40,4 +45,3 @@ gcloud beta builds triggers import --source=trigger.yaml
 ```
 cd gcp-build-triggers
 ```
-5. Open .yaml in a text editor and replace the 
