@@ -48,3 +48,20 @@ substitutions:
     _TRIGGER_TOPIC: wgs35-vcfstats
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
+---
+name: gcf-StanfordBioinformatics-trellis-wgs35-launch-text-to-table
+description: gcf-wgs35-launch-text-to-table
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/launch-text-to-table/*
+filename: functions/launch-text-to-table/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _TRIGGER_TOPIC: wgs35-text-to-table
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
