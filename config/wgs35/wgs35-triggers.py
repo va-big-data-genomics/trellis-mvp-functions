@@ -945,10 +945,10 @@ class LaunchTextToTable:
                            'Data',
                            'WGS35',
         ]
-        supported_labels [
-                          'Fastqc',
-                          'Flagstat',
-                          'Vcfstats'
+        supported_labels = [
+                            'Fastqc',
+                            'Flagstat',
+                            'Vcfstats'
         ]
 
         if not node:
