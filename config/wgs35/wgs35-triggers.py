@@ -750,7 +750,7 @@ class LaunchBamFastqc:
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
-                            "name: \"BamFastqc\", " +
+                            "name: \"bam-fastqc\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (node)-[:INPUT_TO]->(jr) " +
                  "RETURN node " +
@@ -834,7 +834,7 @@ class LaunchFlagstat:
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
-                            "name: \"Flagstat\", " +
+                            "name: \"flagstat\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (node)-[:INPUT_TO]->(jr) " +
                  "RETURN node " +
@@ -918,7 +918,7 @@ class LaunchVcfstats:
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
-                            "name: \"Vcfstats\", " +
+                            "name: \"vcfstats\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (node)-[:INPUT_TO]->(jr) " +
                  "RETURN node " +
