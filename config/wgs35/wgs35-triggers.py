@@ -2164,7 +2164,7 @@ def get_triggers(function_name, env_vars):
                                    env_vars))
     triggers.append(LaunchVcfstats(
                                    function_name,
-                                   env_vars)
+                                   env_vars))
 
     ### Other
     triggers.append(AddFastqSetSize(
