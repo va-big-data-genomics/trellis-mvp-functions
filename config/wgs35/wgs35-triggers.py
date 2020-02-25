@@ -1003,7 +1003,7 @@ class LaunchTextToTable:
     def _create_query(self, blob_id, event_id):
         query = (
                  f"MATCH (:Job)-[:OUTPUT]->(node:Blob) " +
-                 f"AND node.id =\"{blob_id}\" " +
+                 f"WHERE node.id =\"{blob_id}\" " +
                  "AND NOT (node)-[:INPUT_TO]->(:JobRequest:TextToTable) " +
                  "CREATE (jr:JobRequest:TextToTable { " +
                             "sample: node.sample, " +
