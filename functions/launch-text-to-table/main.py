@@ -81,6 +81,30 @@ class VcfstatsTask:
         self.json_schema = 't2t-rtg-vcfstats.json'
         self.series = 'rtg_vcfstats.txt'
 
+def format_pubsub_message(job_dict, seed_id, event_id):
+    message = {
+               "header": {
+                          "resource": "job-metadata", 
+                          "method": "POST",
+                          "labels": ["Create", "Job", "TextToTable", "Dsub", "Node"],
+                          "sentFrom": f"{FUNCTION_NAME}",
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{event_id}"
+               },
+               "body": {
+                        "node": job_dict,
+               }
+    }
+    return message
+
+
+def publish_to_topic(publisher, project_id, topic, data):
+    topic_path = publisher.topic_path(project_id, topic)
+    message = json.dumps(data).encode('utf-8')
+    result = publisher.publish(topic_path, data=message).result()
+    return result
+
+    
 def launch_dsub_task(dsub_args):
     try:
         result = dsub.dsub_main('dsub', dsub_args)
@@ -94,6 +118,18 @@ def launch_dsub_task(dsub_args):
             print(arg)
         return(sys.exc_info())
     return(result)
+
+
+def make_unique_task_id(nodes, datetime_stamp):
+    # Create pretty-unique hash value based on input nodes
+    # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
+    sorted_nodes = sorted(nodes, key = lambda i: i['id'])
+    nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
+    nodes_hash = hashlib.sha256(nodes_str.encode('utf-8')).hexdigest()
+    print(nodes_hash)
+    trunc_nodes_hash = str(nodes_hash)[:8]
+    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
+    return(task_id, trunc_nodes_hash)
 
 
 def get_datetime_stamp():
