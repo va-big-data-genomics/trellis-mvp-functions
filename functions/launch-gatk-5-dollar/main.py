@@ -44,25 +44,10 @@ if ENVIRONMENT == 'google-cloud':
 
 def format_pubsub_message(job_dict, seed_id, event_id):
     message = {
-               "header": {
-                          "resource": "job-metadata", 
-                          "method": "POST",
-                          "labels": ["Create", "Job", "Dsub", "Node"],
-                          "sentFrom": f"{FUNCTION_NAME}",
-                          "seedId": f"{seed_id}",
-                          "previousEventId": f"{event_id}"
-               },
-               "body": {
-                        "node": job_dict,
-               }
-    }
-    return message
-    # Package job node and inputs into JSON message
-    message = {
         "header": {
             "resource": "job-metadata",
             "method": "POST",
-            "labels": ["Create", "Job", "CromwellWorkflow", "Command", "Args"],
+            "labels": ["Create", "Job", "CromwellWorkflow", "Dsub", "Node"],
             "sentFrom": f"{FUNCTION_NAME}",
             "seedId": f"{seed_id}",
             "previousEventId": f"{event_id}"
@@ -100,26 +85,6 @@ def get_datetime_stamp():
     now = datetime.now()
     datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
     return datestamp
-
-
-def format_create_node_query(db_entry, dry_run=False):
-    labels_str = ':'.join(db_entry['labels'])
-
-    # Create database entry string
-    entry_strings = []
-    for key, value in db_entry.items():
-        if isinstance(value, str):
-            entry_strings.append(f'{key}: "{value}"')
-        else:
-            entry_strings.append(f'{key}: {value}')
-    entry_string = ', '.join(entry_strings)
-
-    # Format as cypher query
-    query = (
-             f"CREATE (node:{labels_str} " +
-              "{" + f"{entry_string}" +"}) " +
-              "RETURN node")
-    return query
 
 
 def launch_gatk_5_dollar(event, context):
