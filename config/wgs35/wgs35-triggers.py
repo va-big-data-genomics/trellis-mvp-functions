@@ -958,7 +958,7 @@ class LaunchTextToTable:
             # Check that node matches metadata criteria:
             set(required_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            len(set(supported_labels.keys()).intersection(set(node.get('labels'))))==1,
+            len(set(supported_labels).intersection(set(node.get('labels'))))==1,
             # Metadata required for populating trigger query:
             node.get("id"),
         ]
