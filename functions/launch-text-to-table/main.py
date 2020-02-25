@@ -139,7 +139,7 @@ def launch_text_to_table(event, context):
         # Check that all required labels are present
         set(required_labels).issubset(set(node.get('labels'))),
         # Check that one & only one type format class is represented
-        len(set(supported_types.keys()).intersection(set(node.get('labels')))) == 1
+        len(set(supported_types.keys()).intersection(set(node.get('labels'))))==1,
     ]
 
     for condition in conditions:
