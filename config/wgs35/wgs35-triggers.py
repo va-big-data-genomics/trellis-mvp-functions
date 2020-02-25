@@ -595,7 +595,6 @@ class RunDstatWhenJobStopped:
     def compose_message(self, header, body, node, context):
         topic = self.env_vars['TOPIC_DSTAT']
 
-        messages = []
         # Requeue original message, updating sentFrom property
         message = {
                    "header": {
@@ -1100,8 +1099,6 @@ class RelateJobToJobRequest:
     def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
-        messages = []
-        
         trellis_task_id = node["trellisTaskId"]
 
         query = self._create_query(trellis_task_id)
@@ -1111,9 +1108,9 @@ class RelateJobToJobRequest:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Create", "Relationship", "Trellis", "Input", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "Job", "JobRequest", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelatedTrellisInputToJob",
+                              "trigger": "RelateJobToJobRequest",
                               "publishTo": self.function_name,
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
