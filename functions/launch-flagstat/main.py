@@ -8,6 +8,7 @@ import yaml
 import base64
 import random
 import hashlib
+import logging
 
 from google.cloud import pubsub
 from google.cloud import storage
@@ -119,6 +120,10 @@ def launch_flagstat(event, context):
         print("> No node provided. Exiting.")
         return
 
+    if not 'Bam' in node['labels']:
+        print(f"Error: Not a VCF object. Ignoring {node}.")
+        return
+
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
     task_id, trunc_nodes_hash = make_unique_task_id([node], datetime_stamp)
@@ -194,7 +199,7 @@ def launch_flagstat(event, context):
                           "--output",
                           f"{key}={value}"])
 
-        # Launch dsub job
+    # Launch dsub job
     print(f"> Launching dsub with args: {dsub_args}.")
     dsub_result = launch_dsub_task(dsub_args)
     print(f"> Dsub result: {dsub_result}.")
