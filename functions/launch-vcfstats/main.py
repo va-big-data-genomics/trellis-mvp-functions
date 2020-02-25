@@ -59,10 +59,10 @@ def format_pubsub_message(job_dict, seed_id, event_id):
     return message
 
 
-def publish_to_topic(topic, data):
-    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
-    data = json.dumps(data).encode('utf-8')
-    result = PUBLISHER.publish(topic_path, data=data)
+def publish_to_topic(publisher, project_id, topic, data):
+    topic_path = publisher.topic_path(project_id, topic)
+    message = json.dumps(data).encode('utf-8')
+    result = publisher.publish(topic_path, data=message).result()
     return result
 
 
