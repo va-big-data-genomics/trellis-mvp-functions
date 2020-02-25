@@ -153,7 +153,7 @@ def launch_flagstat(event, context):
             "INPUT": f"gs://{bucket}/{path}"
         },
         "outputs": {
-            "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{basename}.flagstat.tsv"
+            "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{basename}.flagstat.data.tsv"
         },
         "trellisTaskId": task_id,
         "sample": sample,
