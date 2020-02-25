@@ -152,7 +152,7 @@ def launch_fastqc(event, context):
                     "INPUT": f"gs://{bucket}/{path}"
              },
              "outputs": {
-                    "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{basename}.fastqc_data.txt"
+                    "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{basename}.fastqc.data.txt"
              },
              "trellisTaskId": task_id,
              "sample": sample,
