@@ -149,7 +149,7 @@ def launch_text_to_table(event, context):
             logging.error(f"Input node does not match requirements. Node: {node}.")
             return False
 
-    task_label = supported_types.keys().intersection(set(node.get('labels'))).pop()
+    task_label = set(supported_types.keys()).intersection(set(node.get('labels'))).pop()
 
     #task_labels = set(supported_labels.keys()).intersection(set(labels))
     #if not task_labels:
