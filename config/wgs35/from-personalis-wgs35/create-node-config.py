@@ -92,7 +92,7 @@ class NodeKinds:
                      ".*\\.txt$", 
                      ".*\\.duplicate_metrics$",
                      ".*\\.validation_report$",
-                     ".*\\.tsv",
+                     ".*\\.tsv$",
             ],
             "Log": [".*\\.log$"],
             "Stderr": [".*\\/stderr$"],
@@ -117,7 +117,8 @@ class NodeKinds:
             "Json": [".*\\.json$"],
             "Merged": [".*/call-MergeVCFs/.*"],
             "Fastqc": [".*/bam-fastqc/.*"],
-            "Flagstat": ["./*\\.flagstat\\.*"],
+            "Flagstat": ["./flagstat/.*"],
+            "Vcfstats": ["./vcfstats/.*"],
         }
 
         self.label_functions = {
