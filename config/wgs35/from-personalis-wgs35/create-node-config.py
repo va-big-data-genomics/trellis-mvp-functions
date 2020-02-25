@@ -110,6 +110,7 @@ class NodeKinds:
                      ".*\\/sequence_grouping.*",
                      ".*\\.duplicate_metrics$",
                      ".*\\.validation_report$",
+                     ".*\\.data\\..*",
             ],
             "Unsorted": [".*\\.unsorted\\..*"],
             "Sorted": [".*\\.sorted\\..*"],
@@ -117,8 +118,8 @@ class NodeKinds:
             "Json": [".*\\.json$"],
             "Merged": [".*/call-MergeVCFs/.*"],
             "Fastqc": [".*/bam-fastqc/.*"],
-            "Flagstat": ["./flagstat/.*"],
-            "Vcfstats": ["./vcfstats/.*"],
+            "Flagstat": [".*/flagstat/.*"],
+            "Vcfstats": [".*/vcfstats/.*"],
         }
 
         self.label_functions = {
