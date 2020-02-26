@@ -1,31 +1,87 @@
-name: gcf-{repo_owner}-trellis-{data_group}-launch-gatk-5-dollar
-description: gcf-{data_group}-launch-gatk-5-dollar
+name: gcf-{repo_owner}-trellis-{data_group}-create-blob-node-from-personalis-final
+description: gcf-{data_group}-create-blob-node-from-personalis-final
 github:
     owner: {repo_owner}
     name: {repo_name}
     push:
         branch: develop|feat-*
 included_files:
-    - functions/launch-gatk-5-dollar/*
-filename: functions/launch-gatk-5-dollar/cloudbuild.yaml
+    - functions/create-blob-node/*
+    - config/{data_group}/from-personalis/*
+filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _BUCKET_SHORT_NAME: from-personalis
+    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
     _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
+    _OPERATION_SHORT_NAME: final
+    _TRELLIS_BUCKET: ***REMOVED***-dev-trellis
+    _TRIGGER_OPERATION: finalize
+    _TRIGGER_RESOURCE: ***REMOVED***-dev-from-personalis
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-fastq-to-ubam
-description: gcf-{data_group}-fastq-to-ubam
+name: gcf-{repo_owner}-trellis-{data_group}-create-blob-node-from-personalis-meta
+description: gcf-{data_group}-create-blob-node-from-personalis-meta
 github:
     owner: {repo_owner}
     name: {repo_name}
     push:
         branch: develop|feat-*
 included_files:
-    - functions/launch-fastq-to-ubam/*
-filename: functions/launch-fastq-to-ubam/cloudbuild.yaml
+    - functions/create-blob-node/*
+    - config/{data_group}/from-personalis/*
+filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _BUCKET_SHORT_NAME: from-personalis
+    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
     _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
+    _OPERATION_SHORT_NAME: meta
+    _TRELLIS_BUCKET: ***REMOVED***-dev-trellis
+    _TRIGGER_OPERATION: metadataUpdate
+    _TRIGGER_RESOURCE: ***REMOVED***-dev-from-personalis
+---
+name: gcf-{repo_owner}-trellis-{data_group}-create-blob-node-from-{data_group}-final
+description: gcf-{data_group}-create-blob-node-from-{data_group}-final
+github:
+    owner: {repo_owner}
+    name: {repo_name}
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/create-blob-node/*
+    - config/{data_group}/from-personalis-{data_group}/*
+filename: functions/create-blob-node/cloudbuild.yaml
+substitutions:
+    _BUCKET_SHORT_NAME: {data_group}
+    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
+    _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
+    _DATA_GROUP: {data_group}
+    _ENVIRONMENT: google-cloud
+    _OPERATION_SHORT_NAME: final
+    _TRELLIS_BUCKET: ***REMOVED***-dev-trellis
+    _TRIGGER_OPERATION: finalize
+    _TRIGGER_RESOURCE: ***REMOVED***-dev-from-personalis-{data_group}
+---
+name: gcf-{repo_owner}-trellis-{data_group}-create-blob-node-from-{data_group}-meta
+description: gcf-{data_group}-create-blob-node-from-{data_group}-meta
+github:
+    owner: {repo_owner}
+    name: {repo_name}
+    push:
+        branch: develop|feat-*
+included_files:
+    - functions/create-blob-node/*
+    - config/{data_group}/from-personalis-{data_group}/*
+filename: functions/create-blob-node/cloudbuild.yaml
+substitutions:
+    _BUCKET_SHORT_NAME: {data_group}
+    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
+    _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
+    _DATA_GROUP: {data_group}
+    _ENVIRONMENT: google-cloud
+    _OPERATION_SHORT_NAME: meta
+    _TRELLIS_BUCKET: ***REMOVED***-dev-trellis
+    _TRIGGER_OPERATION: metadataUpdate
+    _TRIGGER_RESOURCE: ***REMOVED***-dev-from-personalis-{data_group}
