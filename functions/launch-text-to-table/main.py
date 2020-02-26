@@ -51,25 +51,25 @@ class FastqcTask:
 
     def __init__(self, node):
 
-        chromosome = node['chromosome']
+        chromosome = node.get('chromosome')
 
         self.name = 'text-to-table'
         self.group = 'bam-fastqc' 
         self.schema_name = 'fastqc'
         self.json_schema = 't2t-fastqc.json'
-        self.series = f'chromosome_{chromosome}'
+        self.series = 'phase3'
 
 class FlagstatTask:
 
     def __init__(self, node):
 
-        chromosome = node['chromosome']
+        chromosome = node.get('chromosome')
 
         self.name = 'text-to-table'
         self.group = 'flagstat'
         self.schema_name = 'flagstat'
         self.json_schema = 't2t-flagstat.json'
-        self.series = f'chromosome_{chromosome}'
+        self.series = 'phase3'
 
 class VcfstatsTask:
 
@@ -79,7 +79,7 @@ class VcfstatsTask:
         self.group = 'vcfstats'
         self.schema_name = 'rtg_vcfstats'
         self.json_schema = 't2t-rtg-vcfstats.json'
-        self.series = 'rtg_vcfstats.txt'
+        self.series = 'phase3'
 
 def format_pubsub_message(job_dict, seed_id, event_id):
     message = {
@@ -258,7 +258,7 @@ def launch_text_to_table(event, context):
         "--user", job_dict["user"],
         "--regions", job_dict["regions"], 
         "--project", job_dict["project"],
-        "--min-cores", job_dict["minCores"], 
+        "--min-cores", str(job_dict["minCores"]), 
         "--logging", job_dict["logging"],
         "--image", job_dict["image"], 
         "--use-private-address",
