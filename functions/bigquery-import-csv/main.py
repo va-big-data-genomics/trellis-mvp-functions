@@ -37,7 +37,7 @@ if ENVIRONMENT == 'google-cloud':
 
 class BigQueryTable:
 
-    def __init__(self, name, csv_uri, schema):
+    def __init__(self, name, csv_uri, schema, project, dataset):
         """
 
         Args:
@@ -48,6 +48,8 @@ class BigQueryTable:
         self.name = name
         self.csv_uri = csv_uri
         self.schema_fields = schema
+        self.project = project
+        self.dataset_id = dataset
 
     def write_csv_to_table(self):
         print(f"Loading table: {self.name}.")
@@ -164,15 +166,19 @@ def import_csv_to_bigquery(event, context):
     bq_table = BigQueryTable(
                              name = config_data['table-name'], 
                              csv_uri = csv_uri,
-                             schema = config_data['schema-fields'])
+                             schema = config_data['schema-fields'],
+                             project = PROJECT_ID,
+                             dataset = BIGQUERY_DATASET)
     try:
         bq_table.append_csv_to_table()
     except exceptions.NotFound:
         print(f"Table not found. Creating table.")
         dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
         CLIENT.create_table(bq_table)
-        tables = list(CLIENT.list_tables(dataest_ref))
+        tables = list(CLIENT.list_tables(dataset_ref))
         print(f"Table created. Dataset tables: {tables}.")
+    except:
+        raise
 
 # For local testing
 if __name__ == "__main__":
