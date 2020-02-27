@@ -167,7 +167,7 @@ def import_csv_to_bigquery(event, context):
                              schema = config_data['schema-fields'])
     try:
         bq_table.append_csv_to_table()
-    except excpetions.NotFound:
+    except exceptions.NotFound:
         print(f"Table not found. Creating table.")
         dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
         CLIENT.create_table(bq_table)
