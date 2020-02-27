@@ -82,6 +82,8 @@ def clean_metadata_dict(raw_dict):
 
 
 def get_standard_name_fields(event_name):
+    """(pbilling 200226): This should probably be moved to config file.
+    """
     path_elements = event_name.split('/')
     name_elements = path_elements[-1].split('.')
     name_fields = {
@@ -89,7 +91,8 @@ def get_standard_name_fields(event_name):
                    "dirname": '/'.join(path_elements[:-1]),
                    "basename": path_elements[-1],
                    "name": name_elements[0],
-                   "extension": '.'.join(name_elements[1:])
+                   "extension": '.'.join(name_elements[1:]),
+                   "filetype": name_elements[-1],
     }
     return name_fields
 
