@@ -1,17 +1,39 @@
 import os
+import pdb
 import sys
 import json
+import time
+import uuid
+import yaml
 import base64
+#import random
+#import hashlib
 
-from datetime import datetime
+#from datetime import datetime
 
+#from google.cloud import pubsub
+from google.cloud import storage
 from google.cloud import bigquery
 from google.cloud import exceptions
 
-PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT', '')
-BIGQUERY_DATASET = os.environ.get('BIGQUERY_DATASET', '')
+#PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT', '')
+#BIGQUERY_DATASET = os.environ.get('BIGQUERY_DATASET', '')
 
-CLIENT = bigquery.Client(project=PROJECT_ID)
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+
+    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    BIGQUERY_DATASET = parsed_vars['BIGQUERY_DATASET']
+
+    #PUBLISHER = pubsub.PublisherClient()
+    CLIENT = bigquery.Client()
 
 class BigQueryTable:
 
@@ -53,6 +75,33 @@ class BigQueryTable:
         destination_table = CLIENT.get_table(dataset_ref.table(self.name))
         print(f"Loaded {destination_table.num_rows} rows.")
 
+    def append_csv_to_table(self):
+        print(f"Loading table: {self.name}.")
+        print(f"{BIGQUERY_DATASET} {PROJECT_ID}.")
+        
+        dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
+        
+        job_config = bigquery.LoadJobConfig()
+        job_config.source_format = bigquery.SourceFormat.CSV 
+        job_config.write_disposition = 'WRITE_APPEND'
+
+        bq_schema = []
+        for label, kind in self.schema_fields.items():
+            bq_schema.append(bigquery.SchemaField(label, kind))
+        job_config.schema = bq_schema
+        print(f"Table schema: {job_config.schema}")
+
+        print(f"Job configuration: {job_config}.")
+        load_job = CLIENT.load_table_from_uri(
+                                    source_uris = self.csv_uri, 
+                                    destination = dataset_ref.table(self.name), 
+                                    job_config = job_config)
+        print(f"Starting job {load_job.job_id}.")
+
+        destination_table = CLIENT.get_table(dataset_ref.table(self.name))
+        print(f"Loaded {destination_table.num_rows} rows.")
+
+
 def import_csv_to_bigquery(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
@@ -61,46 +110,53 @@ def import_csv_to_bigquery(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
-    print(data)
+    print(f"> Context: {context}.")
+    print(f"> Data: {data}.")
+    header = data['header']
+    body = data['body']
 
-    resource_type = 'node'
-    if data['resource'] != resource_type:
-        print(f"Error: Expected resource type '{resource_type}', " +
-              f"got '{data['resource']}.'")
+    # Get seed/event ID to track provenance of Trellis events
+    seed_id = header['seedId']
+    event_id = context.event_id
+
+    node = body['results'].get('node')
+    if not node:
+        print("> No node provided. Exiting.")
         return
 
-    node = data['neo4j-metadata']['node']
-    
-    if not 'Concat' in node['labels']:
-        #print(f"Info: Not a Concat object. Ignoring {node}.") # Too noisy
-        return 
-
+    required_labels = ['Blob']
     # Check whether node label is supported
     supported_labels = [
                        'Fastqc',
                        'Flagstat', 
-                       'Vcfstats']
+                       'Vcfstats'
+    ]
+    
+    conditions = [
+        # Check that all required labels are present
+        set(required_labels).issubset(set(node.get('labels'))),
+        # Check that one & only one type format class is represented
+        len(set(supported_labels.keys()).intersection(set(node.get('labels'))))==1,
+    ]
 
-    task_labels = set(supported_labels).intersection(set(node_labels))
-    if not task_labels:
-        print(f"Info: These labels are not supported. Ignoring. {node}.")
-        return 
-    elif len(task_labels) > 1:
-        print(f"Error: Request matches multiple labels. Ignoring. {node}.")
-        return
-    label = task_labels.pop()
-    print(f"Node matches import task for {label}.")
+    for condition in conditions:
+        if condition:
+            continue
+        else:
+            logging.error(f"Input node does not match requirements. Node: {node}.")
+            return False
+
+    task_label = set(supported_types.keys()).intersection(set(node.get('labels'))).pop()
 
     # Get BigQuery table configurations
-    with open('lib/bigquery-config.json') as fh:
+    with open('bigquery-config.json') as fh:
         bigquery_configs = json.load(fh)
     config_data = bigquery_configs[label]
 
-    csv_bucket = node['bucket']
-    csv_path = node['path']
+    csv_bucket = node['csv_bucket']
+    csv_path = node['csv_path']
     csv_uri = f"gs://{csv_bucket}/{csv_path}"
     
     # I don't know why I have this in a separate function...
@@ -110,7 +166,7 @@ def import_csv_to_bigquery(event, context):
                              csv_uri = csv_uri,
                              schema = config_data['schema-fields'])
     try:
-        bq_table.write_csv_to_table()
+        bq_table.append_csv_to_table()
     except excpetions.NotFound:
         print(f"Table not found. Creating table.")
         dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
