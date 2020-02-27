@@ -138,7 +138,7 @@ def import_csv_to_bigquery(event, context):
         # Check that all required labels are present
         set(required_labels).issubset(set(node.get('labels'))),
         # Check that one & only one type format class is represented
-        len(set(supported_labels.keys()).intersection(set(node.get('labels'))))==1,
+        len(set(supported_labels).intersection(set(node.get('labels'))))==1,
     ]
 
     for condition in conditions:
@@ -148,7 +148,7 @@ def import_csv_to_bigquery(event, context):
             logging.error(f"Input node does not match requirements. Node: {node}.")
             return False
 
-    task_label = set(supported_types.keys()).intersection(set(node.get('labels'))).pop()
+    task_label = set(supported_labels).intersection(set(node.get('labels'))).pop()
 
     # Get BigQuery table configurations
     with open('bigquery-config.json') as fh:
