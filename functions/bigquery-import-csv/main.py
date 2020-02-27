@@ -153,7 +153,7 @@ def import_csv_to_bigquery(event, context):
     # Get BigQuery table configurations
     with open('bigquery-config.json') as fh:
         bigquery_configs = json.load(fh)
-    config_data = bigquery_configs[label]
+    config_data = bigquery_configs[task_label]
 
     csv_bucket = node['csv_bucket']
     csv_path = node['csv_path']
