@@ -172,10 +172,10 @@ def import_csv_to_bigquery(event, context):
     try:
         bq_table.append_csv_to_table()
     except exceptions.NotFound:
-        print(f"Table not found. Creating table.")
-        #dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
+        #print(f"Table not found. Creating table.")
+        dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
         #CLIENT.create_table(bq_table)
-        #tables = list(CLIENT.list_tables(dataset_ref))
+        tables = list(CLIENT.list_tables(dataset_ref))
         print(f"Table created. Dataset tables: {tables}.")
     except:
         raise
