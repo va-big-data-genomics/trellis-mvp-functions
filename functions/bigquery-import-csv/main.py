@@ -155,8 +155,8 @@ def import_csv_to_bigquery(event, context):
         bigquery_configs = json.load(fh)
     config_data = bigquery_configs[task_label]
 
-    csv_bucket = node['csv_bucket']
-    csv_path = node['csv_path']
+    csv_bucket = node['bucket']
+    csv_path = node['path']
     csv_uri = f"gs://{csv_bucket}/{csv_path}"
     
     # I don't know why I have this in a separate function...
