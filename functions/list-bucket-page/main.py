@@ -21,7 +21,7 @@ if ENVIRONMENT == 'google-cloud':
     project_id = parsed_vars['GOOGLE_CLOUD_PROJECT']
     write_bucket_name = parsed_vars['TRELLIS_BUCKET']
     write_prefix = parsed_vars['BUCKET_PAGE_PREFIX']
-    publish_topic = parsed_vars['PAGE_TOKENS_TOPIC']
+    publish_topic = parsed_vars['TOPIC_PAGE_TOKENS']
     approved_buckets = parsed_vars['DATA_BUCKETS']
 
     publisher = pubsub.PublisherClient()
