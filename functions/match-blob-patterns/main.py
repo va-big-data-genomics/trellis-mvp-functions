@@ -76,8 +76,8 @@ def match_blob_patterns(event, context):
     node_module = importlib.import_module(node_module_name)
 
     node_kinds = node_module.NodeKinds()
-    label_patterns = node_kinds.match_patterns()
-    kind_matches = {}
+    label_patterns = node_kinds.match_patterns
+    #kind_matches = {}
 
     matched_blobs = []
     for blob_metadata in list_blobs:
