@@ -103,7 +103,7 @@ def make_unique_task_id(nodes, datetime_stamp):
     print(nodes_hash)
     trunc_nodes_hash = str(nodes_hash)[:8]
     task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
-    return(task_id)
+    return(task_id, trunc_nodes_hash)
 
 
 def launch_fastq_to_ubam(event, context):
@@ -139,7 +139,7 @@ def launch_fastq_to_ubam(event, context):
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    task_id = make_unique_task_id(nodes, datetime_stamp)
+    task_id, trunc_nodes_hash = make_unique_task_id(nodes, datetime_stamp)
 
     # TODO: Implement QC checking to make sure fastqs match
     set_sizes = []
