@@ -24,17 +24,21 @@ if ENVIRONMENT == 'google-cloud':
     READ_BUCKET_NAME = parsed_vars['TRELLIS_BUCKET']
     READ_PREFIX = parsed_vars['MATCHED_BLOBS_PREFIX']
     DATA_BUCKETS = parsed_vars['DATA_BUCKETS']
-    PUBLISH_TOPIC = parsed_vars['UNTRACKED_TOPIC']
+    PUBLISH_TOPIC = parsed_vars['TOPIC_UPDATE_METADATA']
 
-    NEO4J_URL = parsed_vars['NEO4J_URL']
+    NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
+    NEO4J_HOST = parsed_vars['NEO4J_HOST']
     NEO4J_USER = parsed_vars['NEO4J_USER']
     NEO4J_PASS = parsed_vars['NEO4J_PASSPHRASE']
+    NEO4J_PORT = parsed_vars['NEO4J_PORT']
 
     # Establish Graph connection
     GRAPH = Graph(
-                  NEO4J_URL, 
-                  user = NEO4J_USER, 
-                  password = NEO4J_PASS)
+                  scheme=NEO4J_SCHEME,
+                  host=NEO4J_HOST, 
+                  port=NEO4J_PORT,
+                  user=NEO4J_USER, 
+                  password=NEO4J_PASSPHRASE)
 
     # Establish PubSub connection
     PUBLISHER = pubsub.PublisherClient()
