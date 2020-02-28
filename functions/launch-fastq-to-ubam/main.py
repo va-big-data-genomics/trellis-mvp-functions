@@ -67,7 +67,8 @@ def launch_dsub_task(dsub_args):
     try:
         result = dsub.dsub_main('dsub', dsub_args)
     except ValueError as exception:
-        raise(f'> Error with dsub arguments: {dsub_args}')
+        logging.error(f'Problem with dsub arguments: {dsub_args}')
+        raise
     except:
         print("> Unexpected error:", sys.exc_info())
         raise
@@ -176,6 +177,7 @@ def launch_fastq_to_ubam(event, context):
 
 
     # Define logging & outputs after task_id
+    task_name = 'flagstat'
     unique_task_label = "FastqToUbam"
     job_dict = {
                 "provider": "google-v2",
@@ -216,7 +218,7 @@ def launch_fastq_to_ubam(event, context):
                 "sample": sample,
                 "plate": plate,
                 "readGroup": read_group,
-                "name": unique_task_label,
+                "name": task_name,
                 "inputHash": trunc_nodes_hash,
                 "labels": ["Job", "Dsub", unique_task_label],
                 "inputIds": input_ids,
