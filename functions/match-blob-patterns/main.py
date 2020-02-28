@@ -68,7 +68,7 @@ def match_blob_patterns(event, context):
 
     # Module name does not include project prefix
     pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
-    match = re.match(pattern, bucket_name)
+    match = re.match(pattern, list_bucket_name)
     suffix = match['suffix']
 
     # Import the config modules that corresponds to event-trigger bucket
