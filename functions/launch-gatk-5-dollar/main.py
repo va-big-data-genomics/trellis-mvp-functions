@@ -141,7 +141,7 @@ def launch_gatk_5_dollar(event, context):
         raise ValueError("No nodes provided; exiting.")
 
     # Dsub data
-    task_name = 'gatk-5-dollar'
+    #task_name = 'gatk-5-dollar'
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
     #nodes_hash = hashlib.sha256(json.dumps(nodes).encode('utf-8')).hexdigest()
@@ -212,6 +212,7 @@ def launch_gatk_5_dollar(event, context):
     print(f"> Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
 
     #workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
+    task_name = "gatk-5-dollar"
     unique_task_label = "Gatk5Dollar"
     job_dict = {
                 "provider": "google-v2",
