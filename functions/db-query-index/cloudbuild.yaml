@@ -10,6 +10,7 @@ steps:
          '--max-instances=10',
          '--entry-point=query_db_index',
          '--runtime=python37',
+         '--vpc-connector=trellis',
          '--trigger-resource=${_TRIGGER_RESOURCE}',
          '--trigger-event=google.storage.object.finalize',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
