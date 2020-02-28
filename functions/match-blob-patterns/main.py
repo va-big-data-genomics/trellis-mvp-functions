@@ -75,7 +75,7 @@ def match_blob_patterns(event, context):
     node_module_name = f"{DATA_GROUP}.{suffix}.create-node-config"
     node_module = importlib.import_module(node_module_name)
 
-    node_kinds = meta_module.NodeKinds()
+    node_kinds = node_module.NodeKinds()
     label_patterns = node_kinds.match_patterns()
     kind_matches = {}
 
