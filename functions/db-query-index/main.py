@@ -38,7 +38,7 @@ if ENVIRONMENT == 'google-cloud':
                   host=NEO4J_HOST, 
                   port=NEO4J_PORT,
                   user=NEO4J_USER, 
-                  password=NEO4J_PASSPHRASE)
+                  password=NEO4J_PASS)
 
     # Establish PubSub connection
     PUBLISHER = pubsub.PublisherClient()
