@@ -174,7 +174,7 @@ def launch_gatk_5_dollar(event, context):
     gatk_papi_inputs = f"{GATK_MVP_DIR}/{GATK_MVP_HASH}/{GATK_GERMLINE_DIR}/generic.google-papi.options.json"
     papi_options_template = storage.Client(project=PROJECT_ID) \
         .get_bucket(TRELLIS_BUCKET) \
-        .blob(GATK_PAPI_INPUTS) \
+        .blob(gatk_papi_inputs) \
         .download_as_string()
     papi_options = json.loads(papi_options_template)
 
