@@ -110,6 +110,7 @@ class RequestLaunchGatk5Dollar:
 
         #sample = node['sample']
         event_id = context.event_id
+        seed_id = context.event_id
 
         query = self._create_query(event_id)
 
@@ -121,8 +122,8 @@ class RequestLaunchGatk5Dollar:
                               "sentFrom": self.function_name,
                               "trigger": "LaunchGatk5Dollar",
                               "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
                    },
                    "body": {
                             "cypher": query,
