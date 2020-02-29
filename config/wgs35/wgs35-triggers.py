@@ -134,7 +134,7 @@ class RequestLaunchGatk5Dollar:
         return([(topic, message)])
 
 
-    def _create_query(self, sample, event_id):
+    def _create_query(self, event_id):
         """Check if all ubams for a sample are in the database & send to GATK $5 function.
 
         Description of query, by line:
