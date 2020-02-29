@@ -60,7 +60,8 @@ def check_triggers(event, context, dry_run=False):
     results = body['results']
 
     # Check that resource is query
-    if resource != 'queryResult':
+    if not resource in ['queryResult', 'request']:
+    #if resource != 'queryResult':
         raise ValueError(
                          f"Error: Expected resource type 'queryResult', " +
                          f"got '{header['resource']}.'")
