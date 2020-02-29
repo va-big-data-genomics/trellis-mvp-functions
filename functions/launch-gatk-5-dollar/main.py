@@ -239,7 +239,7 @@ def launch_gatk_5_dollar(event, context):
                             "--options ${OPTION}"
                 ),
                 "inputs": {
-                           "CFG": f"gs://{TRELLIS_BUCKET}/{GATK_MVP_DIR}/{GATK_MVP_HASH}/google-adc.conf", 
+                           "CFG": f"gs://{TRELLIS_BUCKET}/{GATK_MVP_DIR}/{GATK_MVP_HASH}/{GATK_GERMLINE_DIR}/google-adc.conf", 
                            "OPTION": f"gs://{OUT_BUCKET}/{papi_options_path}",
                            "WDL": f"gs://{TRELLIS_BUCKET}/{GATK_MVP_DIR}/{GATK_MVP_HASH}/{GATK_GERMLINE_DIR}/fc_germline_single_sample_workflow.wdl",
                            "SUBWDL": f"gs://{TRELLIS_BUCKET}/{GATK_MVP_DIR}/{GATK_MVP_HASH}/{GATK_GERMLINE_DIR}/tasks_pipelines/*.wdl",
