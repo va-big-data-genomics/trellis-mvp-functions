@@ -177,7 +177,7 @@ def launch_fastq_to_ubam(event, context):
 
 
     # Define logging & outputs after task_id
-    task_name = 'flagstat'
+    task_name = 'fastq-to-ubam'
     unique_task_label = "FastqToUbam"
     job_dict = {
                 "provider": "google-v2",
