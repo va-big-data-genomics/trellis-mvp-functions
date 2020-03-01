@@ -1,4 +1,4 @@
-name: gcf-subio-trellis-wgs35-launch-gatk-5-dollar
+name: gcf-trellis-wgs35-launch-gatk-5-dollar
 description: gcf-wgs35-launch-gatk-5-dollar
 github:
     owner: StanfordBioinformatics
@@ -14,7 +14,7 @@ substitutions:
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-subio-trellis-wgs35-fastq-to-ubam
+name: gcf-trellis-wgs35-fastq-to-ubam
 description: gcf-wgs35-fastq-to-ubam
 github:
     owner: StanfordBioinformatics
