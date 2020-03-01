@@ -1,81 +1,84 @@
-name: gcf-subio-trellis-wgs35-create-job-node
-description: gcf-wgs35-create-job-node
+name: gcf-trellis-wgs35-launch-bam-fastqc
+description: gcf-wgs35-launch-bam-fastqc
 github:
     owner: StanfordBioinformatics
     name: trellis-mvp-wgs-35000
     push:
-        branch: release-*
+        branch: release-
 included_files:
-    - functions/create-job-node/*
-filename: functions/create-job-node/cloudbuild.yaml
+    - functions/launch-bam-fastqc/*
+filename: functions/launch-bam-fastqc/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
     _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_TOPIC: wgs35-bam-fastqc
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-subio-trellis-wgs35-triggers
-description: gcf-wgs35-triggers
+name: gcf-trellis-wgs35-launch-flagstat
+description: gcf-wgs35-launch-flagstat
 github:
     owner: StanfordBioinformatics
     name: trellis-mvp-wgs-35000
     push:
-        branch: release-*
+        branch: release-
 included_files:
-    - functions/check-triggers/*
-    - config/wgs35/wgs35-triggers.py
-filename: functions/check-triggers/cloudbuild.yaml
+    - functions/launch-flagstat/*
+filename: functions/launch-flagstat/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
     _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_TOPIC: wgs35-flagstat
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
-    _TRIGGER_TOPIC: wgs35-triggers
 ---
-name: gcf-subio-trellis-wgs35-kill-job
-description: gcf-wgs35-kill-job
+name: gcf-trellis-wgs35-launch-vcfstats
+description: gcf-wgs35-launch-vcfstats
 github:
     owner: StanfordBioinformatics
     name: trellis-mvp-wgs-35000
     push:
-        branch: release-*
+        branch: release-
 included_files:
-    - functions/kill-job/*
-filename: functions/kill-job/cloudbuild.yaml
-substitutions:
-    _DATA_GROUP: wgs35
-    _ENVIRONMENT: google-cloud
-    _TRIGGER_TOPIC: wgs35-kill-job
----
-name: gcf-subio-trellis-wgs35-db-query
-description: gcf-wgs35-db-query
-github:
-    owner: StanfordBioinformatics
-    name: trellis-mvp-wgs-35000
-    push:
-        branch: release-*
-included_files:
-    - functions/db-query/*
-filename: functions/db-query/cloudbuild.yaml
+    - functions/launch-vcfstats/*
+filename: functions/launch-vcfstats/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
     _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_TOPIC: wgs35-vcfstats
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-subio-trellis-wgs35-check-dstat
-description: gcf-wgs35-check-dstat
+name: gcf-trellis-wgs35-launch-text-to-table
+description: gcf-wgs35-launch-text-to-table
 github:
     owner: StanfordBioinformatics
     name: trellis-mvp-wgs-35000
     push:
-        branch: release-*
+        branch: release-
 included_files:
-    - functions/check-dstat/*
-filename: functions/check-dstat/cloudbuild.yaml
+    - functions/launch-text-to-table/*
+filename: functions/launch-text-to-table/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
     _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_TOPIC: wgs35-text-to-table
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
-    _FUNCTION_NAME: wgs35-check-dstat
+---
+name: gcf-trellis-wgs35-bigquery-import-csv
+description: gcf-wgs35-bigquery-import-csv
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-
+included_files:
+    - functions/bigquery-import-csv/*
+filename: functions/bigquery-import-csv/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_TOPIC: wgs35-bigquery-import-csv
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
