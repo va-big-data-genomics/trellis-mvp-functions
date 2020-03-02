@@ -144,5 +144,5 @@ def query_db_index(event, context):
             data = json.dumps(blob_metadata).encode('utf-8')
             PUBLISHER.publish(TOPIC_PATH, data=data)
             publish_counter += 1
-    print(f'Count of blobs published: {publish_counter}.')
+    print(f'Count of blobs published to {TOPIC_PATH}: {publish_counter}.')
     return
