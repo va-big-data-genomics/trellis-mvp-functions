@@ -112,9 +112,6 @@ def query_db_index(event, context):
                   f'Metadata: {blob_metadata}.')
             continue
 
-        # Remove md5Hash so that id doesn't cause NoneType
-        # errors when Neo4j tries to import
-        gcp_metadata.pop('md5Hash')
         property_dicts.append(gcp_metadata)
 
     graphed_paths = []
