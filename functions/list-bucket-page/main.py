@@ -121,7 +121,7 @@ def list_bucket_page(event, context):
                                      "bucket": read_bucket.name, 
                                      "name": blob.name, 
                                      "size": str(blob.size), 
-                                     "md5Hash": blob.md5_hash, 
+                                     #"md5Hash": blob.md5_hash, 
                                      "crc32c": blob.crc32c, 
                                      "id": blob.id, 
                     }, 
