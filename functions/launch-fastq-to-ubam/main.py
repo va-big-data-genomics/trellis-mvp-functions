@@ -188,7 +188,7 @@ def launch_fastq_to_ubam(event, context):
                 "minRam": 7.5,
                 "bootDiskSize": 20,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
-                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{unique_task_label}/{task_id}/logs",
+                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 500,
                 "command": (
                             '/gatk/gatk ' +
@@ -208,7 +208,7 @@ def launch_fastq_to_ubam(event, context):
                 },
                 "inputs": fastqs,
                 "outputs": {
-                            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{unique_task_label}/{task_id}/output/{sample}_{read_group}.ubam"
+                            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
                 },
                 "trellisTaskId": task_id,
                 "dryRun": dry_run,
@@ -289,7 +289,7 @@ def launch_fastq_to_ubam(event, context):
     if 'job-id' in dsub_result.keys() and metadata and not dry_run:
         print(f"> Metadata passed to output blobs: {metadata}.")
         # Dump metadata into GCS blob
-        meta_blob_path = f"{plate}/{sample}/{unique_task_label}/{task_id}/metadata/all-objects.json"
+        meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
         while True:
             result = write_metadata_to_blob(meta_blob_path, metadata)
             if result == True:
