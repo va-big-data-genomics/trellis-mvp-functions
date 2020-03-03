@@ -1,5 +1,7 @@
 steps:
 - name: 'gcr.io/cloud-builders/gcloud'
+  args: ['pubsub', 'topcis', 'create', '${_DATA_GROUP}-log-insert-cromwell-instance']
+- name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'logging',
          'sinks',
