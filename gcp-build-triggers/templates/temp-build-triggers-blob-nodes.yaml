@@ -4,7 +4,7 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/create-blob-node/*
     - config/{data_group}/from-personalis/*
@@ -26,7 +26,7 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/create-blob-node/*
     - config/{data_group}/from-personalis/*
@@ -48,7 +48,7 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/create-blob-node/*
     - config/{data_group}/from-personalis-{data_group}/*
@@ -70,7 +70,7 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/create-blob-node/*
     - config/{data_group}/from-personalis-{data_group}/*
