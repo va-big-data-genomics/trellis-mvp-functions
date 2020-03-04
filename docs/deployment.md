@@ -12,7 +12,7 @@
 https://console.cloud.google.com/cloud-build/triggers
 ```
 2. Enable Cloud Build API if it has not been done yet.
-3. Use the left-hand navigation panel to navigate to the "Triggers" section of the Cloud Build console. 
+3. Use the left-hand navigation panel to navigate to the "Triggers" section of the Cloud Build console.
 ![Triggers section of the Cloud Build console](images/triggers.png)
 4. At the top of the page, click the "Connect Repository" button and select the "GitHub (Cloud Build GitHub App)". Click "Continue".
 ![Connect Repository button](images/connect.png)
@@ -34,13 +34,14 @@ gcloud config set project my-project
 
 3. From the command-line, use the "cd" command to navigate to the root of the forked Trellis repo (e.g. "cd /Users/me/trellis")
 4. Navigate to the gcp-build-triggers/templates directory.
-5. For each yaml file, replace the bracketed keywords with your project values.
-6. Run the following command to deploy each trigger:
+5. For each yaml file, replace the bracketed keywords with your project values. Notice the name of trigger must be less than 64 characters.
+6. Create any necessary storage buckets you specified in yaml file.
+7. Run the following command to deploy each trigger:
 
 ```
 gcloud beta builds triggers import --source=trigger.yaml
 ```
-7. Navigate to the Cloud Build panel and check that each trigger has been deployed. If builds are not automatically triggered, trigger them automatically.
+8. Navigate to the Cloud Build panel and check that each trigger has been deployed. If builds are not automatically triggered, trigger them automatically.
 
 ```
 cd gcp-build-triggers
