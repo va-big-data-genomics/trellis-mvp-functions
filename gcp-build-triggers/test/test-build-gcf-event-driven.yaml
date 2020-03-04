@@ -1,4 +1,4 @@
-name: gcf-subio-trellis-wgs35-create-job-node
+name: gcf-trellis-wgs35-create-job-node
 description: gcf-wgs35-create-job-node
 github:
     owner: StanfordBioinformatics
@@ -14,7 +14,7 @@ substitutions:
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-subio-trellis-wgs35-triggers
+name: gcf-trellis-wgs35-triggers
 description: gcf-wgs35-triggers
 github:
     owner: StanfordBioinformatics
@@ -32,7 +32,7 @@ substitutions:
     _ENVIRONMENT: google-cloud
     _TRIGGER_TOPIC: wgs35-triggers
 ---
-name: gcf-subio-trellis-wgs35-kill-job
+name: gcf-trellis-wgs35-kill-job
 description: gcf-wgs35-kill-job
 github:
     owner: StanfordBioinformatics
@@ -47,7 +47,7 @@ substitutions:
     _ENVIRONMENT: google-cloud
     _TRIGGER_TOPIC: wgs35-kill-job
 ---
-name: gcf-subio-trellis-wgs35-db-query
+name: gcf-trellis-wgs35-db-query
 description: gcf-wgs35-db-query
 github:
     owner: StanfordBioinformatics
@@ -63,7 +63,7 @@ substitutions:
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-subio-trellis-wgs35-check-dstat
+name: gcf-trellis-wgs35-check-dstat
 description: gcf-wgs35-check-dstat
 github:
     owner: StanfordBioinformatics

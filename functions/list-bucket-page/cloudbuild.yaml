@@ -11,9 +11,9 @@ steps:
          '--max-instances=100',
          '--entry-point=list_bucket_page',
          '--runtime=python37',
-         '--trigger-topic=${_DATA_GROUP}-bucket-page-tokens',
+         '--trigger-topic=${_DATA_GROUP}-list-bucket-page',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
-         '--update-labels=data-group=${_DATA_GROUP},task=database-import',
+         '--update-labels=data-group=${_DATA_GROUP},task=database-import,inciting-action=request,functional-group=request-driven-db-import',
   ]
