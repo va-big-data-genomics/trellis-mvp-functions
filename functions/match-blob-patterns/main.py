@@ -63,12 +63,21 @@ def match_blob_patterns(event, context):
     list_blobs = json.loads(list_blobs_page)
 
     # Import the config module that corresponds to listed-objects bucket
-    meta_module_name = f'{DATA_GROUP}.{list_bucket_name}.create-node-config'
-    meta_module = importlib.import_module(meta_module_name)
+    #meta_module_name = f'{DATA_GROUP}.{list_bucket_name}.create-node-config'
+    #meta_module = importlib.import_module(meta_module_name)
 
-    node_kinds = meta_module.NodeKinds()
-    kind_patterns = node_kinds.get_match_patterns()
-    kind_matches = {}
+    # Module name does not include project prefix
+    pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
+    match = re.match(pattern, list_bucket_name)
+    suffix = match['suffix']
+
+    # Import the config modules that corresponds to event-trigger bucket
+    node_module_name = f"{DATA_GROUP}.{suffix}.create-node-config"
+    node_module = importlib.import_module(node_module_name)
+
+    node_kinds = node_module.NodeKinds()
+    label_patterns = node_kinds.match_patterns
+    #kind_matches = {}
 
     matched_blobs = []
     for blob_metadata in list_blobs:
@@ -87,7 +96,7 @@ def match_blob_patterns(event, context):
 
         # Determine which kind patterns match the object name
         node_labels = []
-        for key, values in kind_patterns.items():
+        for key, values in label_patterns.items():
             for pattern in values:
                 match = re.fullmatch(pattern, name)
                 if match:

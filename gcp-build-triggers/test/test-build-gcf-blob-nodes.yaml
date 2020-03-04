@@ -1,4 +1,4 @@
-name: gcf-subio-trellis-wgs35-create-blob-node-from-personalis-final
+name: gcf-trellis-wgs35-create-blob-node-from-personalis-final
 description: gcf-wgs35-create-blob-node-from-personalis-final
 github:
     owner: StanfordBioinformatics
@@ -20,7 +20,7 @@ substitutions:
     _TRIGGER_OPERATION: finalize
     _TRIGGER_RESOURCE: ***REMOVED***-test-from-personalis
 ---
-name: gcf-subio-trellis-wgs35-create-blob-node-from-personalis-meta
+name: gcf-trellis-wgs35-create-blob-node-from-personalis-meta
 description: gcf-wgs35-create-blob-node-from-personalis-meta
 github:
     owner: StanfordBioinformatics
@@ -42,7 +42,7 @@ substitutions:
     _TRIGGER_OPERATION: metadataUpdate
     _TRIGGER_RESOURCE: ***REMOVED***-test-from-personalis
 ---
-name: gcf-subio-trellis-wgs35-create-blob-node-from-wgs35-final
+name: gcf-trellis-wgs35-create-blob-node-from-wgs35-final
 description: gcf-wgs35-create-blob-node-from-wgs35-final
 github:
     owner: StanfordBioinformatics
@@ -64,7 +64,7 @@ substitutions:
     _TRIGGER_OPERATION: finalize
     _TRIGGER_RESOURCE: ***REMOVED***-test-from-personalis-wgs35
 ---
-name: gcf-subio-trellis-wgs35-create-blob-node-from-wgs35-meta
+name: gcf-trellis-wgs35-create-blob-node-from-wgs35-meta
 description: gcf-wgs35-create-blob-node-from-wgs35-meta
 github:
     owner: StanfordBioinformatics
