@@ -131,7 +131,7 @@ def log_delete_instance(event, context):
     stopped_by = service
 
     query = (
-            f"MERGE (node:Job {{ " +
+            f"MATCH (node:Job {{ " +
                 f"instanceId: {instance_id}, " +
                 f"instanceName: \"{instance_name}\" }} ) " +
              "SET " +

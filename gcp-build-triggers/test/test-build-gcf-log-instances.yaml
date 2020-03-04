@@ -1,0 +1,47 @@
+name: gcf-trellis-wgs35-log-delete-instance
+description: gcf-wgs35-log-delete-instance
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-
+included_files:
+    - functions/log-delete-instance/*
+filename: functions/log-delete-instance/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
+---
+name: gcf-trellis-wgs35-log-insert-cromwell-instance
+description: gcf-wgs35-log-insert-cromwell-instance
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-
+included_files:
+    - functions/log-insert-cromwell-instance/*
+filename: functions/log-insert-cromwell-instance/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
+---
+name: gcf-trellis-wgs35-log-insert-trellis-instance
+description: gcf-wgs35-log-insert-trellis-instance
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-
+included_files:
+    - functions/log-insert-trellis-instance/*
+filename: functions/log-insert-trellis-instance/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
