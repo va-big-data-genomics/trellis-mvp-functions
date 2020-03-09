@@ -1,6 +1,6 @@
 steps:
 - name: 'ubuntu'
-  args: ['cp', '-r', 'config/wgs35', 'functions/create-blob-node/']
+  args: ['cp', '-r', 'config/${_DATA_GROUP}', 'functions/create-blob-node/']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta',
