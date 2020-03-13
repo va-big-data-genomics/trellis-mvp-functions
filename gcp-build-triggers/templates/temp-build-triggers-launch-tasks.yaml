@@ -4,7 +4,7 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/launch-gatk-5-dollar/*
 filename: functions/launch-gatk-5-dollar/cloudbuild.yaml
@@ -20,7 +20,7 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/launch-fastq-to-ubam/*
 filename: functions/launch-fastq-to-ubam/cloudbuild.yaml
