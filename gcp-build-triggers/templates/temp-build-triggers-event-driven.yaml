@@ -4,12 +4,12 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/create-job-node/*
 filename: functions/create-job-node/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
     _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
@@ -20,13 +20,13 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/check-triggers/*
     - config/{data_group}/{data_group}-triggers.py
 filename: functions/check-triggers/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
     _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
@@ -38,7 +38,7 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/kill-job/*
 filename: functions/kill-job/cloudbuild.yaml
@@ -53,12 +53,12 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/db-query/*
 filename: functions/db-query/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
     _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
@@ -69,35 +69,13 @@ github:
     owner: {repo_owner}
     name: {repo_name}
     push:
-        branch: develop|feat-*
+        branch: {branch_pattern}
 included_files:
     - functions/check-dstat/*
 filename: functions/check-dstat/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-wgs35.yaml
+    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
     _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
     _FUNCTION_NAME: {data_group}-check-dstat
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
