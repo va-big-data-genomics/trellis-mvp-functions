@@ -84,6 +84,7 @@ def query_db_index(event, context):
     #property_dicts = {}
     property_dicts = []
     for blob_metadata in list_blobs:
+        # Not using md5 anymore: https://cloud.google.com/storage/docs/hashes-etags
         if blob_metadata.get('resource') != 'blob':
             print(f"Error: Expected resource type 'blob', " +
                   f"got '{blob_data['resource']}.'")
@@ -94,7 +95,7 @@ def query_db_index(event, context):
             bucket = gcp_metadata['bucket']
             path = gcp_metadata['name']
             size = gcp_metadata['size']
-            md5_hash = gcp_metadata['md5Hash']
+            crc32c = gcp_metadata['crc32c']
         except:
             print(f'Error: Blob missing required metadata; skipping. ' + 
                   f'Blob metadata: {blob_metadata}.')
@@ -143,5 +144,5 @@ def query_db_index(event, context):
             data = json.dumps(blob_metadata).encode('utf-8')
             PUBLISHER.publish(TOPIC_PATH, data=data)
             publish_counter += 1
-    print(f'Count of blobs published: {publish_counter}.')
+    print(f'Count of blobs published to {TOPIC_PATH}: {publish_counter}.')
     return
