@@ -194,7 +194,6 @@ class RequestLaunchFailedGatk5Dollar:
 
     Check whether all ubams for a sample are present, and
     that they haven't already been input to a $5 workflow.
-
     If so, send all ubam nodes metadata to the gatk-5-dollar
     pub/sub topic.
     """
@@ -205,17 +204,10 @@ class RequestLaunchFailedGatk5Dollar:
 
 
     def check_conditions(self, header, body, node):
-        # Only trigger GATK after relationship has been added
-        reqd_header_labels = ['Request', 'LaunchGatk5Dollar', 'All']
-
-        # If there are no results; trigger is not activated
-        #if not node:
-        #    return False
+        reqd_header_labels = ['Request', 'LaunchFailedGatk5Dollar', 'All']
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            #set(required_labels).issubset(set(node.get('labels'))),
-            #node.get('setSize'),
         ]
 
         for condition in conditions:
@@ -240,7 +232,7 @@ class RequestLaunchFailedGatk5Dollar:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Ubam", "GATK", "Nodes"],
+                              "labels": ["Cypher", "Query", "Ubam", "Failed", "GATK", "Nodes"],
                               "sentFrom": self.function_name,
                               "trigger": "RequestLaunchFailedGatk5Dollar",
                               "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
@@ -283,15 +275,15 @@ class RequestLaunchFailedGatk5Dollar:
                     "-[:OUTPUT]->(n:Ubam) " +                      #4
                  # Find samples with a failed $5 GATK workflow
                  "WHERE (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})"
-                    "-[:STATUS]->(:Dstat {status:\"FAILURE\"}) "
+                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
+                    "-[:STATUS]->(:Dstat {status:\"FAILURE\"}) " +
                  # Don't launch job is another is currently running
                  "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"})"
+                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"})" +
                  # Don't launch job if another has succeeded
                  "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})"
-                    "-[:STATUS]->(:Dstat {status:\"SUCCESS\"}) "
+                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
+                    "-[:STATUS]->(:Dstat {status:\"SUCCESS\"}) " +
                  "WITH s.sample AS sample, " +                      #6
                        "n.readGroup AS readGroup, " +               #8
                        "COLLECT(DISTINCT n) AS allNodes " +
@@ -317,7 +309,7 @@ class RequestLaunchFailedGatk5Dollar:
                             "sample: sample, " +                    #25
                             "eventId: eventId}) " +                 #26
                  "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
-                 "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
+                 "RETURN DISTINCT(sampleNodes) AS nodes ")           #28                                                 #13
         return query
 
 
