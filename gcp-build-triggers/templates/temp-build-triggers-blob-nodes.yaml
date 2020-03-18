@@ -1,5 +1,5 @@
-name: gcf-{repo_owner}-trellis-{data_group}-create-blob-node-from-personalis-final
-description: gcf-{data_group}-create-blob-node-from-personalis-final
+name: gcf-{repo_owner}-trellis-{func_group}-create-blob-node-from-personalis-final
+description: gcf-{func_group}-create-blob-node-from-personalis-final
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -11,17 +11,17 @@ included_files:
 filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
     _BUCKET_SHORT_NAME: from-personalis
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {project_id}-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
     _OPERATION_SHORT_NAME: final
-    _TRELLIS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _TRELLIS_BUCKET: {project_id}-trellis
     _TRIGGER_OPERATION: finalize
-    _TRIGGER_RESOURCE: gbsc-gcp-project-mvp-dev-from-personalis
+    _TRIGGER_RESOURCE: {project_id}-from-personalis
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-create-blob-node-from-personalis-meta
-description: gcf-{data_group}-create-blob-node-from-personalis-meta
+name: gcf-{repo_owner}-trellis-{func_group}-create-blob-node-from-personalis-meta
+description: gcf-{func_group}-create-blob-node-from-personalis-meta
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -33,17 +33,17 @@ included_files:
 filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
     _BUCKET_SHORT_NAME: from-personalis
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {project_id}-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
     _OPERATION_SHORT_NAME: meta
-    _TRELLIS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _TRELLIS_BUCKET: {project_id}-trellis
     _TRIGGER_OPERATION: metadataUpdate
-    _TRIGGER_RESOURCE: gbsc-gcp-project-mvp-dev-from-personalis
+    _TRIGGER_RESOURCE: {project_id}-from-personalis
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-create-blob-node-from-{data_group}-final
-description: gcf-{data_group}-create-blob-node-from-{data_group}-final
+name: gcf-{repo_owner}-trellis-{func_group}-create-blob-node-from-{data_group}-final
+description: gcf-{func_group}-create-blob-node-from-{data_group}-final
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -55,17 +55,17 @@ included_files:
 filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
     _BUCKET_SHORT_NAME: {data_group}
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {project_id}-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
     _OPERATION_SHORT_NAME: final
-    _TRELLIS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _TRELLIS_BUCKET: {project_id}-trellis
     _TRIGGER_OPERATION: finalize
-    _TRIGGER_RESOURCE: gbsc-gcp-project-mvp-dev-from-personalis-{data_group}
+    _TRIGGER_RESOURCE: {project_id}-from-personalis-{data_group}
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-create-blob-node-from-{data_group}-meta
-description: gcf-{data_group}-create-blob-node-from-{data_group}-meta
+name: gcf-{repo_owner}-trellis-{func_group}-create-blob-node-from-{data_group}-meta
+description: gcf-{func_group}-create-blob-node-from-{data_group}-meta
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -77,11 +77,11 @@ included_files:
 filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
     _BUCKET_SHORT_NAME: {data_group}
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {project_id}-trellis
     _DATA_GROUP: {data_group}
     _ENVIRONMENT: google-cloud
     _OPERATION_SHORT_NAME: meta
-    _TRELLIS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
+    _TRELLIS_BUCKET: {project_id}-trellis
     _TRIGGER_OPERATION: metadataUpdate
-    _TRIGGER_RESOURCE: gbsc-gcp-project-mvp-dev-from-personalis-{data_group}
+    _TRIGGER_RESOURCE: {project_id}-from-personalis-{data_group}
