@@ -21,7 +21,7 @@ if ENVIRONMENT == 'google-cloud':
     project_id = parsed_vars['GOOGLE_CLOUD_PROJECT']
     write_bucket_name = parsed_vars['TRELLIS_BUCKET']
     write_prefix = parsed_vars['BUCKET_PAGE_PREFIX']
-    publish_topic = parsed_vars['TOPIC_PAGE_TOKENS']
+    publish_topic = parsed_vars['TOPIC_LIST_BUCKET_PAGE']
     approved_buckets = parsed_vars['DATA_BUCKETS']
 
     publisher = pubsub.PublisherClient()
@@ -121,7 +121,7 @@ def list_bucket_page(event, context):
                                      "bucket": read_bucket.name, 
                                      "name": blob.name, 
                                      "size": str(blob.size), 
-                                     "md5Hash": blob.md5_hash, 
+                                     #"md5Hash": blob.md5_hash, 
                                      "crc32c": blob.crc32c, 
                                      "id": blob.id, 
                     }, 
