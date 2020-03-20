@@ -24,7 +24,7 @@ if ENVIRONMENT == 'google-cloud':
 
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     BIGQUERY_DATASET = parsed_vars['BIGQUERY_DATASET']
-    BIGQUERY_CONFIG = parsed_vars['BIGQUERY_CONFIG']
+    #BIGQUERY_CONFIG = parsed_vars['BIGQUERY_CONFIG']
 
     #PUBLISHER = pubsub.PublisherClient()
     CLIENT = bigquery.Client()
