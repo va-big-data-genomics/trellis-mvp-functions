@@ -10,8 +10,8 @@ included_files:
 filename: functions/list-bucket-page/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
 name: gcf-{repo_owner}-trellis-{func_group}-match-blob-patterns
@@ -27,8 +27,9 @@ included_files:
 filename: functions/match-blob-patterns/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _TRIGGER_RESOURCE: {trellis_bucket}
 ---
@@ -44,8 +45,8 @@ included_files:
 filename: functions/db-query-index/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _TRIGGER_RESOURCE: {trellis_bucket}
 ---
@@ -61,6 +62,6 @@ included_files:
 filename: functions/update-metadata/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud

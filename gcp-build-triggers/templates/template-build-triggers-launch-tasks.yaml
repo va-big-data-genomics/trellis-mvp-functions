@@ -10,8 +10,8 @@ included_files:
 filename: functions/launch-gatk-5-dollar/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
 name: gcf-{repo_owner}-trellis-{func_group}-fastq-to-ubam
@@ -26,6 +26,6 @@ included_files:
 filename: functions/launch-fastq-to-ubam/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud

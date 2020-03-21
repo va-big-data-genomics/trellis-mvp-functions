@@ -12,11 +12,12 @@ filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
     _BUCKET_SHORT_NAME: from-personalis
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _OPERATION_SHORT_NAME: final
-    _TRELLIS_BUCKET: {project_id}-trellis
+    _TRELLIS_BUCKET: {trellis_bucket}
     _TRIGGER_OPERATION: finalize
     _TRIGGER_RESOURCE: {project_id}-from-personalis
 ---
@@ -34,11 +35,12 @@ filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
     _BUCKET_SHORT_NAME: from-personalis
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _OPERATION_SHORT_NAME: meta
-    _TRELLIS_BUCKET: {project_id}-trellis
+    _TRELLIS_BUCKET: {trellis_bucket}
     _TRIGGER_OPERATION: metadataUpdate
     _TRIGGER_RESOURCE: {project_id}-from-personalis
 ---
@@ -56,11 +58,12 @@ filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
     _BUCKET_SHORT_NAME: {data_group}
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _OPERATION_SHORT_NAME: final
-    _TRELLIS_BUCKET: {project_id}-trellis
+    _TRELLIS_BUCKET: {trellis_bucket}
     _TRIGGER_OPERATION: finalize
     _TRIGGER_RESOURCE: {project_id}-from-personalis-{data_group}
 ---
@@ -78,10 +81,11 @@ filename: functions/create-blob-node/cloudbuild.yaml
 substitutions:
     _BUCKET_SHORT_NAME: {data_group}
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _OPERATION_SHORT_NAME: meta
-    _TRELLIS_BUCKET: {project_id}-trellis
+    _TRELLIS_BUCKET: {trellis_bucket}
     _TRIGGER_OPERATION: metadataUpdate
     _TRIGGER_RESOURCE: {project_id}-from-personalis-{data_group}

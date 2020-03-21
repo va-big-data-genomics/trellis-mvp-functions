@@ -10,8 +10,8 @@ included_files:
 filename: functions/launch-bam-fastqc/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _TRIGGER_TOPIC: {func_group}-bam-fastqc
 ---
@@ -27,8 +27,8 @@ included_files:
 filename: functions/launch-flagstat/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _TRIGGER_TOPIC: {func_group}-flagstat
 ---
@@ -44,9 +44,9 @@ included_files:
 filename: functions/launch-vcfstats/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _TRIGGER_TOPIC: {func_group}-vcfstats
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
 name: gcf-{repo_owner}-trellis-{func_group}-launch-text-to-table
@@ -61,9 +61,9 @@ included_files:
 filename: functions/launch-text-to-table/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _TRIGGER_TOPIC: {func_group}-text-to-table
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
 name: gcf-{repo_owner}-trellis-{func_group}-bigquery-import-csv
@@ -78,7 +78,7 @@ included_files:
 filename: functions/bigquery-import-csv/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _TRIGGER_TOPIC: {func_group}-bigquery-import-csv
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
