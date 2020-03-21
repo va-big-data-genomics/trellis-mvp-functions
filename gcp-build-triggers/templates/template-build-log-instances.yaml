@@ -10,8 +10,8 @@ included_files:
 filename: functions/log-delete-instance/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
 name: gcf-{repo_owner}-trellis-{func_group}-log-insert-cromwell-instance
@@ -26,8 +26,8 @@ included_files:
 filename: functions/log-insert-cromwell-instance/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
 name: gcf-{repo_owner}-trellis-{func_group}-log-insert-trellis-instance
@@ -42,6 +42,6 @@ included_files:
 filename: functions/log-insert-trellis-instance/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud

@@ -58,7 +58,7 @@ def _dash_to_camelcase(word):
 def _format_pubsub_message(query, event_id, retry_count=None):
     message = {
                "header": {
-                          "resource": "query", 
+                          "resource": "query",
                           "method": "POST",
                           "labels": ["Create", "Dstat", "Node", "Cypher", "Query"],
                           "sentFrom": FUNCTION_NAME,
@@ -141,7 +141,7 @@ def _create_query(dstat_cmd, dstat_json):
             property_strings.append(f'dstat.{neo4j_key}= "{value}"')
         else:
             property_strings.append(f'dstat.{neo4j_key}= {value}')
-    properties_string = ', '.join(property_strings)   
+    properties_string = ', '.join(property_strings)
 
     query = (
              f"MERGE (dstat:Dstat " +

@@ -57,6 +57,7 @@ There are more optional flags can be specified and some of the common ones are:
     --project=${PROJECT_ID} \
     --zone=${ZONE} \
     --network=${NETWORK} \
+    --subnet=${SUBNET} \
     --private-network-ip=${PRIVATE_IP} \
     --address=${EXTERNAL_IP} \
     --tags=${NEO4J_TAG} \
@@ -71,6 +72,8 @@ Refer Google Cloud Documentation for full specifications:
 gcloud compute instances create-with-container trellis-neo4j-xingziye \
     --machine-type=n1-highmem-2 \
     --tags=neo4j \
+    --network=trellis-dev \
+    --subnet=us-west1 \
     --address=trellis-neo4j-xingziye \
     --container-image neo4j:3.5.4 \
     --container-env NEO4J_dbms_memory_pagecache_size=5G,NEO4J_dbms_memory_heap_initial__size=5G,NEO4J_dbms_memory_heap_max__size=5G \

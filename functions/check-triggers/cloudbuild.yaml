@@ -3,7 +3,7 @@ steps:
   args: ['ls', 'config/${_DATA_GROUP}']
 - name: 'ubuntu'
   args: ['cp',
-         'config/${_DATA_GROUP}/wgs35-triggers.py',
+         'config/${_DATA_GROUP}/${_DATA_GROUP}-triggers.py',
          'functions/check-triggers/']
 - name: 'ubuntu'
   args: ['ls', 'functions/check-triggers']
@@ -12,7 +12,7 @@ steps:
          'beta',
          'functions',
          'deploy',
-         '${_DATA_GROUP}-triggers',
+         '${_FUNC_GROUP}-triggers',
          '--project=${PROJECT_ID}',
          '--source=functions/check-triggers',
          '--memory=256MB',
@@ -23,5 +23,5 @@ steps:
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
-         '--update-labels=data-group=${_DATA_GROUP}',
+         '--update-labels=func-group=${_FUNC_GROUP}',
   ]
