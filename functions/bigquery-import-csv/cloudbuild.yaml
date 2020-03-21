@@ -4,7 +4,7 @@ steps:
          'beta',
          'functions',
          'deploy',
-         '${_DATA_GROUP}-bigquery-import-csv',
+         '${_FUNC_GROUP}-bigquery-import-csv',
          '--project=${PROJECT_ID}',
          '--source=functions/bigquery-import-csv',
          '--memory=256MB',
@@ -15,5 +15,5 @@ steps:
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
-         '--update-labels=data-group=${_DATA_GROUP}',
+         '--update-labels=func-group=${_FUNC_GROUP}',
   ]

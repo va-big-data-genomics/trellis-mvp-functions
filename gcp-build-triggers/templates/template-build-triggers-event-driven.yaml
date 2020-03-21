@@ -10,8 +10,8 @@ included_files:
 filename: functions/create-job-node/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
 name: gcf-{repo_owner}-trellis-{func_group}-triggers
@@ -27,8 +27,9 @@ included_files:
 filename: functions/check-triggers/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _TRIGGER_TOPIC: {func_group}-triggers
 ---
@@ -43,7 +44,7 @@ included_files:
     - functions/kill-job/*
 filename: functions/kill-job/cloudbuild.yaml
 substitutions:
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _TRIGGER_TOPIC: {func_group}-kill-job
 ---
@@ -59,8 +60,8 @@ included_files:
 filename: functions/db-query/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
 name: gcf-{repo_owner}-trellis-{func_group}-check-dstat
@@ -75,7 +76,7 @@ included_files:
 filename: functions/check-dstat/cloudbuild.yaml
 substitutions:
     _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _FUNCTION_NAME: {func_group}-check-dstat
