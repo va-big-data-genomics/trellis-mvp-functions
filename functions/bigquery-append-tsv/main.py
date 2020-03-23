@@ -31,7 +31,7 @@ if ENVIRONMENT == 'google-cloud':
     CLIENT = bigquery.Client()
 
 
-def append_tsv(name, csv_uri, schema, project, dataset):
+def append_tsv(name, tsv_uri, schema, project, dataset):
     print(f"Loading table: {self.name}.")
     print(f"{BIGQUERY_DATASET} {PROJECT_ID}.")
     
@@ -52,7 +52,7 @@ def append_tsv(name, csv_uri, schema, project, dataset):
 
     print(f"Job configuration: {job_config}.")
     load_job = CLIENT.load_table_from_uri(
-                                source_uris = csv_uri, 
+                                source_uris = tsv_uri, 
                                 destination = dataset_ref.table(name), 
                                 job_config = job_config)
     print(f"Starting job {load_job.job_id}.")
