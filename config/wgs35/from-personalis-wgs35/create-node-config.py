@@ -121,6 +121,7 @@ class NodeKinds:
             "Flagstat": [".*/flagstat/.*"],
             "Vcfstats": [".*/vcfstats/.*"],
             "TextToTable": [".*/text-to-table/.*"],
+            "CheckContamination": [".*/call-CheckContamination/.*"],
         }
 
         self.label_functions = {
