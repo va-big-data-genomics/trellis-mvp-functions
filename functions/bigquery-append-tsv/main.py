@@ -32,8 +32,8 @@ if ENVIRONMENT == 'google-cloud':
 
 
 def append_tsv(name, tsv_uri, schema, project, dataset):
-    print(f"Loading table: {self.name}.")
-    print(f"{BIGQUERY_DATASET} {PROJECT_ID}.")
+    logging.info(f"Loading table: {name}.")
+    logging.info(f"{BIGQUERY_DATASET} {PROJECT_ID}.")
     
     dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
     
@@ -48,17 +48,17 @@ def append_tsv(name, tsv_uri, schema, project, dataset):
     for label, kind in schema_fields.items():
         bq_schema.append(bigquery.SchemaField(label, kind))
     job_config.schema = bq_schema
-    print(f"Table schema: {job_config.schema}")
+    logging.info(f"Table schema: {job_config.schema}")
 
-    print(f"Job configuration: {job_config}.")
+    loggin.info(f"Job configuration: {job_config}.")
     load_job = CLIENT.load_table_from_uri(
                                 source_uris = tsv_uri, 
                                 destination = dataset_ref.table(name), 
                                 job_config = job_config)
-    print(f"Starting job {load_job.job_id}.")
+    logging.info(f"Starting job {load_job.job_id}.")
 
     destination_table = CLIENT.get_table(dataset_ref.table(name))
-    print(f"Loaded {destination_table.num_rows} rows.")
+    logging.info(f"Loaded {destination_table.num_rows} rows.")
 
 
 def append_tsv_to_bigquery(event, context):
