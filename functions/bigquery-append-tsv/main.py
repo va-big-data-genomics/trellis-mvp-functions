@@ -31,7 +31,7 @@ if ENVIRONMENT == 'google-cloud':
     CLIENT = bigquery.Client()
 
 
-def append_tsv(name, tsv_uri, schema, project, dataset):
+def append_tsv(name, tsv_uri, schema_fields, project, dataset):
     logging.info(f"Loading table: {name}.")
     logging.info(f"{BIGQUERY_DATASET} {PROJECT_ID}.")
     
@@ -122,7 +122,7 @@ def append_tsv_to_bigquery(event, context):
         append_tsv(
                    name = config_data['table-name'],
                    tsv_uri = tsv_uri,
-                   schema = config_data['schema-fields'],
+                   schema_fields = config_data['schema-fields'],
                    project = PROJECT_ID,
                    dataset = BIGQUERY_DATASET)
     except exceptions.NotFound:
