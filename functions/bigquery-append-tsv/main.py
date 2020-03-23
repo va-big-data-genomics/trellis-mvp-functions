@@ -50,7 +50,7 @@ def append_tsv(name, tsv_uri, schema_fields, project, dataset):
     job_config.schema = bq_schema
     logging.info(f"Table schema: {job_config.schema}")
 
-    loggin.info(f"Job configuration: {job_config}.")
+    logging.info(f"Job configuration: {job_config}.")
     load_job = CLIENT.load_table_from_uri(
                                 source_uris = tsv_uri, 
                                 destination = dataset_ref.table(name), 
