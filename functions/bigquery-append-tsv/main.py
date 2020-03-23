@@ -120,7 +120,7 @@ def append_tsv_to_bigquery(event, context):
 
     try:
         append_tsv(
-                   name = config_data['tabel-name'],
+                   name = config_data['table-name'],
                    tsv_uri = tsv_uri,
                    schema = config_data['schema-fields'],
                    project = PROJECT_ID,
