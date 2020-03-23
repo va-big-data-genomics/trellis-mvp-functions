@@ -1508,7 +1508,7 @@ class RequestBigQueryImportContamination:
         return([(topic, message)])
 
 
-    def _create_query(self, sevent_id):
+    def _create_query(self, event_id):
         query = (
                  f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
                  f"WHERE node.extension =\"preBqsr.selfSM\" " +
