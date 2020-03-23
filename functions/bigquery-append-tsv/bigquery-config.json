@@ -29,7 +29,7 @@
                                  "chr": "STRING", 
                                  "sample": "STRING"
                }
-    },
+    }
   },
   "TSV": {
     "CheckContamination": {
