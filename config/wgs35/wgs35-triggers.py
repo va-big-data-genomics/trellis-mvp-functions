@@ -1484,6 +1484,7 @@ class RequestBigQueryImportContamination:
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         event_id = context.event_id
+        seed_id = context.event_id
 
         query = self._create_query(event_id)
 
@@ -1495,8 +1496,8 @@ class RequestBigQueryImportContamination:
                               "sentFrom": self.function_name,
                               "trigger": "RequestBigQueryImportContamination",
                               "publishTo": self.env_vars['TOPIC_BIGQUERY_APPEND_TSV'],
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
                    },
                    "body": {
                             "cypher": query,
