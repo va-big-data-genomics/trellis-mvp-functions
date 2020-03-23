@@ -6,6 +6,7 @@ import time
 import uuid
 import yaml
 import base64
+import logging
 
 #from google.cloud import pubsub
 from google.cloud import storage
