@@ -2772,7 +2772,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(BigQueryImportContamination(
                                     function_name,
                                     env_vars))
-    RequestBigQueryImportContamination(
+    triggers.append(RequestBigQueryImportContamination(
                                     function_name,
                                     env_vars))
 
