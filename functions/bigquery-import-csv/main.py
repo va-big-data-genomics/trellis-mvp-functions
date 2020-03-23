@@ -103,6 +103,36 @@ class BigQueryTable:
         destination_table = CLIENT.get_table(dataset_ref.table(self.name))
         print(f"Loaded {destination_table.num_rows} rows.")
 
+    def append_tsv_to_table(self):
+        print(f"Loading table: {self.name}.")
+        print(f"{BIGQUERY_DATASET} {PROJECT_ID}.")
+        
+        dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
+        
+        job_config = bigquery.LoadJobConfig()
+        job_config.source_format = bigquery.SourceFormat.CSV 
+        job_config.write_disposition = 'WRITE_APPEND'
+        job_config.field_delimiter = "\t"
+        job_config.skip_leading_rows = 1
+        job_config.null_marker = "NA"
+        #job_config.max_bad_records = 1
+
+        bq_schema = []
+        for label, kind in self.schema_fields.items():
+            bq_schema.append(bigquery.SchemaField(label, kind))
+        job_config.schema = bq_schema
+        print(f"Table schema: {job_config.schema}")
+
+        print(f"Job configuration: {job_config}.")
+        load_job = CLIENT.load_table_from_uri(
+                                    source_uris = self.csv_uri, 
+                                    destination = dataset_ref.table(self.name), 
+                                    job_config = job_config)
+        print(f"Starting job {load_job.job_id}.")
+
+        destination_table = CLIENT.get_table(dataset_ref.table(self.name))
+        print(f"Loaded {destination_table.num_rows} rows.")
+
 
 def import_csv_to_bigquery(event, context):
     """When an object node is added to the database, launch any
@@ -133,9 +163,10 @@ def import_csv_to_bigquery(event, context):
     supported_labels = [
                        'Fastqc',
                        'Flagstat', 
-                       'Vcfstats'
+                       'Vcfstats',
+                       'CheckContamination'
     ]
-    
+
     conditions = [
         # Check that all required labels are present
         set(required_labels).issubset(set(node.get('labels'))),
@@ -169,9 +200,20 @@ def import_csv_to_bigquery(event, context):
                              schema = config_data['schema-fields'],
                              project = PROJECT_ID,
                              dataset = BIGQUERY_DATASET)
+
+    # TODO: Split into separate functions
+    label_functions = {
+                        'Fastqc': bq_table.append_csv_to_table,
+                        'Flagstat': bq_table.append_csv_to_table,
+                        'Vcfstats': bq_table.append_csv_to_table,
+                        'CheckContamination': bq_table.append_tsv_to_table
+    }
+
     try:
-        bq_table.append_csv_to_table()
+        #bq_table.append_csv_to_table()
+        label_functions[task_label]()
     except exceptions.NotFound:
+        # This isn't actually doing anything.
         #print(f"Table not found. Creating table.")
         dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
         #CLIENT.create_table(bq_table)
