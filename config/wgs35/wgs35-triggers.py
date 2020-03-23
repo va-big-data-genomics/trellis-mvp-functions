@@ -1485,7 +1485,7 @@ class RequestBigQueryImportContamination:
 
         event_id = context.event_id
 
-        query = self._create_query(blob_id, event_id)
+        query = self._create_query(event_id)
 
         message = {
                    "header": {
