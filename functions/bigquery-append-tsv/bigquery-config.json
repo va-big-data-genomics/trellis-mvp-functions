@@ -1,4 +1,5 @@
 {
+  "CSV": {
     "Vcfstats": {
                  "table-name": "vcfstats",
                  "schema-fields": {
@@ -28,7 +29,9 @@
                                  "chr": "STRING", 
                                  "sample": "STRING"
                }
-    },
+    }
+  },
+  "TSV": {
     "CheckContamination": {
                 "table-name": "check_contamination",
                 "schema-fields": {
@@ -53,4 +56,5 @@
                                   "RDPALT": "NUMERIC"
                 }
     }
+  }
 }
