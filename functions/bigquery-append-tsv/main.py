@@ -31,34 +31,110 @@ if ENVIRONMENT == 'google-cloud':
     CLIENT = bigquery.Client()
 
 
-def append_tsv(name, tsv_uri, schema_fields, project, dataset):
-    logging.info(f"Loading table: {name}.")
-    logging.info(f"{BIGQUERY_DATASET} {PROJECT_ID}.")
-    
-    dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
-    
+class TrellisMessage:
+
+    def __init__(self, event, context):
+        """Parse Trellis messages from Pub/Sub event & context.
+
+        Args:
+            event (type):
+            context (type):
+
+        Message format:
+            - context
+                - event_id (required)
+            - event
+                - header
+                    - sentFrom (required)
+                    - method (optional)
+                    - resource (optional)
+                    - labels (optional)
+                    - seedId (optional)
+                    - previousEventId (optional)
+                - body
+                    - cypher (optional)
+                    - results (optional)
+        """
+
+        pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+        data = json.loads(pubsub_message)
+        logging.info(f"> Context: {context}.")
+        logging.info(f"> Data: {data}.")
+
+        self.event_id = context.event_id
+        self.seed_id = header.get('seedId')
+        
+        # If no seed specified, assume this is the seed event
+        if not self.seed_id:
+            self.seed_id = self.event_id
+
+        self.header = data['header']
+        self.body = data['body']
+
+        self.results = {}
+        if body.get('results'):
+            self.results = body.get('results')
+
+        self.node = None
+        if self.results('node'):
+            self.nodes = self.results('node')
+
+
+def load_json(path):
+    with open(path) as fh:
+        data = json.load(fh)
+    return data
+
+
+def check_conditions(data_labels, node):
+    required_labels = ['Blob']
+
+    conditions = [
+        # Check that all required labels are present
+        set(required_labels).issubset(set(node.get('labels'))),
+        # Check that one & only one type format class is represented
+        len(set(data_labels).intersection(set(node.get('labels'))))==1,
+    ]
+
+    for condition in conditions:
+        if condition:
+            continue
+        else:
+            return False
+    return True
+
+
+def get_bigquery_config_data(tsv_configs, node):
+    """Get BigQuery load configuration for node data type."""
+
+    task_label = set(tsv_configs.keys()).intersection(set(node.get('labels'))).pop()
+    return tsv_configs[task_label]
+
+
+def make_gcs_uri(node):
+    bucket = node['bucket']
+    path = node['path']
+    uri = f"gs://{bucket}/{path}"
+    return uri
+
+
+def config_load_job():
+    # Specify LoadJobConfig (https://googleapis.dev/python/bigquery/latest/generated/google.cloud.bigquery.job.LoadJobConfig.html)
     job_config = bigquery.LoadJobConfig()
     job_config.source_format = bigquery.SourceFormat.CSV 
     job_config.write_disposition = 'WRITE_APPEND'
     job_config.field_delimiter = "\t"
     job_config.skip_leading_rows = 1
     job_config.null_marker = "NA"
+    return job_config
 
+
+def make_table_schema(schema_fields):
+    # Create table schema (https://googleapis.dev/python/bigquery/latest/generated/google.cloud.bigquery.schema.SchemaField.html)
     bq_schema = []
     for label, kind in schema_fields.items():
         bq_schema.append(bigquery.SchemaField(label, kind))
-    job_config.schema = bq_schema
-    logging.info(f"Table schema: {job_config.schema}")
-
-    logging.info(f"Job configuration: {job_config}.")
-    load_job = CLIENT.load_table_from_uri(
-                                source_uris = tsv_uri, 
-                                destination = dataset_ref.table(name), 
-                                job_config = job_config)
-    logging.info(f"Starting job {load_job.job_id}.")
-
-    destination_table = CLIENT.get_table(dataset_ref.table(name))
-    logging.info(f"Loaded {destination_table.num_rows} rows.")
+    return bq_schema
 
 
 def append_tsv_to_bigquery(event, context):
@@ -69,117 +145,64 @@ def append_tsv_to_bigquery(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    data = json.loads(pubsub_message)
-    print(f"> Context: {context}.")
-    print(f"> Data: {data}.")
-    header = data['header']
-    body = data['body']
+    # Parse message
+    message = TrellisMessage(event, context)
 
-    # Get seed/event ID to track provenance of Trellis events
-    seed_id = header['seedId']
-    event_id = context.event_id
-
-    node = body['results'].get('node')
-    if not node:
-        print("> No node provided. Exiting.")
-        return
-
-    # Get BigQuery table configurations from cloud storage
-    #config_blob = storage.Client() \
-    #    .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-    #    .get_blob(os.environ['BIGQUERY_CONFIG']) \
-    #    .download_as_string()
-    #bigquery_configs = json.load(config_blob)
+    # Check that message includes node metadata
+    if not message.node:
+        logging.warning("> No node provided. Exiting.")
+        return(1)
     
-    with open('bigquery-config.json') as fh:
-        bigquery_configs = json.load(fh)
+    # Load BigQuery table config data
+    bigquery_config = load_json('bigquery-config.json')
     tsv_configs = bigquery_configs["TSV"]
 
-    required_labels = ['Blob']
-    conditions = [
-        # Check that all required labels are present
-        set(required_labels).issubset(set(node.get('labels'))),
-        # Check that one & only one type format class is represented
-        len(set(tsv_configs.keys()).intersection(set(node.get('labels'))))==1,
-    ]
+    # Check whether node & message metadata meets function conditions
+    conditions_met = check_conditions(
+                                      data_labels = tsv_configs.keys(),
+                                      node = message.node)
+    if not conditions_met:
+        logging.error(f"> Input node does not match requirements. Node: {node}.")
+        return(1)
 
-    for condition in conditions:
-        if condition:
-            continue
-        else:
-            logging.error(f"Input node does not match requirements. Node: {node}.")
-            return False
+    # Get BigQuery load configuration for node data type
+    config_data = get_config_data(tsv_configs, message.node)
 
-    task_label = set(tsv_configs.keys()).intersection(set(node.get('labels'))).pop()
-    config_data = tsv_configs[task_label]
+    # Get TSV URI
+    tsv_uri = make_gcs_uri(message.node)
+    
+    # Configure BigQuery load job
+    job_config = config_load_job()
 
-    tsv_bucket = node['bucket']
-    tsv_path = node['path']
-    tsv_uri = f"gs://{tsv_bucket}/{tsv_path}"
+    # Create table schema
+    job_config.schema = make_table_schema(config_data['schema-fields'])
+    logging.info(f"> Table schema: {job_config.schema}")
 
+    # Print completed job configuration
+    logging.info(f"> Job configuration: {job_config}.")
+
+    # Append TSV to BigQuery table
+    logging.info(f"> Loading table: {config_data['table-name']}.")
+    logging.info(f"> {BIGQUERY_DATASET} {PROJECT_ID}.")
+    dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
     try:
-        append_tsv(
-                   name = config_data['table-name'],
-                   tsv_uri = tsv_uri,
-                   schema_fields = config_data['schema-fields'],
-                   project = PROJECT_ID,
-                   dataset = BIGQUERY_DATASET)
+        load_job = CLIENT.load_table_from_uri(
+                                    source_uris = tsv_uri, 
+                                    destination = dataset_ref.table(name), 
+                                    job_config = job_config)
     except exceptions.NotFound:
-        # NOTE: This isn't actually doing anything.
-        #print(f"Table not found. Creating table.")
+        # Check that table exists.
+        # API seems to throw this exception even though it will
+        #   automatically create the table if it doesn't exist.
         dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
-        #CLIENT.create_table(bq_table)
         tables = list(CLIENT.list_tables(dataset_ref))
         print(f"Table created. Dataset tables: {tables}.")
     except:
         raise
+    logging.info(f"Starting job {load_job.job_id}.")
 
-# For local testing
-if __name__ == "__main__":
-    """
-    PROJECT_ID = "***REMOVED***-dev"
-    BIGQUERY_DATASET = 'mvp_wgs_9000'
-    CLIENT = bigquery.Client(project=PROJECT_ID)
+    # QC: Check how many rows are in the table
+    destination_table = CLIENT.get_table(dataset_ref.table(name))
+    logging.info(f"Loaded {destination_table.num_rows} rows.")
+    return 0
 
-    data = {
-            'resource': 'node', 
-            'neo4j-metadata': {
-                               'node': {
-                                        'extension': 'txt.csv', 
-                                        'time-created-iso': '2019-04-02T23:09:30.066000+00:00', 
-                                        'dirname': 'dsub/vcfstats/concat/objects', 
-                                        'path': 'dsub/vcfstats/concat/objects/concat_vcfstats.txt.csv', 
-                                        'storageClass': 'REGIONAL', 
-                                        'md5Hash': '2lSvb8PhCk/nssCM3R2y+A==', 
-                                        'timeCreated': '2019-04-02T23:09:30.066Z', 
-                                        'time-updated-iso': '2019-04-02T23:09:30.066000+00:00', 
-                                        'id': '***REMOVED***-dev-from-personalis-qc/dsub/vcfstats/concat/objects/concat_vcfstats.txt.csv/1554246570068077', 
-                                        'contentType': 'text/csv', 
-                                        'generation': '1554246570068077', 
-                                        'metageneration': '1', 
-                                        'kind': 'storage#object', 
-                                        'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-qc/o/dsub%2Fvcfstats%2Fconcat%2Fobjects%2Fconcat_vcfstats.txt.csv?generation=1554246570068077&alt=media', 
-                                        'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-qc/o/dsub%2Fvcfstats%2Fconcat%2Fobjects%2Fconcat_vcfstats.txt.csv', 
-                                        'labels': ['Vcfstats', 'Concat', 'WGS_9000', 'Blob'], 
-                                        'bucket': '***REMOVED***-dev-from-personalis-qc', 
-                                        'basename': 'concat_vcfstats.txt.csv', 
-                                        'crc32c': 'wO1axA==', 
-                                        'size': 3177403, 
-                                        'timeStorageClassUpdated': '2019-04-02T23:09:30.066Z', 
-                                        'task-group': 'vcfstats', 
-                                        'name': 'concat_vcfstats', 
-                                        'etag': 'CO2Qz9XDsuECEAE=', 
-                                        'updated': '2019-04-02T23:09:30.066Z', 
-                                        'time-created-epoch': 1554246570.066, 
-                                        'time-updated-epoch': 1554246570.066
-                               }
-            }
-    }
-    data = json.dumps(data)
-    data = data.encode('utf-8')
-    
-    event = {'data': base64.b64encode(data)}
-
-    import_csv_to_bigquery(event, context=None)
-    """
