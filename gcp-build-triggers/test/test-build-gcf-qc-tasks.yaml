@@ -82,3 +82,20 @@ substitutions:
     _TRIGGER_TOPIC: wgs35-bigquery-import-csv
     _DATA_GROUP: wgs35
     _ENVIRONMENT: google-cloud
+---
+name: gcf-StanfordBioinformatics-bigquery-append-tsv
+description: gcf-bigquery-append-tsv
+github:
+    owner: StanfordBioinformatics
+    name: trellis-mvp-wgs-35000
+    push:
+        branch: release-
+included_files:
+    - functions/bigquery-append-tsv/*
+filename: functions/bigquery-append-tsv/cloudbuild.yaml
+substitutions:
+    _CREDENTIALS_BLOB: credentials/test-wgs35.yaml
+    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-test-trellis
+    _TRIGGER_TOPIC: wgs35-bigquery-append-tsv
+    _DATA_GROUP: wgs35
+    _ENVIRONMENT: google-cloud
