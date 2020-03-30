@@ -1522,8 +1522,7 @@ class RequestBigQueryImportContamination:
                             "name: \"bigquery-append-tsv\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (node)-[:INPUT_TO]->(jr) " +
-                 "RETURN node " +
-                 "LIMIT 1")
+                 "RETURN node ")
         return query
 
 # Relationship triggers
