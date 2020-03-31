@@ -61,6 +61,7 @@ def append_tsv(name, tsv_uri, schema_fields, project, dataset):
     try:
         result = load_job.result()
         logging.info(f"> Job finishes.")
+        time.sleep(5)
     except:
         logging.error(f"> Encountered LoadJob errors: {load_job.errors}.")
         raise
