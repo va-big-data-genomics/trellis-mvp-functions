@@ -13,6 +13,8 @@ from google.cloud import storage
 from google.cloud import bigquery
 from google.cloud import exceptions
 
+from googleapiclient.errors import HttpError
+
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
@@ -56,8 +58,13 @@ def append_tsv(name, tsv_uri, schema_fields, project, dataset):
                                 destination = dataset_ref.table(name), 
                                 job_config = job_config)
     logging.info(f"> Starting job {load_job.job_id}.")
-    result = load_job.result()
-    logging.info(f"> Job result: {result}.")
+    try:
+        result = load_job.result()
+        logging.info(f"> Job finishes.")
+    except:
+        logging.error(f"> Encountered LoadJob errors: {load_job.errors}.")
+        raise
+
 
     #destination_table = CLIENT.get_table(dataset_ref.table(name))
     #logging.info(f"Loaded {destination_table.num_rows} rows.")
