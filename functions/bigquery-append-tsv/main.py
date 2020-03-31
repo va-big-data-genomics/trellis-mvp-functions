@@ -48,17 +48,19 @@ def append_tsv(name, tsv_uri, schema_fields, project, dataset):
     for label, kind in schema_fields.items():
         bq_schema.append(bigquery.SchemaField(label, kind))
     job_config.schema = bq_schema
-    logging.info(f"Table schema: {job_config.schema}")
+    logging.info(f"> Table schema: {job_config.schema}")
 
-    logging.info(f"Job configuration: {job_config}.")
+    logging.info(f"> Job configuration: {job_config}.")
     load_job = CLIENT.load_table_from_uri(
                                 source_uris = tsv_uri, 
                                 destination = dataset_ref.table(name), 
                                 job_config = job_config)
-    logging.info(f"Starting job {load_job.job_id}.")
+    logging.info(f"> Starting job {load_job.job_id}.")
+    result = load_job.result()
+    logging.info(f"> Job result: {result}.")
 
-    destination_table = CLIENT.get_table(dataset_ref.table(name))
-    logging.info(f"Loaded {destination_table.num_rows} rows.")
+    #destination_table = CLIENT.get_table(dataset_ref.table(name))
+    #logging.info(f"Loaded {destination_table.num_rows} rows.")
 
 
 def append_tsv_to_bigquery(event, context):
