@@ -8,7 +8,7 @@ steps:
          '--project=${PROJECT_ID}',
          '--source=functions/bigquery-append-tsv',
          '--memory=256MB',
-         '--max-instances=20',
+         '--max-instances=1',
          '--entry-point=append_tsv_to_bigquery',
          '--runtime=python37',
          '--trigger-topic=${_TRIGGER_TOPIC}',
