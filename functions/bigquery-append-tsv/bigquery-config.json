@@ -41,7 +41,7 @@
                                   "SNPS": "NUMERIC",
                                   "READS": "NUMERIC",
                                   "AVG_DP": "NUMERIC",
-                                  "FREEMIX": "NUMERIC",
+                                  "FREEMIX": "STRING",
                                   "FREELK1": "NUMERIC",
                                   "FREELK0": "NUMERIC",
                                   "FREE_RH": "NUMERIC",
