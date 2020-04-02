@@ -10,11 +10,6 @@
 |
 */
 
-// Variables
-variable "external-bastion-ip" {
-    type = string
-}
-
 // Create network
 resource "google_compute_network" "trellis-vpc-network" {
     name = "trellis"
@@ -76,6 +71,20 @@ resource "google_compute_firewall" "trellis-allow-bastion-bastion" {
     source_ranges = [var.external-bastion-ip]
     source_tags = ["bastion"]
     target_tags = ["bastion"]
+}
+
+// DELETE FOR PRODUCTION
+resource "google_compute_firewall" "trellis-allow-stanford-neo4j" {
+    name = "trellis-allow-stanford-neo4j"
+    network = google_compute_network.trellis-vpc-network.self_link
+
+    allow {
+        protocol = "tcp"
+        ports = ["7687", "7473"]
+    }
+
+    source_ranges = ["171.64.0.0/14"]
+    target_tags = ["neo4j"]
 }
 
 /* COMMENTED OUT
