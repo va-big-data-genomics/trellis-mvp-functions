@@ -1,19 +1,17 @@
 steps:
-- name: 'ubuntu'
-  args: ['cp', '-r', 'config/${_DATA_GROUP}', 'functions/match-blob-patterns/']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
+         'beta',
          'functions',
          'deploy',
-         'trellis-match-blob-patterns',
+         'trellis-launch-validate-cram',
          '--project=${PROJECT_ID}',
-         '--source=functions/match-blob-patterns',
+         '--source=functions/launch-validate-cram',
          '--memory=128MB',
-         '--max-instances=100',
-         '--entry-point=match_blob_patterns',
+         '--max-instances=20',
+         '--entry-point=launch_validate_cram',
          '--runtime=python37',
-         '--trigger-resource=${_TRIGGER_RESOURCE}',
-         '--trigger-event=google.storage.object.finalize',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
