@@ -19,11 +19,13 @@ variable "neo4j-image" {
 }
 
 variable "neo4j-pagecache-size" {
-    type = string
+    type    = string
+    default = "32G"
 }
 
 variable "neo4j-heap-size" {
-    type = string
+    type    = string
+    default = "32G"
 }
 
 variable "github-owner" {
