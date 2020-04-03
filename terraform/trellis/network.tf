@@ -87,6 +87,20 @@ resource "google_compute_firewall" "trellis-allow-stanford-neo4j" {
     target_tags = ["neo4j"]
 }
 
+// DELETE FOR PRODUCTION
+resource "google_compute_firewall" "trellis-allow-stanford-neo4j-ssh" {
+    name = "trellis-allow-stanford-neo4j-ssh"
+    network = google_compute_network.trellis-vpc-network.self_link
+
+    allow {
+        protocol = "tcp"
+        ports = ["22"]
+    }
+
+    source_ranges = ["171.64.0.0/14"]
+    target_tags = ["neo4j"]
+}
+
 /* COMMENTED OUT
 resource "google_compute_firewall" "trellis-allow-notebook-neo4j" {
     name = "trellis-allow-bastion-bastion"
