@@ -16,20 +16,29 @@ module "gce-container" {
 
     env = [
       {
-        NEO4J_dbms_memory_pagecache_size    = var.neo4j-pagecache-size
-        NEO4J_dbms_memory_heap_initial_size = var.neo4j-heap-size
-        NEO4J_dbms_memory_heap_max_size     = var.neo4j-heap-size
+        "name"  = "NEO4J_dbms_memory_pagecache_size"
+        "value" = var.neo4j-pagecache-size
+      },
+      {
+        "name"  = "NEO4J_dbms_memory_heap_initial__size"
+        "value" = var.neo4j-heap-size
+      },
+      {
+        "name"  = "NEO4J_dbms_memory_heap_max__size"
+        "value" = var.neo4j-heap-size
       },
     ]
 
     # Declare volumes to be mounted
     # This is similar to how Docker volumes are mounted
     volumeMounts = [
+      /* Commented out
       {
         mountPath = "/cache"
         name      = "tempfs-0"
         readOnly  = false
       },
+      */
       {
         mountPath = "/data"
         name      = "data-disk-0"
@@ -40,6 +49,7 @@ module "gce-container" {
 
   # Declare the volumes
   volumes = [
+    /*
     {
       name = "tempfs-0"
 
@@ -47,6 +57,7 @@ module "gce-container" {
         medium = "Memory"
       }
     },
+    */
     {
       name = "data-disk-0"
 
@@ -57,22 +68,28 @@ module "gce-container" {
     },
   ]
 
-  restart_policy = "always"
+  restart_policy = "Always"
 }
 
-// Create attached persistent disk
+/* Create attached persistent disk
 resource "google_compute_disk" "neo4j-data-disk" {
     name = "trellis-neo4j-db-disk"
     type = "pd-standard"
-    zone = var.zone
     size = 10
+    image = "centos-6-v20200309"
+    labels = {
+        user = "trellis"
+    }
 }
+*/
+
 
 // Create Neo4j instance
 resource "google_compute_instance" "neo4j-database" {
     name = "trellis-neo4j-db"
     machine_type = "n1-highmem-8"
-    zone = var.zone
+    
+    allow_stopping_for_update = true
 
     boot_disk {
         initialize_params {
@@ -81,7 +98,7 @@ resource "google_compute_instance" "neo4j-database" {
     }
 
     attached_disk {
-        source      = google_compute_disk.neo4j-data-disk.self_link
+        source      = "disk-trellis-neo4j-data"
         device_name = "data-disk-0"
         mode        = "READ_WRITE"
     }
@@ -101,4 +118,8 @@ resource "google_compute_instance" "neo4j-database" {
     }
 
     tags = ["neo4j","https-server"]
+
+    service_account {
+        scopes = ["cloud-platform"]
+    }
 }
