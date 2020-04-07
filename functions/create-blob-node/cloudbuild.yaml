@@ -6,7 +6,7 @@ steps:
          'beta',
          'functions',
          'deploy',
-         '${_DATA_GROUP}-create-blob-node-${_BUCKET_SHORT_NAME}-${_OPERATION_SHORT_NAME}',
+         '${_FUNC_GROUP}-create-blob-node-${_BUCKET_SHORT_NAME}-${_OPERATION_SHORT_NAME}',
          '--project=${PROJECT_ID}',
          '--source=functions/create-blob-node',
          '--memory=128MB',
@@ -19,7 +19,7 @@ steps:
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
          '--update-env-vars=TRIGGER_OPERATION=${_TRIGGER_OPERATION}',
-         '--update-labels=data-group=${_DATA_GROUP}',
+         '--update-labels=func-group=${_FUNC_GROUP}',
          '--update-labels=trigger-operation=${_OPERATION_SHORT_NAME}',
          '--update-labels=trigger-resource=${_TRIGGER_RESOURCE}'
   ]
