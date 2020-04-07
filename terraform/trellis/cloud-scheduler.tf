@@ -10,7 +10,7 @@
 */
 
 resource "google_cloud_scheduler_job" "cron-import-data-from-personalis" {
-    region = "us-central1"
+    region = "us-west2"
 
     name = "cron-import-data-from-personalis"
     description = "Import from-personalis blob metadata to Neo4j"
@@ -32,7 +32,7 @@ EOT
 }
 
 resource "google_cloud_scheduler_job" "trigger-fastq-to-ubam-50" {
-    region = "us-central1"
+    region = "us-west2"
 
     name = "cron-trigger-fastq-to-ubam-50"
     description = "Launch variant calling for 100 samples every 3 hours"
@@ -63,7 +63,7 @@ EOT
 }
 
 resource "google_cloud_scheduler_job" "trigger-relaunch-failed-gatk" {
-    region = "us-central1"
+    region = "us-west2"
 
     name = "cron-trigger-relaunch-failed-gatk"
     description = "Launch GATK $5 for samples where job failed initially"
@@ -90,7 +90,7 @@ EOT
 }
 
 resource "google_cloud_scheduler_job" "trigger-fastq-to-ubam-1" {
-    region = "us-central1"
+    region = "us-west2"
 
     name = "cron-trigger-fastq-to-ubam-1"
     description = "Launch variant calling for 1 sample"
