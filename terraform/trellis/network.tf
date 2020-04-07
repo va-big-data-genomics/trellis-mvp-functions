@@ -17,7 +17,7 @@ resource "google_compute_network" "trellis-vpc-network" {
 }    
 
 // Create subnetwork
-resource "google_compute_subnetwork" "trellis-us-west1" {
+resource "google_compute_subnetwork" "trellis-subnet" {
     name            = "trellis-us-west1"
     ip_cidr_range   = "10.138.0.0/16"
     region          = "us-west1"
@@ -45,6 +45,7 @@ resource "google_compute_firewall" "trellis-allow-serverless-neo4j" {
     target_tags = ["neo4j"]
 }
 
+/* Temporary shelving
 resource "google_compute_firewall" "trellis-allow-bastion-neo4j" {
     name = "trellis-allow-bastion-neo4j"
     network = google_compute_network.trellis-vpc-network.self_link
@@ -57,8 +58,9 @@ resource "google_compute_firewall" "trellis-allow-bastion-neo4j" {
     source_tags = ["bastion"]
     target_tags = ["neo4j"]
 }
+*/
 
-
+/* Temporary shelving
 resource "google_compute_firewall" "trellis-allow-bastion-bastion" {
     name = "trellis-allow-bastion-bastion"
     network = google_compute_network.trellis-vpc-network.self_link
@@ -72,6 +74,7 @@ resource "google_compute_firewall" "trellis-allow-bastion-bastion" {
     source_tags = ["bastion"]
     target_tags = ["bastion"]
 }
+*/
 
 // DELETE FOR PRODUCTION
 resource "google_compute_firewall" "trellis-allow-stanford-neo4j" {
