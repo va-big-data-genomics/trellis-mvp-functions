@@ -1,4 +1,4 @@
-name: trellis-{data_group}-sink-create-insert-trellis-worker
+name: trellis-{func_group}-sink-create-insert-trellis-worker
 description: Create logging sink for Trellis workers.
 github:
     owner: {repo_owner}
@@ -10,9 +10,9 @@ included_files:
     - logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml
 filename: logging-sinks/instance-insert-trellis-pipelines-worker/create-cloudbuild.yaml
 substitutions:
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
 ---
-name: trellis-{data_group}-sink-update-insert-trellis-worker
+name: trellis-{func_group}-sink-update-insert-trellis-worker
 description: Update logging sink for Trellis workers.
 github:
     owner: {repo_owner}
@@ -24,9 +24,9 @@ included_files:
     - logging-sinks/instance-insert-trellis-pipelines-worker/update-cloudbuild.yaml
 filename: logging-sinks/instance-insert-trellis-pipelines-worker/update-cloudbuild.yaml
 substitutions:
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
 ---
-name: trellis-{data_group}-sink-create-insert-cromwell-worker
+name: trellis-{func_group}-sink-create-insert-cromwell-worker
 description: Create logging sink for Cromwell workers.
 github:
     owner: {repo_owner}
@@ -38,9 +38,9 @@ included_files:
     - logging-sinks/instance-insert-cromwell-pipelines-worker/create-cloudbuild.yaml
 filename: logging-sinks/instance-insert-cromwell-pipelines-worker/create-cloudbuild.yaml
 substitutions:
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
 ---
-name: trellis-{data_group}-sink-update-insert-cromwell-worker
+name: trellis-{func_group}-sink-update-insert-cromwell-worker
 description: Update logging sink for Cromwell workers.
 github:
     owner: {repo_owner}
@@ -52,9 +52,9 @@ included_files:
     - logging-sinks/instance-insert-cromwell-pipelines-worker/update-cloudbuild.yaml
 filename: logging-sinks/instance-insert-cromwell-pipelines-worker/update-cloudbuild.yaml
 substitutions:
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
 ---
-name: trellis-{data_group}-sink-create-delete-pipelines-worker
+name: trellis-{func_group}-sink-create-delete-pipelines-worker
 description: Create logging sink for deleted workers.
 github:
     owner: {repo_owner}
@@ -66,9 +66,9 @@ included_files:
     - logging-sinks/instance-delete-pipelines-worker/create-cloudbuild.yaml
 filename: logging-sinks/instance-delete-pipelines-worker/create-cloudbuild.yaml
 substitutions:
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
 ---
-name: trellis-{data_group}-sink-update-delete-pipelines-worker
+name: trellis-{func_group}-sink-update-delete-pipelines-worker
 description: Update logging sink for deleted workers.
 github:
     owner: {repo_owner}
@@ -80,4 +80,4 @@ included_files:
     - logging-sinks/instance-delete-pipelines-worker/update-cloudbuild.yaml
 filename: logging-sinks/instance-delete-pipelines-worker/update-cloudbuild.yaml
 substitutions:
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}

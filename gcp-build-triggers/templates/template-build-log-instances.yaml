@@ -1,5 +1,5 @@
-name: gcf-{repo_owner}-trellis-{data_group}-log-delete-instance
-description: gcf-{data_group}-log-delete-instance
+name: gcf-{repo_owner}-trellis-{func_group}-log-delete-instance
+description: gcf-{func_group}-log-delete-instance
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -9,13 +9,13 @@ included_files:
     - functions/log-delete-instance/*
 filename: functions/log-delete-instance/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/{env}-{data_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-log-insert-cromwell-instance
-description: gcf-{data_group}-log-insert-cromwell-instance
+name: gcf-{repo_owner}-trellis-{func_group}-log-insert-cromwell-instance
+description: gcf-{func_group}-log-insert-cromwell-instance
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -25,13 +25,13 @@ included_files:
     - functions/log-insert-cromwell-instance/*
 filename: functions/log-insert-cromwell-instance/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/{env}-{data_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-log-insert-trellis-instance
-description: gcf-{data_group}-log-insert-trellis-instance
+name: gcf-{repo_owner}-trellis-{func_group}-log-insert-trellis-instance
+description: gcf-{func_group}-log-insert-trellis-instance
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -41,7 +41,7 @@ included_files:
     - functions/log-insert-trellis-instance/*
 filename: functions/log-insert-trellis-instance/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/{env}-{data_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud

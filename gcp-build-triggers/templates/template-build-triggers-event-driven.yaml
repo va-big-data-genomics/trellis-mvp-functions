@@ -1,5 +1,5 @@
-name: gcf-{repo_owner}-trellis-{data_group}-create-job-node
-description: gcf-{data_group}-create-job-node
+name: gcf-{repo_owner}-trellis-{func_group}-create-job-node
+description: gcf-{func_group}-create-job-node
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -9,13 +9,13 @@ included_files:
     - functions/create-job-node/*
 filename: functions/create-job-node/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-triggers
-description: gcf-{data_group}-triggers
+name: gcf-{repo_owner}-trellis-{func_group}-triggers
+description: gcf-{func_group}-triggers
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -26,14 +26,15 @@ included_files:
     - config/{data_group}/{data_group}-triggers.py
 filename: functions/check-triggers/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
-    _TRIGGER_TOPIC: {data_group}-triggers
+    _TRIGGER_TOPIC: {func_group}-triggers
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-kill-job
-description: gcf-{data_group}-kill-job
+name: gcf-{repo_owner}-trellis-{func_group}-kill-job
+description: gcf-{func_group}-kill-job
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -43,12 +44,12 @@ included_files:
     - functions/kill-job/*
 filename: functions/kill-job/cloudbuild.yaml
 substitutions:
-    _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
-    _TRIGGER_TOPIC: {data_group}-kill-job
+    _TRIGGER_TOPIC: {func_group}-kill-job
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-db-query
-description: gcf-{data_group}-db-query
+name: gcf-{repo_owner}-trellis-{func_group}-db-query
+description: gcf-{func_group}-db-query
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -58,13 +59,13 @@ included_files:
     - functions/db-query/*
 filename: functions/db-query/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-check-dstat
-description: gcf-{data_group}-check-dstat
+name: gcf-{repo_owner}-trellis-{func_group}-check-dstat
+description: gcf-{func_group}-check-dstat
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -74,8 +75,8 @@ included_files:
     - functions/check-dstat/*
 filename: functions/check-dstat/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: ***REMOVED***-dev-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
-    _FUNCTION_NAME: {data_group}-check-dstat
+    _FUNCTION_NAME: {func_group}-check-dstat
