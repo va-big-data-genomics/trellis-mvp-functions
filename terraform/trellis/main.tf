@@ -8,24 +8,25 @@
 
 provider "google" {
   project = var.project
-  region  = "us-west1"
-  zone    = "us-west1-b"
+  region  = var.region
+  zone    = var.zone
 }
 
 provider "google-beta" {
   project = var.project
-  region  = "us-west1"
-  zone    = "us-west1-b"
+  region  = var.region
+  zone    = var.zone
 }
 
 
 resource "google_compute_project_metadata" "default" {
     metadata = {
-        trellis-network = "trellis"
-        trellis-subnetwork = "us-west1"
+        trellis-network = google_compute_network.trellis-vpc-network.name
+        trellis-subnetwork = google_compute_subnetwork.trellis-subnet.name
     }
 }
 
+/* Define this outside of Terraform
 resource "google_compute_resource_policy" "daily_snapshot" {
   name   = "dailysnapshot"
   region = "us-west1"
@@ -38,3 +39,4 @@ resource "google_compute_resource_policy" "daily_snapshot" {
     }
   }
 }
+*/
