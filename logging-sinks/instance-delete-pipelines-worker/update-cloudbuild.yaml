@@ -4,7 +4,7 @@ steps:
          'logging',
          'sinks',
          'update',
-         '${_DATA_GROUP}-sink-delete-instance',
-         'pubsub.googleapis.com/projects/${PROJECT_ID}/topics/${_DATA_GROUP}-log-delete-instance',
+         '${_FUNC_GROUP}-sink-delete-instance',
+         'pubsub.googleapis.com/projects/${PROJECT_ID}/topics/${_FUNC_GROUP}-log-delete-instance',
          '--log-filter', 'resource.type="gce_instance" AND protoPayload.serviceName="compute.googleapis.com" AND protoPayload.request."@type"="type.googleapis.com/compute.instances.delete" AND protoPayload.resourceName:"google-pipelines-worker"'
   ]

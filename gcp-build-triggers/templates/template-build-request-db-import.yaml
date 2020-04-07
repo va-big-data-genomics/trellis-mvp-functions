@@ -1,5 +1,5 @@
-name: gcf-{repo_owner}-trellis-{data_group}-list-bucket-page
-description: gcf-{data_group}-list-bucket-page
+name: gcf-{repo_owner}-trellis-{func_group}-list-bucket-page
+description: gcf-{func_group}-list-bucket-page
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -9,13 +9,13 @@ included_files:
     - functions/list-bucket-page/*
 filename: functions/list-bucket-page/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/{env}-{data_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-match-blob-patterns
-description: gcf-{data_group}-match-blob-patterns
+name: gcf-{repo_owner}-trellis-{func_group}-match-blob-patterns
+description: gcf-{func_group}-match-blob-patterns
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -26,14 +26,15 @@ included_files:
     - config/{data_group}/*
 filename: functions/match-blob-patterns/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/{env}-{data_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
     _DATA_GROUP: {data_group}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _TRIGGER_RESOURCE: {trellis_bucket}
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-db-query-index
-description: gcf-{data_group}-db-query-index
+name: gcf-{repo_owner}-trellis-{func_group}-db-query-index
+description: gcf-{func_group}-db-query-index
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -43,14 +44,14 @@ included_files:
     - functions/db-query-index/*
 filename: functions/db-query-index/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/{env}-{data_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
     _TRIGGER_RESOURCE: {trellis_bucket}
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-update-metadata
-description: gcf-{data_group}-update-metadata
+name: gcf-{repo_owner}-trellis-{func_group}-update-metadata
+description: gcf-{func_group}-update-metadata
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -60,7 +61,7 @@ included_files:
     - functions/update-metadata/*
 filename: functions/update-metadata/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/{env}-{data_group}.yaml
-    _CREDENTIALS_BUCKET: {project_id}-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud

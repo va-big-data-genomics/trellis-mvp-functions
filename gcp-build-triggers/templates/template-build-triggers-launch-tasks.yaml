@@ -1,5 +1,5 @@
-name: gcf-{repo_owner}-trellis-{data_group}-launch-gatk-5-dollar
-description: gcf-{data_group}-launch-gatk-5-dollar
+name: gcf-{repo_owner}-trellis-{func_group}-launch-gatk-5-dollar
+description: gcf-{func_group}-launch-gatk-5-dollar
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -9,13 +9,13 @@ included_files:
     - functions/launch-gatk-5-dollar/*
 filename: functions/launch-gatk-5-dollar/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud
 ---
-name: gcf-{repo_owner}-trellis-{data_group}-fastq-to-ubam
-description: gcf-{data_group}-fastq-to-ubam
+name: gcf-{repo_owner}-trellis-{func_group}-fastq-to-ubam
+description: gcf-{func_group}-fastq-to-ubam
 github:
     owner: {repo_owner}
     name: {repo_name}
@@ -25,7 +25,7 @@ included_files:
     - functions/launch-fastq-to-ubam/*
 filename: functions/launch-fastq-to-ubam/cloudbuild.yaml
 substitutions:
-    _CREDENTIALS_BLOB: credentials/dev-{data_group}.yaml
-    _CREDENTIALS_BUCKET: gbsc-gcp-project-mvp-dev-trellis
-    _DATA_GROUP: {data_group}
+    _CREDENTIALS_BLOB: credentials/{env}-{func_group}.yaml
+    _CREDENTIALS_BUCKET: {trellis_bucket}
+    _FUNC_GROUP: {func_group}
     _ENVIRONMENT: google-cloud

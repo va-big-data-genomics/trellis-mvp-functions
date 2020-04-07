@@ -39,13 +39,13 @@ def format_pubsub_message(query, event_id, publish_to=None):
                "header": {
                           "resource": "query",
                           "method": "POST",
-                          "labels": ['Create', 'Job', 'CromwellAttempt', 'Node', 'Query', 'Cypher'], 
+                          "labels": ['Create', 'Job', 'CromwellAttempt', 'Node', 'Query', 'Cypher'],
                           "sentFrom": f"{FUNCTION_NAME}",
                           "seedId": f"{event_id}",
                           "previousEventId": f"{event_id}"
                },
                "body": {
-                        "cypher": query, 
+                        "cypher": query,
                         "result-mode": "data",
                         "result-structure": "list",
                         "result-split": "True",
@@ -84,7 +84,7 @@ def get_datetime_iso8601(date_string):
 
     Google datetime format: https://tools.ietf.org/html/rfc3339
     ISO 8601 standard format: https://en.wikipedia.org/wiki/ISO_8601
-    
+
     Args:
         date_string (str): Date in ISO 8601 format
     Returns
@@ -122,7 +122,7 @@ def log_insert_cromwell_instance(event, context):
     for label in labels:
         key = label['key']
         value = label['value']
-        
+
         # Get Cromwell specific metadata values
         if key == 'cromwell-workflow-id':
             # Chop 'cromwell-' prefix for consistency
@@ -188,7 +188,7 @@ def log_insert_cromwell_instance(event, context):
             f"{cromwell_query_str} " +
         "RETURN node")
 
-    # If an instance cannot be found (i.e. already deleted), 
+    # If an instance cannot be found (i.e. already deleted),
     # delete operation will not return an instance ID.
     # For now, I'm just ignoring these messages.
     if not instance_id:
@@ -204,7 +204,7 @@ def log_insert_cromwell_instance(event, context):
 
     result = publish_to_topic(DB_TOPIC, message)
     print(f"> Published message to {DB_TOPIC} with result: {result}.")
-    
+
 
 if __name__ == "__main__":
     # Run unit tests in local
@@ -215,11 +215,11 @@ if __name__ == "__main__":
     FUNCTION_NAME = "wgs35-update-job-status"
 
     PUBLISHER = pubsub.PublisherClient()
-    
+
     # Insert operation
     with open("insert_data_sample.json", "r") as fh:
         data = json.load(fh)
-    data = json.dumps(data).encode('utf-8') 
+    data = json.dumps(data).encode('utf-8')
     event = {'data': base64.b64encode(data)}
     context = {'test': 123}
     update_job_status(event, context)
@@ -230,8 +230,7 @@ if __name__ == "__main__":
     with open("delete_data_sample.json", "r") as fh:
         data = json.load(fh)
     data = json.dumps(data).encode('utf-8')
-    event = {'data': base64.b64encode(data)}   
+    event = {'data': base64.b64encode(data)}
     context = {'event_id': 611225247182937, 'timestamp': '2019-07-10T04:11:53.865Z', 'event_type': 'google.pubsub.topic.publish', 'resource': {'service': 'pubsub.googleapis.com', 'name': 'projects/gbsc-gcp-project-mvp-test/topics/wgs35-update-vm-status', 'type': 'type.googleapis.com/google.pubsub.v1.PubsubMessage'}}
 
     update_job_status(event, context)
-
