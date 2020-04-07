@@ -92,27 +92,6 @@ resource "google_pubsub_topic" "list-bucket-page" {
     labels = {user = "trellis"}
 }
 
-resource "google_pubsub_topic" "log-delete-instance" {
-    name = "log-delete-instance"
-    labels = {user = "trellis"}
-}
-
-resource "google_pubsub_topic_iam_member" "log-delete-instance-publisher" {
-    topic   = google_pubsub_topic.log-delete-instance.name
-    role    = "roles/pubsub.publisher"
-    member  = google_logging_project_sink.sink-delete-pipelines-worker.writer_identity
-}
-
-resource "google_pubsub_topic" "log-insert-cromwell-instance" {
-    name = "log-insert-cromwell-instance"
-    labels = {user = "trellis"}
-}
-
-resource "google_pubsub_topic" "log-insert-trellis-instance" {
-    name = "log-insert-trellis-instance"
-    labels = {user = "trellis"}
-}
-
 resource "google_pubsub_topic" "match-blob-patterns" {
     name = "match-blob-patterns"
     labels = {user = "trellis"}
