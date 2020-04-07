@@ -105,7 +105,7 @@ resource "google_compute_instance" "neo4j-database" {
     
     network_interface {
         network = google_compute_network.trellis-vpc-network.self_link
-        subnetwork = google_compute_subnetwork.trellis-us-west1.self_link
+        subnetwork = google_compute_subnetwork.trellis-subnet.self_link
         access_config {}
     }
 
