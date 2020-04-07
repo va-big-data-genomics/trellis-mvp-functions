@@ -2,9 +2,20 @@ variable "project" {
     type = string
 }
 
-//variable "zone" {
-//   type = string
-//}
+variable "region" {
+    type = string
+    default = "us-west1"
+}
+
+variable "zone" {
+    type = string
+    default = "us-west1-b"
+}
+
+variable "data-group" {
+    type = string
+    default = "phase3"
+}
 
 variable "external-bastion-ip" {
     type = string
@@ -39,5 +50,17 @@ variable "github-repo" {
 }
 
 variable "github-branch-pattern" {
+    type = string
+}
+
+variable "gatk-github-owner" {
+    type = string
+}
+
+variable "gatk-github-repo" {
+    type = string
+}
+
+variable "gatk-github-branch-pattern" {
     type = string
 }
