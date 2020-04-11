@@ -27,7 +27,8 @@ if ENVIRONMENT == 'google-cloud':
 
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
-    TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    DB_QUERY_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
 
     PUBLISHER = pubsub.PublisherClient()
@@ -40,7 +41,7 @@ def format_pubsub_message(query, seed_id):
                           "method": "POST",
                           "labels": ["Create", "Blob", "Node", "Cypher", "Query"],
                           "sentFrom": f"{FUNCTION_NAME}",
-                          "publishTo": f"{DATA_GROUP}-triggers",
+                          "publishTo": f"{TOPIC_TRIGGERS}",
                           "seedId": f"{seed_id}",
                           "previousEventId": f"{seed_id}"
                },
@@ -280,8 +281,8 @@ def create_node_query(event, context):
 
     message = format_pubsub_message(db_query, seed_id)
     print(f"> Pubsub message: {message}.")
-    result = publish_to_topic(TOPIC, message)
-    print(f"> Published message to {TOPIC} with result: {result}.")
+    result = publish_to_topic(DB_QUERY_TOPIC, message)
+    print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
 
     #summary = {
     #           "name": name, 
