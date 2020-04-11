@@ -142,7 +142,7 @@ def query_db_index(event, context):
         if not path in graphed_paths:
             # Send untracked objects to Pub/Sub topic
             data = json.dumps(blob_metadata).encode('utf-8')
-            PUBLISHER.publish(TOPIC_PATH, data=data)
+            result = PUBLISHER.publish(TOPIC_PATH, data=data).result()
             publish_counter += 1
     print(f'Count of blobs published to {TOPIC_PATH}: {publish_counter}.')
     return
