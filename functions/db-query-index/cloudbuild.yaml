@@ -1,6 +1,7 @@
 steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
+         'beta',
          'functions',
          'deploy',
          'trellis-db-query-index',
