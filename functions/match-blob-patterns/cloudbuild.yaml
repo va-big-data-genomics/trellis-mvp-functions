@@ -3,6 +3,7 @@ steps:
   args: ['cp', '-r', 'config/${_DATA_GROUP}', 'functions/match-blob-patterns/']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
+         'beta',
          'functions',
          'deploy',
          'trellis-match-blob-patterns',
