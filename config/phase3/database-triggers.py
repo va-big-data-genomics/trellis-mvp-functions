@@ -590,7 +590,7 @@ class KillDuplicateJobs:
                               "trigger": "KillDuplicateJobs",
                               "publishTo": [
                                             self.env_vars['TOPIC_KILL_JOB'], # Kill job
-                                            self.function_name               # Label job as duplicate
+                                            self.env_vars['TOPIC_TRIGGERS'], # Label job as duplicate
                               ],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
@@ -727,7 +727,7 @@ class RequeueJobQuery:
         header['sentFrom'] = self.function_name
         header['trigger'] = "RequeueJobQuery"
         header['resource'] = 'query'
-        header['publishTo'] = self.function_name
+        header['publishTo'] = self.env_vars['TOPIC_TRIGGERS']
         header['previousEventId'] = context.event_id
         
         header['labels'].remove('Database')
@@ -789,7 +789,7 @@ class RequeueRelationshipQuery:
         header['sentFrom'] = self.function_name
         header['trigger'] = "RequeueRelationshipQuery"
         header['resource'] = 'query'
-        header['publishTo'] = self.function_name
+        header['publishTo'] = self.env_vars['TOPIC_TRIGGERS']
         header['previousEventId'] = context.event_id
 
         header['labels'].remove('Database')
@@ -1571,7 +1571,7 @@ class RelateTrellisOutputToJob:
                               "labels": ["Create", "Relationship", "Trellis", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateTrellisOutputToJob",
-                              "publishTo": self.function_name,
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -1639,7 +1639,7 @@ class RelateTrellisInputToJob:
                                   "labels": ["Create", "Relationship", "Trellis", "Input", "Cypher", "Query"],
                                   "sentFrom": self.function_name,
                                   "trigger": "RelatedTrellisInputToJob",
-                                  "publishTo": self.function_name,
+                                  "publishTo": self.env_vars['TOPIC_TRIGGERS']
                                   "seedId": header["seedId"],
                                   "previousEventId": context.event_id,
                        },
@@ -1706,7 +1706,7 @@ class RelateJobToJobRequest:
                               "labels": ["Create", "Relationship", "Job", "JobRequest", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateJobToJobRequest",
-                              "publishTo": self.function_name,
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -1936,7 +1936,7 @@ class RelateFromPersonalisToSample:
                               "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateFromPersonalisToSample",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2004,7 +2004,7 @@ class RelateCromwellOutputToStep:
                               "labels": ["Create", "Relationship", "CromwellStep", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellOutputToStep",
-                              "publishTo": self.function_name,
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2091,7 +2091,7 @@ class AddWorkflowIdToCromwellWorkflow:
                               "labels": ["Update", "CromwellWorkflow", "CromwellWorkflowId","Node", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "AddWorkflowIdToCromwellWorkflow",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2174,7 +2174,7 @@ class RelateCromwellWorkflowToStep:
                               "labels": ["Create", "Relationship", "CromwellWorkflow", "CromwellStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellWorkflowToStep",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2260,7 +2260,7 @@ class RelateCromwellStepToPreviousStep:
                               "labels": ["Create", "Relationship", "CromwellStep", "PreviousStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToPreviousStep",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2350,7 +2350,7 @@ class CreateCromwellStepFromAttempt:
                               "labels": ["Create", "Node", "CromwellStep", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "CreateCromwellStepFromAttempt",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2439,7 +2439,7 @@ class RelateCromwellStepToLatestAttempt:
                               "labels": ["Create", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellStepToAttempt",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2527,7 +2527,7 @@ class RelateCromwellAttemptToPreviousAttempt:
                               "labels": ["Create", "Relationship", "CromwellAttempt", "PreviousAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellAttemptToPreviousAttempt",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2619,7 +2619,7 @@ class RelateCromwellStepToAttempt:
                               "labels": ["Create", "Relationship", "CromwellStep", "CromwellAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCromwellAttemptToPreviousAttempt",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2704,7 +2704,7 @@ class DeleteRelationshipCromwellStepHasAttempt:
                               "labels": ["Delete", "Relationship", "CromwellStep", "PreviousAttempt", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "DeleteRelationshipCromwellStepHasAttempt",
-                              "publishTo": self.function_name,   # Requeue message if fails initially
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
