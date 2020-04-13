@@ -18,6 +18,8 @@ ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     TRIGGER_OPERATION = os.environ['TRIGGER_OPERATION']
+    GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
+    GIT_VERSION_TAG = os.environ['GIT_VERSION_TAG']
 
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -94,6 +96,8 @@ def get_standard_name_fields(event_name):
                    "name": name_elements[0],
                    "extension": '.'.join(name_elements[1:]),
                    "filetype": name_elements[-1],
+                   "gitCommitHash": GIT_COMMIT_HASH,
+                   "gitVersionTag": GIT_VERSION_TAG,
     }
     return name_fields
 
