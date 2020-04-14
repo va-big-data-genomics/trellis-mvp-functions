@@ -18,6 +18,8 @@ from google.cloud import pubsub
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
+    GIT_VERSION_TAG = os.environ['GIT_VERSION_TAG']
 
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -188,6 +190,10 @@ def write_job_node_query(event, context):
 
     # Create dict of metadata to add to database node
     db_dict = clean_metadata_dict(body['node'])
+
+    # Add git version info
+    db_dict['gitCommitHash'] = GIT_COMMIT_HASH
+    db_dict['gitVersionTag'] = GIT_VERSION_TAG
 
     # Add standard fields
     time_fields = get_standard_time_fields(event)
