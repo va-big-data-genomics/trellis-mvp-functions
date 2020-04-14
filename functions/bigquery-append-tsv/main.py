@@ -78,8 +78,8 @@ class TrellisMessage:
             self.results = body.get('results')
 
         self.node = None
-        if self.results('node'):
-            self.node = self.results('node')
+        if self.results.get('node'):
+            self.node = self.results['node']
 
 
 def load_json(path):
