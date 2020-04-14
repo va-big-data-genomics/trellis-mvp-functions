@@ -60,6 +60,8 @@ class TrellisMessage:
         data = json.loads(pubsub_message)
         logging.info(f"> Context: {context}.")
         logging.info(f"> Data: {data}.")
+        header = data['header']
+        body = data['body']
 
         self.event_id = context.event_id
         self.seed_id = header.get('seedId')
