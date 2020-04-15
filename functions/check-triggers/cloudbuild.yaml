@@ -12,7 +12,7 @@ steps:
          'beta',
          'functions',
          'deploy',
-         'check-triggers',
+         'trellis-check-triggers',
          '--project=${PROJECT_ID}',
          '--source=functions/check-triggers',
          '--memory=256MB',
