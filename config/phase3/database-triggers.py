@@ -1639,7 +1639,7 @@ class RelateTrellisInputToJob:
                                   "labels": ["Create", "Relationship", "Trellis", "Input", "Cypher", "Query"],
                                   "sentFrom": self.function_name,
                                   "trigger": "RelatedTrellisInputToJob",
-                                  "publishTo": self.env_vars['TOPIC_TRIGGERS']
+                                  "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                                   "seedId": header["seedId"],
                                   "previousEventId": context.event_id,
                        },
