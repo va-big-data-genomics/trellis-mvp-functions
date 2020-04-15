@@ -3,8 +3,9 @@ if __name__ == "__main__":
     TOPIC = "wgs35-db-queries"
     TRIGGER = 'property'
     DATA_GROUP = 'wgs35'
+    FUNC_GROUP = 'wgs35'
 
-    function_name = f"{DATA_GROUP}-check-triggers"
+    function_name = f"{FUNC_GROUP}-check-triggers"
     parsed_vars = {
                    'DB_QUERY_TOPIC': 'null-db-queries',
                    'TOPIC_FASTQ_TO_UBAM': 'null-task-fastq-to-ubam',
@@ -78,39 +79,39 @@ if __name__ == "__main__":
     # Test 2. Should not trigger anything
     data = {
         'header': {
-            'resource': 'queryResult', 
+            'resource': 'queryResult',
         },
         'body': {
             'results': {
                 'node': {
-                    'extension': 'fastq.gz', 
-                    'readGroup': 0, 
-                    'dirname': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ', 
-                    'path': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz', 
-                    'storageClass': 'REGIONAL', 
-                    'timeCreatedEpoch': 1555361455.813, 
-                    'timeUpdatedEpoch': 1556910775.055, 
-                    'timeCreated': '2019-04-15T20:50:55.813Z', 
-                    'id': '***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565', 
-                    'contentType': 'application/octet-stream', 
-                    'generation': '1555361455813565', 
-                    'metageneration': '40', 
-                    'kind': 'storage#object', 
-                    'timeUpdatedIso': '2019-05-03T19:12:55.055000+00:00', 
-                    'sample': 'SHIP4946367', 
-                    'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media', 
-                    'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz', 
-                    'labels': ['Fastq', 'WGS35', 'Blob'], 
-                    'bucket': '***REMOVED***-dev-from-personalis', 
-                    'componentCount': 32, 
-                    'basename': 'SHIP4946367_0_R1.fastq.gz', 
-                    'crc32c': 'ftNG8w==', 
-                    'size': 5955984357, 
-                    'timeStorageClassUpdated': '2019-04-15T20:50:55.813Z', 
-                    'name': 'SHIP4946367_0_R1', 
-                    'etag': 'CL3nyPj80uECECg=', 
-                    'timeCreatedIso': '2019-04-15T20:50:55.813000+00:00', 
-                    'matePair': 1, 
+                    'extension': 'fastq.gz',
+                    'readGroup': 0,
+                    'dirname': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ',
+                    'path': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz',
+                    'storageClass': 'REGIONAL',
+                    'timeCreatedEpoch': 1555361455.813,
+                    'timeUpdatedEpoch': 1556910775.055,
+                    'timeCreated': '2019-04-15T20:50:55.813Z',
+                    'id': '***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565',
+                    'contentType': 'application/octet-stream',
+                    'generation': '1555361455813565',
+                    'metageneration': '40',
+                    'kind': 'storage#object',
+                    'timeUpdatedIso': '2019-05-03T19:12:55.055000+00:00',
+                    'sample': 'SHIP4946367',
+                    'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media',
+                    'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz',
+                    'labels': ['Fastq', 'WGS35', 'Blob'],
+                    'bucket': '***REMOVED***-dev-from-personalis',
+                    'componentCount': 32,
+                    'basename': 'SHIP4946367_0_R1.fastq.gz',
+                    'crc32c': 'ftNG8w==',
+                    'size': 5955984357,
+                    'timeStorageClassUpdated': '2019-04-15T20:50:55.813Z',
+                    'name': 'SHIP4946367_0_R1',
+                    'etag': 'CL3nyPj80uECECg=',
+                    'timeCreatedIso': '2019-04-15T20:50:55.813000+00:00',
+                    'matePair': 1,
                     'updated': '2019-05-03T19:12:55.055Z'
                 }
             }
@@ -130,37 +131,37 @@ if __name__ == "__main__":
             'resource': 'queryResult'
         },
         'body': {
-            'query': 'CREATE (node:Json:WGS_35000:Blob {bucket: "***REMOVED***-dev-from-personalis", contentType: "application/json", crc32c: "3fotNQ==", etag: "CKPi8vn80uECEA8=", generation: "1555361458598179", id: "***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/SHIP4946367.json/1555361458598179", kind: "storage#object", md5Hash: "sLK5JVGK7A9Xbcb4suIA8g==", mediaLink: "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FSHIP4946367.json?generation=1555361458598179&alt=media", metageneration: "15", name: "SHIP4946367", selfLink: "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FSHIP4946367.json", size: 686, storageClass: "REGIONAL", timeCreated: "2019-04-15T20:50:58.597Z", timeStorageClassUpdated: "2019-04-15T20:50:58.597Z", updated: "2019-05-03T19:46:19.685Z", path: "va_mvp_phase2/***REMOVED***/SHIP4946367/SHIP4946367.json", dirname: "va_mvp_phase2/***REMOVED***/SHIP4946367", basename: "SHIP4946367.json", extension: "json", timeCreatedEpoch: 1555361458.597, timeUpdatedEpoch: 1556912779.685, timeCreatedIso: "2019-04-15T20:50:58.597000+00:00", timeUpdatedIso: "2019-05-03T19:46:19.685000+00:00", labels: [\'Json\', \'WGS_35000\', \'Blob\'], sample: "SHIP4946367"}) RETURN node', 
+            'query': 'CREATE (node:Json:WGS_35000:Blob {bucket: "***REMOVED***-dev-from-personalis", contentType: "application/json", crc32c: "3fotNQ==", etag: "CKPi8vn80uECEA8=", generation: "1555361458598179", id: "***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/SHIP4946367.json/1555361458598179", kind: "storage#object", md5Hash: "sLK5JVGK7A9Xbcb4suIA8g==", mediaLink: "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FSHIP4946367.json?generation=1555361458598179&alt=media", metageneration: "15", name: "SHIP4946367", selfLink: "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FSHIP4946367.json", size: 686, storageClass: "REGIONAL", timeCreated: "2019-04-15T20:50:58.597Z", timeStorageClassUpdated: "2019-04-15T20:50:58.597Z", updated: "2019-05-03T19:46:19.685Z", path: "va_mvp_phase2/***REMOVED***/SHIP4946367/SHIP4946367.json", dirname: "va_mvp_phase2/***REMOVED***/SHIP4946367", basename: "SHIP4946367.json", extension: "json", timeCreatedEpoch: 1555361458.597, timeUpdatedEpoch: 1556912779.685, timeCreatedIso: "2019-04-15T20:50:58.597000+00:00", timeUpdatedIso: "2019-05-03T19:46:19.685000+00:00", labels: [\'Json\', \'WGS_35000\', \'Blob\'], sample: "SHIP4946367"}) RETURN node',
             'results': {
                 'node': {
-                    'extension': 'json', 
-                    'dirname': 'va_mvp_phase2/***REMOVED***/SHIP4946367', 
-                    'path': 'va_mvp_phase2/***REMOVED***/SHIP4946367/SHIP4946367.json', 
-                    'storageClass': 'REGIONAL', 
-                    'md5Hash': 'sLK5JVGK7A9Xbcb4suIA8g==', 
-                    'timeCreatedEpoch': 1555361458.597, 
-                    'timeUpdatedEpoch': 1556912779.685, 
-                    'timeCreated': '2019-04-15T20:50:58.597Z', 
-                    'id': '***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/SHIP4946367.json/1555361458598179', 
-                    'contentType': 'application/json', 
-                    'generation': '1555361458598179', 
-                    'metageneration': '15', 
-                    'kind': 'storage#object', 
-                    'timeUpdatedIso': '2019-05-03T19:46:19.685000+00:00', 
-                    'sample': 'SHIP4946367', 
-                    'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FSHIP4946367.json?generation=1555361458598179&alt=media', 
-                    'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FSHIP4946367.json', 
-                    'labels': ['Json', 'WGS35', 'Blob', 'Marker', 'FromPersonalis'], 
-                    'bucket': '***REMOVED***-dev-from-personalis', 
-                    'basename': 'SHIP4946367.json', 
-                    'crc32c': '3fotNQ==', 
-                    'size': 686, 
-                    'timeStorageClassUpdated': '2019-04-15T20:50:58.597Z', 
-                    'name': 'SHIP4946367', 
-                    'etag': 'CKPi8vn80uECEA8=', 
-                    'timeCreatedIso': '2019-04-15T20:50:58.597000+00:00', 
+                    'extension': 'json',
+                    'dirname': 'va_mvp_phase2/***REMOVED***/SHIP4946367',
+                    'path': 'va_mvp_phase2/***REMOVED***/SHIP4946367/SHIP4946367.json',
+                    'storageClass': 'REGIONAL',
+                    'md5Hash': 'sLK5JVGK7A9Xbcb4suIA8g==',
+                    'timeCreatedEpoch': 1555361458.597,
+                    'timeUpdatedEpoch': 1556912779.685,
+                    'timeCreated': '2019-04-15T20:50:58.597Z',
+                    'id': '***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/SHIP4946367.json/1555361458598179',
+                    'contentType': 'application/json',
+                    'generation': '1555361458598179',
+                    'metageneration': '15',
+                    'kind': 'storage#object',
+                    'timeUpdatedIso': '2019-05-03T19:46:19.685000+00:00',
+                    'sample': 'SHIP4946367',
+                    'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FSHIP4946367.json?generation=1555361458598179&alt=media',
+                    'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FSHIP4946367.json',
+                    'labels': ['Json', 'WGS35', 'Blob', 'Marker', 'FromPersonalis'],
+                    'bucket': '***REMOVED***-dev-from-personalis',
+                    'basename': 'SHIP4946367.json',
+                    'crc32c': '3fotNQ==',
+                    'size': 686,
+                    'timeStorageClassUpdated': '2019-04-15T20:50:58.597Z',
+                    'name': 'SHIP4946367',
+                    'etag': 'CKPi8vn80uECEA8=',
+                    'timeCreatedIso': '2019-04-15T20:50:58.597000+00:00',
                     'updated': '2019-05-03T19:46:19.685Z'
-                }   
+                }
             }
         }
     }
@@ -211,7 +212,7 @@ if __name__ == "__main__":
                     "timeCreatedIso": "2019-06-17T08:10:54.243000+00:00",
                     "updated": "2019-06-17T17:32:09.531Z",
                     "taskId": "0x99cf771c0230-190617-071430"
-                }        
+                }
             }
         }
     }
@@ -220,4 +221,3 @@ if __name__ == "__main__":
     context = None
     result = check_triggers(event, context, dry_run=True)
     print(f">>> Expect CheckUbamCount: {result}.")
-    

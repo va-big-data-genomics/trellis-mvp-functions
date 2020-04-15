@@ -50,9 +50,9 @@ if ENVIRONMENT == 'google-cloud':
     # Neo4j graph
     GRAPH = Graph(
                   scheme=NEO4J_SCHEME,
-                  host=NEO4J_HOST, 
+                  host=NEO4J_HOST,
                   port=NEO4J_PORT,
-                  user=NEO4J_USER, 
+                  user=NEO4J_USER,
                   password=NEO4J_PASSPHRASE)
                   #max_connections=NEO4J_MAX_CONN)
 
@@ -75,7 +75,7 @@ def format_pubsub_message(method, labels, query, results, seed_id, event_id, ret
                         "results": results,
                }
     }
-    
+
     if retry_count:
         message['header']['retry-count'] = retry_count
 
@@ -93,14 +93,14 @@ def publish_str_to_topic(topic, str_data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     message = str_data.encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
-    return result    
+    return result
 
 
 def republish_message(topic, data):
     """Wrapper for publish_to_topic which adds retry chunk.
     """
     max_retries = 3
-    
+
     header = data["header"]
     counter = header.get("retry-count")
     if counter:
@@ -150,7 +150,7 @@ def query_db(event, context):
         print(
               f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
               f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
-    
+
     if type(data) == str:
         logging.warn("Message data not correctly loaded as JSON. " +
                      "Used eval to convert from string.")
@@ -165,12 +165,12 @@ def query_db(event, context):
     seed_id = header.get("seedId")
     if not seed_id:
         seed_id = event_id
-    
+
     # Check that resource is query
     if header['resource'] != 'query':
         raise ValueError(f"Expected resource type 'query', " +
                          f"got '{header['resource']}.'")
-    
+
     method = header['method']
     labels = header['labels']
     topics = header.get('publishTo')
@@ -180,7 +180,7 @@ def query_db(event, context):
     result_mode = body.get('result-mode')
     result_structure = body.get('result-structure')
     result_split = body.get('result-split')
-    
+
     try:
         # Calculate elapsed time for each query & print
         query_start = time.time()
@@ -238,7 +238,7 @@ def query_db(event, context):
             print(f"> Execution time exceeded {time_threshold} seconds.")
 
         return query_results
-    
+
     # Hack to convert single publishTo topics into lists
     if isinstance(topics, str):
         topics = [topics]
@@ -249,10 +249,10 @@ def query_db(event, context):
                 # If no results; send one message so triggers can respond to null
                 query_result = {}
                 message = format_pubsub_message(
-                                                method = method, 
-                                                labels = labels, 
-                                                query = query, 
-                                                results = query_result, 
+                                                method = method,
+                                                labels = labels,
+                                                query = query,
+                                                results = query_result,
                                                 seed_id = seed_id,
                                                 event_id = event_id,
                                                 retry_count=retry_count)
@@ -265,7 +265,7 @@ def query_db(event, context):
                                                 method = method,
                                                 labels = labels,
                                                 query = query,
-                                                results = result, 
+                                                results = result,
                                                 seed_id = seed_id,
                                                 event_id = event_id,
                                                 retry_count=retry_count)

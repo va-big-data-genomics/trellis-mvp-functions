@@ -32,6 +32,7 @@ if ENVIRONMENT == 'google-cloud':
     DB_QUERY_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
     TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
+    FUNC_GROUP = parsed_vars.get('FUNC_GROUP')
 
     PUBLISHER = pubsub.PublisherClient()
 
@@ -39,7 +40,7 @@ if ENVIRONMENT == 'google-cloud':
 def format_pubsub_message(query, seed_id):
     message = {
                "header": {
-                          "resource": "query", 
+                          "resource": "query",
                           "method": "POST",
                           "labels": ["Create", "Blob", "Node", "Cypher", "Query"],
                           "sentFrom": f"{FUNCTION_NAME}",
@@ -148,7 +149,7 @@ def get_datetime_iso8601(date_string):
 
     Google datetime format: https://tools.ietf.org/html/rfc3339
     ISO 8601 standard format: https://en.wikipedia.org/wiki/ISO_8601
-    
+
     Args:
         date_string (str): Date in ISO 8601 format
     Returns
@@ -158,7 +159,7 @@ def get_datetime_iso8601(date_string):
 
 
 def format_node_merge_query(db_dict, dry_run=False):
-    # Create label string 
+    # Create label string
     tmp_labels = list(db_dict['labels'])
     tmp_labels.remove('Blob')
     labels_str = ':'.join(tmp_labels)
@@ -200,11 +201,11 @@ def format_node_merge_query(db_dict, dry_run=False):
             f'path: "{db_dict["path"]}" }}) ' +
         "ON CREATE SET node.nodeCreated = timestamp(), " +
             'node.nodeIteration = "initial", ' +
-            f"{create_string} " + 
+            f"{create_string} " +
         f"ON MATCH SET " +
             'node.nodeIteration = "merged", ' +
-            f"{merge_string} " + 
-        "RETURN node") 
+            f"{merge_string} " +
+        "RETURN node")
     return query
 
 
@@ -289,9 +290,9 @@ def create_node_query(event, context):
     print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
 
     #summary = {
-    #           "name": name, 
-    #           "bucket": bucket_name, 
-    #           "node-module-name": node_module_name, 
+    #           "name": name,
+    #           "bucket": bucket_name,
+    #           "node-module-name": node_module_name,
     #           "labels": db_dict
     #           "db-query": db_query,
     #}
@@ -311,36 +312,36 @@ if __name__ == "__main__":
 
     # fastq
     event = {
-             'bucket': '***REMOVED***-dev-from-personalis', 
-             'componentCount': 32, 
-             'contentType': 'application/octet-stream', 
-             'crc32c': 'ftNG8w==', 
-             'etag': 'CL3nyPj80uECEBE=', 
-             'generation': '1555361455813565', 
-             'id': '***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565', 
-             'kind': 'storage#object', 
-             'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media', 
-             'metadata': {'function-testing': '20190423:1217', 'gcf-update-metadata': '510893936442804'}, 
-             'metageneration': '17', 
-             'name': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz', 
-             'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz', 
-             'size': '5955984357', 
-             'storageClass': 'REGIONAL', 
-             'timeCreated': '2019-04-15T20:50:55.813Z', 
-             'timeStorageClassUpdated': '2019-04-15T20:50:55.813Z', 
+             'bucket': '***REMOVED***-dev-from-personalis',
+             'componentCount': 32,
+             'contentType': 'application/octet-stream',
+             'crc32c': 'ftNG8w==',
+             'etag': 'CL3nyPj80uECEBE=',
+             'generation': '1555361455813565',
+             'id': '***REMOVED***-dev-from-personalis/va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565',
+             'kind': 'storage#object',
+             'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media',
+             'metadata': {'function-testing': '20190423:1217', 'gcf-update-metadata': '510893936442804'},
+             'metageneration': '17',
+             'name': 'va_mvp_phase2/***REMOVED***/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz',
+             'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/va_mvp_phase2%2F***REMOVED***%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz',
+             'size': '5955984357',
+             'storageClass': 'REGIONAL',
+             'timeCreated': '2019-04-15T20:50:55.813Z',
+             'timeStorageClassUpdated': '2019-04-15T20:50:55.813Z',
              'updated': '2019-04-23T19:17:53.205Z'
     }
     context = None
 
     summary = create_node_query(event, context)
-    
+
     # Test event attributes
     assert summary['name'] == event['name']
     assert summary['bucket'] == event['bucket']
-    
+
     # Test node and trigger modules
     assert summary['node-module-name'] == f"{DATA_GROUP}.{event['bucket']}.create-node-config"
-    
+
     # Test labels
     try:
         expected_labels = ['Blob', 'WGS_35000', 'Fastq']
@@ -364,4 +365,3 @@ if __name__ == "__main__":
     event = {'bucket': '***REMOVED***-dev-from-personalis-gatk', 'contentType': 'application/octet-stream', 'crc32c': 'ZaJM+g==', 'etag': 'CPiFjqbVgOICEAI=', 'generation': '1556931361866488', 'id': '***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/objects/SHIP4946367_0.ubam/1556931361866488', 'kind': 'storage#object', 'md5Hash': 'Tgh+eyIiKe8TRWV6vohGJQ==', 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Fobjects%2FSHIP4946367_0.ubam?generation=1556931361866488&alt=media', 'metadata': {'test': '20190506:1148'}, 'metageneration': '2', 'name': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/objects/SHIP4946367_0.ubam', 'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Fobjects%2FSHIP4946367_0.ubam', 'size': '16871102587', 'storageClass': 'REGIONAL', 'timeCreated': '2019-05-04T00:56:01.866Z', 'timeStorageClassUpdated': '2019-05-04T00:56:01.866Z', 'updated': '2019-05-06T18:48:06.711Z'}
     context = None
     summary = create_node_query(event, context)
-
