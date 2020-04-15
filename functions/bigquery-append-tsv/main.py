@@ -172,7 +172,7 @@ def append_tsv_to_bigquery(event, context):
         return(1)
 
     # Get BigQuery load configuration for node data type
-    config_data = get_config_data(tsv_configs, message.node)
+    config_data = get_bigquery_config_data(tsv_configs, message.node)
 
     # Get TSV URI
     tsv_uri = make_gcs_uri(message.node)
