@@ -105,7 +105,7 @@ def match_blob_patterns(event, context):
                     break
         
         # Add kind labels to blob metdata
-        if node_labels:
+        if node_labels and "Blob" in node_labels:
             #node_labels.extend(global_labels)
             trellis_metadata = blob_metadata.get('trellis-metadata')
             if trellis_metadata:
@@ -117,6 +117,7 @@ def match_blob_patterns(event, context):
             print(
                   'Warning: blob did not match any patterns. ' +
                   f'{blob_metadata}.')
+
 
     # Write GCS output objects for each kind
     write_bucket = client.get_bucket(WRITE_BUCKET_NAME)

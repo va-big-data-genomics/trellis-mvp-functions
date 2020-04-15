@@ -249,6 +249,7 @@ def launch_fastq_to_ubam(event, context):
         "--use-private-address",
         "--network", job_dict["network"],
         "--subnetwork", job_dict["subnetwork"],
+        "--enable-stackdriver-monitoring",
         # 4 total attempts; 3 preemptible, final 1 full-price
         #"--preemptible", job_dict["preemptible"],
         #"--retries", job_dict["retries"] 

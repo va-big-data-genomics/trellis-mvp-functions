@@ -4,7 +4,7 @@ steps:
          'beta',
          'functions',
          'deploy',
-         '${_DATA_GROUP}-kill-job',
+         'trellis-kill-job',
          '--project=${PROJECT_ID}',
          '--source=functions/kill-job',
          '--memory=128MB',
@@ -15,6 +15,6 @@ steps:
          '--trigger-topic=${_TRIGGER_TOPIC}',
          '--update-env-vars=PROJECT_ID=${PROJECT_ID}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
-         '--update-labels=data-group=${_DATA_GROUP}',
+         '--update-labels=user=trellis',
          '--update-labels=task=kill-job',
   ]

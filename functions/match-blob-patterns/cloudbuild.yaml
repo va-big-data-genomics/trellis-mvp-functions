@@ -3,9 +3,10 @@ steps:
   args: ['cp', '-r', 'config/${_DATA_GROUP}', 'functions/match-blob-patterns/']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
+         'beta',
          'functions',
          'deploy',
-         '${_DATA_GROUP}-match-blob-patterns',
+         'trellis-match-blob-patterns',
          '--project=${PROJECT_ID}',
          '--source=functions/match-blob-patterns',
          '--memory=128MB',
@@ -17,5 +18,5 @@ steps:
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
-         '--update-labels=data-group=${_DATA_GROUP},task=database-import,functional-group=request-driven-db-import,inciting-action=request',
+         '--update-labels=user=trellis',
   ]
