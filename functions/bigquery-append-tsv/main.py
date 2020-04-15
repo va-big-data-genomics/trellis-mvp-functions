@@ -161,7 +161,7 @@ def append_tsv_to_bigquery(event, context):
     
     # Load BigQuery table config data
     bigquery_config = load_json('bigquery-config.json')
-    tsv_configs = bigquery_configs["TSV"]
+    tsv_configs = bigquery_config["TSV"]
 
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
