@@ -40,15 +40,15 @@ def format_pubsub_message(query, seed_id, event_id):
     message = {
                "header": {
                           "resource": "query",
-                          "method": "POST", 
-                          "labels": ['Create', 'Job', 'Node', 'Query', 'Cypher'], 
+                          "method": "POST",
+                          "labels": ['Create', 'Job', 'Node', 'Query', 'Cypher'],
                           "sentFrom": f"{FUNCTION_NAME}",
                           "publishTo": f"{TOPIC_TRIGGERS}",
                           "seedId": f"{seed_id}",
                           "previousEventId": f"{event_id}"
                },
                "body": {
-                        "cypher": query, 
+                        "cypher": query,
                         "result-mode": "data",
                         "result-structure": "list",
                         "result-split": "True",
@@ -124,7 +124,7 @@ def get_datetime_iso8601(date_string):
 
     Google datetime format: https://tools.ietf.org/html/rfc3339
     ISO 8601 standard format: https://en.wikipedia.org/wiki/ISO_8601
-    
+
     Args:
         date_string (str): Date in ISO 8601 format
     Returns
@@ -152,7 +152,7 @@ def format_query(db_entry, dry_run=False):
     #         f"CREATE (node:{labels_str} " +
     #         f"{{ {entry_string}, nodeCreated: timestamp() }}) " +
     #          "RETURN node")
-    
+
     # TODO: Merge on :Job label to be
     query = (
              "MERGE (node:Job { " +
@@ -204,10 +204,9 @@ def write_job_node_query(event, context):
     print(f"> Database query: \"{db_query}\".")
 
     message = format_pubsub_message(
-                                    query = db_query, 
-                                    seed_id = seed_id, 
+                                    query = db_query,
+                                    seed_id = seed_id,
                                     event_id = event_id)
     print(f"> Pubsub message: {message}.")
     result = publish_to_topic(TOPIC, message)
     print(f"> Published message to {TOPIC} with result: {result}.")
-    
