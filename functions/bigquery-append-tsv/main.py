@@ -208,7 +208,7 @@ def append_tsv_to_bigquery(event, context):
     logging.info(f"Starting job {load_job.job_id}.")
 
     # QC: Check how many rows are in the table
-    destination_table = CLIENT.get_table(dataset_ref.table(name))
+    destination_table = CLIENT.get_table(dataset_ref.table(config_data['table-name']))
     logging.info(f"Loaded {destination_table.num_rows} rows.")
     return 0
 
