@@ -8,7 +8,7 @@ steps:
   # Deploy container image to Cloud Run
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
-         'beta', 'run', 'deploy', '${_DATA_GROUP}-check-dstat',
+         'beta', 'run', 'deploy', 'trellis-check-dstat',
          '--set-env-vars', 'ENVIRONMENT=${_ENVIRONMENT}',
          '--set-env-vars', 'FUNCTION_NAME=${_FUNCTION_NAME}',
          '--set-env-vars', 'CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',

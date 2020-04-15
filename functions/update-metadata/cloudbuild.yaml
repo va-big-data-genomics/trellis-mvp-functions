@@ -3,15 +3,15 @@ steps:
   args: [
          'functions',
          'deploy',
-         '${_DATA_GROUP}-update-metadata',
+         'trellis-update-metadata',
          '--project=${PROJECT_ID}',
          '--source=functions/update-metadata',
          '--memory=128MB',
          '--max-instances=200',
          '--entry-point=update_metadata',
          '--runtime=python37',
-         '--trigger-topic=${_DATA_GROUP}-update-metadata',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
          '--update-env-vars=PROJECT_ID=${PROJECT_ID}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
-         '--update-labels=data-group=${_DATA_GROUP},task=database-import,functional-group=request-driven-db-import,inciting-action=request',
+         '--update-labels=user=trellis',
   ]
