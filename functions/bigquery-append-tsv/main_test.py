@@ -1,6 +1,7 @@
 import json
 import mock
 import base64
+import google
 from uuid import uuid4
 
 import pytest
@@ -10,11 +11,6 @@ import main
 mock_context = mock.Mock()
 mock_context.event_id = '617187464135194'
 mock_context.timestamp = '2019-07-15T22:09:03.761Z'
-
-
-# assert 'lion' in message['text'].lower()
-# assert 'lion' in message['attachments'][0]['title'].lower()
-# assert message['attachments'][0]['color'] == '#3367d6'
 
 class TestTrellisMessage:
     """Test the TrellisMessage class.
@@ -99,26 +95,104 @@ class TestTrellisMessage:
         assert message.event_id == mock_context.event_id
         assert message.seed_id  == mock_context.event_id
 
-"""
+
 class TestLoadJson:
+
+    def test_expected(self):
+        data = main.load_json('bigquery-config-test.json')
+        assert len(data.keys())        == 2
+        assert len(data['CSV'].keys()) == 3
+        assert len(data['TSV'].keys()) == 1
 
 
 class TestCheckConditions:
 
+    def test_expected(self):
+        data_labels = ['CheckContamination']
+        node = {'labels': ['WGS35', 'Blob', 'Cromwell', 'Gatk', 'Structured', 'Text', 'Data', 'CheckContamination']}
+
+        result = main.check_conditions(data_labels, node)
+        assert result == True
+
+    def test_empty_labels(self):
+        data_labels = ['CheckContamination']
+        node = {'labels': []}
+
+        result = main.check_conditions(data_labels, node)
+        assert result == False
+
+    def test_missing_data_label(self):
+        data_labels = ['CheckContamination']
+        node = {'labels': ['WGS35', 'Blob', 'Cromwell', 'Gatk', 'Structured', 'Text', 'Data']}
+
+        result = main.check_conditions(data_labels, node)
+        assert result == False
+
 
 class TestGetBigQueryConfigData:
+
+    def test_expected(self):
+        tsv_configs = {"CheckContamination" : {}}
+        node = {'labels': ['WGS35', 'Blob', 'Cromwell', 'Gatk', 'Structured', 'Text', 'Data', 'CheckContamination']}
+
+        result = main.get_bigquery_config_data(
+                                               tsv_configs,
+                                               node)
+        assert result == tsv_configs['CheckContamination']
+
+    def test_missing_label(self):
+        tsv_configs = {"CheckContamination" : {}}
+        node = {'labels': ['WGS35', 'Blob', 'Cromwell', 'Gatk', 'Structured', 'Text', 'Data']}
+        
+        with pytest.raises(KeyError):
+            main.get_bigquery_config_data(
+                                          tsv_configs,
+                                          node)
 
 
 class TestMakeGcsUri:
 
+    def test_expected(self):
+        node = {
+                'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis-wgs35',
+                'path': 'DVALABP000398/SHIP4946371/gatk-5-dollar/200323-224846-831-1d509436/output/germline_single_sample_workflow/697594a9-165b-4f1e-9ee3-6e6a39cb6c88/call-CheckContamination/SHIP4946371.preBqsr.selfSM'
+        }
+        result = main.make_gcs_uri(node)
+        assert result == "gs://gbsc-gcp-project-mvp-dev-from-personalis-wgs35/DVALABP000398/SHIP4946371/gatk-5-dollar/200323-224846-831-1d509436/output/germline_single_sample_workflow/697594a9-165b-4f1e-9ee3-6e6a39cb6c88/call-CheckContamination/SHIP4946371.preBqsr.selfSM"
+
 
 class TestConfigLoadJob:
 
+    def test_expected(self):
+        result = main.config_load_job()
+        assert isinstance(result, google.cloud.bigquery.job.LoadJobConfig) == True
+
 
 class TestMakeTableSchema:
-    
-# Test Trellis message
-def test_trellis_message_none():
-    body = {'results': {}}
-    message = main.TrellisMessage(event, context)
-"""
+
+    def test_expected(self):
+        schema_fields = {
+            "SEQ_ID": "STRING",
+            "RG": "STRING",
+            "CHIP_ID": "STRING",
+            "SNPS": "NUMERIC",
+            "READS": "NUMERIC",
+            "AVG_DP": "NUMERIC",
+            "FREEMIX": "NUMERIC",
+            "FREELK1": "NUMERIC",
+            "FREELK0": "NUMERIC",
+            "FREE_RH": "NUMERIC",
+            "FREE_RA": "NUMERIC",
+            "CHIPMIX": "NUMERIC",
+            "CHIPLK1": "NUMERIC",
+            "CHIPLK0": "NUMERIC",
+            "CHIP_RH": "NUMERIC",
+            "CHIP_RA": "NUMERIC",
+            "DPREF": "NUMERIC",
+            "RDPHET": "NUMERIC",
+            "RDPALT": "NUMERIC"
+        }
+        result = main.make_table_schema(schema_fields)
+        assert len(result) == 19
+        assert isinstance(result[0], google.cloud.bigquery.schema.SchemaField) == True
+
