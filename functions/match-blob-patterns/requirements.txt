@@ -1,3 +1,2 @@
 iso8601==0.1.12
-google-cloud-storage==1.9.0
-
+google-cloud-storage==1.15.0
