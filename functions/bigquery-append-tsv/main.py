@@ -109,7 +109,11 @@ def check_conditions(data_labels, node):
 def get_bigquery_config_data(tsv_configs, node):
     """Get BigQuery load configuration for node data type."""
 
-    task_label = set(tsv_configs.keys()).intersection(set(node.get('labels'))).pop()
+    try:
+        task_label = set(tsv_configs.keys()).intersection(set(node.get('labels'))).pop()
+    except KeyError as exception:
+        logging.error("No BigQuery configuration label found in node labels.")
+        raise
     return tsv_configs[task_label]
 
 
@@ -162,7 +166,7 @@ def append_tsv_to_bigquery(event, context):
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
                                       data_labels = tsv_configs.keys(),
-                                      node = message.node)
+                                      node        = message.node)
     if not conditions_met:
         logging.error(f"> Input node does not match requirements. Node: {node}.")
         return(1)
