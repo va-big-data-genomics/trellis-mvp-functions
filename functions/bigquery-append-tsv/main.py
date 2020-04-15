@@ -193,9 +193,9 @@ def append_tsv_to_bigquery(event, context):
     dataset_ref = CLIENT.dataset(BIGQUERY_DATASET)
     try:
         load_job = CLIENT.load_table_from_uri(
-                                    source_uris = tsv_uri, 
-                                    destination = dataset_ref.table(name), 
-                                    job_config = job_config)
+            source_uris = tsv_uri, 
+            destination = dataset_ref.table(config_data['table-name']), 
+            job_config  = job_config)
     except exceptions.NotFound:
         # Check that table exists.
         # API seems to throw this exception even though it will
