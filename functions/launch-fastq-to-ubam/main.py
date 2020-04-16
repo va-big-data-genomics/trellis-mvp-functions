@@ -1,39 +1,113 @@
 import os
+import pdb
 import sys
 import json
+import time
+import uuid
+import yaml
 import base64
+import random
+import hashlib
+
+from google.cloud import storage
+from google.cloud import pubsub
 
 from datetime import datetime
 
 from dsub.commands import dsub
 
-project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', '')
-zones = os.environ.get('ZONES', '')
-out_bucket = os.environ.get('DSUB_OUT_BUCKET', '')
-log_bucket = os.environ.get('DSUB_LOG_BUCKET', '')
-out_root = os.environ.get('DSUB_OUT_ROOT', '')
-DSUB_USER = os.environ.get('DSUB_USER', '')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
+
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+
+    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+
+    REGIONS = parsed_vars['DSUB_REGIONS']
+    OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
+    LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
+    DSUB_USER = parsed_vars['DSUB_USER']
+    NETWORK = parsed_vars['DSUB_NETWORK']
+    SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
+
+
+    PUBLISHER = pubsub.PublisherClient()
+
+def format_pubsub_message(job_dict, seed_id, event_id):
+    message = {
+               "header": {
+                          "resource": "job-metadata", 
+                          "method": "POST",
+                          "labels": ["Create", "Job", "Dsub", "Node"],
+                          "sentFrom": f"{FUNCTION_NAME}",
+                          "seedId": f"{seed_id}",
+                          "previousEventId": f"{event_id}"
+               },
+               "body": {
+                        "node": job_dict,
+               }
+    }
+    return message
+
+
+def publish_to_topic(publisher, project_id, topic, data):
+    topic_path = publisher.topic_path(project_id, topic)
+    message = json.dumps(data).encode('utf-8')
+    result = publisher.publish(topic_path, data=message).result()
+    return result
+
 
 def launch_dsub_task(dsub_args):
     try:
-        dsub.main('dsub', dsub_args)
+        result = dsub.dsub_main('dsub', dsub_args)
     except ValueError as exception:
-        print(exception)
-        print(f'Error with dsub arguments: {dsub_args}')
-        return(exception)
+        logging.error(f'Problem with dsub arguments: {dsub_args}')
+        raise
     except:
-        print("Unexpected error:", sys.exc_info())
-        for arg in dsub_args:
-            print(arg)
-        return(sys.exc_info())
-    return(1)
+        print("> Unexpected error:", sys.exc_info())
+        raise
+        #for arg in dsub_args:
+        #    print(arg)
+        #return(sys.exc_info())
+    return(result)
 
-def get_datestamp():
+
+def get_datetime_stamp():
     now = datetime.now()
-    datestamp = now.strftime("%Y%m%d")
+    datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
     return datestamp
 
-def launch_fastqc(event, context):
+
+def write_metadata_to_blob(meta_blob_path, metadata):
+    try:
+        meta_blob = storage.Client(project=PROJECT_ID) \
+            .get_bucket(OUT_BUCKET) \
+            .blob(meta_blob_path) \
+            .upload_from_string(json.dumps(metadata))
+        return True
+    except:
+        return False
+
+
+def make_unique_task_id(nodes, datetime_stamp):
+    # Create pretty-unique hash value based on input nodes
+    # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
+    sorted_nodes = sorted(nodes, key = lambda i: i['id'])
+    nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
+    nodes_hash = hashlib.sha256(nodes_str.encode('utf-8')).hexdigest()
+    print(nodes_hash)
+    trunc_nodes_hash = str(nodes_hash)[:8]
+    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
+    return(task_id, trunc_nodes_hash)
+
+
+def launch_fastq_to_ubam(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
 
@@ -41,68 +115,258 @@ def launch_fastqc(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
-    print(data)
+    print(f"> Context: {context}.")
+    print(f"> Data: {data}.")
+    header = data['header']
+    body = data['body']
 
-    resource_type = 'node'
-    if data['resource'] != resource_type:
-        print(f"Error: Expected resource type '{resource_type}', " +
-              f"got '{data['resource']}.'")
+    # Get seed/event ID to track provenance of Trellis events
+    seed_id = header['seedId']
+    event_id = context.event_id
+
+    dry_run = header.get('dryRun')
+    if not dry_run:
+        dry_run = False
+
+    nodes = body['results'].get('nodes')
+    if not nodes:
+        print("> No nodes provided. Exiting.")
         return
 
-    node = data['neo4j-metadata']['node']
+    if len(nodes) != 2:
+        raise ValueError(f"> Error: Need 2 fastqs; {len(nodes)} provided.")
 
-    if not 'Bam' in node['labels']:
-        print(f"Info: Not a Bam object. Ignoring. {node}.")
-        return 
+    # Create unique task ID
+    datetime_stamp = get_datetime_stamp()
+    task_id, trunc_nodes_hash = make_unique_task_id(nodes, datetime_stamp)
 
-    # Dsub data
-    task_name = 'fastqc'
-    task_group = 'fastqc-bam'
-
-    datestamp = get_datestamp()
-
-    # Database entry variables
-    in_bucket = node['bucket']
-    in_path = node['path']
+    # TODO: Implement QC checking to make sure fastqs match
+    set_sizes = []
+    fastq_fields = []
+    fastqs = {}
     
-    sample = node['sample']
-    basename = node['basename']
-    chromosome = node['chromosome']
+    # inputIds used to create relationships via trigger
+    input_ids = []
+    for node in nodes:
+        plate = node['plate']
+        sample = node['sample']
+        read_group = node['readGroup']
+        mate_pair = node['matePair']
+        set_size = int(node['setSize'])/2
+        input_id = node['id']
+
+        bucket = node['bucket']
+        path = node['path']
+
+        fastq_name = f'FASTQ_{mate_pair}'
+        fastqs[fastq_name] = f"gs://{bucket}/{path}" 
+
+        fastq_fields.extend([plate, sample, read_group])
+        set_sizes.append(set_size)
+        input_ids.append(input_id)
+
+    # Check that fastqs are from same sample/read group
+    if len(set(fastq_fields)) != 3:
+        raise ValueError(f"> Fastq fields are not in agreement: {fastq_fields}. Exiting.")
+
+    # Check to make sure that set sizes are in agreement
+    if len(set(set_sizes)) != 1:
+        raise ValueError(f"> Set sizes of fastqs are not in agreement: {set_sizes}. Exiting.")
+
+
+    # Define logging & outputs after task_id
+    task_name = 'fastq-to-ubam'
+    unique_task_label = "FastqToUbam"
+    job_dict = {
+                "provider": "google-v2",
+                "user": DSUB_USER,
+                "regions": REGIONS,
+                "project": PROJECT_ID,
+                "minCores": 1,
+                "minRam": 7.5,
+                "bootDiskSize": 20,
+                "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
+                "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
+                "diskSize": 500,
+                "command": (
+                            '/gatk/gatk ' +
+                            '--java-options ' +
+                            '\'-Xmx8G -Djava.io.tmpdir=bla\' ' +
+                            'FastqToSam ' +
+                            '-F1 ${FASTQ_1} ' +
+                            '-F2 ${FASTQ_2} ' +
+                            '-O ${UBAM} ' +
+                            '-RG ${RG} ' +
+                            '-SM ${SM} ' +
+                            '-PL ${PL}'),
+                "envs": {
+                         "RG": read_group,
+                         "SM": sample,
+                         "PL": "illumina"
+                },
+                "inputs": fastqs,
+                "outputs": {
+                            "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
+                },
+                "trellisTaskId": task_id,
+                "dryRun": dry_run,
+                #"preemptible": "3",
+                #"retries": "3",
+                "preemptible": False,
+                "sample": sample,
+                "plate": plate,
+                "readGroup": read_group,
+                "name": task_name,
+                "inputHash": trunc_nodes_hash,
+                "labels": ["Job", "Dsub", unique_task_label],
+                "inputIds": input_ids,
+                "network": NETWORK,
+                "subnetwork": SUBNETWORK,
+    }
 
     dsub_args = [
-        "--provider", "google-v2", 
-        "--user", DSUB_USER, 
-        "--zones", zones, 
-        "--project", project_id, 
-        "--logging", 
-            f"gs://{log_bucket}/{out_root}/{task_group}/{task_name}/logs/{datestamp}",
-        "--image", 
-            f"gcr.io/{project_id}/fastqc:1.01", 
-        "--disk-size", "1000", 
-        "--script", "lib/fastqc.sh", 
-        "--input", 
-            f"INPUT=gs://{in_bucket}/{in_path}",
-        "--output", 
-            f"OUTPUT=gs://{out_bucket}/{out_root}/{task_group}/{task_name}/objects/{basename}.fastqc_data.txt",
-        "--env", f"SAMPLE_ID={sample}"
+        #"--name", job_dict["name"],
+        "--name", f"fq2u-{job_dict['inputHash'][0:5]}",
+        "--label", f"read-group={read_group}",
+        "--label", f"sample={sample.lower()}",
+        "--label", f"trellis-id={task_id}",
+        "--label", f"trellis-name={job_dict['name']}",
+        "--label", f"plate={plate.lower()}",
+        "--label", f"input-hash={trunc_nodes_hash}",
+        "--provider", job_dict["provider"], 
+        "--user", job_dict["user"], 
+        "--regions", job_dict["regions"],
+        "--project", job_dict["project"],
+        "--min-cores", str(job_dict["minCores"]), 
+        "--min-ram", str(job_dict["minRam"]),
+        "--boot-disk-size", str(job_dict["bootDiskSize"]), 
+        "--image", job_dict["image"], 
+        "--logging", job_dict["logging"],
+        "--disk-size", str(job_dict["diskSize"]),
+        "--command", job_dict["command"],
+        "--use-private-address",
+        "--network", job_dict["network"],
+        "--subnetwork", job_dict["subnetwork"],
+        "--enable-stackdriver-monitoring",
+        # 4 total attempts; 3 preemptible, final 1 full-price
+        #"--preemptible", job_dict["preemptible"],
+        #"--retries", job_dict["retries"] 
     ]
-    print(f"Launching dsub with args: {dsub_args}.")
-    launch_dsub_task(dsub_args)
+
+    # Argument lists
+    for key, value in job_dict["inputs"].items():
+        dsub_args.extend([
+                          "--input", 
+                          f"{key}={value}"])
+    for key, value in job_dict['envs'].items():
+        dsub_args.extend([
+                          "--env",
+                          f"{key}={value}"])
+    for key, value in job_dict['outputs'].items():
+        dsub_args.extend([
+                          "--output",
+                          f"{key}={value}"])
+
+    # Optional flags
+    if job_dict['dryRun']:
+        dsub_args.append("--dry-run")
+
+    # Wait a random time interval to reduce overlapping db queries
+    #   because of ubam objects created at same time
+    random_wait = random.randrange(0,10)
+    print(f"> Waiting for {random_wait} seconds to launch job.")
+    time.sleep(random_wait)
+    
+    # Launch dsub job
+    print(f"> Launching dsub with args: {dsub_args}.")
+    dsub_result = launch_dsub_task(dsub_args)
+    print(f"> Dsub result: {dsub_result}.")
+
+    # Metadata to be perpetuated to ubams is written to file
+    # Try until success
+    metadata = {"setSize": set_size}
+    if 'job-id' in dsub_result.keys() and metadata and not dry_run:
+        print(f"> Metadata passed to output blobs: {metadata}.")
+        # Dump metadata into GCS blob
+        meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
+        while True:
+            result = write_metadata_to_blob(meta_blob_path, metadata)
+            if result == True:
+                break
+        print(f"> Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
+
+    
+    if 'job-id' in dsub_result.keys():
+        # Add dsub job ID to neo4j database node
+        job_dict['dsubJobId'] = dsub_result['job-id']
+        job_dict['dstatCmd'] = (
+                                 "dstat " +
+                                f"--project {job_dict['project']} " +
+                                f"--provider {job_dict['provider']} " +
+                                f"--jobs '{job_dict['dsubJobId']}' " +
+                                f"--users '{job_dict['user']}' " +
+                                 "--full " +
+                                 "--format json " +
+                                 "--status '*'")
+
+        # Format inputs for neo4j database
+        for key, value in job_dict["inputs"].items():
+            job_dict[f"input_{key}"] = value
+        for key, value in job_dict["envs"].items():
+            job_dict[f"env_{key}"] = value
+        for key, value in job_dict["outputs"].items():
+            job_dict[f"output_{key}"] = value
+
+        # Send job metadata to create-job-node function
+        message = format_pubsub_message(
+                                        job_dict = job_dict, 
+                                        #nodes = nodes,
+                                        seed_id = seed_id,
+                                        event_id = event_id)
+        print(f"> Pubsub message: {message}.")
+        result = publish_to_topic(
+                                  PUBLISHER,
+                                  PROJECT_ID,
+                                  NEW_JOB_TOPIC,
+                                  message) 
+        print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")
+        
 
 # For local testing
 if __name__ == "__main__":
-    project_id = "gbsc-gcp-project-mvp-dev"
-    zones =  "us-west1*"
-    out_bucket = "gbsc-gcp-project-mvp-dev-from-personalis-qc"
-    out_root = "dsub"
+    PROJECT_ID = "gbsc-gcp-project-mvp-dev"
+    ZONES =  "us-west1*"
+    OUT_BUCKET = "gbsc-gcp-project-mvp-dev-from-personalis-wgs35"
+    LOG_BUCKET = "gbsc-gcp-project-mvp-dev-from-personalis-wgs35-logs"
+    DSUB_USER = "trellis"
+    FUNCTION_NAME = "test-launch-fastq-to-ubam"
+    TOPIC = "wgs35-create-job-node"
+    REGIONS = "us-west1"
 
-    data = {"resource": "blob", "gcp-metadata": {"bucket": "gbsc-gcp-project-mvp-dev-from-personalis", "contentLanguage": "en", "contentType": "application/octet-stream", "crc32c": "XPwmhA==", "etag": "CMTx8Y/t8+ACEAE=", "generation": "1552093034608836", "id": "gbsc-gcp-project-mvp-dev-from-personalis/SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam/1552093034608836", "kind": "storage#object", "md5Hash": "qm+p+AbPhpyXwmXtAQ/fkA==", "mediaLink": "https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/SHIP4420818%2FAlignments%2FSHIP4420818_chromosome_Y.recal.bam?generation=1552093034608836&alt=media", "metadata": {"goog-reserved-file-mtime": "1527072114"}, "metageneration": "1", "name": "SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam", "selfLink": "https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/SHIP4420818%2FAlignments%2FSHIP4420818_chromosome_Y.recal.bam", "size": "921001444", "storageClass": "REGIONAL", "timeCreated": "2019-03-09T00:57:14.607Z", "timeStorageClassUpdated": "2019-03-09T00:57:14.607Z", "updated": "2019-03-09T00:57:14.607Z"}, "trellis-metadata": {"path": "SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam", "dirname": "SHIP4420818/Alignments", "basename": "SHIP4420818_chromosome_Y.recal.bam", "extension": "recal.bam", "time-created-epoch": 1552093034.607, "time-updated-epoch": 1552093034.607, "time-created-iso": "2019-03-09T00:57:14.607000+00:00", "time-updated-iso": "2019-03-09T00:57:14.607000+00:00", "labels": ["Bam", "WGS_9000", "Blob"], "sample": "SHIP4420818", "chromosome": "Y"}}
-    data = json.dumps(data)
-    data = data.encode('utf-8')
-    
+    PUBLISHER = pubsub.PublisherClient()
+
+    data = {
+            'header': {
+                       'method': 'VIEW',
+                       'labels': ['Fastq', 'Nodes'],
+                       'resource': 'query-result',
+                       'sentFrom': 'wgs35-db-query',
+                       'dryRun': True,
+            },
+            'body': {
+                     'query': 'MATCH (n:Fastq) WHERE n.sample="SHIP4946367" WITH n.readGroup AS read_group, collect(n) AS nodes WHERE size(nodes) = 2 RETURN [n in nodes] AS nodes', 
+                     'results': {
+                                 'nodes': [
+                                           {'plate':'DVALBP', 'extension': 'fastq.gz', 'readGroup': 0, 'dirname': 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ', 'path': 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz', 'storageClass': 'REGIONAL', 'setSize': 9, 'timeCreatedEpoch': 1555361455.813, 'timeUpdatedEpoch': 1556919952.482, 'timeCreated': '2019-04-15T20:50:55.813Z', 'id': 'gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R1.fastq.gz/1555361455813565', 'contentType': 'application/octet-stream', 'generation': '1555361455813565', 'metageneration': '46', 'kind': 'storage#object', 'timeUpdatedIso': '2019-05-03T21:45:52.482000+00:00', 'sample': 'SHIP4946367', 'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz', 'labels': ['Fastq', 'WGS_35000', 'Blob'], 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R1.fastq.gz?generation=1555361455813565&alt=media', 'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis', 'componentCount': 32, 'basename': 'SHIP4946367_0_R1.fastq.gz', 'crc32c': 'ftNG8w==', 'size': 5955984357, 'timeStorageClassUpdated': '2019-04-15T20:50:55.813Z', 'name': 'SHIP4946367_0_R1', 'etag': 'CL3nyPj80uECEC4=', 'timeCreatedIso': '2019-04-15T20:50:55.813000+00:00', 'matePair': 1, 'updated': '2019-05-03T21:45:52.482Z'}, 
+                                           {'plate':'DVALBP', 'extension': 'fastq.gz', 'readGroup': 0, 'dirname': 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ', 'path': 'va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R2.fastq.gz', 'storageClass': 'REGIONAL', 'setSize': 9, 'timeCreatedEpoch': 1555361456.112, 'timeUpdatedEpoch': 1556920219.608, 'timeCreated': '2019-04-15T20:50:56.112Z', 'id': 'gbsc-gcp-project-mvp-dev-from-personalis/va_mvp_phase2/DVALABP000398/SHIP4946367/FASTQ/SHIP4946367_0_R2.fastq.gz/1555361456112810', 'contentType': 'application/octet-stream', 'generation': '1555361456112810', 'metageneration': '16', 'kind': 'storage#object', 'timeUpdatedIso': '2019-05-03T21:50:19.608000+00:00', 'sample': 'SHIP4946367', 'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R2.fastq.gz', 'labels': ['Fastq', 'WGS_35000', 'Blob'], 'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis/o/va_mvp_phase2%2FDVALABP000398%2FSHIP4946367%2FFASTQ%2FSHIP4946367_0_R2.fastq.gz?generation=1555361456112810&alt=media', 'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis', 'componentCount': 32, 'basename': 'SHIP4946367_0_R2.fastq.gz', 'crc32c': 'aV17ew==', 'size': 6141826914, 'timeStorageClassUpdated': '2019-04-15T20:50:56.112Z', 'name': 'SHIP4946367_0_R2', 'etag': 'CKqJ2/j80uECEBA=', 'timeCreatedIso': '2019-04-15T20:50:56.112000+00:00', 'matePair': 2, 'updated': '2019-05-03T21:50:19.608Z'}
+                                 ], 
+                                 'metadata_setSize': 9
+                     }
+            }
+    }
+    data = json.dumps(data).encode('utf-8')
     event = {'data': base64.b64encode(data)}
 
-    launch_fastqc(event, context=None)
+    result = launch_fastq_to_ubam(event, context=None)

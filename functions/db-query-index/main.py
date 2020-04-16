@@ -2,6 +2,7 @@
 import os
 import re 
 import json
+import yaml
 
 from py2neo import Graph
 
@@ -9,27 +10,41 @@ from google.cloud import storage
 from google.cloud import pubsub
 
 # Get environment variables
-PROJECT_ID = os.environ.get('GOOGLE_CLOUD_PROJECT')
-READ_BUCKET_NAME = os.environ.get('TRELLIS_BUCKET')
-READ_PREFIX = os.environ.get('MATCHED_BLOBS_PREFIX')
-DATA_BUCKETS = os.environ.get('DATA_BUCKETS')
-PUBLISH_TOPIC = os.environ.get('UNTRACKED_TOPIC')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    FUNCTION_NAME = os.environ['FUNCTION_NAME']
 
-NEO4J_URL = os.environ.get('NEO4J_URL')
-NEO4J_USER = os.environ.get('NEO4J_USER')
-NEO4J_PASS = os.environ.get('NEO4J_PASSPHRASE')
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+  
+    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    READ_BUCKET_NAME = parsed_vars['TRELLIS_BUCKET']
+    READ_PREFIX = parsed_vars['MATCHED_BLOBS_PREFIX']
+    DATA_BUCKETS = parsed_vars['DATA_BUCKETS']
+    PUBLISH_TOPIC = parsed_vars['TOPIC_UPDATE_METADATA']
 
-# Establish Graph connection
-GRAPH = Graph(
-              NEO4J_URL, 
-              user = NEO4J_USER, 
-              password = NEO4J_PASS)
+    NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
+    NEO4J_HOST = parsed_vars['NEO4J_HOST']
+    NEO4J_USER = parsed_vars['NEO4J_USER']
+    NEO4J_PASS = parsed_vars['NEO4J_PASSPHRASE']
+    NEO4J_PORT = parsed_vars['NEO4J_PORT']
 
-# Establish PubSub connection
-PUBLISHER = pubsub.PublisherClient()
-TOPIC_PATH = PUBLISHER.topic_path(PROJECT_ID, PUBLISH_TOPIC)
+    # Establish Graph connection
+    GRAPH = Graph(
+                  scheme=NEO4J_SCHEME,
+                  host=NEO4J_HOST, 
+                  port=NEO4J_PORT,
+                  user=NEO4J_USER, 
+                  password=NEO4J_PASS)
 
-def main(event, context):
+    # Establish PubSub connection
+    PUBLISHER = pubsub.PublisherClient()
+    TOPIC_PATH = PUBLISHER.topic_path(PROJECT_ID, PUBLISH_TOPIC)
+
+def query_db_index(event, context):
     """Triggered by a change to a Cloud Storage bucket.
     Args:
          event (dict): Event payload.
@@ -49,7 +64,7 @@ def main(event, context):
         return None
     
     # Check whether bucket in read path is tracked by this db
-    approved_buckets = DATA_BUCKETS.split(',')
+    approved_buckets = DATA_BUCKETS
     
     name_suffix = re.split(READ_PREFIX, object_name)[1]
     data_bucket_name = name_suffix.split('/')[1]
@@ -69,6 +84,7 @@ def main(event, context):
     #property_dicts = {}
     property_dicts = []
     for blob_metadata in list_blobs:
+        # Not using md5 anymore: https://cloud.google.com/storage/docs/hashes-etags
         if blob_metadata.get('resource') != 'blob':
             print(f"Error: Expected resource type 'blob', " +
                   f"got '{blob_data['resource']}.'")
@@ -79,7 +95,7 @@ def main(event, context):
             bucket = gcp_metadata['bucket']
             path = gcp_metadata['name']
             size = gcp_metadata['size']
-            md5_hash = gcp_metadata['md5Hash']
+            crc32c = gcp_metadata['crc32c']
         except:
             print(f'Error: Blob missing required metadata; skipping. ' + 
                   f'Blob metadata: {blob_metadata}.')
@@ -126,7 +142,7 @@ def main(event, context):
         if not path in graphed_paths:
             # Send untracked objects to Pub/Sub topic
             data = json.dumps(blob_metadata).encode('utf-8')
-            PUBLISHER.publish(TOPIC_PATH, data=data)
+            result = PUBLISHER.publish(TOPIC_PATH, data=data).result()
             publish_counter += 1
-    print(f'Count of blobs published: {publish_counter}.')
+    print(f'Count of blobs published to {TOPIC_PATH}: {publish_counter}.')
     return

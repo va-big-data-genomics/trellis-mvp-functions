@@ -1,5 +1,6 @@
 import os
 import json
+import yaml
 import base64
 import importlib
 
@@ -9,25 +10,33 @@ from google.cloud import storage
 from google.cloud import pubsub
 
 # Get environment variables
-project_id = os.environ.get('GOOGLE_CLOUD_PROJECT', '')
-write_bucket_name = os.environ.get('TRELLIS_BUCKET', '')
-write_prefix = os.environ.get('BUCKET_PAGE_PREFIX', '')
-publish_topic = os.environ.get('PAGE_TOKENS_TOPIC', '')
-approved_buckets_str = os.environ.get('DATA_BUCKETS', '')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if ENVIRONMENT == 'google-cloud':
+    vars_blob = storage.Client() \
+                .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                .get_blob(os.environ['CREDENTIALS_BLOB']) \
+                .download_as_string()
+    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
-publisher = pubsub.PublisherClient()
-topic_path = publisher.topic_path(
-                                  project_id, 
-                                  publish_topic)   
+    project_id = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    write_bucket_name = parsed_vars['TRELLIS_BUCKET']
+    write_prefix = parsed_vars['BUCKET_PAGE_PREFIX']
+    publish_topic = parsed_vars['TOPIC_LIST_BUCKET_PAGE']
+    approved_buckets = parsed_vars['DATA_BUCKETS']
 
-storage_client = storage.Client(project=project_id) 
+    publisher = pubsub.PublisherClient()
+    topic_path = publisher.topic_path(
+                                      project_id, 
+                                      publish_topic)   
+
+    storage_client = storage.Client(project=project_id) 
 
 def get_timestamp():
     now = datetime.now()
     timestamp = now.strftime("%Y%m%d-%H%M")
     return timestamp
 
-def main(event, context):
+def list_bucket_page(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
     Args:
          event (dict): Event payload.
@@ -57,8 +66,9 @@ def main(event, context):
     token = gcp_metadata.get('page-token')
 
     # Check that bucket is approved for reading
-    approved_buckets = approved_buckets_str.split(',')
+    #approved_buckets = approved_buckets_str.split(',')
     if not read_bucket_name in approved_buckets:
+        # TODO: Raise this as an error
         print(f"Error: Bucket {read_bucket_name} is not approved for reading.'")
         return
     
@@ -111,7 +121,7 @@ def main(event, context):
                                      "bucket": read_bucket.name, 
                                      "name": blob.name, 
                                      "size": str(blob.size), 
-                                     "md5Hash": blob.md5_hash, 
+                                     #"md5Hash": blob.md5_hash, 
                                      "crc32c": blob.crc32c, 
                                      "id": blob.id, 
                     }, 
