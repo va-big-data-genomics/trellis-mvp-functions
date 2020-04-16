@@ -1,0 +1,60 @@
+{
+  "CSV": {
+    "Vcfstats": {
+                 "table-name": "vcfstats",
+                 "schema-fields": {
+                                   "dimension": "STRING", 
+                                   "index": "STRING", 
+                                   "value": "STRING", 
+                                   "tool": "STRING", 
+                                   "sample": "STRING"
+                 }
+    }, 
+    "Flagstat": {
+                 "table-name": "flagstat",
+                 "schema-fields": {
+                                   "dimension": "STRING", 
+                                   "index": "STRING", 
+                                   "value": "STRING", 
+                                   "chr": "STRING", 
+                                   "sample": "STRING"
+                 }
+    }, 
+    "Fastqc": {
+               "table-name": "fastqc",
+               "schema-fields": {
+                                 "dimension": "STRING", 
+                                 "index": "STRING", 
+                                 "value": "STRING", 
+                                 "chr": "STRING", 
+                                 "sample": "STRING"
+               }
+    },
+  },
+  "TSV": {
+    "CheckContamination": {
+                "table-name": "check_contamination",
+                "schema-fields": {
+                                  "SEQ_ID": "STRING",
+                                  "RG": "STRING",
+                                  "CHIP_ID": "STRING",
+                                  "SNPS": "NUMERIC",
+                                  "READS": "NUMERIC",
+                                  "AVG_DP": "NUMERIC",
+                                  "FREEMIX": "NUMERIC",
+                                  "FREELK1": "NUMERIC",
+                                  "FREELK0": "NUMERIC",
+                                  "FREE_RH": "NUMERIC",
+                                  "FREE_RA": "NUMERIC",
+                                  "CHIPMIX": "NUMERIC",
+                                  "CHIPLK1": "NUMERIC",
+                                  "CHIPLK0": "NUMERIC",
+                                  "CHIP_RH": "NUMERIC",
+                                  "CHIP_RA": "NUMERIC",
+                                  "DPREF": "NUMERIC",
+                                  "RDPHET": "NUMERIC",
+                                  "RDPALT": "NUMERIC"
+                }
+    }
+  }
+}

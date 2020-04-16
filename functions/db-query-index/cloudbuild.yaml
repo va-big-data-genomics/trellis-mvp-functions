@@ -1,0 +1,21 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-db-query-index',
+         '--project=${PROJECT_ID}',
+         '--source=functions/db-query-index',
+         '--memory=128MB',
+         '--max-instances=10',
+         '--entry-point=query_db_index',
+         '--runtime=python37',
+         '--vpc-connector=trellis',
+         '--trigger-resource=${_TRIGGER_RESOURCE}',
+         '--trigger-event=google.storage.object.finalize',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=user=trellis',
+  ]

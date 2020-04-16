@@ -1,0 +1,19 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-log-insert-cromwell-instance',
+         '--project=${PROJECT_ID}',
+         '--source=functions/log-insert-cromwell-instance',
+         '--memory=128MB',
+         '--max-instances=100',
+         '--entry-point=log_insert_cromwell_instance',
+         '--runtime=python37',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=user=trellis',
+  ]
