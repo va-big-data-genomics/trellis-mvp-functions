@@ -1,0 +1,77 @@
+steps:
+# Python image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_PYTHON_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_PYTHON_IMAGE}', 'gcr.io/${PROJECT_ID}/${_PYTHON_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_PYTHON_IMAGE}']
+# Cromwell image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_CROMWELL_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_CROMWELL_IMAGE}', 'gcr.io/${PROJECT_ID}/${_CROMWELL_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_CROMWELL_IMAGE}']
+# GATK image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_GATK_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_GATK_IMAGE}', 'gcr.io/${PROJECT_ID}/${_GATK_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_GATK_IMAGE}']
+# Vcfstats image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_VCFSTATS_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_VCFSTATS_IMAGE}', 'gcr.io/${PROJECT_ID}/${_VCFSTATS_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_VCFSTATS_IMAGE}']
+# Samtools flagstat image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_SAMTOOLS_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_SAMTOOLS_IMAGE}', 'gcr.io/${PROJECT_ID}/${_SAMTOOLS_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_SAMTOOLS_IMAGE}']
+# Text-to-table image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_T2T_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_T2T_IMAGE}', 'gcr.io/${PROJECT_ID}/${_T2T_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_T2T_IMAGE}']
+# Text-to-table image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_FASTQC_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_FASTQC_IMAGE}', 'gcr.io/${PROJECT_ID}/${_FASTQC_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_FASTQC_IMAGE}']
+# Neo4j image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_NEO4J_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_NEO4J_IMAGE}', 'gcr.io/${PROJECT_ID}/${_NEO4J_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_NEO4J_IMAGE}']
+substitutions:
+    _PYTHON_IMAGE: 'python:2.7'
+    _CROMWELL_IMAGE: 'broadinstitute/cromwell:47'
+    _GATK_IMAGE: 'broadinstitute/gatk:4.1.0.0'
+    _VCFSTATS_IMAGE: 'realtimegenomics/rtg-tools:3.7.1'
+    _SAMTOOLS_IMAGE: 'biocontainers/samtools:v1.9-4-deb_cv1'
+    _T2T_IMAGE: 'stanfordbioinformatics/text-to-table:0.2.1'
+    _FASTQC_IMAGE: 'biocontainers/fastqc:v0.11.5_cv4'
+    _NEO4J_IMAGE: 'neo4j:3.5.4'
+images: [
+    'gcr.io/$PROJECT_ID/${_PYTHON_IMAGE}',
+    'gcr.io/$PROJECT_ID/${_CROMWELL_IMAGE}',
+    'gcr.io/$PROJECT_ID/${_GATK_IMAGE}',
+    'gcr.io/$PROJECT_ID/${_VCFSTATS_IMAGE}',
+    'gcr.io/$PROJECT_ID/${_SAMTOOLS_IMAGE}',
+    'gcr.io/$PROJECT_ID/${_T2T_IMAGE}',
+    'gcr.io/$PROJECT_ID/${_FASTQC_IMAGE}',
+    'gcr.io/$PROJECT_ID/${_NEO4J_IMAGE}'
+
+]
