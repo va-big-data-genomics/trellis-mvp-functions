@@ -144,7 +144,7 @@ def launch_vcfstats(event, context):
         "regions": REGIONS,
         "project": PROJECT_ID,
         "minCores": 1,
-        "image": f"gcr.io/{PROJECT_ID}/rtg-tools:1.0",
+        "image": f"gcr.io/{PROJECT_ID}/realtimegenomics/rtg-tools:3.7.1",
         "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
         "command": "rtg vcfstats ${INPUT} > ${OUTPUT}",
         "envs": {

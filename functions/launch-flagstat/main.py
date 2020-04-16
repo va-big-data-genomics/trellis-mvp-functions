@@ -143,7 +143,7 @@ def launch_flagstat(event, context):
         "regions": REGIONS,
         "project": PROJECT_ID,
         "minCores": 1,
-        "image": f"gcr.io/{PROJECT_ID}/samtools:1.01",
+        "image": f"gcr.io/{PROJECT_ID}/biocontainers/samtools:v1.9-4-deb_cv1",
         "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
         "command": "samtools flagstat ${INPUT} > ${OUTPUT}",
         "envs": {
