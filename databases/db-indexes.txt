@@ -1,0 +1,25 @@
+CREATE INDEX ON :Blob(bucket, path) # [RelateFromPersonalisToSample]
+CREATE INDEX ON :Blob(id)           # [RelateTrellisInputToJob]
+CREATE INDEX ON :Blob(sample)       # [RelateSampleToFromPersonalis, RelateFromPersonalisToSample]
+CREATE INDEX ON :Blob(taskId, id)   # [RelateTrellisOutputToJob]
+CREATE INDEX ON :Blob(bucket, name, size, id, crc32c) # [db-query-index]
+CREATE INDEX ON :Fastq(plate)
+CREATE INDEX ON :Fastq(sample)      # [AddFastqSetSize,GetFastqForUbam]
+CREATE INDEX ON :Job(name)
+CREATE INDEX ON :Job(sample, name, inputHash, status) # [KillDuplicateJobs]
+CREATE INDEX ON :Job(trellisTaskId) # [RelateTrellisOutputToJob, RelateTrellisInputToJob, RelateJobToJobRequest]
+CREATE INDEX ON :Job(instanceName)  # [MarkJobAsDuplicate, CreateCromwellStepFromAttempt, RelateCromwellAttemptToPreviousAttempt, RelateCromwellStepToAttempt]
+CREATE INDEX ON :Job(instanceId, instanceName)
+CREATE INDEX ON :Job(name, sample)
+CREATE INDEX ON :Ubam(sample)       # [CheckUbamCount]
+CREATE INDEX ON :Dstat(instanceName, jobId)     # [RelateDstatToJob]
+CREATE INDEX ON :Dsub(dsubJobId, instanceName)  # [RelateDstatToJob]
+# Cromwell indexes
+CREATE INDEX ON :CromwellStep(cromwellWorkflowId)   # [RelateCromwellWorkflowToStep]
+CREATE INDEX ON :CromwellStep(cromwellWorkflowId, wdlCallAlias) # [RelateCromwellOutputToStep, RelateCromwellStepToPreviousStep, CreateCromwellStepFromAttempt, RelateCromwellStepToLatestAttempt, RelateCromwellStepToAttempt, DeleteRelationshipCromwellStepHasAttempt]
+CREATE INDEX ON :Blob(cromwellWorkflowId, wdlCallAlias, id) # [RelateCromwellOutputToStep]
+CREATE INDEX ON :CromwellWorkflow(trellisTaskId) # [AddWorkflowidToCromwellWorkflow]
+CREATE INDEX ON :CromwellWorkflow(cromwellWorkflowId)  # [RelateCromwellWorkflowToStep, RelateCromwellStepToPreviousStep]
+CREATE INDEX ON :CromwellAttempt(cromwellWorkflowId, wdlCallAlias) # [RelateCromwellStepToLatestAttempt, RelateCromwellAttemptToPreviousAttempt]
+CREATE INDEX ON :Sample(sample)
+CREATE INDEX ON :JobRequest(name)   # [RelateJobToJobRequest]

@@ -1,0 +1,49 @@
+[
+{
+    'job-name': 'echo', 
+    'last-update': '2019-09-03 23:50:36.130564', 
+    'status-message': 'Success', 
+    'job-id': 'echo--pbilling--190903-164833-50', 
+    'user-id': 'pbilling', 
+    'status': 'SUCCESS', 
+    'status-detail': 'Success', 
+    'create-time': '2019-09-03 23:48:34.365658', 
+    'start-time': '2019-09-03 23:48:35.547089', 
+    'end-time': '2019-09-03 23:50:36.130564', 
+    'internal-id': 'projects/***REMOVED***-dev/operations/10214628217442417908', 
+    'logging': 'gs://***REMOVED***-dev-group/logging/echo--pbilling--190903-164833-50.log', 
+    'labels': {}, 
+    'envs': {}, 
+    'inputs': {}, 
+    'input-recursives': {}, 
+    'outputs': {'OUT': 'gs://***REMOVED***-dev-group/output/out.txt'}, 
+    'output-recursives': {}, 
+    'mounts': {}, 
+    'provider': 'google-v2', 
+    'provider-attributes': {
+        'instance-name': 'google-pipelines-worker-759c21e95d1a3dae49d5643c96b5f286', 
+        'zone': 'us-central1-f', 
+        'regions': ['us-central1'], 
+        'zones': [], 
+        'machine-type': 'n1-standard-1', 
+        'preemptible': False, 
+        'boot-disk-size': 10, 
+        'network': '', 
+        'subnetwork': '', 
+        'use_private_address': False, 
+        'cpu_platform': '', 
+        'accelerators': [], 
+        'enable-stackdriver-monitoring': False, 
+        'service-account': 'default', 
+        'disk-size': 200, 
+        'disk-type': 'pd-standard'
+    }, 
+    'events': [
+        {'name': 'start', 'start-time': '2019-09-03 23:48:35.547089+00:00'}, 
+        {'name': 'pulling-image', 'start-time': '2019-09-03 23:50:02.259242+00:00'}, {'name': 'localizing-files', 'start-time': '2019-09-03 23:50:21.610231+00:00'}, {'name': 'running-docker', 'start-time': '2019-09-03 23:50:23.233803+00:00'}, {'name': 'delocalizing-files', 'start-time': '2019-09-03 23:50:24.681977+00:00'}, {'name': 'ok', 'start-time': '2019-09-03 23:50:36.130564+00:00'}
+    ], 
+    'dsub-version': 'v0-3-2', 
+    'script-name': 'echo', 
+    'script': '#!/usr/bin/env bash\necho "Hello World" > "${OUT}"'
+    }
+]

@@ -1,0 +1,33 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'compute', 'instances', 'delete',
+         '--quiet',
+         '--zone=${_ZONE}',
+         '${_INSTANCE_NAME}'
+  ]
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'compute',
+         'instances',
+         'create-with-container', '${_INSTANCE_NAME}',
+         '--project=${PROJECT_ID}',
+         '--zone=${_ZONE}',
+         '--machine-type=${_MACHINE_TYPE}',
+         '--network=default',
+         '--network-tier=PREMIUM',
+         '--maintenance-policy=MIGRATE',
+         '--scopes=https://www.googleapis.com/auth/cloud-platform',
+         '--tags=neo4j,https-server',
+         '--image=${_STABLE_COS}',
+         '--image-project=cos-cloud',
+         '--boot-disk-size=10GB',
+         '--boot-disk-type=pd-standard',
+         '--boot-disk-device-name=instance-1',
+         '--container-image=gcr.io/${PROJECT_ID}/${_IMAGE_NAME}:${_NEO4J_VERSION}',
+         '--container-restart-policy=always',
+         '--disk "name=${_DISK_NAME},device-name=${_DISK_NAME},mode=rw,boot=no"',
+         '--container-mount-host-path host-path=/mnt/disks/${_DISK_NAME},mount-path=/data --metadata ^:^startup-script="mkdir -p /mnt/disks/${_DISK_NAME} && mount -o discard,defaults /dev/sdb /mnt/disks/${_DISK_NAME}"',
+         '--address=${_IP_ADDRESS}',
+         '--labels=container-os=${_STABLE_COS}'
+  ]

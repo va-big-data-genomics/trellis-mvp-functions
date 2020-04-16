@@ -1,0 +1,20 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-launch-fastq-to-ubam',
+         '--project=${PROJECT_ID}',
+         '--source=functions/launch-fastq-to-ubam',
+         '--memory=128MB',
+         '--max-instances=25',
+         '--timeout=120',
+         '--entry-point=launch_fastq_to_ubam',
+         '--runtime=python37',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=user=trellis',
+  ]

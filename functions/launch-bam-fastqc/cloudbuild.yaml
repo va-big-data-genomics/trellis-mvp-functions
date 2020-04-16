@@ -1,0 +1,19 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-launch-bam-fastqc',
+         '--project=${PROJECT_ID}',
+         '--source=functions/launch-bam-fastqc',
+         '--memory=128MB',
+         '--max-instances=20',
+         '--entry-point=launch_fastqc',
+         '--runtime=python37',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=user=trellis',
+  ]

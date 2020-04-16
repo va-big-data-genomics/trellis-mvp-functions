@@ -1,0 +1,20 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-kill-job',
+         '--project=${PROJECT_ID}',
+         '--source=functions/kill-job',
+         '--memory=128MB',
+         '--max-instances=40',
+         '--timeout=60',
+         '--entry-point=kill_job',
+         '--runtime=python37',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
+         '--update-env-vars=PROJECT_ID=${PROJECT_ID}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=user=trellis',
+         '--update-labels=task=kill-job',
+  ]
