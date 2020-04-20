@@ -14,7 +14,7 @@ steps:
          '--set-env-vars', 'CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--set-env-vars', 'CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--image', 'gcr.io/$PROJECT_ID/check-dstat',
-         '--region', 'us-central1',
+         '--region', 'us-west1',
          '--platform', 'managed',
          '--no-allow-unauthenticated',
          '--quiet']

@@ -141,7 +141,7 @@ def launch_fastqc(event, context):
              "regions": REGIONS,
              "project": PROJECT_ID,
              "minCores": 1,
-             "image": f"gcr.io/{PROJECT_ID}/fastqc:1.01",
+             "image": f"gcr.io/{PROJECT_ID}/biocontainers/fastqc:v0.11.5_cv4",
              "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
              "diskSize": 1000,
              "script": "fastqc.sh",
