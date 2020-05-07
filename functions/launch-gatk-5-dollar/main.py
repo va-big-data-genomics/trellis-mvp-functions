@@ -225,7 +225,7 @@ def launch_gatk_5_dollar(event, context):
                 "minCores": 1,
                 "minRam": 12,
                 "preemptible": False,
-                "bootDiskSize": 20,
+                "bootDiskSize": 40,
                 "image": f"gcr.io/{PROJECT_ID}/broadinstitute/cromwell:47",
                 "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 100,
