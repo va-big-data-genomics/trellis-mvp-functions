@@ -3032,7 +3032,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(LaunchTextToTable(
                                     function_name,
                                     env_vars))
-    triggers.append(RunBigQueryImportCsv(
+    triggers.append(BigQueryImportCsv(
                                     function_name,
                                     env_vars))
     triggers.append(BigQueryImportContamination(
@@ -3041,6 +3041,16 @@ def get_triggers(function_name, env_vars):
     triggers.append(RequestBigQueryImportContamination(
                                     function_name,
                                     env_vars))
+    triggers.append(PostgresInsertCsv(
+                                    function_name,
+                                    env_vars))
+    triggers.append(PostgresInsertContamination(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestPostgresInsertContamination(
+                                    function_name,
+                                    env_vars))
+
 
     ### Other
     triggers.append(AddFastqSetSize(
