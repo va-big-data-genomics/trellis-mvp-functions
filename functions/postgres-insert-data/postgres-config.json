@@ -1,0 +1,60 @@
+{
+  "CSV": {
+    "Vcfstats": {
+                 "table-name": "vcfstats",
+                 "schema-fields": {
+                                   "dimension": "VARCHAR(255)", 
+                                   "index": "VARCHAR(255)", 
+                                   "value": "VARCHAR(255)", 
+                                   "tool": "VARCHAR(255)", 
+                                   "sample": "VARCHAR(255)"
+                 }
+    }, 
+    "Flagstat": {
+                 "table-name": "flagstat",
+                 "schema-fields": {
+                                   "dimension": "VARCHAR(255)", 
+                                   "index": "VARCHAR(255)", 
+                                   "value": "VARCHAR(255)", 
+                                   "chr": "VARCHAR(255)", 
+                                   "sample": "VARCHAR(255)"
+                 }
+    }, 
+    "Fastqc": {
+               "table-name": "fastqc",
+               "schema-fields": {
+                                 "dimension": "VARCHAR(255)", 
+                                 "index": "VARCHAR(255)", 
+                                 "value": "VARCHAR(255)", 
+                                 "chr": "VARCHAR(255)", 
+                                 "sample": "VARCHAR(255)"
+               }
+    }
+  },
+  "TSV": {
+    "CheckContamination": {
+                "table-name": "check_contamination",
+                "schema-fields": {
+                                  "SEQ_ID": "VARCHAR(255)",
+                                  "RG": "VARCHAR(255)",
+                                  "CHIP_ID": "VARCHAR(255)",
+                                  "SNPS": "VARCHAR(255)",
+                                  "READS": "VARCHAR(255)",
+                                  "AVG_DP": "VARCHAR(255)",
+                                  "FREEMIX": "VARCHAR(255)",
+                                  "FREELK1": "VARCHAR(255)",
+                                  "FREELK0": "VARCHAR(255)",
+                                  "FREE_RH": "VARCHAR(255)",
+                                  "FREE_RA": "VARCHAR(255)",
+                                  "CHIPMIX": "VARCHAR(255)",
+                                  "CHIPLK1": "VARCHAR(255)",
+                                  "CHIPLK0": "VARCHAR(255)",
+                                  "CHIP_RH": "VARCHAR(255)",
+                                  "CHIP_RA": "VARCHAR(255)",
+                                  "DPREF": "VARCHAR(255)",
+                                  "RDPHET": "VARCHAR(255)",
+                                  "RDPALT": "VARCHAR(255)"
+                }
+    }
+  }
+}
