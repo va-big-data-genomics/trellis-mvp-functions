@@ -8,7 +8,7 @@ import yaml
 import base64
 import logging
 import psycopg2
-import sqlalchemy
+#import sqlalchemy
 
 #from google.cloud import pubsub
 from google.cloud import storage
