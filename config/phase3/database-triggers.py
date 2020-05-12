@@ -1263,7 +1263,7 @@ class LaunchTextToTable:
         return query
 
 
-class RunBigQueryImportCsv:
+class BigQueryImportCsv:
     
     def __init__(self, function_name, env_vars):
 
@@ -1525,6 +1525,271 @@ class RequestBigQueryImportContamination:
                  "RETURN node " +
                  "LIMIT 1")
         return query
+
+
+class PostgresInsertCsv:
+    
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        # Don't need to wait until
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Blob',
+                           'TextToTable',
+                           'Data',
+                           'WGS35',
+        ]
+        supported_labels = [
+                            'Fastqc',
+                            'Flagstat',
+                            'Vcfstats'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            len(set(supported_labels).intersection(set(node.get('labels'))))==1,
+            node.get('filetype') == 'csv',
+            # Metadata required for populating trigger query:
+            node.get("id"),
+            node.get("sample")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        event_id = context.event_id
+
+        query = self._create_query(blob_id, event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Trigger", "Insert", "Postgres", "Csv", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "PostgresInsertCsv",
+                              "publishTo": self.env_vars['TOPIC_POSTGRES_INSERT_DATA'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, blob_id, event_id):
+        query = (
+                 f"MATCH (:Job:TextToTable)-[:OUTPUT]->(node:Blob) " +
+                 f"WHERE node.id =\"{blob_id}\" " +
+                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:PostgresInsertData) " +
+                 "CREATE (jr:JobRequest:PostgresInsertData { " +
+                            "sample: node.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"postgres-insert-data\", " +
+                            f"eventId: {event_id} }}) " +
+                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "RETURN node " +
+                 "LIMIT 1")
+        return query
+
+
+class PostgresInsertContamination:
+    
+    
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        # Don't need to wait until
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Blob',
+                           'Data',
+                           'Structured',
+                           'Text',
+                           'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            node.get("extension") == "preBqsr.selfSM",
+            node.get("wdlCallAlias") == "CheckContamination",
+            # Metadata required for populating trigger query:
+            node.get("id"),
+            node.get("sample")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        event_id = context.event_id
+
+        query = self._create_query(blob_id, event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Trigger", "Insert", "Postgres", "Contamination", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "PostgresInsertContamination",
+                              "publishTo": self.env_vars['TOPIC_POSTGRES_INSERT_DATA'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, blob_id, event_id):
+        query = (
+                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"WHERE node.id =\"{blob_id}\" " +
+                 "AND s.wdlCallAlias = \"checkcontamination\" " +
+                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:PostgresInsertData) " +
+                 "CREATE (jr:JobRequest:PostgresInsertData { " +
+                            "sample: node.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"postgres-insert-data\", " +
+                            f"eventId: {event_id} }}) " +
+                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "RETURN node " +
+                 "LIMIT 1")
+        return query
+
+
+class RequestPostgresInsertContamination:
+
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        # Don't need to wait until
+        reqd_header_labels = ['Request', 'PostgresImportContamination']
+
+        #if not node:
+        #    return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            #node.get("extension") == "preBqsr.selfSM",
+            #node.get("wdlCallAlias") == "CheckContamination",
+            # Metadata required for populating trigger query:
+            #node.get("id"),
+            #node.get("sample")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        query = self._create_query(event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Trigger", "Import", "Postgres", "Contamination", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestPostgresInsertContamination",
+                              "publishTo": self.env_vars['TOPIC_POSTGRES_INSERT_DATA'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id):
+        query = (
+                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"WHERE node.extension =\"preBqsr.selfSM\" " +
+                 "AND s.wdlCallAlias = \"checkcontamination\" " +
+                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:PostgresInsertData) " +
+                 "CREATE (jr:JobRequest:PostgresInsertData { " +
+                            "sample: node.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"postgres-insert-data\", " +
+                            f"eventId: {event_id} }}) " +
+                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "RETURN node " +
+                 "LIMIT 1")
+        return query
+
 
 # Relationship triggers
 class RelateTrellisOutputToJob:
