@@ -32,16 +32,14 @@ if ENVIRONMENT == 'google-cloud':
     QC_DB_PASSWORD = parsed_vars['QC_DB_PASSWORD']
     QC_DB_NAME     = parsed_vars['QC_DB_NAME'] # postgres(?)
 
-
     #PUBLISHER = pubsub.PublisherClient()
-    #CLIENT = bigquery.Client()
     CLIENT = storage.Client()
 
     # Connect via psycopg2: https://stackoverflow.com/questions/52366380/how-to-connect-cloud-function-to-cloudsql
     # Google example: https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/cloud-sql/mysql/sqlalchemy/main.py
     DB_CONN = psycopg2.connect(
                                host     = f'/cloudsql/{cloud_sql_connection_name}',
-                               db_name  = QC_DB_NAME
+                               db_name  = QC_DB_NAME,
                                user     = QC_DB_USER,
                                password = QC_DB_PASSWORD)
 
@@ -237,7 +235,7 @@ def postgres_insert_data(event, context):
     extension = message.node['extension'].upper()
     
     # Load table config data
-    table_config = load_json('bigquery-config.json')
+    table_config = load_json('postgres-config.json')
     extension_configs = bigquery_config[extension]
 
     # Check whether node & message metadata meets function conditions
@@ -252,15 +250,6 @@ def postgres_insert_data(event, context):
     config_data = get_table_config_data(extension_configs, message.node)
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
-
-    # Connect to Cloud SQL Postgres database
-    """
-    conn = psycopg2.connect(
-                            user     = POSTGRES_USER,
-                            password = POSTGRES_PASSWORD,
-                            host     = POSTGRES_HOST,
-                            port     = POSTGRES_PORT)
-    """
 
     # Check whether table exists
     table_exists = table_exists(DB_CONN, table_name)
