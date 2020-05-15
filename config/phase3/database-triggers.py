@@ -1972,6 +1972,7 @@ class RelateTrellisOutputToJob:
         }
         return([(topic, message)]) 
 
+    """
     def _create_query(self, node_id, task_id):
         query = (
                  f"MATCH (j:Job {{ trellisTaskId:\"{task_id}\" }} ), " +
@@ -1981,6 +1982,18 @@ class RelateTrellisOutputToJob:
                   "OR NOT j.duplicate=True " +
                   "MERGE (j)-[:OUTPUT]->(node) " +
                   "RETURN node")
+        return query
+    """
+
+    def _create_query(self, node_id, task_id):
+        query = (
+                 "MATCH (node:Blob { " +
+                    f"trellisTaskId: \"{task_id}\", " +
+                    f"id: \"{node_id}\" " +
+                 "}) " +
+                 f"MERGE (:Job {{ trellisTaskId: \"{task_id}\" }} )" +
+                    "-[:OUTPUT]->(node) " +
+                 "RETURN node"
         return query
 
 
