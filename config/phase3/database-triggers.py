@@ -3156,7 +3156,7 @@ def get_triggers(function_name, env_vars):
                                     env_vars))
     triggers.append(RequestGatk5DollarNoJob(
                                     function_name,
-                                    env_Vars))
+                                    env_vars))
 
     ## Launch QC jobs
     triggers.append(LaunchBamFastqc(
