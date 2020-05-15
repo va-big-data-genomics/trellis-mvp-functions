@@ -1993,7 +1993,7 @@ class RelateTrellisOutputToJob:
                  "}) " +
                  f"MERGE (:Job {{ trellisTaskId: \"{task_id}\" }} )" +
                     "-[:OUTPUT]->(node) " +
-                 "RETURN node"
+                 "RETURN node")
         return query
 
 
