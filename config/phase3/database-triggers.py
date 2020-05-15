@@ -313,6 +313,129 @@ class RequestLaunchFailedGatk5Dollar:
         return query
 
 
+class RequestGatk5DollarNoJob:
+    """Trigger re-launching $5 GATK workflows that have failed.
+
+    Check whether all ubams for a sample are present, and
+    that they haven't already been input to a $5 workflow.
+    If so, send all ubam nodes metadata to the gatk-5-dollar
+    pub/sub topic.
+    """
+
+    def __init__(self, function_name, env_vars):
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Request', 'LaunchFailedGatk5Dollar', 'All']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        """Send full set of ubams to GATK task"""
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        #sample = node['sample']
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        query = self._create_query(event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Ubam", "Failed", "GATK", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestGatk5DollarNoJob",
+                              "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data", 
+                            "result-structure": "list",
+                            "result-split": "True",
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id):
+        """Check if all ubams for a sample are in the database & send to GATK $5 function.
+
+        Description of query, by line:
+            (1-2)   Find all ubams associated with this ubams sample.
+            (3,8)   Check that there is not an existing GATK $5 workflow for this sample.
+            (4-7)   Collect all ubams by sample/read group.
+            (9-10)  In case there are duplicate ubams, only get the first node of each 
+                    group of unique sample/read group ubams.
+            (11-13) Group all the ubams with the same sample and setSize, where setSize
+                    indicates how many ubams should be present for this sample.
+            (14)    Check that the count of bams with unique read groups matches the 
+                    expected number of bams.
+            (15)    Return number of ubam nodes.
+
+        Update notes:
+            v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
+                    check that sample is not related to an existing GATK $5 workflow. 
+        """
+        query = (
+                 f"MATCH (s:Sample)" +      #1
+                    "-[:HAS]->(:Fastq)" +                           #2
+                    "-[:INPUT_TO]->(:Job)" +                        #3
+                    "-[:OUTPUT]->(n:Ubam) " +                      #4
+                 # Find samples with a $5 GATK job request & no job
+                 "WHERE (s)-[*4]->(jobRequest:JobRequest:Gatk5Dollar)" + #5
+                 "AND NOT (j)-[:TRIGGERED]->(:Job:Gatk5Dollar)"
+                 # Don't launch job is another is currently running
+                 "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
+                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"})" +
+                 # Don't launch job if another has succeeded
+                 "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
+                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
+                    "-[:STATUS]->(:Dstat {status:\"SUCCESS\"}) " +
+                 "WITH s.sample AS sample, " +                      #6
+                       "n.readGroup AS readGroup, " +               #8
+                       "COLLECT(DISTINCT n) AS allNodes " +
+                 "WITH head(allNodes) AS heads " +                  #9
+                 "UNWIND [heads] AS uniqueNodes " +                 #10
+                 "WITH uniqueNodes.sample AS sample, " +            #11
+                      "uniqueNodes.setSize AS setSize, " +          #12
+                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
+                 "WHERE size(sampleNodes) = setSize " +             #14
+                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
+                            "sample: sample, " +                    #16
+                            "nodeCreated: datetime(), " +           #17
+                            "nodeCreatedEpoch: " +                  #18
+                                "datetime().epochSeconds, " +
+                            "name: \"gatk-5-dollar\", " +
+                            f"eventId: {event_id} }}) " +           #19
+                 "WITH sampleNodes, " +                             #20
+                      "sample, " +
+                      "j.eventId AS eventId, " +                     #21
+                      "j.nodeCreatedEpoch AS epochTime " +          #22
+                 "UNWIND sampleNodes AS sampleNode " +              #23
+                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
+                            "sample: sample, " +                    #25
+                            "eventId: eventId}) " +                 #26
+                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
+                 "RETURN DISTINCT(sampleNodes) AS nodes ")           #28                                                 #13
+        return query
+
+
 class LaunchGatk5Dollar:
     """Trigger for launching GATK $5 Cromwell workflow.
 
@@ -3018,6 +3141,9 @@ def get_triggers(function_name, env_vars):
     triggers.append(RequestLaunchFailedGatk5Dollar(
                                     function_name,
                                     env_vars))
+    triggers.append(RequestGatk5DollarNoJob(
+                                    function_name,
+                                    env_Vars))
 
     ## Launch QC jobs
     triggers.append(LaunchBamFastqc(
