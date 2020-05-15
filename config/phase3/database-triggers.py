@@ -399,7 +399,7 @@ class RequestGatk5DollarNoJob:
                     "-[:OUTPUT]->(n:Ubam) " +                      #4
                  # Find samples with a $5 GATK job request & no job
                  "WHERE (s)-[*4]->(jobRequest:JobRequest:Gatk5Dollar)" + #5
-                 "AND NOT (j)-[:TRIGGERED]->(:Job:Gatk5Dollar)"
+                 "AND NOT (jobRequest)-[:TRIGGERED]->(:Job:Gatk5Dollar)"
                  # Don't launch job is another is currently running
                  "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
                     "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"})" +
