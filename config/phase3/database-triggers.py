@@ -398,11 +398,11 @@ class RequestGatk5DollarNoJob:
                     "-[:INPUT_TO]->(:Job)" +                        #3
                     "-[:OUTPUT]->(n:Ubam) " +                      #4
                  # Find samples with a $5 GATK job request & no job
-                 "WHERE (s)-[*4]->(jobRequest:JobRequest:Gatk5Dollar)" + #5
-                 "AND NOT (jobRequest)-[:TRIGGERED]->(:Job:Gatk5Dollar)"
+                 "WHERE (s)-[*4]->(jobRequest:JobRequest:Gatk5Dollar) " + #5
+                 "AND NOT (jobRequest)-[:TRIGGERED]->(:Job:Gatk5Dollar) "
                  # Don't launch job is another is currently running
                  "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"})" +
+                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"}) " +
                  # Don't launch job if another has succeeded
                  "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
                     "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
@@ -432,7 +432,7 @@ class RequestGatk5DollarNoJob:
                             "sample: sample, " +                    #25
                             "eventId: eventId}) " +                 #26
                  "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
-                 "RETURN DISTINCT(sampleNodes) AS nodes ")           #28                                                 #13
+                 "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
 
