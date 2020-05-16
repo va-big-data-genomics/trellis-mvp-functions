@@ -210,9 +210,6 @@ def launch_gatk_5_dollar(event, context):
     except:
         logging.error(f"Failed to load workflow inputs from {gatk_hg38_inputs}.")
 
-    # Debugging
-    return
-
     # Add key/values
     logging.info(f"> Adding sample-specific inputs to JSON")
     gatk_inputs['germline_single_sample_workflow.sample_name'] = sample
