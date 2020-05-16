@@ -168,13 +168,16 @@ def launch_gatk_5_dollar(event, context):
         input_ids.append(input_id)
 
     # Load Pipeline API (PAPI) options JSON from GCS
-    logging.info(f"> Loading PAPI options")
-    gatk_papi_inputs = f"{GATK_MVP_DIR}/{GATK_MVP_HASH}/{GATK_GERMLINE_DIR}/generic.google-papi.options.json"
-    papi_options_template = storage.Client(project=PROJECT_ID) \
-        .get_bucket(TRELLIS_BUCKET) \
-        .blob(gatk_papi_inputs) \
-        .download_as_string()
-    papi_options = json.loads(papi_options_template)
+    try:
+        logging.info(f"> Loading PAPI options")
+        gatk_papi_inputs = f"{GATK_MVP_DIR}/{GATK_MVP_HASH}/{GATK_GERMLINE_DIR}/generic.google-papi.options.json"
+        papi_options_template = storage.Client(project=PROJECT_ID) \
+            .get_bucket(TRELLIS_BUCKET) \
+            .blob(gatk_papi_inputs) \
+            .download_as_string()
+        papi_options = json.loads(papi_options_template)
+    except:
+        logging.error(f"Failed to load PAPI options from {gatk_papi_inputs}.")
 
     # Add Trellis ID to Cromwell workers
     # NOTE: Doesn't work. Don't know where these are supposed to go.
@@ -184,22 +187,31 @@ def launch_gatk_5_dollar(event, context):
     #}
 
     # Write workflow-specific PAPI options to GCS
-    logging.info(f"> Writing workflow-specific PAPI options to GCS")
-    papi_options_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/{sample}.google-papi.options.json"
-    papi_options_blob = storage.Client(project=PROJECT_ID) \
-        .get_bucket(OUT_BUCKET) \
-        .blob(papi_options_path) \
-        .upload_from_string(json.dumps(papi_options, indent=4))
-    logging.info(f"> Created PAPI options blob at gs://{OUT_BUCKET}/{papi_options_path}.")
+    try:
+        logging.info(f"> Writing workflow-specific PAPI options to GCS")
+        papi_options_path = f"{plate}/{sample}/{task_name}/{task_id}/inputs/{sample}.google-papi.options.json"
+        papi_options_blob = storage.Client(project=PROJECT_ID) \
+            .get_bucket(OUT_BUCKET) \
+            .blob(papi_options_path) \
+            .upload_from_string(json.dumps(papi_options, indent=4))
+        logging.info(f"> Created PAPI options blob at gs://{OUT_BUCKET}/{papi_options_path}.")
+    except:
+        logging.error(f"Failed to write workflow-specific PAPI options to {papi_options_path}.")
 
-    # Load inputs JSON from GCS
-    logging.info(f"> Loading workflow inputs JSON from GCS")
-    gatk_hg38_inputs = f"{GATK_MVP_DIR}/{GATK_MVP_HASH}/mvp.hg38.inputs.json"
-    gatk_input_template = storage.Client(project=PROJECT_ID) \
-        .get_bucket(TRELLIS_BUCKET) \
-        .blob(gatk_hg38_inputs) \
-        .download_as_string()
-    gatk_inputs = json.loads(gatk_input_template)
+    try:
+        # Load inputs JSON from GCS
+        logging.info(f"> Loading workflow inputs JSON from GCS")
+        gatk_hg38_inputs = f"{GATK_MVP_DIR}/{GATK_MVP_HASH}/mvp.hg38.inputs.json"
+        gatk_input_template = storage.Client(project=PROJECT_ID) \
+            .get_bucket(TRELLIS_BUCKET) \
+            .blob(gatk_hg38_inputs) \
+            .download_as_string()
+        gatk_inputs = json.loads(gatk_input_template)
+    except:
+        logging.error(f"Failed to load workflow inputs from {gatk_hg38_inputs}.")
+
+    # Debugging
+    return
 
     # Add key/values
     logging.info(f"> Adding sample-specific inputs to JSON")
@@ -216,9 +228,6 @@ def launch_gatk_5_dollar(event, context):
         .blob(gatk_inputs_path) \
         .upload_from_string(json.dumps(gatk_inputs, indent=4))
     print(f"> Created input blob at gs://{OUT_BUCKET}/{gatk_inputs_path}.")
-
-    # Debugging
-    return
 
     #workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
     unique_task_label = "Gatk5Dollar"
