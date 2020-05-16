@@ -314,7 +314,7 @@ class RequestLaunchFailedGatk5Dollar:
 
 
 class RequestGatk5DollarNoJob:
-        """Trigger re-launching $5 GATK workflows that have failed.
+    """Trigger re-launching $5 GATK workflows that have failed.
 
     Check whether all ubams for a sample are present, and
     that they haven't already been input to a $5 workflow.
