@@ -314,7 +314,7 @@ class RequestLaunchFailedGatk5Dollar:
 
 
 class RequestGatk5DollarNoJob:
-    """Trigger re-launching $5 GATK workflows that have failed.
+        """Trigger re-launching $5 GATK workflows that have failed.
 
     Check whether all ubams for a sample are present, and
     that they haven't already been input to a $5 workflow.
@@ -396,10 +396,10 @@ class RequestGatk5DollarNoJob:
                  f"MATCH (s:Sample)" +      #1
                     "-[:HAS]->(:Fastq)" +                           #2
                     "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam) " +                      #4
+                    "-[:OUTPUT]->(n:Ubam)" +                      #4
+                    "-[:INPUT_TO]->(jobRequest:JobRequest:Gatk5Dollar) " +
                  # Find samples with a $5 GATK job request & no job
-                 "WHERE (s)-[*4]->(jobRequest:JobRequest:Gatk5Dollar) " + #5
-                 "AND NOT (jobRequest)-[:TRIGGERED]->(:Job:Gatk5Dollar) "
+                 "WHERE NOT (jobRequest)-[:TRIGGERED]->(:Job:Gatk5Dollar) "
                  # Don't launch job is another is currently running
                  "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
                     "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"}) " +
@@ -407,6 +407,7 @@ class RequestGatk5DollarNoJob:
                  "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
                     "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
                     "-[:STATUS]->(:Dstat {status:\"SUCCESS\"}) " +
+                 # Create JobRequest node
                  "WITH s.sample AS sample, " +                      #6
                        "n.readGroup AS readGroup, " +               #8
                        "COLLECT(DISTINCT n) AS allNodes " +
@@ -423,6 +424,7 @@ class RequestGatk5DollarNoJob:
                                 "datetime().epochSeconds, " +
                             "name: \"gatk-5-dollar\", " +
                             f"eventId: {event_id} }}) " +           #19
+                 # Send nodes to launch-gatk-5-dollar
                  "WITH sampleNodes, " +                             #20
                       "sample, " +
                       "j.eventId AS eventId, " +                     #21
