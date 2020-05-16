@@ -118,7 +118,8 @@ def launch_gatk_5_dollar(event, context):
     header = data['header']
     body = data['body']
 
-    # Debugging"
+    # Debugging
+    return
 
     seed_id = header['seedId']
     event_id = context.event_id
