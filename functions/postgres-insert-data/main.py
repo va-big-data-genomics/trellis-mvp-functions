@@ -32,6 +32,8 @@ if ENVIRONMENT == 'google-cloud':
     QC_DB_PASSWORD = parsed_vars['QC_DB_PASSWORD']
     QC_DB_NAME     = parsed_vars['QC_DB_NAME'] # postgres(?)
     QC_DB_INSTANCE_CONN = parsed_vars['QC_DB_INSTANCE_CONN']
+    # Required if only using private IP with VPC connector
+    QC_DB_IP       = parsed_vars['QC_DB_IP']
 
     #PUBLISHER = pubsub.PublisherClient()
     CLIENT = storage.Client()
@@ -39,7 +41,8 @@ if ENVIRONMENT == 'google-cloud':
     # Connect via psycopg2: https://stackoverflow.com/questions/52366380/how-to-connect-cloud-function-to-cloudsql
     # Google example: https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/cloud-sql/mysql/sqlalchemy/main.py
     DB_CONN = psycopg2.connect(
-                               host     = f'/cloudsql/{QC_DB_INSTANCE_CONN}',
+                               host = QC_DB_IP,
+                               #host     = f'/cloudsql/{QC_DB_INSTANCE_CONN}',
                                dbname  = QC_DB_NAME,
                                user     = QC_DB_USER,
                                password = QC_DB_PASSWORD)
