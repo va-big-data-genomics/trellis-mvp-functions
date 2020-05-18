@@ -1989,12 +1989,13 @@ class RelateTrellisOutputToJob:
 
     def _create_query(self, node_id, task_id):
         query = (
+                 "MERGE (j:Job {{trellisTaskId: \"{task_id}\" }} )" +
+                 "WITH j"
                  "MATCH (node:Blob { " +
                     f"trellisTaskId: \"{task_id}\", " +
                     f"id: \"{node_id}\" " +
                  "}) " +
-                 f"MERGE (:Job {{ trellisTaskId: \"{task_id}\" }} )" +
-                    "-[:OUTPUT]->(node) " +
+                 f"MERGE (:j)-[:OUTPUT]->(node) " +
                  "RETURN node")
         return query
 
