@@ -39,7 +39,7 @@ if ENVIRONMENT == 'google-cloud':
     # Google example: https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/cloud-sql/mysql/sqlalchemy/main.py
     DB_CONN = psycopg2.connect(
                                host     = f'/cloudsql/{cloud_sql_connection_name}',
-                               db_name  = QC_DB_NAME,
+                               dbname  = QC_DB_NAME,
                                user     = QC_DB_USER,
                                password = QC_DB_PASSWORD)
 
