@@ -18,7 +18,7 @@ from google.cloud import exceptions
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
-    cloud_sql_connection_name = os.environ.get("CLOUD_SQL_CONNECTION_NAME")
+    CONNECTION_NAME = os.environ.get("CLOUD_SQL_CONNECTION_NAME")
     
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -38,7 +38,7 @@ if ENVIRONMENT == 'google-cloud':
     # Connect via psycopg2: https://stackoverflow.com/questions/52366380/how-to-connect-cloud-function-to-cloudsql
     # Google example: https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/cloud-sql/mysql/sqlalchemy/main.py
     DB_CONN = psycopg2.connect(
-                               host     = f'/cloudsql/{cloud_sql_connection_name}',
+                               host     = f'/cloudsql/{CONNECTION_NAME}',
                                dbname  = QC_DB_NAME,
                                user     = QC_DB_USER,
                                password = QC_DB_PASSWORD)
