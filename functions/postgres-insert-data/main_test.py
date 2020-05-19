@@ -171,3 +171,24 @@ class TestCheckTableExists:
             table_exists = main.check_table_exists(mock_connect, table_name)
 
             assert table_exists == True
+
+
+class TestGetDelimiter:
+
+    def test_check_contamination(self):
+        node = {"extension": "preBqsr.selfSM"}
+        delimiter = main.get_delimiter(node)
+
+        assert delimiter == "\t"
+
+    def test_csv(self):
+        node = {"extension": "csv"}
+        delimiter = main.get_delimiter(node)
+
+        assert delimiter == ","
+
+    def test_no_rule(self):
+        node = {"extension": "nonsense_extension"}
+        delimiter = main.get_delimiter(node)
+
+        assert delimiter == None
