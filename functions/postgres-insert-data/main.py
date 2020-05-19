@@ -47,7 +47,7 @@ if ENVIRONMENT == 'google-cloud':
 
 class TrellisMessage:
 
-    def __init__(self, event, context):
+    def __init__(self, data, context):
         """Parse Trellis messages from Pub/Sub event & context.
 
         Args:
@@ -69,18 +69,8 @@ class TrellisMessage:
                     - cypher (optional)
                     - results (optional)
         """
-
-        pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-        data = json.loads(pubsub_message)
-        #logging.info(f"> Context: {context}.")
-        #logging.info(f"> Data: {data}.")
-        print(f"> Context: {context}.")
-        print(f"> Data: {data}.")
         header = data['header']
         body = data['body']
-
-        # Debugging
-        return
 
         self.event_id = context.event_id
         self.seed_id = header.get('seedId')
@@ -91,6 +81,9 @@ class TrellisMessage:
 
         self.header = data['header']
         self.body = data['body']
+
+        # Debugging
+        return
 
         self.results = {}
         if body.get('results'):
@@ -248,9 +241,15 @@ def postgres_insert_data(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-    
+    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+    data = json.loads(pubsub_message)
+    logging.info(f"> Context: {context}.")
+    logging.info(f"> Data: {data}.")
+    print(f"> Context: {context}.")
+    print(f"> Data: {data}.")
+
     # Parse message
-    message = TrellisMessage(event, context)
+    message = TrellisMessage(data, context)
 
     # Check that message includes node metadata
     if not message.node:
