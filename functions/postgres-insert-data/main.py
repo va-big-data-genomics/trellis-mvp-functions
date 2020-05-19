@@ -228,7 +228,10 @@ def insert_multiple_rows(conn, table_name, schema_fields, rows):
         value_symbols.append('%s')
     values_string = ', '.join(value_symbols)
     sql = f"INSERT INTO {table_name}({columns}) VALUES({values_string})"
-    print(sql)
+    print(f"> sql: {sql}.")
+    print(f"> rows: {rows}.")
+    # Debugging
+    return
     try:
         cursor = conn.cursor()
         cursor.executemany(sql, rows)
@@ -352,10 +355,13 @@ def postgres_insert_data(event, context):
     # Insert rows into table
     insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
 
+    # Debugging
+    return
+
     job_dict = {
                 "databaseName": QC_DB_NAME,
                 "tableName": table_name,
-                "inputIds": [message.node['id']],
+                "inputIds": [node['id']],
                 "labels": [
                            'Job',
                            'PostgresInsertData']
