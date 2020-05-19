@@ -1846,7 +1846,7 @@ class RequestPostgresInsertContamination:
     def check_conditions(self, header, body, node):
 
         # Don't need to wait until
-        reqd_header_labels = ['Request', 'PostgresImportContamination']
+        reqd_header_labels = ['Request', 'PostgresInsertContamination']
 
         #if not node:
         #    return False
