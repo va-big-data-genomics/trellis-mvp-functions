@@ -13,6 +13,7 @@ import psycopg2
 from google.cloud import pubsub
 from google.cloud import storage
 from google.cloud import exceptions
+from google.cloud import error_reporting
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
@@ -35,6 +36,7 @@ if ENVIRONMENT == 'google-cloud':
 
     PUBLISHER = pubsub.PublisherClient()
     CLIENT = storage.Client()
+    ERROR_CLIENT = error_reporting.Client()
 
     # Connect via psycopg2: https://stackoverflow.com/questions/52366380/how-to-connect-cloud-function-to-cloudsql
     # Google example: https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/cloud-sql/mysql/sqlalchemy/main.py
@@ -272,15 +274,15 @@ def postgres_insert_data(event, context):
     config_data = get_table_config_data(extension_configs, message.node)
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
-    info.logging(f"Table name: {table_name}.")
-    info.logging(f"Schema fields: {schema_fields}.")
-
-    # Debugging
-    return
+    logging.info(RuntimeError(f"Table name: {table_name}."))
+    logging.info(RuntimeError(f"Schema fields: {schema_fields}."))
 
     # TODO: this is broken
     # Check whether table exists
     table_exists = table_exists(DB_CONN, table_name)
+
+    # Debugging
+    return
 
     if not table_exists:
         # If not, create table
