@@ -17,7 +17,6 @@ from google.cloud import exceptions
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
-    #CONNECTION_NAME = os.environ.get("CLOUD_SQL_CONNECTION_NAME")
     
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -45,9 +44,6 @@ if ENVIRONMENT == 'google-cloud':
                                dbname  = QC_DB_NAME,
                                user     = QC_DB_USER,
                                password = QC_DB_PASSWORD)
-
-    # Debugging
-    return
 
 class TrellisMessage:
 
@@ -247,6 +243,9 @@ def postgres_insert_data(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
+    # Debugging
+    return
+    
     # Parse message
     message = TrellisMessage(event, context)
 
