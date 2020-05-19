@@ -1903,7 +1903,7 @@ class RequestPostgresInsertContamination:
                  f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
                  f"WHERE node.extension =\"preBqsr.selfSM\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:PostgresInsertData) " +
+                 "AND NOT (node)-[:INPUT_TO]->(:Job:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
