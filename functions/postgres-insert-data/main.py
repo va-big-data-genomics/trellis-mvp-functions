@@ -30,7 +30,7 @@ if ENVIRONMENT == 'google-cloud':
     QC_DB_USER     = parsed_vars['QC_DB_USER']
     QC_DB_PASSWORD = parsed_vars['QC_DB_PASSWORD']
     QC_DB_NAME     = parsed_vars['QC_DB_NAME'] # postgres(?)
-    QC_DB_INSTANCE_CONN = parsed_vars['QC_DB_INSTANCE_CONN']
+    #QC_DB_INSTANCE_CONN = parsed_vars['QC_DB_INSTANCE_CONN']
     # Required if only using private IP with VPC connector
     QC_DB_IP       = parsed_vars['QC_DB_IP']
 
@@ -45,6 +45,9 @@ if ENVIRONMENT == 'google-cloud':
                                dbname  = QC_DB_NAME,
                                user     = QC_DB_USER,
                                password = QC_DB_PASSWORD)
+
+    # Debugging
+    return
 
 class TrellisMessage:
 
@@ -253,9 +256,6 @@ def postgres_insert_data(event, context):
         return(1)
 
     extension = message.node['extension'].upper()
-    
-    # Debugging
-    return
     
     # Load table config data
     table_config = load_json('postgres-config.json')
