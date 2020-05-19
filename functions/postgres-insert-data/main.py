@@ -253,14 +253,14 @@ def postgres_insert_data(event, context):
         logging.warning("> No node provided. Exiting.")
         return(1)
 
-    # Debugging
-    return
-
     extension = message.node['extension'].upper()
     
     # Load table config data
     table_config = load_json('postgres-config.json')
     extension_configs = bigquery_config[extension]
+
+    # Debugging
+    return
 
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
