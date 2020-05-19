@@ -331,9 +331,6 @@ def postgres_insert_data(event, context):
         logging.info(f"Blob path: {node['path']}.")
         raise RuntimeError("Failed to load data from GCS blob.")
 
-    # Debugging
-    return
-
     # Get delimiter
     try:
         delimiter = get_delimiter(node)
