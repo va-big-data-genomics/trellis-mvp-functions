@@ -278,12 +278,12 @@ def postgres_insert_data(event, context):
     logging.info(RuntimeError(f"Table name: {table_name}."))
     logging.info(RuntimeError(f"Schema fields: {schema_fields}."))
 
+    # Debugging
+    return
+
     # TODO: this is broken
     # Check whether table exists
     table_exists = table_exists(DB_CONN, table_name)
-
-    # Debugging
-    return
 
     if not table_exists:
         # If not, create table
