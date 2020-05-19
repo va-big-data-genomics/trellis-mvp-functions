@@ -47,7 +47,7 @@ if ENVIRONMENT == 'google-cloud':
 
 class TrellisMessage:
 
-    def __init__(self, data, context):
+    def __init__(self, event, context):
         """Parse Trellis messages from Pub/Sub event & context.
 
         Args:
@@ -69,6 +69,13 @@ class TrellisMessage:
                     - cypher (optional)
                     - results (optional)
         """
+        pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+        data = json.loads(pubsub_message)
+        logging.info(f"> Context: {context}.")
+        logging.info(f"> Data: {data}.")
+        logging.info(f"> Context: {context}.")
+        logging.info(f"> Data: {data}.")
+        
         header = data['header']
         body = data['body']
 
@@ -238,15 +245,8 @@ def postgres_insert_data(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    data = json.loads(pubsub_message)
-    logging.info(f"> Context: {context}.")
-    logging.info(f"> Data: {data}.")
-    print(f"> Context: {context}.")
-    print(f"> Data: {data}.")
-
     # Parse message
-    message = TrellisMessage(data, context)
+    message = TrellisMessage(event, context)
 
     # Check that message includes node metadata
     if not message.node:
@@ -255,12 +255,10 @@ def postgres_insert_data(event, context):
 
     extension = message.node['extension'].upper()
     
+    # TODO: This is broken
     # Load table config data
     table_config = load_json('postgres-config.json')
     extension_configs = table_config[extension]
-
-    # Debugging
-    return
 
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
