@@ -13,7 +13,7 @@ import psycopg2
 from google.cloud import pubsub
 from google.cloud import storage
 from google.cloud import exceptions
-from google.cloud import error_reporting
+#from google.cloud import error_reporting
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
@@ -274,6 +274,7 @@ def postgres_insert_data(event, context):
     config_data = get_table_config_data(extension_configs, message.node)
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
+    # https://cloud.google.com/functions/docs/monitoring/error-reporting
     logging.info(RuntimeError(f"Table name: {table_name}."))
     logging.info(RuntimeError(f"Schema fields: {schema_fields}."))
 
