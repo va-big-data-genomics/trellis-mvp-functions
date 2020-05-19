@@ -102,7 +102,7 @@ class TestLoadJson:
         data = main.load_json('postgres-config.json')
         assert len(data.keys())        == 2
         assert len(data['CSV'].keys()) == 3
-        assert len(data['preBqsr.selfSM'].keys()) == 1
+        assert len(data['PREBQSR.SELFSM'].keys()) == 1
 
 
 class TestCheckConditions:
@@ -148,3 +148,26 @@ class TestGetTableConfigData:
             main.get_table_config_data(
                                        table_configs,
                                        node)
+
+
+class TestCheckTableExists:
+
+    def test_table_does_not_exist(self):
+        table_name = "check_contamination"
+        fetchone_result = (False,)
+
+        with mock.patch('psycopg2.connect') as mock_connect:
+            mock_connect.cursor.return_value.fetchone.return_value = fetchone_result
+            table_exists = main.check_table_exists(mock_connect, table_name)
+
+            assert table_exists == False
+
+    def test_table_does_exist(self):
+        table_name = "check_contamination"
+        fetchone_result = (True,)
+
+        with mock.patch('psycopg2.connect') as mock_connect:
+            mock_connect.cursor.return_value.fetchone.return_value = fetchone_result
+            table_exists = main.check_table_exists(mock_connect, table_name)
+
+            assert table_exists == True
