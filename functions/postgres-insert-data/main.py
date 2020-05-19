@@ -310,7 +310,11 @@ def postgres_insert_data(event, context):
     # Check that table columns match listed schema
     try:
         col_names = get_table_col_names(DB_CONN, table_name)
-        if not col_names == schema_fields.keys():
+        keys = [key.lower() for key in schema_fields.keys()]
+        #if not col_names == schema_fields.keys():
+        if not col_names == keys:
+            logging.info(f"> Column names: {col_names}.")
+            logging.info(f"> Schema keys: {keys}.")
             raise RuntimeError("Column names do not match schema.")
         logging.info("> Table column names match schema.")
     except:
