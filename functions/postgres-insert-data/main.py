@@ -163,10 +163,12 @@ def table_exists(connection, table_name):
         cursor = connection.cursor()
         cursor.execute(f"SELECT EXISTS(SELECT relname FROM pg_class WHERE relname='{table_name}')")
         exists = cursor.fetchone()[0]
-        #print(exists)
+        print(exists)
         cursor.close()
-    except psycopg2.Error as e:
-        logging.error(e)
+    #except psycopg2.Error as e:
+    #    logging.error(e)
+    except:
+        logging.error(RuntimeError("> Could not check existence of table."))
     return exists
 
 
@@ -275,15 +277,15 @@ def postgres_insert_data(event, context):
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
     # https://cloud.google.com/functions/docs/monitoring/error-reporting
-    logging.info(RuntimeError(f"Table name: {table_name}."))
-    logging.info(RuntimeError(f"Schema fields: {schema_fields}."))
-
-    # Debugging
-    return
+    logging.info(RuntimeError(f"> Table name: {table_name}."))
+    logging.info(RuntimeError(f"> Schema fields: {schema_fields}."))
 
     # TODO: this is broken
     # Check whether table exists
     table_exists = table_exists(DB_CONN, table_name)
+
+    # Debugging
+    return
 
     if not table_exists:
         # If not, create table
