@@ -312,13 +312,16 @@ def postgres_insert_data(event, context):
         logging.info(f"Blob path: {node['path']}.")
         raise RuntimeError("Failed to load data from GCS blob.")
 
-    # TODO: the extension *should* be "tsv". T_T
-    if node['extension'] == 'preBqsr.selfSM':
-        delimiter = "\t"
-    elif node['extension'] == 'csv':
-        delimiter = ","
-    else:
-        raise RuntimeError("Extension \"{node['extension']}\" does not match supported types.")
+    try:
+        # TODO: the extension *should* be "tsv". T_T
+        if message.node.get['extension'] == 'preBqsr.selfSM':
+            delimiter = "\t"
+        elif message.node['extension'] == 'csv':
+            delimiter = ","
+        else:
+            raise RuntimeError("Extension \"{message.node['extension']}\" does not match supported types.")
+    except:
+        raise RuntimeError("Failed to determine delimiter from extension.")
 
     # Debugging
     return
