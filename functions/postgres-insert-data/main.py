@@ -271,6 +271,9 @@ def postgres_insert_data(event, context):
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
 
+    # Debugging
+    return
+
     # Check whether table exists
     table_exists = table_exists(DB_CONN, table_name)
     if not table_exists:
