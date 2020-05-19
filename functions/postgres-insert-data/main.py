@@ -313,7 +313,10 @@ def postgres_insert_data(event, context):
     job_dict = {
                 "databaseName": QC_DB_NAME,
                 "tableName": table_name,
-                "inputIds": [message.node['id']]
+                "inputIds": [message.node['id']],
+                "labels": [
+                           'Job',
+                           'PostgresInsertData']
     }
 
     # Publish job node information
