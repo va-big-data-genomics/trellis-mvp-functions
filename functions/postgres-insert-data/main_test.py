@@ -99,10 +99,10 @@ class TestTrellisMessage:
 class TestLoadJson:
 
     def test_expected(self):
-        data = main.load_json('bigquery-config-test.json')
+        data = main.load_json('postgres-config.json')
         assert len(data.keys())        == 2
         assert len(data['CSV'].keys()) == 3
-        assert len(data['TSV'].keys()) == 1
+        assert len(data['preBqsr.selfSM'].keys()) == 1
 
 
 class TestCheckConditions:
@@ -129,70 +129,22 @@ class TestCheckConditions:
         assert result == False
 
 
-class TestGetBigQueryConfigData:
+class TestGetTableConfigData:
 
     def test_expected(self):
-        tsv_configs = {"CheckContamination" : {}}
+        table_configs = {"CheckContamination" : {}}
         node = {'labels': ['WGS35', 'Blob', 'Cromwell', 'Gatk', 'Structured', 'Text', 'Data', 'CheckContamination']}
 
-        result = main.get_bigquery_config_data(
-                                               tsv_configs,
-                                               node)
-        assert result == tsv_configs['CheckContamination']
+        result = main.get_table_config_data(
+                                            table_configs,
+                                            node)
+        assert result == table_configs['CheckContamination']
 
     def test_missing_label(self):
-        tsv_configs = {"CheckContamination" : {}}
+        table_configs = {"CheckContamination" : {}}
         node = {'labels': ['WGS35', 'Blob', 'Cromwell', 'Gatk', 'Structured', 'Text', 'Data']}
         
         with pytest.raises(KeyError):
-            main.get_bigquery_config_data(
-                                          tsv_configs,
-                                          node)
-
-
-class TestMakeGcsUri:
-
-    def test_expected(self):
-        node = {
-                'bucket': '***REMOVED***-dev-from-personalis-wgs35',
-                'path': '***REMOVED***/***REMOVED***/gatk-5-dollar/200323-224846-831-1d509436/output/germline_single_sample_workflow/697594a9-165b-4f1e-9ee3-6e6a39cb6c88/call-CheckContamination/***REMOVED***.preBqsr.selfSM'
-        }
-        result = main.make_gcs_uri(node)
-        assert result == "gs://***REMOVED***-dev-from-personalis-wgs35/***REMOVED***/***REMOVED***/gatk-5-dollar/200323-224846-831-1d509436/output/germline_single_sample_workflow/697594a9-165b-4f1e-9ee3-6e6a39cb6c88/call-CheckContamination/***REMOVED***.preBqsr.selfSM"
-
-
-class TestConfigLoadJob:
-
-    def test_expected(self):
-        result = main.config_load_job()
-        assert isinstance(result, google.cloud.bigquery.job.LoadJobConfig) == True
-
-
-class TestMakeTableSchema:
-
-    def test_expected(self):
-        schema_fields = {
-            "SEQ_ID": "STRING",
-            "RG": "STRING",
-            "CHIP_ID": "STRING",
-            "SNPS": "NUMERIC",
-            "READS": "NUMERIC",
-            "AVG_DP": "NUMERIC",
-            "FREEMIX": "NUMERIC",
-            "FREELK1": "NUMERIC",
-            "FREELK0": "NUMERIC",
-            "FREE_RH": "NUMERIC",
-            "FREE_RA": "NUMERIC",
-            "CHIPMIX": "NUMERIC",
-            "CHIPLK1": "NUMERIC",
-            "CHIPLK0": "NUMERIC",
-            "CHIP_RH": "NUMERIC",
-            "CHIP_RA": "NUMERIC",
-            "DPREF": "NUMERIC",
-            "RDPHET": "NUMERIC",
-            "RDPALT": "NUMERIC"
-        }
-        result = main.make_table_schema(schema_fields)
-        assert len(result) == 19
-        assert isinstance(result[0], google.cloud.bigquery.schema.SchemaField) == True
-
+            main.get_table_config_data(
+                                       table_configs,
+                                       node)
