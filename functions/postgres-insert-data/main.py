@@ -330,6 +330,9 @@ def postgres_insert_data(event, context):
         logging.info(f"Blob path: {node['path']}.")
         raise RuntimeError("Failed to load data from GCS blob.")
 
+    # Debugging
+    return
+
     # Get delimiter
     try:
         delimiter = get_delimiter(message.node)
@@ -337,9 +340,6 @@ def postgres_insert_data(event, context):
             raise RuntimeError("Extension \"{message.node['extension']}\" does not match supported types.")
     except:
         raise RuntimeError("Failed to determine delimiter from extension.")
-
-    # Debugging
-    return
 
     # Separate string into lines
     lines = data.split('\n')
