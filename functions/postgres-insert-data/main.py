@@ -245,11 +245,11 @@ def postgres_insert_data(event, context):
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
 
-    # Debugging
-    return
-
     # Parse message
     message = TrellisMessage(data, context)
+
+    # Debugging
+    return
 
     # Check that message includes node metadata
     if not message.node:
