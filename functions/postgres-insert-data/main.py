@@ -74,6 +74,9 @@ class TrellisMessage:
 
         self.event_id = context.event_id
         self.seed_id = header.get('seedId')
+
+        # Debugging
+        return
         
         # If no seed specified, assume this is the seed event
         if not self.seed_id:
@@ -81,9 +84,6 @@ class TrellisMessage:
 
         self.header = data['header']
         self.body = data['body']
-
-        # Debugging
-        return
 
         self.results = {}
         if body.get('results'):
