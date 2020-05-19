@@ -283,7 +283,7 @@ def postgres_insert_data(event, context):
     table_exists = check_table_exists(DB_CONN, table_name)
 
     # Debugging
-    return
+    #return
 
     if not table_exists:
         logging.info(f"> Table does not exist. Creating new table {table_name}.")
