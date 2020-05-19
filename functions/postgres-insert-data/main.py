@@ -72,9 +72,6 @@ class TrellisMessage:
         header = data['header']
         body = data['body']
 
-        # Debugging
-        return
-
         self.event_id = context.event_id
         self.seed_id = header.get('seedId')
         
@@ -247,6 +244,9 @@ def postgres_insert_data(event, context):
     logging.info(f"> Data: {data}.")
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
+
+    # Debugging
+    return
 
     # Parse message
     message = TrellisMessage(data, context)
