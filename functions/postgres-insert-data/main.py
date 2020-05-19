@@ -248,13 +248,13 @@ def postgres_insert_data(event, context):
     # Parse message
     message = TrellisMessage(data, context)
 
-    # Debugging
-    return
-
     # Check that message includes node metadata
     if not message.node:
         logging.warning("> No node provided. Exiting.")
         return(1)
+
+    # Debugging
+    return
 
     extension = message.node['extension'].upper()
     
