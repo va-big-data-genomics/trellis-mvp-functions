@@ -239,6 +239,19 @@ def insert_multiple_rows(conn, table_name, schema_fields, rows):
         print(error)
 
 
+def get_delimiter(node):
+    extension = node.get('extension').lower()
+
+    if extension == 'prebqsr.selfsm':
+        return("\t")
+    elif extension == 'csv':
+        return(",")
+    elif extension == "tsv":
+        return("\t")
+    else:
+        return(None)
+
+
 def postgres_insert_data(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
@@ -278,7 +291,6 @@ def postgres_insert_data(event, context):
     logging.info(RuntimeError(f"> Table name: {table_name}."))
     logging.info(RuntimeError(f"> Schema fields: {schema_fields}."))
 
-    # TODO: this is broken
     # Check whether table exists
     try:
         table_exists = check_table_exists(DB_CONN, table_name)
@@ -312,13 +324,10 @@ def postgres_insert_data(event, context):
         logging.info(f"Blob path: {node['path']}.")
         raise RuntimeError("Failed to load data from GCS blob.")
 
+    # Get delimiter
     try:
-        # TODO: the extension *should* be "tsv". T_T
-        if message.node.get['extension'] == 'preBqsr.selfSM':
-            delimiter = "\t"
-        elif message.node['extension'] == 'csv':
-            delimiter = ","
-        else:
+        delimiter = get_delimiter(message.node)
+        if not delimiter:
             raise RuntimeError("Extension \"{message.node['extension']}\" does not match supported types.")
     except:
         raise RuntimeError("Failed to determine delimiter from extension.")
