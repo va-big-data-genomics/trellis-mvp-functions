@@ -257,7 +257,7 @@ def postgres_insert_data(event, context):
     
     # Load table config data
     table_config = load_json('postgres-config.json')
-    extension_configs = bigquery_config[extension]
+    extension_configs = table_config[extension]
 
     # Debugging
     return
