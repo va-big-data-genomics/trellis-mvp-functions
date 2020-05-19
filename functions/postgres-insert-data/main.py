@@ -260,7 +260,7 @@ def postgres_insert_data(event, context):
     extension_configs = table_config[extension]
 
     # Debugging
-    return
+    #return
 
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
