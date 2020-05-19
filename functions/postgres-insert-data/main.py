@@ -314,6 +314,9 @@ def postgres_insert_data(event, context):
     except:
         raise RuntimeError("Failed to check table columns matched schema.")
 
+    # Debugging
+    return
+
     # Get CSV data
     try:
         bucket_name = node['bucket']
@@ -331,9 +334,6 @@ def postgres_insert_data(event, context):
             raise RuntimeError("Extension \"{message.node['extension']}\" does not match supported types.")
     except:
         raise RuntimeError("Failed to determine delimiter from extension.")
-
-    # Debugging
-    return
 
     # Separate string into lines
     lines = data.split('\n')
