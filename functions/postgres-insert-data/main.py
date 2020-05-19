@@ -261,13 +261,14 @@ def postgres_insert_data(event, context):
     """
     # Parse message
     message = TrellisMessage(event, context)
+    node = message.node
 
     # Check that message includes node metadata
-    if not message.node:
+    if not node:
         logging.warning("> No node provided. Exiting.")
         return(1)
 
-    extension = message.node['extension'].upper()
+    extension = node['extension'].upper()
     
     # Load table config data
     table_config = load_json('postgres-config.json')
@@ -276,14 +277,14 @@ def postgres_insert_data(event, context):
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
                                       data_labels = extension_configs.keys(),
-                                      node        = message.node)
+                                      node        = node)
     if not conditions_met:
         logging.error(f"> Input node does not match requirements. Node: {node}.")
         return(1)
 
     # Get table configuration for node data type
     # TestGetTableConfigData
-    config_data = get_table_config_data(extension_configs, message.node)
+    config_data = get_table_config_data(extension_configs, node)
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
     # https://cloud.google.com/functions/docs/monitoring/error-reporting
@@ -335,7 +336,7 @@ def postgres_insert_data(event, context):
 
     # Get delimiter
     try:
-        delimiter = get_delimiter(message.node)
+        delimiter = get_delimiter(node)
         if not delimiter:
             raise RuntimeError("Extension \"{message.node['extension']}\" does not match supported types.")
     except:
