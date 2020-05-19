@@ -272,16 +272,20 @@ def postgres_insert_data(event, context):
     config_data = get_table_config_data(extension_configs, message.node)
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
+    info.logging(f"Table name: {table_name}.")
+    info.logging(f"Schema fields: {schema_fields}.")
 
+    # TODO: this is broken
     # Check whether table exists
     table_exists = table_exists(DB_CONN, table_name)
+
+    # Debugging
+    return
+
     if not table_exists:
         # If not, create table
         sql = create_table_sql(table_name, schema_fields)
         execute_sql_command(DB_CONN, sql)
-
-    # Debugging
-    return
 
     # Check that table columns match listed schema
     col_names = get_table_col_names(DB_CONN, table_name)
