@@ -147,7 +147,7 @@ def get_table_config_data(table_configs, node):
     except KeyError as exception:
         logging.error("No table configuration label found in node labels.")
         raise
-    return tsv_configs[task_label]
+    return table_configs[task_label]
 
 
 def table_exists(connection, table_name):
@@ -271,6 +271,7 @@ def postgres_insert_data(event, context):
         return(1)
 
     # Get table configuration for node data type
+    # TestGetTableConfigData
     config_data = get_table_config_data(extension_configs, message.node)
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
