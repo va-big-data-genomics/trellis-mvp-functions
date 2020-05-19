@@ -36,7 +36,7 @@ if ENVIRONMENT == 'google-cloud':
 
     PUBLISHER = pubsub.PublisherClient()
     CLIENT = storage.Client()
-    ERROR_CLIENT = error_reporting.Client()
+    #ERROR_CLIENT = error_reporting.Client()
 
     # Connect via psycopg2: https://stackoverflow.com/questions/52366380/how-to-connect-cloud-function-to-cloudsql
     # Google example: https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/cloud-sql/mysql/sqlalchemy/main.py
