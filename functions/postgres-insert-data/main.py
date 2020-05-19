@@ -349,6 +349,9 @@ def postgres_insert_data(event, context):
         row = tuple(columns)
         rows.append(row)
 
+    # Debugging
+    return
+
     # Insert rows into table
     insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
 
