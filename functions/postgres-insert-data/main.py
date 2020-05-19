@@ -280,35 +280,48 @@ def postgres_insert_data(event, context):
 
     # TODO: this is broken
     # Check whether table exists
-    table_exists = check_table_exists(DB_CONN, table_name)
+    try:
+        table_exists = check_table_exists(DB_CONN, table_name)
+    except:
+        raise RuntimeError("Failed to check whether table exists.")
 
-    # Debugging
-    #return
-
-    if not table_exists:
-        logging.info(f"> Table does not exist. Creating new table {table_name}.")
-        # If not, create table
-        sql = create_table_sql(table_name, schema_fields)
-        execute_sql_command(DB_CONN, sql)
+    try:
+        if not table_exists:
+            logging.info(f"> Table does not exist. Creating new table {table_name}.")
+            # If not, create table
+            sql = create_table_sql(table_name, schema_fields)
+            execute_sql_command(DB_CONN, sql)
+    except:
+        raise RuntimeError("Failed to create new database table.")
 
     # Check that table columns match listed schema
-    col_names = get_table_col_names(DB_CONN, table_name)
-    if not col_names == schema_fields.keys():
-        logging.error("Column names do not match schema.")
+    try:
+        col_names = get_table_col_names(DB_CONN, table_name)
+        if not col_names == schema_fields.keys():
+            logging.error("Column names do not match schema.")
+    except:
+        raise RuntimeError("Failed to check table columns matched schema.")
 
     # Get CSV data
-    bucket_name = node['bucket']
-    bucket = CLIENT.get_bucket(bucket_name)
-    blob = bucket.get_blob(node['path'])
-    data = blob.download_as_string().decode('utf-8')
+    try:
+        bucket_name = node['bucket']
+        bucket = CLIENT.get_bucket(bucket_name)
+        blob = bucket.get_blob(node['path'])
+        data = blob.download_as_string().decode('utf-8')
+    except:
+        logging.info(f"Blob path: {node['path']}.")
+        raise RuntimeError("Failed to load data from GCS blob.")
 
-    if node['extension'] == 'tsv':
+    # TODO: the extension *should* be "tsv". T_T
+    if node['extension'] == 'preBqsr.selfSM':
         delimiter = "\t"
     elif node['extension'] == 'csv':
         delimiter = ","
     else:
-        logging.error("Extension \"{node['extension']}\" does not match supported types.")
-        return None
+        raise RuntimeError("Extension \"{node['extension']}\" does not match supported types.")
+
+    # Debugging
+    return
 
     # Separate string into lines
     lines = data.split('\n')
