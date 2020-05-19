@@ -72,10 +72,15 @@ class TrellisMessage:
 
         pubsub_message = base64.b64decode(event['data']).decode('utf-8')
         data = json.loads(pubsub_message)
-        logging.info(f"> Context: {context}.")
-        logging.info(f"> Data: {data}.")
+        #logging.info(f"> Context: {context}.")
+        #logging.info(f"> Data: {data}.")
+        print(f"> Context: {context}.")
+        print(f"> Data: {data}.")
         header = data['header']
         body = data['body']
+
+        # Debugging
+        return
 
         self.event_id = context.event_id
         self.seed_id = header.get('seedId')
@@ -243,8 +248,6 @@ def postgres_insert_data(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-    # Debugging
-    return
     
     # Parse message
     message = TrellisMessage(event, context)
