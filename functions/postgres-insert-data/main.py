@@ -170,7 +170,7 @@ def check_table_exists(connection, table_name):
     return exists
 
 
-def get_table_col_names(connection, table_str):
+def get_table_col_names(connection, table_name):
     """
 
     tested locally: true
@@ -294,6 +294,7 @@ def postgres_insert_data(event, context):
     # Check whether table exists
     try:
         table_exists = check_table_exists(DB_CONN, table_name)
+        logging.info(f"> Table exists: {table_exists}.")
     except:
         raise RuntimeError("Failed to check whether table exists.")
 
@@ -306,17 +307,16 @@ def postgres_insert_data(event, context):
     except:
         raise RuntimeError("Failed to create new database table.")
 
-    
+    # BROKEN
+    # Check that table columns match listed schema
+    #try:
+    col_names = get_table_col_names(DB_CONN, table_name)
+    #    if not col_names == schema_fields.keys():
+    #        raise RuntimeError("Column names do not match schema.")
+    #except:
+    #    raise RuntimeError("Failed to check table columns matched schema.")
     # Debugging
     return
-
-    # Check that table columns match listed schema
-    try:
-        col_names = get_table_col_names(DB_CONN, table_name)
-        if not col_names == schema_fields.keys():
-            raise RuntimeError("Column names do not match schema.")
-    except:
-        raise RuntimeError("Failed to check table columns matched schema.")
 
     # Get CSV data
     try:
