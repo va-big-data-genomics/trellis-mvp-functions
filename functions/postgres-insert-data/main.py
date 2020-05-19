@@ -152,7 +152,7 @@ def get_table_config_data(table_configs, node):
     return table_configs[task_label]
 
 
-def table_exists(connection, table_name):
+def check_table_exists(connection, table_name):
     """
 
     tested locally: true
@@ -165,10 +165,8 @@ def table_exists(connection, table_name):
         exists = cursor.fetchone()[0]
         print(exists)
         cursor.close()
-    #except psycopg2.Error as e:
-    #    logging.error(e)
-    except:
-        logging.error(RuntimeError("> Could not check existence of table."))
+    except psycopg2.Error as e:
+        logging.error(e)
     return exists
 
 
@@ -282,12 +280,13 @@ def postgres_insert_data(event, context):
 
     # TODO: this is broken
     # Check whether table exists
-    table_exists = table_exists(DB_CONN, table_name)
+    table_exists = check_table_exists(DB_CONN, table_name)
 
     # Debugging
     return
 
     if not table_exists:
+        logging.info(f"> Table does not exist. Creating new table {table_name}.")
         # If not, create table
         sql = create_table_sql(table_name, schema_fields)
         execute_sql_command(DB_CONN, sql)
