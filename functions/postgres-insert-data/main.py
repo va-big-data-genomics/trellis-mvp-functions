@@ -163,7 +163,6 @@ def check_table_exists(connection, table_name):
         cursor = connection.cursor()
         cursor.execute(f"SELECT EXISTS(SELECT relname FROM pg_class WHERE relname='{table_name}')")
         exists = cursor.fetchone()[0]
-        print(exists)
         cursor.close()
     except psycopg2.Error as e:
         logging.error(e)
@@ -309,12 +308,13 @@ def postgres_insert_data(event, context):
 
     # BROKEN
     # Check that table columns match listed schema
-    #try:
+    try:
     col_names = get_table_col_names(DB_CONN, table_name)
-    #    if not col_names == schema_fields.keys():
-    #        raise RuntimeError("Column names do not match schema.")
-    #except:
-    #    raise RuntimeError("Failed to check table columns matched schema.")
+        if not col_names == schema_fields.keys():
+            raise RuntimeError("Column names do not match schema.")
+    logging.info("> Table column names match schema.")
+    except:
+        raise RuntimeError("Failed to check table columns matched schema.")
     # Debugging
     return
 
