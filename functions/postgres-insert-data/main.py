@@ -254,12 +254,12 @@ def postgres_insert_data(event, context):
 
     extension = message.node['extension'].upper()
     
+    # Debugging
+    return
+    
     # Load table config data
     table_config = load_json('postgres-config.json')
     extension_configs = bigquery_config[extension]
-
-    # Debugging
-    return
 
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
