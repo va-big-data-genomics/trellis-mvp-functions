@@ -10,9 +10,8 @@ import logging
 import psycopg2
 #import sqlalchemy
 
-#from google.cloud import pubsub
+from google.cloud import pubsub
 from google.cloud import storage
-#from google.cloud import bigquery
 from google.cloud import exceptions
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
@@ -35,14 +34,14 @@ if ENVIRONMENT == 'google-cloud':
     # Required if only using private IP with VPC connector
     QC_DB_IP       = parsed_vars['QC_DB_IP']
 
-    #PUBLISHER = pubsub.PublisherClient()
+    PUBLISHER = pubsub.PublisherClient()
     CLIENT = storage.Client()
 
     # Connect via psycopg2: https://stackoverflow.com/questions/52366380/how-to-connect-cloud-function-to-cloudsql
     # Google example: https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/cloud-sql/mysql/sqlalchemy/main.py
     DB_CONN = psycopg2.connect(
-                               host = QC_DB_IP,
                                #host     = f'/cloudsql/{QC_DB_INSTANCE_CONN}',
+                               host = QC_DB_IP,
                                dbname  = QC_DB_NAME,
                                user     = QC_DB_USER,
                                password = QC_DB_PASSWORD)
@@ -96,6 +95,23 @@ class TrellisMessage:
         self.node = None
         if self.results.get('node'):
             self.node = self.results['node']
+
+
+def format_pubsub_message(job_dict, seed_id, event_id):
+    message = {
+        "header": {
+            "resource": "job-metadata",
+            "method": "POST",
+            "labels": ["Create", "Job", "PostgresInsertData", "Node"],
+            "sentFrom": f"{FUNCTION_NAME}",
+            "seedId": f"{seed_id}",
+            "previousEventId": f"{event_id}"
+        },
+        "body": {
+            "node": job_dict,
+        }
+    }
+    return message
 
 
 def load_json(path):
@@ -293,5 +309,20 @@ def postgres_insert_data(event, context):
 
     # Insert rows into table
     insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
+
+    job_dict = {
+                "databaseName": QC_DB_NAME,
+                "tableName": table_name,
+                "inputIds": [message.node['id']]
+    }
+
+    # Publish job node information
+    message = format_pubsub_message(
+                                    job_dict,
+                                    message.seed_id,
+                                    message.event_id)
+    logging.info(f"> Pubsub message: {message}.")
+    result = publish_to_topic(NEW_JOBS_TOPIC, message)
+    logging.info(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")
 
 
