@@ -259,9 +259,6 @@ def postgres_insert_data(event, context):
     table_config = load_json('postgres-config.json')
     extension_configs = table_config[extension]
 
-    # Debugging
-    #return
-
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
                                       data_labels = extension_configs.keys(),
@@ -275,6 +272,9 @@ def postgres_insert_data(event, context):
     config_data = get_table_config_data(extension_configs, message.node)
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
+
+    # Debugging
+    return
 
     # Check whether table exists
     table_exists = table_exists(DB_CONN, table_name)
