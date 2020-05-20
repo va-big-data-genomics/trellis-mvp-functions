@@ -4,6 +4,8 @@ import base64
 import google
 from uuid import uuid4
 
+from psycopg2.extensions import Column
+
 import pytest
 
 import main
@@ -192,3 +194,23 @@ class TestGetDelimiter:
         delimiter = main.get_delimiter(node)
 
         assert delimiter == None
+
+"""
+class TestGetTableColumnNames:
+
+    def test_check_contamination_columns(self):
+        table_name = "check_contamination"
+        description =(Column(name='seq_id', type_code=1043), Column(name='rg', type_code=1043), Column(name='chip_id', type_code=1043), Column(name='snps', type_code=1043), Column(name='reads', type_code=1043), Column(name='avg_dp', type_code=1043), Column(name='freemix', type_code=1043), Column(name='freelk1', type_code=1043), Column(name='freelk0', type_code=1043), Column(name='free_rh', type_code=1043), Column(name='free_ra', type_code=1043), Column(name='chipmix', type_code=1043), Column(name='chiplk1', type_code=1043), Column(name='chiplk0', type_code=1043), Column(name='chip_rh', type_code=1043), Column(name='chip_ra', type_code=1043), Column(name='dpref', type_code=1043), Column(name='rdphet', type_code=1043), Column(name='rdpalt', type_code=1043))
+
+        with open('postgres-config.json') as fh:
+            data = json.load(fh)
+        schema_fields = data["PREBQSR.SELFSM"]["CheckContamination"]["schema-fields"]
+
+        with mock.patch('psycopg2.connect') as mock_connect:
+            mock_connect.cursor.return_value.description.return_value = description
+            col_names = main.get_table_col_names(mock_connect, table_name)
+
+            schema_keys = schema_fields.keys()
+            keys = [key.lower() for key in schema_keys]
+            assert col_names == keys
+"""
