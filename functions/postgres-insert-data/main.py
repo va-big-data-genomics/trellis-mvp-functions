@@ -356,7 +356,7 @@ def postgres_insert_data(event, context):
         rows = rows[1:]
 
     # Insert rows into table (ignore header row)
-    insert_multiple_rows(DB_CONN, table_name, schema_fields)
+    insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
 
     # Debugging
     return
