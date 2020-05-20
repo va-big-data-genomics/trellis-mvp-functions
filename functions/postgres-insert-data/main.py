@@ -289,8 +289,7 @@ def postgres_insert_data(event, context):
                                       data_labels = extension_configs.keys(),
                                       node        = node)
     if not conditions_met:
-        logging.error(f"> Input node does not match requirements. Node: {node}.")
-        return(1)
+        raise RuntimeError(f"> Input node does not match requirements. Node: {node}.")
 
     # Get table configuration for node data type
     # TestGetTableConfigData
@@ -362,6 +361,8 @@ def postgres_insert_data(event, context):
     # Skip header
     if table_name == "check_contamination":
         rows = rows[1:]
+
+    return
 
     # Insert rows into table (ignore header row)
     insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
