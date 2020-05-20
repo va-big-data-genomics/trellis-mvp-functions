@@ -316,7 +316,8 @@ def postgres_insert_data(event, context):
     except:
         raise RuntimeError("Failed to create new database table.")
 
-    # BROKEN
+    return
+
     # Check that table columns match listed schema
     try:
         col_names = get_table_col_names(DB_CONN, table_name)
@@ -361,8 +362,6 @@ def postgres_insert_data(event, context):
     # Skip header
     if table_name == "check_contamination":
         rows = rows[1:]
-
-    return
 
     # Insert rows into table (ignore header row)
     insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
