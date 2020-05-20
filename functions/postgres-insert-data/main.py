@@ -352,7 +352,7 @@ def postgres_insert_data(event, context):
         rows.append(row)
 
     # Skip header
-    if table_name = "check_contamination":
+    if table_name == "check_contamination":
         rows = rows[1:]
 
     # Insert rows into table (ignore header row)
