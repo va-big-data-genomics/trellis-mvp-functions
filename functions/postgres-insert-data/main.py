@@ -249,13 +249,13 @@ def insert_multiple_rows(conn, table_name, schema_fields, rows):
 
 
 def get_delimiter(node):
-    extension = node.get('extension').lower()
+    filetype = node.get('filetype').lower()
 
-    if extension == 'prebqsr.selfsm':
+    if filetype == 'selfsm':
         return("\t")
-    elif extension == 'csv':
+    elif filetype == 'csv':
         return(",")
-    elif extension == "tsv":
+    elif filetype == "tsv":
         return("\t")
     else:
         return(None)
@@ -278,29 +278,27 @@ def postgres_insert_data(event, context):
         logging.warning("> No node provided. Exiting.")
         return(1)
 
-    extension = node['extension'].upper()
+    filetype = node['filetype'].upper()
     
     # Load table config data
     table_config = load_json('postgres-config.json')
-    extension_configs = table_config[extension]
+    filetype_configs = table_config[filetype]
 
     # Check whether node & message metadata meets function conditions
     conditions_met = check_conditions(
-                                      data_labels = extension_configs.keys(),
+                                      data_labels = filetype_configs.keys(),
                                       node        = node)
     if not conditions_met:
         raise RuntimeError(f"> Input node does not match requirements. Node: {node}.")
 
     # Get table configuration for node data type
     # TestGetTableConfigData
-    config_data = get_table_config_data(extension_configs, node)
+    config_data = get_table_config_data(filetype_configs, node)
     table_name = config_data['table-name']
     schema_fields = config_data['schema-fields']
     # https://cloud.google.com/functions/docs/monitoring/error-reporting
     logging.info(RuntimeError(f"> Table name: {table_name}."))
     logging.info(RuntimeError(f"> Schema fields: {schema_fields}."))
-
-    return
 
     # Check whether table exists
     try:
@@ -346,9 +344,9 @@ def postgres_insert_data(event, context):
     try:
         delimiter = get_delimiter(node)
         if not delimiter:
-            raise RuntimeError("Extension \"{message.node['extension']}\" does not match supported types.")
+            raise RuntimeError("Filetype \"{node['filetype']}\" does not match supported types.")
     except:
-        raise RuntimeError("Failed to determine delimiter from extension.")
+        raise RuntimeError("Failed to determine delimiter from filetype.")
 
     # Separate string into lines
     lines = data.rstrip().split('\n')
