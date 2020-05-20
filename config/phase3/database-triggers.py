@@ -1836,7 +1836,6 @@ class PostgresInsertContamination:
 
 class RequestPostgresInsertContamination:
 
-
     def __init__(self, function_name, env_vars):
 
         self.function_name = function_name
@@ -1913,6 +1912,82 @@ class RequestPostgresInsertContamination:
                  "MERGE (node)-[:INPUT_TO]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
+        return query
+
+class RequestPostgresInsertTextToTable:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        # Don't need to wait until
+        reqd_header_labels = ['Request', 'PostgresInsertTextToTable']
+
+        #if not node:
+        #    return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            #node.get("id"),
+            #node.get("sample")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        query = self._create_query(event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Trigger", "Import", "Postgres", "TextToTable", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestPostgresInsertTextToTable",
+                              "publishTo": self.env_vars['TOPIC_POSTGRES_INSERT_DATA'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id):
+        query = (
+                 f"MATCH (s:Job:TextToTable)-[:OUTPUT]->(node:Blob:TextToTable) " +
+                 f"WHERE node.filetype =\"csv\" " +
+                 "AND NOT (node)-[:INPUT_TO]->(:Job:PostgresInsertData) " +
+                 "CREATE (jr:JobRequest:PostgresInsertData { " +
+                            "sample: node.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"postgres-insert-data\", " +
+                            f"eventId: {event_id} }}) " +
+                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "RETURN node ")
         return query
 
 
@@ -3190,6 +3265,9 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RequestPostgresInsertContamination(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestPostgresInsertTextToTable(
                                     function_name,
                                     env_vars))
 
