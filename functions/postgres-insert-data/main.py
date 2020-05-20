@@ -233,7 +233,7 @@ def insert_multiple_rows(conn, table_name, schema_fields, rows):
 
     #try:
     cursor = conn.cursor()
-    cursor.executemany(sql, rows)
+    #cursor.executemany(sql, rows)
     #conn.commit()
     cursor.close()
     #except (Exception, psycopg2.DatabaseError) as error:
