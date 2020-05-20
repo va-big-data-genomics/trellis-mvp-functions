@@ -25,7 +25,8 @@ if ENVIRONMENT == 'google-cloud':
                 .download_as_string()
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
-    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    PROJECT_ID     = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
     QC_DB_USER     = parsed_vars['QC_DB_USER']
     QC_DB_PASSWORD = parsed_vars['QC_DB_PASSWORD']
@@ -115,6 +116,13 @@ def format_pubsub_message(job_dict, seed_id, event_id):
         }
     }
     return message
+
+
+def publish_to_topic(topic, data):
+    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    data = json.dumps(data).encode('utf-8')
+    result = PUBLISHER.publish(topic_path, data=data)
+    return result
 
 
 def load_json(path):
@@ -358,9 +366,6 @@ def postgres_insert_data(event, context):
     # Insert rows into table (ignore header row)
     insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
 
-    # Debugging
-    return
-
     job_dict = {
                 "databaseName": QC_DB_NAME,
                 "tableName": table_name,
@@ -371,12 +376,12 @@ def postgres_insert_data(event, context):
     }
 
     # Publish job node information
-    message = format_pubsub_message(
-                                    job_dict,
-                                    message.seed_id,
-                                    message.event_id)
-    logging.info(f"> Pubsub message: {message}.")
-    result = publish_to_topic(NEW_JOBS_TOPIC, message)
+    pubsub_message = format_pubsub_message(
+                                           job_dict,
+                                           message.seed_id,
+                                           message.event_id)
+    logging.info(f"> Pubsub message: {pubsub_message}.")
+    result = publish_to_topic(NEW_JOBS_TOPIC, pubsub_message)
     logging.info(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")
 
 
