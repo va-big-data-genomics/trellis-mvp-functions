@@ -300,6 +300,8 @@ def postgres_insert_data(event, context):
     logging.info(RuntimeError(f"> Table name: {table_name}."))
     logging.info(RuntimeError(f"> Schema fields: {schema_fields}."))
 
+    return
+
     # Check whether table exists
     try:
         table_exists = check_table_exists(DB_CONN, table_name)
@@ -316,7 +318,6 @@ def postgres_insert_data(event, context):
     except:
         raise RuntimeError("Failed to create new database table.")
 
-    return
 
     # Check that table columns match listed schema
     try:
