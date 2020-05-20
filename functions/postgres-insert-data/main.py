@@ -231,13 +231,13 @@ def insert_multiple_rows(conn, table_name, schema_fields, rows):
     print(f"> sql: {sql}.")
     print(f"> rows: {rows}.")
 
-    #try:
-    cursor = conn.cursor()
-    #cursor.executemany(sql, rows)
-    #conn.commit()
-    cursor.close()
-    #except (Exception, psycopg2.DatabaseError) as error:
-    #    print(error)
+    try:
+        cursor = conn.cursor()
+        cursor.executemany(sql, rows)
+        conn.commit()
+        cursor.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        raise error
 
 
 def get_delimiter(node):
@@ -342,7 +342,7 @@ def postgres_insert_data(event, context):
         raise RuntimeError("Failed to determine delimiter from extension.")
 
     # Separate string into lines
-    lines = data.split('\n')
+    lines = data.rstrip().split('\n')
 
     # Separate line into columns
     rows = []
@@ -359,7 +359,7 @@ def postgres_insert_data(event, context):
     insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
 
     # Debugging
-    return
+    #return
 
     job_dict = {
                 "databaseName": QC_DB_NAME,
