@@ -359,7 +359,7 @@ def postgres_insert_data(event, context):
     insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
 
     # Debugging
-    #return
+    return
 
     job_dict = {
                 "databaseName": QC_DB_NAME,
