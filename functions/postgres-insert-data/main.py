@@ -231,13 +231,13 @@ def insert_multiple_rows(conn, table_name, schema_fields, rows):
     print(f"> sql: {sql}.")
     print(f"> rows: {rows}.")
 
-    try:
-        cursor = conn.cursor()
-        cursor.executemany(sql, rows)
-        conn.commit()
-        cursor.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
+    #try:
+    cursor = conn.cursor()
+    cursor.executemany(sql, rows)
+    conn.commit()
+    cursor.close()
+    #except (Exception, psycopg2.DatabaseError) as error:
+    #    print(error)
 
 
 def get_delimiter(node):
