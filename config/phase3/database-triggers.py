@@ -1914,6 +1914,7 @@ class RequestPostgresInsertContamination:
                  "LIMIT 1")
         return query
 
+
 class RequestPostgresInsertTextToTable:
 
     def __init__(self, function_name, env_vars):
