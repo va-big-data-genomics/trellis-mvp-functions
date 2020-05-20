@@ -230,8 +230,7 @@ def insert_multiple_rows(conn, table_name, schema_fields, rows):
     sql = f"INSERT INTO {table_name}({columns}) VALUES({values_string})"
     print(f"> sql: {sql}.")
     print(f"> rows: {rows}.")
-    # Debugging
-    return
+
     try:
         cursor = conn.cursor()
         cursor.executemany(sql, rows)
@@ -352,8 +351,12 @@ def postgres_insert_data(event, context):
         row = tuple(columns)
         rows.append(row)
 
-    # Insert rows into table
-    insert_multiple_rows(DB_CONN, table_name, schema_fields, rows)
+    # Skip header
+    if table_name = "check_contamination":
+        rows = rows[1:]
+
+    # Insert rows into table (ignore header row)
+    insert_multiple_rows(DB_CONN, table_name, schema_fields)
 
     # Debugging
     return
