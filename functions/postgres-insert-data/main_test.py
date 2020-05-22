@@ -4,6 +4,8 @@ import base64
 import google
 from uuid import uuid4
 
+from psycopg2.extensions import Column
+
 import pytest
 
 import main
@@ -99,10 +101,10 @@ class TestTrellisMessage:
 class TestLoadJson:
 
     def test_expected(self):
-        data = main.load_json('bigquery-config-test.json')
+        data = main.load_json('postgres-config.json')
         assert len(data.keys())        == 2
         assert len(data['CSV'].keys()) == 3
-        assert len(data['TSV'].keys()) == 1
+        assert len(data['PREBQSR.SELFSM'].keys()) == 1
 
 
 class TestCheckConditions:
@@ -129,70 +131,86 @@ class TestCheckConditions:
         assert result == False
 
 
-class TestGetBigQueryConfigData:
+class TestGetTableConfigData:
 
     def test_expected(self):
-        tsv_configs = {"CheckContamination" : {}}
+        table_configs = {"CheckContamination" : {}}
         node = {'labels': ['WGS35', 'Blob', 'Cromwell', 'Gatk', 'Structured', 'Text', 'Data', 'CheckContamination']}
 
-        result = main.get_bigquery_config_data(
-                                               tsv_configs,
-                                               node)
-        assert result == tsv_configs['CheckContamination']
+        result = main.get_table_config_data(
+                                            table_configs,
+                                            node)
+        assert result == table_configs['CheckContamination']
 
     def test_missing_label(self):
-        tsv_configs = {"CheckContamination" : {}}
+        table_configs = {"CheckContamination" : {}}
         node = {'labels': ['WGS35', 'Blob', 'Cromwell', 'Gatk', 'Structured', 'Text', 'Data']}
         
         with pytest.raises(KeyError):
-            main.get_bigquery_config_data(
-                                          tsv_configs,
-                                          node)
+            main.get_table_config_data(
+                                       table_configs,
+                                       node)
 
 
-class TestMakeGcsUri:
+class TestCheckTableExists:
 
-    def test_expected(self):
-        node = {
-                'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis-wgs35',
-                'path': 'DVALABP000398/SHIP4946371/gatk-5-dollar/200323-224846-831-1d509436/output/germline_single_sample_workflow/697594a9-165b-4f1e-9ee3-6e6a39cb6c88/call-CheckContamination/SHIP4946371.preBqsr.selfSM'
-        }
-        result = main.make_gcs_uri(node)
-        assert result == "gs://gbsc-gcp-project-mvp-dev-from-personalis-wgs35/DVALABP000398/SHIP4946371/gatk-5-dollar/200323-224846-831-1d509436/output/germline_single_sample_workflow/697594a9-165b-4f1e-9ee3-6e6a39cb6c88/call-CheckContamination/SHIP4946371.preBqsr.selfSM"
+    def test_table_does_not_exist(self):
+        table_name = "check_contamination"
+        fetchone_result = (False,)
+
+        with mock.patch('psycopg2.connect') as mock_connect:
+            mock_connect.cursor.return_value.fetchone.return_value = fetchone_result
+            table_exists = main.check_table_exists(mock_connect, table_name)
+
+            assert table_exists == False
+
+    def test_table_does_exist(self):
+        table_name = "check_contamination"
+        fetchone_result = (True,)
+
+        with mock.patch('psycopg2.connect') as mock_connect:
+            mock_connect.cursor.return_value.fetchone.return_value = fetchone_result
+            table_exists = main.check_table_exists(mock_connect, table_name)
+
+            assert table_exists == True
 
 
-class TestConfigLoadJob:
+class TestGetDelimiter:
 
-    def test_expected(self):
-        result = main.config_load_job()
-        assert isinstance(result, google.cloud.bigquery.job.LoadJobConfig) == True
+    def test_check_contamination(self):
+        node = {"extension": "preBqsr.selfSM"}
+        delimiter = main.get_delimiter(node)
 
+        assert delimiter == "\t"
 
-class TestMakeTableSchema:
+    def test_csv(self):
+        node = {"extension": "csv"}
+        delimiter = main.get_delimiter(node)
 
-    def test_expected(self):
-        schema_fields = {
-            "SEQ_ID": "STRING",
-            "RG": "STRING",
-            "CHIP_ID": "STRING",
-            "SNPS": "NUMERIC",
-            "READS": "NUMERIC",
-            "AVG_DP": "NUMERIC",
-            "FREEMIX": "NUMERIC",
-            "FREELK1": "NUMERIC",
-            "FREELK0": "NUMERIC",
-            "FREE_RH": "NUMERIC",
-            "FREE_RA": "NUMERIC",
-            "CHIPMIX": "NUMERIC",
-            "CHIPLK1": "NUMERIC",
-            "CHIPLK0": "NUMERIC",
-            "CHIP_RH": "NUMERIC",
-            "CHIP_RA": "NUMERIC",
-            "DPREF": "NUMERIC",
-            "RDPHET": "NUMERIC",
-            "RDPALT": "NUMERIC"
-        }
-        result = main.make_table_schema(schema_fields)
-        assert len(result) == 19
-        assert isinstance(result[0], google.cloud.bigquery.schema.SchemaField) == True
+        assert delimiter == ","
 
+    def test_no_rule(self):
+        node = {"extension": "nonsense_extension"}
+        delimiter = main.get_delimiter(node)
+
+        assert delimiter == None
+
+"""
+class TestGetTableColumnNames:
+
+    def test_check_contamination_columns(self):
+        table_name = "check_contamination"
+        description =(Column(name='seq_id', type_code=1043), Column(name='rg', type_code=1043), Column(name='chip_id', type_code=1043), Column(name='snps', type_code=1043), Column(name='reads', type_code=1043), Column(name='avg_dp', type_code=1043), Column(name='freemix', type_code=1043), Column(name='freelk1', type_code=1043), Column(name='freelk0', type_code=1043), Column(name='free_rh', type_code=1043), Column(name='free_ra', type_code=1043), Column(name='chipmix', type_code=1043), Column(name='chiplk1', type_code=1043), Column(name='chiplk0', type_code=1043), Column(name='chip_rh', type_code=1043), Column(name='chip_ra', type_code=1043), Column(name='dpref', type_code=1043), Column(name='rdphet', type_code=1043), Column(name='rdpalt', type_code=1043))
+
+        with open('postgres-config.json') as fh:
+            data = json.load(fh)
+        schema_fields = data["PREBQSR.SELFSM"]["CheckContamination"]["schema-fields"]
+
+        with mock.patch('psycopg2.connect') as mock_connect:
+            mock_connect.cursor.return_value.description.return_value = description
+            col_names = main.get_table_col_names(mock_connect, table_name)
+
+            schema_keys = schema_fields.keys()
+            keys = [key.lower() for key in schema_keys]
+            assert col_names == keys
+"""
