@@ -140,6 +140,9 @@ def log_insert_cromwell_instance(event, context):
     machine_type = payload['request']['machineType']
     machine_type = machine_type.split('/')[-1]
 
+    boot_disk_size = payload['request']['disks'][0]['initializeParams']['diskSizeGb']
+    attached_disk_size = payload['request']['disks'][1]['initializeParams']['diskSizeGb']
+
     instance_id = resource['labels']['instance_id']
     zone = resource['labels']['zone']
     project = resource['labels']['project_id']
@@ -174,6 +177,8 @@ def log_insert_cromwell_instance(event, context):
             f"node.startTimeEpoch = {start_time_epoch}, " +
             f"node.zone = \"{zone}\", " +
             f"node.machineType = \"{machine_type}\", " +
+            f"node.bootDiskSize = \"{boot_disk_size}\", " +
+            f"node.attachedDiskSize = \"{attached_disk_size}\", " +
             # Add Cromwell metadata fields, if present
             f"{cromwell_query_str} " +
         "ON MATCH SET " +
@@ -184,6 +189,8 @@ def log_insert_cromwell_instance(event, context):
             f"node.startTimeEpoch = {start_time_epoch}, " +
             f"node.zone = \"{zone}\", " +
             f"node.machineType = \"{machine_type}\", " +
+            f"node.bootDiskSize = \"{boot_disk_size}\", " +
+            f"node.attachedDiskSize = \"{attached_disk_size}\", " +
             # Add Cromwell metadata fields, if present
             f"{cromwell_query_str} " +
         "RETURN node")
