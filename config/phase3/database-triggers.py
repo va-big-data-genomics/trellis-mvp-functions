@@ -2072,7 +2072,7 @@ class RelateTrellisOutputToJob:
                     f"trellisTaskId: \"{task_id}\", " +
                     f"id: \"{node_id}\" " +
                  "}) " +
-                 "MERGE (:j)-[:OUTPUT]->(node) " +
+                 "MERGE (j)-[:OUTPUT]->(node) " +
                  "RETURN node")
         return query
 
