@@ -2066,6 +2066,7 @@ class RelateTrellisOutputToJob:
     def _create_query(self, node_id, task_id):
         query = (
                  f"MERGE (j:Job {{trellisTaskId: \"{task_id}\" }}) " +
+                 "ON CREATE SET j.labels = [\"Job\"] " +
                  "WITH j " +
                  "MATCH (node:Blob { " +
                     f"trellisTaskId: \"{task_id}\", " +
