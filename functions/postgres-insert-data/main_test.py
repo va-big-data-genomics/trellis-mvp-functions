@@ -204,6 +204,11 @@ class TestGetDelimiter:
 
         assert delimiter == None
 
+class TestGetDatetimeStamp:
+
+    def test(self):
+        stamp = main.get_datetime_stamp()
+
 """
 class TestGetTableColumnNames:
 
