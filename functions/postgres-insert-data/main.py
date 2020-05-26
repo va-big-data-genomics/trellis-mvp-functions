@@ -403,7 +403,8 @@ def postgres_insert_data(event, context):
                                            message.seed_id,
                                            message.event_id)
     logging.info(f"> Pubsub message: {pubsub_message}.")
-    result = publish_to_topic(NEW_JOBS_TOPIC, pubsub_message)
-    logging.info(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")
+    future = publish_to_topic(NEW_JOBS_TOPIC, pubsub_message)
+    message_id = future.result()
+    logging.info(f"> Published message to {NEW_JOBS_TOPIC} with result: {message_id}.")
 
 
