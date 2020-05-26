@@ -125,6 +125,24 @@ def publish_to_topic(topic, data):
     return result
 
 
+def get_datetime_stamp():
+    now = datetime.now()
+    datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
+    return datestamp
+
+
+def make_unique_task_id(nodes, datetime_stamp):
+    # Create pretty-unique hash value based on input nodes
+    # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
+    sorted_nodes = sorted(nodes, key = lambda i: i['id'])
+    nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
+    nodes_hash = hashlib.sha256(nodes_str.encode('utf-8')).hexdigest()
+    print(nodes_hash)
+    trunc_nodes_hash = str(nodes_hash)[:8]
+    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
+    return(task_id, trunc_nodes_hash)
+
+
 def load_json(path):
     with open(path) as fh:
         data = json.load(fh)
@@ -279,6 +297,10 @@ def postgres_insert_data(event, context):
         return(1)
 
     filetype = node['filetype'].upper()
+
+    # Create unique task ID
+    datetime_stamp = get_datetime_stamp()
+    task_id, trunc_nodes_hash = make_unique_task_id([node], datetime_stamp)
     
     # Load table config data
     table_config = load_json('postgres-config.json')
@@ -371,7 +393,8 @@ def postgres_insert_data(event, context):
                 "inputIds": [node['id']],
                 "labels": [
                            'Job',
-                           'PostgresInsertData']
+                           'PostgresInsertData'],
+                "trellisTaskId": task_id
     }
 
     # Publish job node information
