@@ -104,7 +104,7 @@ class TestLoadJson:
         data = main.load_json('postgres-config.json')
         assert len(data.keys())        == 2
         assert len(data['CSV'].keys()) == 3
-        assert len(data['PREBQSR.SELFSM'].keys()) == 1
+        assert len(data['SELFSM'].keys()) == 1
 
 
 class TestCheckConditions:
@@ -178,19 +178,28 @@ class TestCheckTableExists:
 class TestGetDelimiter:
 
     def test_check_contamination(self):
-        node = {"extension": "preBqsr.selfSM"}
+        node = {
+                "extension": "preBqsr.selfSM",
+                "filetype": "selfSM"
+        }
         delimiter = main.get_delimiter(node)
 
         assert delimiter == "\t"
 
     def test_csv(self):
-        node = {"extension": "csv"}
+        node = {
+                "extension": "csv",
+                "filetype": "csv"
+        }
         delimiter = main.get_delimiter(node)
 
         assert delimiter == ","
 
     def test_no_rule(self):
-        node = {"extension": "nonsense_extension"}
+        node = {
+                "extension": "nonsense_extension",
+                "filetype": "nonsense_extension"
+        }
         delimiter = main.get_delimiter(node)
 
         assert delimiter == None
