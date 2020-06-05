@@ -321,7 +321,7 @@ class RequestLaunchFailedGatk5Dollar:
                  # Group workflows by samples
                  "WITH w.sample AS sampleName, COLLECT(w) AS jobs, COLLECT(w.status) AS statuses " +
                  # Filter out any samples with running workflows
-                 "WHERE NOT \"RUNNING\" in statuses" +
+                 "WHERE NOT \"RUNNING\" in statuses " +
                  "UNWIND jobs AS w " +
                  "WITH sampleName, w " +
                  "MATCH (w)-[:STATUS]->(d:Dstat) " +
