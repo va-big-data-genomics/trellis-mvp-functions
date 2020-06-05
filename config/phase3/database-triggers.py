@@ -268,6 +268,8 @@ class RequestLaunchFailedGatk5Dollar:
             v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
                     check that sample is not related to an existing GATK $5 workflow. 
         """
+
+        """ OLD QUERY
         query = (
                  f"MATCH (s:Sample)" +      #1
                     "-[:HAS]->(:Fastq)" +                           #2
@@ -311,6 +313,55 @@ class RequestLaunchFailedGatk5Dollar:
                  "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
                  "RETURN DISTINCT(sampleNodes) AS nodes ")           #28                                                 #13
         return query
+        """
+
+        query = (
+                 # Match GATK workflows that are stopped 
+                 "MATCH (w:Gatk5Dollar:CromwellWorkflow) " +
+                 # Group workflows by samples
+                 "WITH w.sample AS sampleName, COLLECT(w) AS jobs, COLLECT(w.status) AS statuses " +
+                 # Filter out any samples with running workflows
+                 "WHERE NOT \"RUNNING\" in statuses" +
+                 "UNWIND jobs AS w " +
+                 "WITH sampleName, w " +
+                 "MATCH (w)-[:STATUS]->(d:Dstat) " +
+                 "WITH sampleName, COLLECT(d.status) AS statuses " +
+                 # Select samples where none of the workflows have succeeded
+                 "WHERE NOT \"SUCCESS\" IN statuses " +
+                 "MATCH (s:Sample {sample:sampleName})" +  
+                    "-[:HAS]->(:Fastq)" +                        
+                    "-[:INPUT_TO]->(:Job)" +                      
+                    "-[:OUTPUT]->(n:Ubam) " +
+                 "WITH s.sample AS sample, " +                     
+                   "n.readGroup AS readGroup, " +         
+                   "COLLECT(DISTINCT n) AS allNodes " +
+                 # Ignore duplicate nodes
+                 "WITH head(allNodes) AS heads " +
+                 "UNWIND [heads] AS uniqueNodes " +
+                 "WITH uniqueNodes.sample AS sample, " +
+                      "uniqueNodes.setSize AS setSize, " +
+                      "COLLECT(uniqueNodes) AS sampleNodes " +
+                 "WHERE size(sampleNodes) = setSize " +
+                 # Create job request nodes
+                 "CREATE (j:JobRequest:Gatk5Dollar {" +
+                            "sample: sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: " +
+                                "datetime().epochSeconds, " +
+                            "name: \"gatk-5-dollar\", " +
+                            f"eventId: {event_id} }}) " +
+                 "WITH sampleNodes, " +
+                      "sample, " +
+                      "j.eventId AS eventId, " +
+                      "j.nodeCreatedEpoch AS epochTime " +
+                 "UNWIND sampleNodes AS sampleNode " +
+                 # Merge ubam nodes to job request node
+                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +
+                            "sample: sample, " +
+                            "eventId: eventId}) " +
+                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +
+                 "RETURN DISTINCT(sampleNodes) AS nodes " +
+                 "LIMIT 25") 
 
 
 class RequestGatk5DollarNoJob:
