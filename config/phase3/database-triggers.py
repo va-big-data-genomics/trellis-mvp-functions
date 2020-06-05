@@ -361,7 +361,8 @@ class RequestLaunchFailedGatk5Dollar:
                             "eventId: eventId}) " +
                  "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +
                  "RETURN DISTINCT(sampleNodes) AS nodes " +
-                 "LIMIT 25") 
+                 "LIMIT 25")
+        return query
 
 
 class RequestGatk5DollarNoJob:
