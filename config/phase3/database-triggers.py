@@ -1963,7 +1963,7 @@ class RequestPostgresInsertContamination:
                             f"eventId: {event_id} }}) " +
                  "MERGE (node)-[:INPUT_TO]->(jr) " +
                  "RETURN node " +
-                 "LIMIT 1")
+                 "LIMIT 100")
         return query
 
 
@@ -2030,7 +2030,7 @@ class RequestPostgresInsertTextToTable:
 
     def _create_query(self, event_id):
         query = (
-                 f"MATCH (s:Job:TextToTable)-[:OUTPUT]->(node:Blob:TextToTable) " +
+                 f"MATCH (node:Blob:TextToTable) " +
                  f"WHERE node.filetype =\"csv\" " +
                  "AND NOT (node)-[:INPUT_TO]->(:Job:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
@@ -2040,7 +2040,8 @@ class RequestPostgresInsertTextToTable:
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (node)-[:INPUT_TO]->(jr) " +
-                 "RETURN node ")
+                 "RETURN node " +
+                 "LIMIT 500")
         return query
 
 
