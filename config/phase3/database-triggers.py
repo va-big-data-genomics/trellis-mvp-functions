@@ -2041,7 +2041,7 @@ class RequestPostgresInsertTextToTable:
                             f"eventId: {event_id} }}) " +
                  "MERGE (node)-[:INPUT_TO]->(jr) " +
                  "RETURN node " +
-                 "LIMIT 500")
+                 "LIMIT 100")
         return query
 
 
