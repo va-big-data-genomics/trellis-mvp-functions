@@ -1165,7 +1165,7 @@ class LaunchBamFastqc:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Bam) " +
+                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob:Bam) " +
                  "WHERE s.wdlCallAlias=\"gatherbamfiles\" " +
                  f"AND node.id =\"{blob_id}\" " +
                  "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BamFastqc) " +
