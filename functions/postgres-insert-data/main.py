@@ -397,7 +397,8 @@ def postgres_insert_data(event, context):
                 "labels": [
                            'Job',
                            'PostgresInsertData'],
-                "trellisTaskId": task_id
+                "trellisTaskId": task_id,
+                "name": "postgres-insert-data",
     }
 
     # Publish job node information
