@@ -1,0 +1,12 @@
+GOOGLE_CLOUD_PROJECT: gbsc-gcp-prj-mvp-trellis-paul
+NEW_JOBS_TOPIC: local-test-topic
+DSUB_REGIONS: us-west1
+DSUB_OUT_BUCKET: gbsc-gcp-prj-mvp-trellis-paul-from-personalis-phase3-data
+DSUB_LOG_BUCKET: gbsc-gcp-prj-mvp-trellis-paul-from-personalis-phase3-logs
+DSUB_USER: trellis
+DSUB_NETWORK: trellis
+DSUB_SUBNETWORK: trellis-us-west1
+
+REF_FASTA: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta
+REF_FASTA_INDEX: gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.fasta.fai
+SNP_LIST: gs://gbsc-gcp-prj-mvp-trellis-paul-trellis/signatureSNP_hg38.txt

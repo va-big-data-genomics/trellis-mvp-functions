@@ -1,0 +1,20 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-launch-view-gvcf-snps',
+         '--project=${PROJECT_ID}',
+         '--source=functions/launch-view-gvcf-snps',
+         '--memory=128MB',
+         '--max-instances=20',
+         '--entry-point=launch_view_gvcf_snps',
+         '--runtime=python37',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
+         '--vpc-connector=trellis',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-labels=user=trellis'
+  ]
