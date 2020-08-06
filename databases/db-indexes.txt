@@ -23,3 +23,5 @@ CREATE INDEX ON :CromwellWorkflow(cromwellWorkflowId)  # [RelateCromwellWorkflow
 CREATE INDEX ON :CromwellAttempt(cromwellWorkflowId, wdlCallAlias) # [RelateCromwellStepToLatestAttempt, RelateCromwellAttemptToPreviousAttempt]
 CREATE INDEX ON :Sample(sample)
 CREATE INDEX ON :JobRequest(name)   # [RelateJobToJobRequest]
+CREATE INDEX ON :Dstat(status)
+CREATE INDEX ON :Job(name, status)
