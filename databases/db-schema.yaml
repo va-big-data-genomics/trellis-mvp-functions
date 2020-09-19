@@ -1,0 +1,775 @@
+---
+name: "trellis-general"
+group_labels:
+    - _Trellis
+    - _Schema
+relationships:
+    labels:
+        - WAS_USED_BY:
+            properties:
+                ontology: "provenance"
+                ontologySource: "https://www.w3.org/TR/2013/REC-prov-o-20130430"
+        - GENERATED:
+            properties:
+                ontology: "provenance"
+                ontologySource: "https://www.w3.org/TR/2013/REC-prov-o-20130430"
+nodes:
+    labels:
+        - ComputeJob:
+            properties:
+                - startedAtTime:
+                    propertyTypes: 
+                        - LocalDateTime
+                    mandatory: true
+                - endedAtTime:
+                    propertyTypes: 
+                        - LocalDateTime
+                    mandatory: false
+                - startedAtTimeEpoch:
+                    propertyTypes: 
+                        - Float
+                    mandatory: true
+                - endedAtTimeEpoch:
+                    propertyTypes: 
+                        - Float
+                    mandatory: false
+                - durationMinutes:
+                    propertyTypes: 
+                        - Duration
+                    mandatory: false
+            relationships:
+                in:
+                    - WAS_USED_BY:
+                        - CloudObject: trellis-general
+                out:
+                    - GENERATED:
+                        - CloudObject: trellis-general
+        - Trellis:
+            properties:
+                - trellis_nodeIteration:
+                    description: "Describes whether most recent node activity was creation or update."
+                    propertyTypes:
+                        - String
+                    propertyValues: 
+                        - initial
+                        - merged
+                    mandatory: true
+                - trellis_timeCreatedEpoch:
+                    description: "Time from epoch node was created in database."
+                    propertyTypes:
+                        - Float
+                    mandatory: true
+                - trellis_timeUpdatedEpoch:
+                    description: "Time from epoch node was last updated."
+                    propertyTypes:
+                        - Float
+                    mandatory: true
+                - trellis_timeCreatedIso:
+                    description: "Datetime node was created in database."
+                    propertyTypes:
+                        - LocalDateTime
+                    mandatory: true
+                - trellis_timeUpdatedIso:
+                    description: "Datetime node was last updated."
+                    propertyTypes:
+                        - LocalDateTime
+                    mandatory: true
+        - TrellisJob:
+            properties:
+                - trellis_taskId:
+                    description: "Sufficiently unique ID based on timestamp and input hash."
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - trellis_inputHash:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - trellis_inputIds:
+                    propertyTypes: 
+                        - StringArray
+                    mandatory: false
+                - trellis_sample:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - trellis_plate: 
+                - trellis_gitCommitHash:
+                    desciption: "Hash value pointing to Git commit of Trellis function source."
+                    propertyTypes:
+                        - String
+                    mandatory: false
+        - CloudObject:
+            properties:
+                - obj_uri:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - obj_bucket:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - obj_filetype:
+                    description:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - obj_extension:
+                    description: "Everything after the '.' in an object name."
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - obj_name:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - obj_path:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - obj_dirname: 
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - obj_triggerOperation:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - finalize
+                        - metadataUpdate
+                    mandatory: true
+                - obj_timeDeleted:
+                    propertyTypes:
+                        - DateTime
+                    mandatory: false
+                - obj_timeDeletedEpoch:
+                    propertyTypes:
+                        - Int
+                        - Long
+                    mandatory: false
+            relationships:
+                in: 
+                    - GENERATED:
+                        - ComputeJob: trellis-general
+                out: 
+                    - WAS_USED_BY:
+                        - ComputeJob: trellis-general
+        - Sample:
+            properties:
+                - trellis_snvQc:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - pass
+                        - fail
+                    mandatory: false
+
+---
+name: "job-workflow-managers"
+group_labels: 
+    - _Job
+    - _Schema
+requires:
+    - trellis-general
+relationships:
+    labels:
+        - WAS_USED_BY:
+            properties:
+                ontology: "provenance"
+                ontologySource: "https://www.w3.org/TR/2013/REC-prov-o-20130430"
+        - GENERATED:
+            properties:
+                ontology: "provenance"
+                ontologySource: "https://www.w3.org/TR/2013/REC-prov-o-20130430"
+        - HAS_STATUS:
+            properties:
+                ontology: "trellis"
+        - HAD_ACTIVITY:
+            properties:
+                ontology: "provenance"
+                ontologySource: "https://www.w3.org/TR/2013/REC-prov-o-20130430/#owl-profile"
+        - NEXT:
+            properties:
+                ontology: "trellis"
+nodes:
+    labels:
+        - DsubRequest:
+            properties:
+                - dsub_project:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dsub_regions:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - dsub_provider:
+                    propertyTypes: 
+                        - String
+                - dsub_dstatCmd:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dsub_image:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dsub_jobId:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dsub_minCores:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: false
+                - dsub_minRam:
+                    propertyTypes:
+                        - Float
+                    mandatory: false
+                - dsub_diskSize:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: false
+                - dsub_bootDiskSize:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: false
+                - dsub_script:
+                    propertyTypes:
+                        - String
+                    mandatory: false
+                - dsub_command:
+                    propertyTypes:
+                        - String
+                    mandatory: false
+                - dsub_user:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dsub_status:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dsub_usePrivateAddress:
+                    propertyTypes:
+                        - Boolean
+                    mandatory: false
+                - dsub_envVars:
+                    propertyTypes:
+                        - StringArray
+                    mandatory: false
+                - dsub_timeout:
+                    propertyTypes:
+                        - String
+                    mandatory: false
+            relationships:
+                in:
+                    - WAS_USED_BY:
+                        - CloudObject: trellis-general
+                out:
+                    - GENERATED:
+                        - CloudObject: trellis-general
+                    - HAS_STATUS:
+                        - Dstat: job-workflow-managers
+        - CromwellWorkflow:
+            properties:
+                - crom_workflowId:
+                    description: "Workflow ID internally generated by Cromwell."
+                    propertyTypes:
+                        - String
+                    mandatory: true
+            relationships:
+                in:
+                    - WAS_USED_BY:
+                        - CloudObject: trellis-general
+                out:
+                    - HAD_ACTIVITY:
+                        - CromwellStep: job-workflow-managers
+        - CromwellStep:
+            properties:
+                - crom_wdlCallAlias:
+                    description: "WDL call alias of the Cromwell step being attempted."
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - crom_workflowId:
+                    description: "Workflow ID internally generated by Cromwell."
+                    propertyTypes:
+                        - String
+                    mandatory: true
+            relationships:
+                in:
+                    - NEXT:
+                        - CromwellStep: job-workflow-managers
+                    - HAD_ACTIVITY:
+                        - CromwellWorkflow: job-workflow-managers
+                out:
+                    - NEXT:
+                        - CromwellStep: job-workflow-managers
+                    - GENERATED:
+                        - CloudObject: trellis-general
+                    - HAD_ACTIVITY:
+                        - CromwellAttempt: job-workflow-managers
+        - CromwellAttempt:
+            properties:
+                - crom_wdlCallAlias:
+                    description: "WDL call alias of the Cromwell step being attempted."
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - crom_wdlTaskName:
+                    description: "WDL task name of the Cromwell step being attempted."
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - crom_workflowId:
+                    description: "Workflow ID internally generated by Cromwell."
+                    propertyTypes:
+                        - String
+                    mandatory: true
+        - Dstat:
+            properties:
+                - dsub_usePrivateAddress:
+                    propertyTypes:
+                        - Boolean
+                    mandatory: false
+                - dstat_events:
+                    propertyTypes:
+                        - StringArray
+                    mandatory: true
+                - dsub_version:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dstat_userId:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dstat_statusMessage:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dstat_command:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dsub_labels:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dstat_jobId:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dstat_status:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - SUCCESS
+                        - FAILURE
+                        - RUNNING
+                    mandatory: true
+                - dstat_scriptName:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                - dstat_createTime:
+                    propertyTypes:
+                        - String
+                        - Datetime
+                    mandatory: true
+                - dstat_lastUpdate:
+                    propertyTypes:
+                        - String
+                        - Datetime
+                    mandatory: true
+---
+name: bioinformatics
+group_labels: 
+    - _Bioinformatics
+    - _Schema
+relationships:
+    labels:
+        - HAS_INDEX:
+            properties:
+                ontology: "bioinformatics"
+        - HAS_SEQUENCING_READS:
+            properties:
+                ontology: "bioinformatics"
+        - HAS_VARIANT_CALLS:
+            properties:
+                ontology: "bioinformatics"
+        - HAS_QC_DATA:
+            properties:
+                ontology: "bioinformatics"
+nodes:
+    labels:
+        - SequencingReads:
+            properties:
+                - seq_setSize:
+                    description: "Number of data objects of this type associated with this sample."
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                - seq_readGroup:
+                    description: "The sequencing read group of these reads."
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                - seq_matePair:
+                    description: "For paired-end reads stored in separate objects, indicates which member of the pair this is."
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    propertyValues:
+                        - 1
+                        - 2
+                    mandatory: false
+                - seq_chromosome:
+                    propertyTypes:
+                        - String
+                    mandatory: false
+            relationships:
+                out: 
+                    - HAS_INDEX: 
+                        - Index: bioinformatics
+        - Index:
+            properties:
+            relationships:
+                in:
+                    - HAS_INDEX:
+                        - SequencingReads: bioinformatics
+        - Covid19:
+            properties:
+                - covid19Positive:
+                    propertyTypes:
+                        - Boolean
+                    mandatory: true
+        - BiologicalOme:
+            properties:
+                - name:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - genome
+                    mandatory: true
+---
+name: covid
+group_labels:
+    - _Covid
+    - _Schema
+nodes:
+    labels:
+        - Covid19:
+            properties:
+                - cov19_caseDefintion:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - Negative
+                        - Confirmed Positive
+                        - Presumptive Positive
+                    mandatory: true
+                - cov19_caseDefinedBy:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - VA
+                    mandatory: true
+                - cov19_caseConfidence:
+                    propertyTypes:
+                        - String
+                    propertyvalues:
+                        - Presumptive
+                        - Confirmed
+                    mandatory: false
+---
+name: "google-cloud-platform"
+group_labels: 
+    - _Gcp
+    - _Schema
+nodes:
+    labels:
+        - GooglePipelinesWorker:
+            properties:
+                - goog_instanceName:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - goog_project:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - goog_network:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - goog_subnetwork:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - goog_attachedDiskSize:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                - goog_bootDiskSize:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                - goog_instanceId:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - goog_zone:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - goog_stoppedBy:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+                - goog_machineType:
+                    propertyTypes: 
+                        - String
+                    mandatory: true
+            relationships:
+        - GcpBlob:
+            properties:
+                - goog_md5Hash:
+                    description: "MD5 hash value that uniquely describes object."
+                    propertyTypes:
+                        - String
+                    mandatory: false
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_contentType:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_generation:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_metageneration:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_kind:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_selfLink:
+                    propertyTypes:
+                        - String
+                        - URI
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_mediaLink:
+                    propertyTypes:
+                        - String
+                        - URI
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_bucket:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_size:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_crc32c:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_etag:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_storageClass:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - STANDARD
+                        - NEARLINE
+                        - COLDLINE
+                        - ARCHIVE
+                        - MULTI_REGIONAL
+                        - REGIONAL
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_id:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+                - goog_timeCreated:
+                    propertyTypes:
+                        - Datetime
+                    mandatory: true
+                    reference: https://cloud.google.com/storage/docs/json_api/v1/objects
+---
+name: "personalis"
+group_labels: 
+    - _Personalis
+    - _Schema
+relationships: 
+    labels:
+        - WAS_USED_BY:
+            properties:
+                ontology: "provenance"
+                ontologySource: "https://www.w3.org/TR/2013/REC-prov-o-20130430"
+        - GENERATED:
+            properties:
+                ontology: "provenance"
+                ontologySource: "https://www.w3.org/TR/2013/REC-prov-o-20130430"
+nodes:
+    labels:
+        - PersonalisSample:
+            properties:
+                - psalis_gender:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - M
+                        - F
+                    mandatory: true
+                - psalis_requestId:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    example: "SHIP_4633"
+                - psalis_sampleConcordance:
+                    propertyTypes:
+                        - Float
+                    mandatory: true
+                -psalis_sampleQcCode:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - PASS
+                        - FAIL
+                    mandatory: true
+                - psalis_predictedGender:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - M
+                        - F
+                    mandatory: true
+                - psalis_volume:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                - psalis_OD260_280:
+                    propertyTypes:
+                        - Float
+                    mandatory: true
+                - psalis_receiptCode:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - PASS
+                        - FAIL
+                    mandatory: true
+                - psalis_bloodType:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - A
+                        - B
+                        - AB
+                        - O
+                    mandatory: true
+                - psalis_shippingId:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    example: "SHIP1234567"
+                - psalis_dataQcDate:
+                    propertyTypes:
+                        - Date
+                    mandatory: true
+                - psalis_alignmentCoverage:
+                    propertyTypes:
+                        - Float
+                    mandatory: true
+                - psalis_sampleQcDate:
+                    propertyTypes:
+                        - Date
+                    mandatory: true
+                - psalis_concentration:
+                    propertyTypes:
+                        - Long
+                        - Integer
+                    mandatory: true
+                    example: 50
+                - psalis_ethnicity:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    example: "AFR"
+                - psalis_assayType:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    example: "WGS"
+                - psalis_receiptDate:
+                    propertyTypes:
+                        - Date
+                    mandatory: true
+            relationships:
+                out:
+                    - WAS_USED_BY:
+                        - PersonalisSequencing: personalis
+        - PersonalisSequencing:
+            properties:
+                - psalis_protocolId:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    example: "PROTOCOL_7"
+                - psalis_plateCoord:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    example: "C01"
+                - psalis_cellId:
+                    propertyTypes:
+                        - Integer
+                    mandatory: true
+                    example: "0162195071"
+                - psalis_runDate:
+                    propertyTypes:
+                        - Date
+                    mandatory: true
+                - psalis_plateId:
+                    propertyTypes:
+                        - String
+                    mandatory: true
+                    example: "DVALABP000398"
+            relationships:
+                in:
+                    - WAS_USED_BY:
+                        - PersonalisSample: personalis
+                out:
+                    - GENERATED:
+                        - CloudObject: trellis-general
