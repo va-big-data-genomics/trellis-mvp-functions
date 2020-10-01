@@ -2044,7 +2044,76 @@ class RequestPostgresInsertTextToTable:
                  "LIMIT 100")
         return query
 
-# Data consolidation triggers
+# Data optimization triggers
+class MergeBiologicalNodesFromSequencing:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'PersonalisSequencing'
+                           'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("sample") == True,
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Create", "Biological", "Nodes", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "MergeBiologicalNodesFromSequencing",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (s:PersonalisSequencing) " +
+                 f"WHERE s.sample =\"{sample}\" " +
+                 "WITH s " +
+                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample})<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(:BiologicalOme:Genome) ")
+        return query
+
+
 class ValidateGenomeRelationships:
 
     def __init__(self, function_name, env_vars):
@@ -2068,7 +2137,7 @@ class ValidateGenomeRelationships:
             set(required_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
-            node.get("trellis_snvQc") == "pass",
+            node.get("trellis_snvQa") == True,
         ]
 
         for condition in conditions:
@@ -2107,17 +2176,16 @@ class ValidateGenomeRelationships:
 
     def _create_query(self, sample):
         query = (
-                 "MATCH (s:Sample)<-[:GAVE_SAMPLE]-(:Individual)-[:HAS_BIOLOGICAL_OME]->(o:BiologicalOme {name:\"genome\"}) " +
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
                  f"WHERE s.sample =\"{sample}\" " +
                  "WITH s, o " +
                  "MATCH (o)-[:HAS_QC_DATA]->(:Fastq), " +
                  "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
                  "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
-                 "(o)-[:HAS_SEQUENCING_READS]->(:Cram), " +
-                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf), " +
-                 "(s)-[:INPUT_TO]->(node:PersonalisSequencing) " +
-                 "SET node.trellis_optimizeStorage = true " +
-                 "RETURN node " +
+                 "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:HAS_INDEX]->(:Crai), " +
+                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi), " +
+                 "SET s.trellis_optimizeStorage = true " +
+                 "RETURN s AS node " +
                  "LIMIT 1")
         return query
 
@@ -2132,9 +2200,7 @@ class DeleteNonessentialSequencingData:
     def check_conditions(self, header, body, node):
 
         reqd_header_labels = ['Validate', 'Genome', 'Relationships']
-        required_labels = [
-                           'PersonalisSequencing'
-        ]
+        required_labels = ['Sample']
 
         if not node:
             return False
@@ -2183,8 +2249,9 @@ class DeleteNonessentialSequencingData:
 
     def _create_query(self, sample):
         query = (
-                 "MATCH (s:Sample)-[:HAS|INPUT_TO|OUTPUT|LED_TO*]->(b:Blob) " +
+                 "MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) " +
                  "WHERE s.sample = \"{sample}\" " +
+                 "AND NOT b.obj_exists = false " +
                  "WITH COLLECT(DISTINCT(b)) AS all_blobs " +
                  "UNWIND all_blobs AS b " +
                  "MATCH p=(b)-[*1..2]-(:BiologicalOme) " +
@@ -2259,7 +2326,7 @@ class RelateVcfstatsToGenome:
 
     def _create_query(self, blob_id, sample):
         query = (
-                 "MATCH (ome:BiologicalOme), " +
+                 "MATCH (ome:BiologicalOme:Genome), " +
                  "(blob:Blob:Vcfstats:Text:Data) " +
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
@@ -2764,73 +2831,6 @@ class RelateMergedVcfToTbi:
                  "MERGE (vcf)-[:HAS_INDEX]->(tbi)")
         return query
 
-
-class MergeSampleNode:
-
-    def __init__(self, function_name, env_vars):
-
-        self.function_name = function_name
-        self.env_vars = env_vars
-
-    def check_conditions(self, header, body, node):
-
-        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
-        required_labels = [
-                           'Sequencing',
-                           'Blob',
-                           'WGS35'
-        ]
-
-        if not node:
-            return False
-
-        conditions = [
-            # Check that node matches metadata criteria:
-            set(required_labels).issubset(set(node.get('labels'))),
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True
-
-    def compose_message(self, header, body, node, context):
-        topic = self.env_vars['DB_QUERY_TOPIC']
-
-        blob_id = node['id']
-        sample = node['sample']
-
-        query = self._create_query(blob_id, sample)
-
-        message = {
-                   "header": {
-                              "resource": "query",
-                              "method": "POST",
-                              "labels": ["Create", "Biological", "Node", "Sample", "Cypher", "Query"],
-                              "sentFrom": self.function_name,
-                              "trigger": "MergeSampleNode",
-                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
-                   },
-                   "body": {
-                            "cypher": query,
-                            "result-mode": "data",
-                            "result-structure": "list",
-                            "result-split": "True"
-                   }
-        }
-        return([(topic, message)])
-
-    def _create_query(self, blob_id, sample):
-        query = (
-                 "MATCH (seq:Sequencing) " +
-                 f"WHERE seq.id =\"{blob_id}\" " +
-                 f"MERGE (seq)<-[:WAS_USED_BY]-(:Sample \{sample: \"{sample}\"\})")
-        return query
 
 # Relationship triggers
 class RelateTrellisOutputToJob:
@@ -4185,6 +4185,41 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(DeleteRelationshipCromwellStepHasAttempt(
+                                    function_name,
+                                    env_vars))
+
+    ## Trellis v1.2 refactor
+    triggers.append(MergeBiologicalNodesFromSequencing(
+                                    function_name,
+                                    env_vars))
+    triggers.append(ValidateGenomeRelationships(
+                                    function_name,
+                                    env_vars))
+    triggers.append(DeleteNonessentialSequencingData(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateVcfstatsToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFlagstatToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFastqcToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateMergedVcfToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFastqToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCramToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCramToCrai(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateMergedVcfToTbi(
                                     function_name,
                                     env_vars))
     return triggers
