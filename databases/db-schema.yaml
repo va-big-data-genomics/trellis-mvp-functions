@@ -99,7 +99,7 @@ nodes:
                     propertyTypes:
                         - String
                     mandatory: false
-        - CloudObject:
+        - Blob:
             properties:
                 - obj_uri:
                     propertyTypes:
@@ -147,6 +147,10 @@ nodes:
                         - Int
                         - Long
                     mandatory: false
+                - obj_exists:
+                    propertyTypes:
+                        - Boolean
+                    mandatory: false
             relationships:
                 in: 
                     - GENERATED:
@@ -156,14 +160,14 @@ nodes:
                         - ComputeJob: trellis-general
         - Sample:
             properties:
-                - trellis_snvQc:
+                - trellis_snvQa:
                     propertyTypes:
-                        - String
-                    propertyValues:
-                        - pass
-                        - fail
+                        - Bool
                     mandatory: false
-
+                - trellis_optimizeStorage:
+                    propertyTypes:
+                        - Bool
+                    mandatory: false
 ---
 name: "job-workflow-managers"
 group_labels: 
@@ -444,20 +448,7 @@ nodes:
                 in:
                     - HAS_INDEX:
                         - SequencingReads: bioinformatics
-        - Covid19:
-            properties:
-                - covid19Positive:
-                    propertyTypes:
-                        - Boolean
-                    mandatory: true
-        - BiologicalOme:
-            properties:
-                - name:
-                    propertyTypes:
-                        - String
-                    propertyValues:
-                        - genome
-                    mandatory: true
+        - Sequencing:
 ---
 name: covid
 group_labels:
@@ -773,3 +764,33 @@ nodes:
                 out:
                     - GENERATED:
                         - CloudObject: trellis-general
+---
+name: "human-omics"
+nodes:
+    labels:
+        - Person:
+        - Sample:
+            properties:
+                - trellis_snvQa:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - pass
+                        - fail
+                    mandatory: false
+            relationships:
+                in: 
+                    - GENERATED:
+                        - Person: human-omics
+                out: 
+                    - WAS_USED_BY:
+                        - Sequencing: bioinformatics
+        - BiologicalOme:
+            properties:
+                - name:
+                    propertyTypes:
+                        - String
+                    propertyValues:
+                        - genome
+                    mandatory: true
+        - Genome:
