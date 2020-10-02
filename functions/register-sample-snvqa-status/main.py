@@ -117,7 +117,7 @@ def _create_query(sample, neo4j_status):
 
     query = (
         "MATCH (node:Sample) " +
-        f"WHERE node.sample = {sample} " +
+        f"WHERE node.sample = \"{sample}\" " +
         f"SET node.trellis_snvQa = {neo4j_status} " +
         "RETURN node")
     return query
