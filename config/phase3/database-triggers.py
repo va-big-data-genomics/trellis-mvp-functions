@@ -2179,11 +2179,11 @@ class ValidateGenomeRelationships:
                  "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
                  f"WHERE s.sample =\"{sample}\" " +
                  "WITH s, o " +
-                 "MATCH (o)-[:HAS_QC_DATA]->(:Fastq), " +
+                 "MATCH (o)-[:HAS_QC_DATA]->(:Fastqc), " +
                  "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
                  "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
                  "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:HAS_INDEX]->(:Crai), " +
-                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi), " +
+                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi) " +
                  "SET s.trellis_optimizeStorage = true " +
                  "RETURN s AS node " +
                  "LIMIT 1")
