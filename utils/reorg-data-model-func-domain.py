@@ -15,7 +15,7 @@ relabel_sample_personalis_sequencing = """
 merge_biological_nodes = """
     CALL apoc.periodic.iterate(
         "MATCH (p:PersonalisSequencing) WHERE NOT (p)<-[:WAS_USED_BY]-(:Sample) RETURN p",
-        "MERGE (p)<-[:WAS_USED_BY]-(:Sample {sample:p.sample})<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome:BiologicalOme {name:"genome"})",
+        "MERGE (p)<-[:WAS_USED_BY]-(:Sample:WgsPhase3 {sample:p.sample, labels:[\"Sample\", \"WgsPhase3\"]})<-[:GENERATED]-(:Person {labels:[\"Person\"]})-[:HAS_BIOLOGICAL_OME]->(:Genome:BiologicalOme {labels: [\"Genome\", \"BiologicalOme\"], name:"genome"})",
         {batchSize: 1000, parallel:true}
     )
 """
