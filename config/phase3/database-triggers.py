@@ -2126,7 +2126,7 @@ class ValidateGenomeRelationships:
         reqd_header_labels = ['Update', 'Sample', 'Node']
         required_labels = [
                            'Sample'
-                           'WGS35',
+                           'WgsPhase3',
         ]
 
         if not node:
