@@ -287,6 +287,7 @@ def launch_gatk_5_dollar(event, context):
                  "--label", f"trellis-name={job_dict['name']}",
                  "--label", f"plate={plate.lower()}",
                  "--label", f"input-hash={trunc_nodes_hash}",
+                 "--label", f"wdl-call-alias={task_name}",
                  "--provider", job_dict["provider"], 
                  "--user", job_dict["user"], 
                  "--regions", job_dict["regions"],

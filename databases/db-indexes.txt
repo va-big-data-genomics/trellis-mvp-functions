@@ -25,3 +25,4 @@ CREATE INDEX ON :Sample(sample)
 CREATE INDEX ON :JobRequest(name)   # [RelateJobToJobRequest]
 CREATE INDEX ON :Dstat(status)
 CREATE INDEX ON :Job(name, status)
+CREATE INDEX ON :Sample(trellis_snvQa)
