@@ -1,0 +1,25 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-register-sample-snvqa-status',
+         '--project=${PROJECT_ID}',
+         '--source=functions/register-sample-snvqa-status',
+         '--memory=128MB',
+         '--max-instances=100',
+         '--entry-point=register_sample_snvqa_status',
+         '--runtime=python37',
+         '--trigger-resource=${_TRIGGER_RESOURCE}',
+         '--trigger-event=google.storage.object.${_TRIGGER_OPERATION}',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-env-vars=TRIGGER_OPERATION=${_TRIGGER_OPERATION}',
+         '--update-env-vars=GIT_COMMIT_HASH=${SHORT_SHA}',
+         '--update-env-vars=GIT_VERSION_TAG=${TAG_NAME}',
+         '--update-labels=trigger-operation=${_OPERATION_SHORT_NAME}',
+         '--update-labels=trigger-resource=${_TRIGGER_RESOURCE}',
+         '--update-labels=user=trellis',
+  ]
