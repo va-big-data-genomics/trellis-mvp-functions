@@ -18,6 +18,7 @@ steps:
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
          '--update-env-vars=GIT_COMMIT_HASH=${SHORT_SHA}',
          '--update-env-vars=GIT_VERSION_TAG=${TAG_NAME}',
+         '--update-env-vars=TRIGGER_OPERATIONS=${_TRIGGER_OPERATION}',
          '--update-labels=trigger-resource=${_TRIGGER_RESOURCE}',
          '--update-labels=user=trellis',
   ]
