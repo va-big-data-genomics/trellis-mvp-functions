@@ -15,6 +15,9 @@ steps:
          '--trigger-topic=${_TRIGGER_TOPIC}',
          '--update-env-vars=PROJECT_ID=${PROJECT_ID}',
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         # Fix for logging issue: https://issuetracker.google.com/issues/155215191#comment112
+         '--update-env-vars=USE_WORKER_V2=true',
+         '--update-env-vars=PYTHON37_DRAIN_LOGS_ON_CRASH_WAIT_SEC=5',
          '--update-labels=user=trellis',
          '--update-labels=task=delete-blob',
   ]
