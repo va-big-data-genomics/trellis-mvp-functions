@@ -30,7 +30,7 @@ if ENVIRONMENT == 'google-cloud':
     TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
 
     PUBLISHER = pubsub.PublisherClient()
-    STORAGE = storage.Client()
+    STORAGE_CLIENT = storage.Client()
 
 
 def format_pubsub_message(query, seed_id):
@@ -85,12 +85,15 @@ def register_sample_snvqa_status(event, context):
 
     # Load CSV object (format: "sample,status[pass,fail]")
     print("> Loading sample status CSV from GCS.")
-    bucket = STORAGE.get_bucket(object_bucket)
+    bucket = STORAGE_CLIENT.get_bucket(object_bucket)
     blob = bucket.get_blob(object_path)
     csv_data = blob.download_as_string()
 
     print("> Parsing sample status data from CSV.")
-    for line in csv_data:
+    csv_data = csv_data.decode("utf-8")
+    csv_data = csv_data.rstrip()
+    lines = csv_data.split('\n')
+    for line in lines:
         elements = line.split(',')
         sample = elements[0]
         status = elements[1]
