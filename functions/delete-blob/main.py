@@ -42,11 +42,30 @@ def delete_blob(event, context):
     bucket = blob['bucket']
     path = blob['path']
 
+    # Hardcode protections against deleted essential data types
+    protected_patterns = [
+                          "fastq.gz",
+                          "g.vcf.gz$",
+                          "g.vcf.gz.tbi$",
+                          ".cram$",
+                          ".cram.crai$",
+                          "flagstat.data.tsv$",
+                          "fastqc.data.txt$",
+                          "vcfstats.data.txt$",
+    ]
+
+    for pattern in protected_patterns:
+        if re.search(pattern, path):
+            logging.warning("> Attempted to delete protected object. Aborting. {pattern}: {path}.")
+            return
+
     logging.info(f"> Attempting to delete blob gs://{bucket}/{path}.")
     
+    """ Commenting out for development
     bucket = CLIENT.get_bucket(bucket)
     blob = bucket.blob(path)
     blob.delete()
+    """
     
     logging.info(f"> Blob gs://{bucket}/{path} deleted.")
         
