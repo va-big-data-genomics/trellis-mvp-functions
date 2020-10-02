@@ -2125,7 +2125,7 @@ class ValidateGenomeRelationships:
 
         reqd_header_labels = ['Update', 'Sample', 'Node']
         required_labels = [
-                           'Sample'
+                           'Sample',
                            'WgsPhase3',
         ]
 
@@ -2137,7 +2137,7 @@ class ValidateGenomeRelationships:
             set(required_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
-            node.get("trellis_snvQa") == "True",
+            node.get("trellis_snvQa") == True,
         ]
 
         for condition in conditions:
