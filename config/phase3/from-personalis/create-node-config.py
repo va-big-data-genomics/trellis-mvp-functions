@@ -253,7 +253,7 @@ class NodeKinds:
                                "Blob": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*"],
                                "Fastq": ["va_mvp_phase2/.*/.*/FASTQ/.*\\.fastq.gz$"], 
                                "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
-                               "Sample": ["^va_mvp_phase2/.*\\.json$"],
+                               "PersonalisSequencing": ["^va_mvp_phase2/.*\\.json$"],
                                "Json": ["^va_mvp_phase2/.*\\.json$"],
                                "Checksum": ["^va_mvp_phase2/.*checksum.txt"], 
                                "WGS35": ["^va_mvp_phase2/.*"],
@@ -265,7 +265,7 @@ class NodeKinds:
                                 "Fastq": [
                                           mate_pair_name_0, 
                                           read_group_name_1],
-                                "Sample": [read_json]
+                                "PersonalisSequencing": [read_json]
         }
 
     def get_label_functions(self, labels):

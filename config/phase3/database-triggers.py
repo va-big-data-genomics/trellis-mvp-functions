@@ -2044,6 +2044,793 @@ class RequestPostgresInsertTextToTable:
                  "LIMIT 100")
         return query
 
+# Data optimization triggers
+class MergeBiologicalNodesFromSequencing:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'PersonalisSequencing'
+                           'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("sample") == True,
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Create", "Biological", "Nodes", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "MergeBiologicalNodesFromSequencing",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (s:PersonalisSequencing) " +
+                 f"WHERE s.sample =\"{sample}\" " +
+                 "WITH s " +
+                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample})<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(:BiologicalOme:Genome) ")
+        return query
+
+
+class ValidateGenomeRelationships:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Update', 'Sample', 'Node']
+        required_labels = [
+                           'Sample'
+                           'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("trellis_snvQa") == True,
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Trigger", "Validate", "Genome", "Relationships", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "ValidateGenomeRelationships",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
+                 f"WHERE s.sample =\"{sample}\" " +
+                 "WITH s, o " +
+                 "MATCH (o)-[:HAS_QC_DATA]->(:Fastq), " +
+                 "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
+                 "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
+                 "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:HAS_INDEX]->(:Crai), " +
+                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi), " +
+                 "SET s.trellis_optimizeStorage = true " +
+                 "RETURN s AS node " +
+                 "LIMIT 1")
+        return query
+
+
+class DeleteNonessentialSequencingData:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Validate', 'Genome', 'Relationships']
+        required_labels = ['Sample']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("trellis_optimizeStorage") == True,
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Trigger", "Validate", "Genome", "Relationships", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "ValidateGenomeRelationships",
+                              "publishTo": self.env_vars['TOPIC_DELETE_BLOB'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) " +
+                 "WHERE s.sample = \"{sample}\" " +
+                 "AND NOT b.obj_exists = false " +
+                 "WITH COLLECT(DISTINCT(b)) AS all_blobs " +
+                 "UNWIND all_blobs AS b " +
+                 "MATCH p=(b)-[*1..2]-(:BiologicalOme) " +
+                 "WHERE ALL (r in relationships(p) WHERE r.ontology=\"bioinformatics\") " +
+                 "WITH all_blobs, COLLECT(b) AS essential_blobs " +
+                 "UNWIND all_blobs AS b " +
+                 "MATCH (b) " +
+                 "WHERE NOT b IN essential_blobs " +
+                 "RETURN b AS node")
+        return query
+
+
+class RelateVcfstatsToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Vcfstats',
+                           'Text',
+                           'Data'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Vcfstats", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateVcfstatsToGenome",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (ome:BiologicalOme:Genome), " +
+                 "(blob:Blob:Vcfstats:Text:Data) " +
+                 "WHERE ome.name =\"genome\" " +
+                 f"AND ome.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+        return query
+
+
+class RelateFlagstatToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Flagstat',
+                           'Text',
+                           'Data',
+                           'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Flagstat", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateFlagstatToGenome",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (ome:BiologicalOme), " +
+                 "(blob:Blob:Flagstat:Text:Data:WGS35) " +
+                 "WHERE ome.name =\"genome\" " +
+                 f"AND ome.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+        return query
+
+
+class RelateFastqcToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Fastqc',
+                           'Text',
+                           'Data',
+                           'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Fastqc", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateFastqcToGenome",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (ome:BiologicalOme), " +
+                 "(blob:Blob:Fastqc:Text:Data:WGS35) " +
+                 "WHERE ome.name =\"genome\" " +
+                 f"AND ome.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+        return query
+
+
+class RelateMergedVcfToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Vcf',
+                           'Merged',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Vcf", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateMergedVcfToGenome",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (ome:BiologicalOme), " +
+                 "(blob:Blob:Merged:Vcf:WGS35) " +
+                 "WHERE ome.name =\"genome\" " +
+                 f"AND ome.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_VARIANT_CALLS]->(blob)")
+        return query
+
+
+class RelateFastqToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Fastq',
+                           'FromPersonalis',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Fastq", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateFastqToGenome",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (ome:BiologicalOme), " +
+                 "(blob:Blob:Fastq:FromPersonalis:WGS35) " +
+                 "WHERE ome.name =\"genome\" " +
+                 f"AND ome.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_SEQUENCING_READS]->(blob)")
+        return query
+
+
+class RelateCramToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Cram',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Cram", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCramToGenome",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (ome:BiologicalOme), " +
+                 "(blob:Blob:Cram:Gatk:WGS35) " +
+                 "WHERE ome.name =\"genome\" " +
+                 f"AND ome.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_SEQUENCING_READS]->(blob)")
+        return query
+
+
+class RelateCramToCrai:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Cram',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+
+        query = self._create_query(blob_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Cram", "Crai", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCramToCrai",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id):
+        query = (
+                 "MATCH (cram:Blob:Cram)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Crai) ",
+                 f"WHERE cram.id =\"{blob_id}\" " +
+                 "MERGE (cram)-[:HAS_INDEX]->(crai)")
+        return query
+
+
+class RelateMergedVcfToTbi:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Merged',
+                           'Vcf',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+
+        query = self._create_query(blob_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Merged", "Vcf", "Tbi", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateMergedVcfToTbi",
+                              "publishTo": self.env_vars['TOPIC_DB_QUERY'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id):
+        query = (
+                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Tbi) ",
+                 f"WHERE vcf.id =\"{blob_id}\" " +
+                 "MERGE (vcf)-[:HAS_INDEX]->(tbi)")
+        return query
+
 
 # Relationship triggers
 class RelateTrellisOutputToJob:
@@ -3398,6 +4185,41 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(DeleteRelationshipCromwellStepHasAttempt(
+                                    function_name,
+                                    env_vars))
+
+    ## Trellis v1.2 refactor
+    triggers.append(MergeBiologicalNodesFromSequencing(
+                                    function_name,
+                                    env_vars))
+    triggers.append(ValidateGenomeRelationships(
+                                    function_name,
+                                    env_vars))
+    triggers.append(DeleteNonessentialSequencingData(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateVcfstatsToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFlagstatToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFastqcToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateMergedVcfToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFastqToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCramToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCramToCrai(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateMergedVcfToTbi(
                                     function_name,
                                     env_vars))
     return triggers
