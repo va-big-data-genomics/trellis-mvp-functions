@@ -84,10 +84,12 @@ def register_sample_snvqa_status(event, context):
         return
 
     # Load CSV object (format: "sample,status[pass,fail]")
+    print("> Loading sample status CSV from GCS.")
     bucket = STORAGE.get_bucket(object_bucket)
     blob = bucket.get_blob(object_path)
     csv_data = blob.download_as_string()
 
+    print("> Parsing sample status data from CSV.")
     for line in csv_data:
         elements = line.split(',')
         sample = elements[0]
