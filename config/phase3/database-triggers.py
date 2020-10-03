@@ -2250,7 +2250,7 @@ class DeleteNonessentialSequencingData:
     def _create_query(self, sample):
         query = (
                  "MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) " +
-                 "WHERE s.sample = \"{sample}\" " +
+                 f"WHERE s.sample = \"{sample}\" " +
                  "AND NOT b.obj_exists = false " +
                  "WITH COLLECT(DISTINCT(b)) AS all_blobs " +
                  "UNWIND all_blobs AS b " +
