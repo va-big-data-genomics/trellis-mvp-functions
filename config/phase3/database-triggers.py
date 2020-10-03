@@ -2251,7 +2251,6 @@ class DeleteNonessentialSequencingData:
         query = (
                  "MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) " +
                  f"WHERE s.sample = \"{sample}\" " +
-                 "AND NOT b.obj_exists = false " +
                  "WITH COLLECT(DISTINCT(b)) AS all_blobs " +
                  "UNWIND all_blobs AS b " +
                  "MATCH p=(b)-[*1..2]-(:BiologicalOme) " +
@@ -2260,6 +2259,8 @@ class DeleteNonessentialSequencingData:
                  "UNWIND all_blobs AS b " +
                  "MATCH (b) " +
                  "WHERE NOT b IN essential_blobs " +
+                 "AND (NOT b.obj_exists = false OR NOT EXISTS(b.obj_exists)) " +
+                 f"AND b.bucket = \"{self.env_vars['DSUB_OUT_BUCKET']}\" " + 
                  "RETURN b AS node")
         return query
 
