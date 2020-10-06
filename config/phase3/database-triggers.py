@@ -3136,7 +3136,7 @@ class RelateDstatToJob:
         return query
 
 
-class RelateSampleToFromPersonalis:
+class RelatePersonalisSequencingToFromPersonalis:
 
     def __init__(self, function_name, env_vars):
         '''NOTE: Currently not in use(?)
@@ -3151,18 +3151,20 @@ class RelateSampleToFromPersonalis:
 
     def check_conditions(self, header, body, node):
         reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        reqd_node_labels = ['PersonalisSequencing']
 
         if not node:
                 return False
 
         conditions = [
             # Check that message has appropriate headers
+            set(reqd_node_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
+
             # Check that retry count has not been met/exceeded
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             # Check node-specific information
-            "Sample" in node.get("labels"),
             node.get("sample"),
             node.get("bucket")
         ]
@@ -3201,16 +3203,16 @@ class RelateSampleToFromPersonalis:
     def _create_query(self, sample_node):
         sample = sample_node['sample']
         query = (
-                 f"MATCH (j:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                 f"MATCH (s:Blob:Json:FromPersonalis:PersonalisSequencing {{ sample:\"{sample}\" }}), " +
                   "(b:Blob:FromPersonalis) " +
-                  "WHERE b.sample = j.sample " +
-                  "AND b.bucket = j.bucket " +
-                  "AND NOT \"Sample\" IN labels(b) " +
-                  "MERGE (j)-[:HAS]->(b)")
+                  "WHERE b.sample = s.sample " +
+                  "AND b.bucket = s.bucket " +
+                  "AND NOT \"PersonalisSequencing\" IN labels(b) " +
+                  "MERGE (s)-[:GENERATED]->(b)")
         return query
 
 
-class RelateFromPersonalisToSample:
+class RelateFromPersonalisToPersonalisSequencing:
 
     def __init__(self, function_name, env_vars):
 
@@ -3220,18 +3222,19 @@ class RelateFromPersonalisToSample:
 
     def check_conditions(self, header, body, node):
         reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        reqd_node_labels = ['FromPersonalis']
 
         if not node:
                 return False
 
         conditions = [
             # Check that message has appropriate headers
+            set(reqd_node_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Check that retry count has not been met/exceeded
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             # Check node-specific information
-            "FromPersonalis" in node.get("labels"),
             not "Sample" in node.get("labels"),
             node.get("sample"),
             node.get("bucket")
@@ -3255,9 +3258,9 @@ class RelateFromPersonalisToSample:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "PersonalisSequencing", "Blob", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateFromPersonalisToSample",
+                              "trigger": "RelateFromPersonalisToPersonalisSequencing",
                               "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
@@ -3276,9 +3279,9 @@ class RelateFromPersonalisToSample:
         bucket = node['bucket']
         path = node['path']
         query = (
-                 f"MATCH (sample:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                 f"MATCH (seq:Blob:Json:FromPersonalis:PersonalisSequencing {{ sample:\"{sample}\" }}), " +
                  f"(node:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
-                  "MERGE (sample)-[:HAS]->(node) " +
+                  "MERGE (seq)-[:GENERATED]->(node) " +
                   "RETURN node")
         return query
 
@@ -4153,10 +4156,10 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateDstatToJob(
                                     function_name,
                                     env_vars))
-    triggers.append(RelateFromPersonalisToSample(
+    triggers.append(RelateFromPersonalisToPersonalisSequencing(
                                     function_name,
                                     env_vars))
-    triggers.append(RelateSampleToFromPersonalis(
+    triggers.append(RelatePersonalisSequencingToFromPersonalis(
                                     function_name,
                                     env_vars))
 
