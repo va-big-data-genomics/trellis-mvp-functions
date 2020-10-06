@@ -2623,7 +2623,7 @@ class RelateFastqToGenome:
     def _create_query(self, blob_id, sample):
         query = (
                  "MATCH (blob:Blob:Fastq:FromPersonalis:WGS35) " +
-                 f"AND blob.id = \"{blob_id}\" " +
+                 f"WHERE blob.id = \"{blob_id}\" " +
                  "WITH blob " +
                  "MERGE (g:Genome {sample: blob.sample}) " +
                  "WITH blob, g " +
