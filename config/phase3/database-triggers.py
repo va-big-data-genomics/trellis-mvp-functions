@@ -2056,8 +2056,8 @@ class MergeBiologicalNodesFromSequencing:
 
         reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
         reqd_node_labels = [
-                           'PersonalisSequencing'
-                           'WGS35',
+                            'PersonalisSequencing',
+                            'WGS35',
         ]
 
         if not node:
@@ -2067,6 +2067,11 @@ class MergeBiologicalNodesFromSequencing:
             # Check that node matches metadata criteria:
             set(reqd_node_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
+
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            
             # Metadata required for populating trigger query:
             node.get("sample"),
         ]
