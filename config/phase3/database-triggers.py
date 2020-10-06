@@ -3189,7 +3189,7 @@ class RelatePersonalisSequencingToFromPersonalis:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Sample", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateSampleToFromPersonalis",
+                              "trigger": "RelatePersonalisSequencingToFromPersonalis",
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -3235,7 +3235,7 @@ class RelateFromPersonalisToPersonalisSequencing:
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             # Check node-specific information
-            not "Sample" in node.get("labels"),
+            not "PersonalisSequencing" in node.get("labels"),
             node.get("sample"),
             node.get("bucket")
         ]
