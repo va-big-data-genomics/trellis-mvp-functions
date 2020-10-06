@@ -527,7 +527,7 @@ class RequestGatk5DollarNoRequest:
                  f"MATCH (s:PersonalisSequencing)" +      #1
                     "-[:GENERATED]->(:Fastq)" +                           #2
                     "-[:WAS_USED_BY]->(:Job)" +                        #3
-                    "-[:GENERATED]->(n:Ubam)" +                      #4
+                    "-[:GENERATED]->(n:Ubam) " +                      #4
                  # Find samples with ubams but no $5 GATK job request
                  "WHERE NOT (n)-[:WAS_USED_BY]->(jobRequest:JobRequest:Gatk5Dollar) " +
                  # Create JobRequest node
