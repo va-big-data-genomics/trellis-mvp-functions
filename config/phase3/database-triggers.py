@@ -2097,7 +2097,7 @@ class MergeBiologicalNodesFromSequencing:
                               "labels": ["Trigger", "Create", "Biological", "Nodes", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "MergeBiologicalNodesFromSequencing",
-                              "publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2626,7 +2626,7 @@ class RelateFastqToGenome:
                  f"AND blob.id = \"{blob_id}\" " +
                  "WITH blob " +
                  "MERGE (g:Genome {sample: blob.sample}) " +
-                 "WITH blob, g" +
+                 "WITH blob, g " +
                  "MERGE (blob)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
         return query
 
