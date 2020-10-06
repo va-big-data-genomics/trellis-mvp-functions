@@ -2055,7 +2055,7 @@ class MergeBiologicalNodesFromSequencing:
     def check_conditions(self, header, body, node):
 
         reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
-        required_labels = [
+        reqd_node_labels = [
                            'PersonalisSequencing'
                            'WGS35',
         ]
@@ -2065,10 +2065,10 @@ class MergeBiologicalNodesFromSequencing:
 
         conditions = [
             # Check that node matches metadata criteria:
-            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_node_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
-            node.get("sample") == True,
+            node.get("sample"),
         ]
 
         for condition in conditions:
