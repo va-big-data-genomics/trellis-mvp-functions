@@ -6,12 +6,12 @@ import logging
 
 from google.cloud import storage
 
-CLIENT = storage.Client()
-
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     PROJECT_ID = os.environ['GCP_PROJECT']
+
+    CLIENT = storage.Client()
     
 
 def delete_blob(event, context):
@@ -62,11 +62,9 @@ def delete_blob(event, context):
 
     logging.info(f"> Attempting to delete blob gs://{bucket}/{path}.")
     
-    """ Commenting out for development
+    """ Commenting out for development """
     bucket = CLIENT.get_bucket(bucket)
     blob = bucket.blob(path)
-    blob.delete()
-    """
     
     logging.info(f"> Blob gs://{bucket}/{path} deleted.")
         
