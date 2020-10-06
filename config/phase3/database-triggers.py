@@ -2115,7 +2115,9 @@ class MergeBiologicalNodesFromSequencing:
                  "MATCH (s:PersonalisSequencing) " +
                  f"WHERE s.sample =\"{sample}\" " +
                  "WITH s " +
-                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample})<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(:BiologicalOme:Genome) ")
+                 "MERGE (g:BiologicalOme:Genome {sample: s.sample}) " +
+                 "WITH s, g " +
+                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
         return query
 
 
@@ -2620,12 +2622,12 @@ class RelateFastqToGenome:
 
     def _create_query(self, blob_id, sample):
         query = (
-                 "MATCH (ome:BiologicalOme), " +
-                 "(blob:Blob:Fastq:FromPersonalis:WGS35) " +
-                 "WHERE ome.name =\"genome\" " +
-                 f"AND ome.sample = \"{sample}\" " +
+                 "MATCH (blob:Blob:Fastq:FromPersonalis:WGS35) " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_SEQUENCING_READS]->(blob)")
+                 "WITH blob " +
+                 "MERGE (g:Genome {sample: blob.sample}) " +
+                 "WITH blob, g" +
+                 "MERGE (blob)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
         return query
 
 
