@@ -155,10 +155,10 @@ class RequestLaunchGatk5Dollar:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:Sample)" +      #1
-                    "-[:HAS]->(:Fastq)" +                           #2
-                    "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam) " +                       #4
+                 f"MATCH (s:PersonalisSequencing)" +      #1
+                    "-[:GENERATED]->(:Fastq)" +                           #2
+                    "-[:WAS_USED_BY]->(:Job)" +                        #3
+                    "-[:GENERATED]->(n:Ubam) " +                       #4
                  "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " + #5
                  "WITH s.sample AS sample, " +                      #6
                        "n.readGroup AS readGroup, " +               #8
@@ -184,7 +184,7 @@ class RequestLaunchGatk5Dollar:
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
                             "sample: sample, " +                    #25
                             "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
                  "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
@@ -269,52 +269,6 @@ class RequestLaunchFailedGatk5Dollar:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
 
-        """ OLD QUERY
-        query = (
-                 f"MATCH (s:Sample)" +      #1
-                    "-[:HAS]->(:Fastq)" +                           #2
-                    "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam) " +                      #4
-                 # Find samples with a failed $5 GATK workflow
-                 "WHERE (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
-                    "-[:STATUS]->(:Dstat {status:\"FAILURE\"}) " +
-                 # Don't launch job is another is currently running
-                 "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"})" +
-                 # Don't launch job if another has succeeded
-                 "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
-                    "-[:STATUS]->(:Dstat {status:\"SUCCESS\"}) " +
-                 "WITH s.sample AS sample, " +                      #6
-                       "n.readGroup AS readGroup, " +               #8
-                       "COLLECT(DISTINCT n) AS allNodes " +
-                 "WITH head(allNodes) AS heads " +                  #9
-                 "UNWIND [heads] AS uniqueNodes " +                 #10
-                 "WITH uniqueNodes.sample AS sample, " +            #11
-                      "uniqueNodes.setSize AS setSize, " +          #12
-                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
-                 "WHERE size(sampleNodes) = setSize " +             #14
-                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
-                            "sample: sample, " +                    #16
-                            "nodeCreated: datetime(), " +           #17
-                            "nodeCreatedEpoch: " +                  #18
-                                "datetime().epochSeconds, " +
-                            "name: \"gatk-5-dollar\", " +
-                            f"eventId: {event_id} }}) " +           #19
-                 "WITH sampleNodes, " +                             #20
-                      "sample, " +
-                      "j.eventId AS eventId, " +                     #21
-                      "j.nodeCreatedEpoch AS epochTime " +          #22
-                 "UNWIND sampleNodes AS sampleNode " +              #23
-                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
-                            "sample: sample, " +                    #25
-                            "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
-                 "RETURN DISTINCT(sampleNodes) AS nodes ")           #28                                                 #13
-        return query
-        """
-
         query = (
                  # Match GATK workflows that are stopped 
                  "MATCH (w:Gatk5Dollar:CromwellWorkflow) " +
@@ -328,10 +282,10 @@ class RequestLaunchFailedGatk5Dollar:
                  "WITH sampleName, COLLECT(d.status) AS statuses " +
                  # Select samples where none of the workflows have succeeded
                  "WHERE NOT \"SUCCESS\" IN statuses " +
-                 "MATCH (s:Sample {sample:sampleName})" +  
-                    "-[:HAS]->(:Fastq)" +                        
-                    "-[:INPUT_TO]->(:Job)" +                      
-                    "-[:OUTPUT]->(n:Ubam) " +
+                 "MATCH (s:PersonalisSequencing {sample:sampleName})" +  
+                    "-[:GENERATED]->(:Fastq)" +                        
+                    "-[:WAS_USED_BY]->(:Job)" +                      
+                    "-[:GENERATED]->(n:Ubam) " +
                  "WITH s.sample AS sample, " +                     
                    "n.readGroup AS readGroup, " +         
                    "COLLECT(DISTINCT n) AS allNodes " +
@@ -359,7 +313,7 @@ class RequestLaunchFailedGatk5Dollar:
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +
                             "sample: sample, " +
                             "eventId: eventId}) " +
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +
                  "RETURN DISTINCT(sampleNodes) AS nodes " +
                  "LIMIT 25")
         return query
@@ -445,11 +399,11 @@ class RequestGatk5DollarNoJob:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:Sample)" +      #1
-                    "-[:HAS]->(:Fastq)" +                           #2
-                    "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam)" +                      #4
-                    "-[:INPUT_TO]->(jobRequest:JobRequest:Gatk5Dollar) " +
+                 f"MATCH (s:PersonalisSequencing)" +      #1
+                    "-[:GENERATED]->(:Fastq)" +                           #2
+                    "-[:WAS_USED_BY]->(:Job)" +                        #3
+                    "-[:GENERATED]->(n:Ubam)" +                      #4
+                    "-[:WAS_USED_BY]->(jobRequest:JobRequest:Gatk5Dollar) " +
                  # Find samples with a $5 GATK job request & no job
                  "WHERE NOT (jobRequest)-[:TRIGGERED]->(:Job:Gatk5Dollar) "
                  # Don't launch job is another is currently running
@@ -485,7 +439,7 @@ class RequestGatk5DollarNoJob:
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
                             "sample: sample, " +                    #25
                             "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
                  "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
@@ -578,10 +532,10 @@ class LaunchGatk5Dollar:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:Sample {{sample:\"{sample}\"}})" +      #1
-                    "-[:HAS]->(:Fastq)" +                           #2
-                    "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam) " +                       #4
+                 f"MATCH (s:PersonalisSequencing {{sample:\"{sample}\"}})" +      #1
+                    "-[:GENERATED]->(:Fastq)" +                           #2
+                    "-[:WAS_USED_BY]->(:Job)" +                        #3
+                    "-[:GENERATED]->(n:Ubam) " +                       #4
                  "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " + #5
                  "WITH s.sample AS sample, " +                      #6
                        "n.readGroup AS readGroup, " +               #8
@@ -607,7 +561,7 @@ class LaunchGatk5Dollar:
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
                             "sample: sample, " +                    #25
                             "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
                  "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
@@ -684,7 +638,7 @@ class LaunchFastqToUbam:
                             f"sample:\"{sample}\", " +
                             f"readGroup:{read_group} }}) " +
                  "WHERE NOT " +
-                    "(n)-[:INPUT_TO]->(:JobRequest:FastqToUbam) " +
+                    "(n)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
                  "WITH n.sample AS sample, " +
                       "n.matePair AS matePair, " +
                       "n.setSize AS setSize, "
@@ -706,7 +660,7 @@ class LaunchFastqToUbam:
                 #"MATCH (jobReq:JobRequest:FastqToUbam { " +
                 #            "sample: sample, " +
                 #            "eventId: eventId}) " +
-                "MERGE (uniqueMatePair)-[:INPUT_TO]->(j) " +
+                "MERGE (uniqueMatePair)-[:WAS_USED_BY]->(j) " +
                 "RETURN DISTINCT(uniqueMatePairs) AS nodes")
         return query
 
@@ -1165,17 +1119,17 @@ class LaunchBamFastqc:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob:Bam) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob:Bam) " +
                  "WHERE s.wdlCallAlias=\"gatherbamfiles\" " +
                  f"AND node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BamFastqc) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:BamFastqc) " +
                  "CREATE (jr:JobRequest:BamFastqc { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"bam-fastqc\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1249,17 +1203,17 @@ class LaunchFlagstat:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob:Bam) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob:Bam) " +
                  "WHERE s.wdlCallAlias=\"gatherbamfiles\" " +
                  f"AND node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:Flagstat) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:Flagstat) " +
                  "CREATE (jr:JobRequest:Flagstat { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"flagstat\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1334,17 +1288,17 @@ class LaunchVcfstats:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob:Vcf) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob:Vcf) " +
                  "WHERE s.wdlCallAlias=\"mergevcfs\" " +
                  f"AND node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:Vcfstats) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:Vcfstats) " +
                  "CREATE (jr:JobRequest:Vcfstats { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"vcfstats\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1425,16 +1379,16 @@ class LaunchTextToTable:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (:Job)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (:Job)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:TextToTable) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:TextToTable) " +
                  "CREATE (jr:JobRequest:TextToTable { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"text-to-table\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1517,16 +1471,16 @@ class BigQueryImportCsv:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (:Job:TextToTable)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (:Job:TextToTable)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BigQueryImportCsv) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:BigQueryImportCsv) " +
                  "CREATE (jr:JobRequest:BigQueryImportCsv { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"bigquery-import-csv\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1606,17 +1560,17 @@ class BigQueryImportContamination:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BigQueryAppendTsv) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:BigQueryAppendTsv) " +
                  "CREATE (jr:JobRequest:BigQueryAppendTsv { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"bigquery-append-tsv\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1688,17 +1642,17 @@ class RequestBigQueryImportContamination:
 
     def _create_query(self, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.extension =\"preBqsr.selfSM\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BigQueryAppendTsv) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:BigQueryAppendTsv) " +
                  "CREATE (jr:JobRequest:BigQueryAppendTsv { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"bigquery-append-tsv\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1781,16 +1735,16 @@ class PostgresInsertCsv:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (:Job:TextToTable)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (:Job:TextToTable)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:PostgresInsertData) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1870,17 +1824,17 @@ class PostgresInsertContamination:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:PostgresInsertData) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1951,17 +1905,17 @@ class RequestPostgresInsertContamination:
 
     def _create_query(self, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.extension =\"preBqsr.selfSM\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:Job:PostgresInsertData) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:Job:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 100")
         return query
@@ -2032,14 +1986,14 @@ class RequestPostgresInsertTextToTable:
         query = (
                  f"MATCH (node:Blob:TextToTable) " +
                  f"WHERE node.filetype =\"csv\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:Job:PostgresInsertData) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:Job:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 100")
         return query
@@ -2117,7 +2071,7 @@ class MergeBiologicalNodesFromSequencing:
                  "WITH s " +
                  "MERGE (g:BiologicalOme:Genome {sample: s.sample}) " +
                  "WITH s, g " +
-                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
+                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample})-[:GENERATED_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
         return query
 
 
@@ -2183,14 +2137,14 @@ class ValidateGenomeRelationships:
 
     def _create_query(self, sample):
         query = (
-                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:GENERATED_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
                  f"WHERE s.sample =\"{sample}\" " +
                  "WITH s, o " +
-                 "MATCH (o)-[:HAS_QC_DATA]->(:Fastqc), " +
-                 "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
-                 "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
-                 "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:HAS_INDEX]->(:Crai), " +
-                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi) " +
+                 "MATCH (o)-[:GENERATED_QC_DATA]->(:Fastqc), " +
+                 "(o)-[:GENERATED_QC_DATA]->(:Flagstat), " +
+                 "(o)-[:GENERATED_QC_DATA]->(:Vcfstats), " +
+                 "(o)-[:GENERATED_SEQUENCING_READS]->(:Cram)-[:GENERATED_INDEX]->(:Crai), " +
+                 "(o)-[:GENERATED_VARIANT_CALLS]->(:Merged:Vcf)-[:GENERATED_INDEX]->(:Tbi) " +
                  "SET s.trellis_optimizeStorage = true " +
                  "RETURN s AS node " +
                  "LIMIT 1")
@@ -2339,7 +2293,7 @@ class RelateVcfstatsToGenome:
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:GENERATED_QC_DATA]->(blob)")
         return query
 
 
@@ -2411,7 +2365,7 @@ class RelateFlagstatToGenome:
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:GENERATED_QC_DATA]->(blob)")
         return query
 
 
@@ -2483,7 +2437,7 @@ class RelateFastqcToGenome:
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:GENERATED_QC_DATA]->(blob)")
         return query
 
 
@@ -2555,7 +2509,7 @@ class RelateMergedVcfToGenome:
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_VARIANT_CALLS]->(blob)")
+                 "MERGE (ome)-[:GENERATED_VARIANT_CALLS]->(blob)")
         return query
 
 
@@ -2627,7 +2581,7 @@ class RelateFastqToGenome:
                  "WITH blob " +
                  "MERGE (g:BiologicalOme:Genome {sample: blob.sample}) " +
                  "WITH blob, g " +
-                 "MERGE (blob)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
+                 "MERGE (blob)<-[:GENERATED_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
         return query
 
 
@@ -2699,7 +2653,7 @@ class RelateCramToGenome:
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_SEQUENCING_READS]->(blob)")
+                 "MERGE (ome)-[:GENERATED_SEQUENCING_READS]->(blob)")
         return query
 
 
@@ -2767,7 +2721,7 @@ class RelateCramToCrai:
         query = (
                  "MATCH (cram:Blob:Cram)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Crai) ",
                  f"WHERE cram.id =\"{blob_id}\" " +
-                 "MERGE (cram)-[:HAS_INDEX]->(crai)")
+                 "MERGE (cram)-[:GENERATED_INDEX]->(crai)")
         return query
 
 
@@ -2836,7 +2790,7 @@ class RelateMergedVcfToTbi:
         query = (
                  "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Tbi) ",
                  f"WHERE vcf.id =\"{blob_id}\" " +
-                 "MERGE (vcf)-[:HAS_INDEX]->(tbi)")
+                 "MERGE (vcf)-[:GENERATED_INDEX]->(tbi)")
         return query
 
 
@@ -2906,7 +2860,7 @@ class RelateTrellisOutputToJob:
                               f"id:\"{node_id}\" }}) " +
                   "WHERE NOT EXISTS(j.duplicate) " +
                   "OR NOT j.duplicate=True " +
-                  "MERGE (j)-[:OUTPUT]->(node) " +
+                  "MERGE (j)-[:GENERATED]->(node) " +
                   "RETURN node")
         return query
     """
@@ -2920,7 +2874,7 @@ class RelateTrellisOutputToJob:
                     f"trellisTaskId: \"{task_id}\", " +
                     f"id: \"{node_id}\" " +
                  "}) " +
-                 "MERGE (j)-[:OUTPUT]->(node) " +
+                 "MERGE (j)-[:GENERATED]->(node) " +
                  "RETURN node")
         return query
 
@@ -2987,7 +2941,7 @@ class RelateTrellisInputToJob:
         query = (
                  f"MATCH (input:Blob {{ id:\"{input_id}\" }}), " +
                  f"(job:Job {{ trellisTaskId:\"{trellis_task_id}\"  }}) " +
-                 f"CREATE (input)-[:INPUT_TO]->(job) " +
+                 f"CREATE (input)-[:WAS_USED_BY]->(job) " +
                   "RETURN job AS node")
         return query
 
@@ -3061,9 +3015,9 @@ class RelateJobToJobRequest:
         # NOTE: If this doesn't work, I can try also try using the
         # input IDs attached to the job node to find input blobs
         query = (
-            f"MATCH (b:Blob)-[:INPUT_TO]->(j:Job {{ trellisTaskId: \"{trellis_task_id}\" }}), " +
-            "(b)-[:INPUT_TO]->(jr:JobRequest {name: j.name}) " +
-            "MATCH (b2:Blob)-[:INPUT_TO]->(jr) " +
+            f"MATCH (b:Blob)-[:WAS_USED_BY]->(j:Job {{ trellisTaskId: \"{trellis_task_id}\" }}), " +
+            "(b)-[:WAS_USED_BY]->(jr:JobRequest {name: j.name}) " +
+            "MATCH (b2:Blob)-[:WAS_USED_BY]->(jr) " +
             "WHERE NOT (jr)-[:TRIGGERED]->(:Job) " +
             "WITH j, jr, " +
             "COLLECT(DISTINCT b) AS jobInputs, " +
@@ -3367,7 +3321,7 @@ class RelateCromwellOutputToStep:
                  "}) " +
                  #"WHERE NOT EXISTS(step.duplicate) " +
                  #"OR NOT step.duplicate=True " +
-                 "MERGE (step)-[:OUTPUT]->(node) " +
+                 "MERGE (step)-[:GENERATED]->(node) " +
                  "RETURN node")
         return query
 
@@ -3802,7 +3756,7 @@ class RelateCromwellStepToLatestAttempt:
                  "UNWIND attempts AS attempt " +
                  "MATCH (attempt) " +
                  "WHERE attempt.startTimeEpoch = maxTime " +
-                 "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
+                 "MERGE (step)-[:GENERATED_ATTEMPT]->(attempt) " +
                  "RETURN step AS node")
         return query
   
@@ -3902,7 +3856,7 @@ class RelateCromwellStepToAttempt:
 
     def __init__(self, function_name, env_vars):
         '''When a new Cromwell attempt is added after a previous one, 
-           create a new :HAS_ATTEMPT relationships between the step and 
+           create a new :GENERATED_ATTEMPT relationships between the step and 
            the newest attempt.
         '''
 
@@ -3978,7 +3932,7 @@ class RelateCromwellStepToAttempt:
                  "(attempt:Job { " +
                     f"instanceName: \"{instance_name}\" " +
                  "}) " +
-                 "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
+                 "MERGE (step)-[:GENERATED_ATTEMPT]->(attempt) " +
                  "RETURN attempt AS node")
         return query
 
@@ -3987,7 +3941,7 @@ class DeleteRelationshipCromwellStepHasAttempt:
     
 
     def __init__(self, function_name, env_vars):
-        '''Delete :HAS_ATTEMPT relationship between Cromwell step and old attempts
+        '''Delete :GENERATED_ATTEMPT relationship between Cromwell step and old attempts
            once a newer attempt has been added to the database.
         '''
 
@@ -4058,9 +4012,9 @@ class DeleteRelationshipCromwellStepHasAttempt:
                   "MATCH (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                  "})-[:HAS_ATTEMPT]->(newAttempt:CromwellAttempt)-[:AFTER*..5]->(oldAttempt:CromwellAttempt) " +
+                  "})-[:GENERATED_ATTEMPT]->(newAttempt:CromwellAttempt)-[:AFTER*..5]->(oldAttempt:CromwellAttempt) " +
                   "WITH step, newAttempt, oldAttempt " +
-                  "MATCH (step)-[r:HAS_ATTEMPT]->(oldAttempt) " +
+                  "MATCH (step)-[r:GENERATED_ATTEMPT]->(oldAttempt) " +
                   "DELETE r " +
                   "RETURN newAttempt AS node"
         )
