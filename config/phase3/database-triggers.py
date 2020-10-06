@@ -2625,7 +2625,7 @@ class RelateFastqToGenome:
                  "MATCH (blob:Blob:Fastq:FromPersonalis:WGS35) " +
                  f"WHERE blob.id = \"{blob_id}\" " +
                  "WITH blob " +
-                 "MERGE (g:Genome {sample: blob.sample}) " +
+                 "MERGE (g:BiologicalOme:Genome {sample: blob.sample}) " +
                  "WITH blob, g " +
                  "MERGE (blob)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
         return query
