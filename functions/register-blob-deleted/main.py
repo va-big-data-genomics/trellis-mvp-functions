@@ -65,7 +65,7 @@ def publish_to_topic(topic, data):
     return result
 
 
-def get_standard_time_fields(event):
+def get_standard_time_fields(context):
     """
     Args:
         event (dict): Metadata properties stored as strings
@@ -142,7 +142,7 @@ def register_blob_deleted(event, context):
     blob_id = event['id']
 
     # Add standard fields
-    db_dict = get_standard_time_fields(event)
+    db_dict = get_standard_time_fields(context)
 
     # Add trigger operation as metadata property
     db_dict['triggerOperation'] = TRIGGER_OPERATION
