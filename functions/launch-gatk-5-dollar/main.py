@@ -36,8 +36,8 @@ if ENVIRONMENT == 'google-cloud':
     GATK_MVP_DIR = parsed_vars['GATK_MVP_DIR']
     GATK_MVP_HASH = parsed_vars['GATK_MVP_HASH']
     GATK_GERMLINE_DIR = parsed_vars['GATK_GERMLINE_DIR']
-    #GATK_HG38_INPUTS = parsed_vars['GATK_HG38_INPUTS']
-    #GATK_PAPI_INPUTS = parsed_vars['GATK_PAPI_INPUTS']
+    CROMWELL_IMAGE = parsed_vars['CROMWELL_IMAGE']
+
     NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
     # Establish PubSub connection
@@ -237,7 +237,7 @@ def launch_gatk_5_dollar(event, context):
                 "minRam": 12,
                 "preemptible": False,
                 "bootDiskSize": 20,
-                "image": f"gcr.io/{PROJECT_ID}/broadinstitute/cromwell:47",
+                "image": f"gcr.io/{PROJECT_ID}/{CROMWELL_IMAGE}",
                 "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 100,
                 "command": ("java " +
