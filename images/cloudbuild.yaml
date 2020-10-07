@@ -57,13 +57,13 @@ steps:
   args: ['push', 'gcr.io/${PROJECT_ID}/${_NEO4J_IMAGE}']
 substitutions:
     _PYTHON_IMAGE: 'python:2.7'
-    _CROMWELL_IMAGE: 'broadinstitute/cromwell:47'
+    _CROMWELL_IMAGE: 'broadinstitute/cromwell:53.1'
     _GATK_IMAGE: 'broadinstitute/gatk:4.1.0.0'
     _VCFSTATS_IMAGE: 'realtimegenomics/rtg-tools:3.7.1'
     _SAMTOOLS_IMAGE: 'biocontainers/samtools:v1.9-4-deb_cv1'
     _T2T_IMAGE: 'stanfordbioinformatics/text-to-table:0.2.1'
     _FASTQC_IMAGE: 'biocontainers/fastqc:v0.11.5_cv4'
-    _NEO4J_IMAGE: 'neo4j:3.5.4'
+    _NEO4J_IMAGE: 'neo4j:3.5.14'
 images: [
     'gcr.io/$PROJECT_ID/${_PYTHON_IMAGE}',
     'gcr.io/$PROJECT_ID/${_CROMWELL_IMAGE}',
