@@ -55,6 +55,13 @@ steps:
   args: ['tag', '${_NEO4J_IMAGE}', 'gcr.io/${PROJECT_ID}/${_NEO4J_IMAGE}']
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/${PROJECT_ID}/${_NEO4J_IMAGE}']
+# Bcftools image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['pull', '${_BCFTOOLS_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['tag', '${_BCFTOOLS_IMAGE}', 'gcr.io/${PROJECT_ID}/${_BCFTOOLS_IMAGE}']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/${PROJECT_ID}/${_BCFTOOLS_IMAGE}']
 substitutions:
     _PYTHON_IMAGE: 'python:2.7'
     _CROMWELL_IMAGE: 'broadinstitute/cromwell:53'
@@ -64,6 +71,7 @@ substitutions:
     _T2T_IMAGE: 'stanfordbioinformatics/text-to-table:0.2.1'
     _FASTQC_IMAGE: 'biocontainers/fastqc:v0.11.5_cv4'
     _NEO4J_IMAGE: 'neo4j:3.5.14'
+    _BCFTOOLS_IMAGE: 'bschiffthaler/bcftools:1.11'
 images: [
     'gcr.io/$PROJECT_ID/${_PYTHON_IMAGE}',
     'gcr.io/$PROJECT_ID/${_CROMWELL_IMAGE}',
@@ -72,6 +80,6 @@ images: [
     'gcr.io/$PROJECT_ID/${_SAMTOOLS_IMAGE}',
     'gcr.io/$PROJECT_ID/${_T2T_IMAGE}',
     'gcr.io/$PROJECT_ID/${_FASTQC_IMAGE}',
-    'gcr.io/$PROJECT_ID/${_NEO4J_IMAGE}'
-
+    'gcr.io/$PROJECT_ID/${_NEO4J_IMAGE}',
+    'gcr.io/$PROJECT_ID/${_BCFTOOLS_IMAGE}'
 ]
