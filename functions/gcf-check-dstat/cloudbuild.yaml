@@ -1,0 +1,22 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta', 'functions', 'deploy', 'trellis-check-dstat',
+         '--project=${PROJECT_ID}',
+         '--source=functions/gcf-check-dstat',
+         '--memory=128MB',
+         '--max-instances=20',
+         '--entry-point=get_dstat_result',
+         '--runtime=python37',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
+         # Environment variables
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-env-vars=FUNCTION_NAME=${_FUNCTION_NAME}',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=USE_WORKER_V2=true',
+         '--update-env-vars=PYTHON37_DRAIN_LOGS_ON_CRASH_WAIT_SEC=5',
+         # Metadata labels
+         '--update-labels=user=trellis',
+         '--update-labels=task=check-dstat',
+        ]
