@@ -11,7 +11,6 @@ steps:
          '--trigger-topic=${_TRIGGER_TOPIC}',
          # Environment variables
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
-         '--update-env-vars=FUNCTION_NAME=${_FUNCTION_NAME}',
          '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
          '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
          '--update-env-vars=USE_WORKER_V2=true',
