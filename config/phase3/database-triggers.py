@@ -782,6 +782,76 @@ class LaunchFastqToUbam:
         return query
 
 
+class RequestGetSignatureSnps:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'LaunchViewSignatureSnps']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        query = self._create_query(event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Gvcf", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestGetSignatureSnps",
+                              "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, sample, read_group, event_id):
+        query = (
+                 "MATCH (n:Merged:Vcf) " +
+                 "WHERE NOT " +
+                    "(n)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
+                 "WITH n LIMIT 100 " +
+                 "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
+                            "sample:n.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"view-gvcf-snps\", " +
+                            f"eventId: {event_id} }}) " +
+                "MERGE (n)-[:WAS_USED_BY]->(j) " +
+                "RETURN n AS node")
+        return query
+
+
 class KillDuplicateJobs:
 
     def __init__(self, function_name, env_vars):
@@ -4306,6 +4376,9 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RelateMergedVcfToTbi(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestGetSignatureSnps(
                                     function_name,
                                     env_vars))
     return triggers
