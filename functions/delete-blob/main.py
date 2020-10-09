@@ -65,6 +65,7 @@ def delete_blob(event, context):
     """ Commenting out for development """
     bucket = CLIENT.get_bucket(bucket)
     blob = bucket.blob(path)
+    blob.delete()
     
-    logging.info(f"> Blob gs://{bucket}/{path} deleted.")
+    logging.info(f"> Blob delete: {name}.{extension}. URI: gs://{bucket}/{path}.")
         
