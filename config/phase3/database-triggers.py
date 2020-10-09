@@ -822,8 +822,8 @@ class RequestGetSignatureSnps:
                               "sentFrom": self.function_name,
                               "trigger": "RequestGetSignatureSnps",
                               "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
                    },
                    "body": {
                             "cypher": query,
