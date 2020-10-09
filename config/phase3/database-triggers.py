@@ -835,7 +835,7 @@ class RequestGetSignatureSnps:
         return([(topic, message)])
 
 
-    def _create_query(self, sample, read_group, event_id):
+    def _create_query(self, event_id):
         query = (
                  "MATCH (n:Merged:Vcf) " +
                  "WHERE NOT " +
