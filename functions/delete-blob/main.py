@@ -42,6 +42,8 @@ def delete_blob(event, context):
 
     bucket = blob['bucket']
     path = blob['path']
+    name = blob['name']
+    extension = blob['extension']
 
     # Hardcode protections against deleted essential data types
     protected_patterns = [
