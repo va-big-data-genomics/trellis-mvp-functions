@@ -2185,7 +2185,7 @@ class RequestPostgresInsertTextToTable:
                  "LIMIT 100")
         return query
 
-# Data optimization triggers
+# Trellis v1.2 Data optimization triggers
 class MergeBiologicalNodesFromSequencing:
 
     def __init__(self, function_name, env_vars):
@@ -2258,7 +2258,7 @@ class MergeBiologicalNodesFromSequencing:
                  "WITH s " +
                  "MERGE (g:BiologicalOme:Genome {sample: s.sample}) " +
                  "WITH s, g " +
-                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample})-[:GENERATED_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
+                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample, labels: [\"Sample\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:GENERATED_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
         return query
 
 
@@ -2327,11 +2327,11 @@ class ValidateGenomeRelationships:
                  "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:GENERATED_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
                  f"WHERE s.sample =\"{sample}\" " +
                  "WITH s, o " +
-                 "MATCH (o)-[:GENERATED_QC_DATA]->(:Fastqc), " +
-                 "(o)-[:GENERATED_QC_DATA]->(:Flagstat), " +
-                 "(o)-[:GENERATED_QC_DATA]->(:Vcfstats), " +
-                 "(o)-[:GENERATED_SEQUENCING_READS]->(:Cram)-[:GENERATED_INDEX]->(:Crai), " +
-                 "(o)-[:GENERATED_VARIANT_CALLS]->(:Merged:Vcf)-[:GENERATED_INDEX]->(:Tbi) " +
+                 "MATCH (o)-[:HAS_QC_DATA]->(:Fastqc), " +
+                 "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
+                 "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
+                 "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:GENERATED_INDEX]->(:Crai), " +
+                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:GENERATED_INDEX]->(:Tbi) " +
                  "SET s.trellis_optimizeStorage = true " +
                  "RETURN s AS node " +
                  "LIMIT 1")
@@ -2480,7 +2480,7 @@ class RelateVcfstatsToGenome:
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:GENERATED_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
         return query
 
 
@@ -2552,7 +2552,7 @@ class RelateFlagstatToGenome:
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:GENERATED_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
         return query
 
 
@@ -2624,7 +2624,7 @@ class RelateFastqcToGenome:
                  "WHERE ome.name =\"genome\" " +
                  f"AND ome.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:GENERATED_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
         return query
 
 
@@ -2695,7 +2695,7 @@ class RelateMergedVcfToGenome:
                  "(blob:Blob:Merged:Vcf:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:GENERATED_VARIANT_CALLS]->(blob)")
+                 "MERGE (ome)-[:HAS_VARIANT_CALLS]->(blob)")
         return query
 
 
@@ -2767,7 +2767,7 @@ class RelateFastqToGenome:
                  "WITH blob " +
                  "MERGE (g:BiologicalOme:Genome {sample: blob.sample}) " +
                  "WITH blob, g " +
-                 "MERGE (blob)<-[:GENERATED_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
+                 "MERGE (blob)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
         return query
 
 
@@ -2834,12 +2834,11 @@ class RelateCramToGenome:
 
     def _create_query(self, blob_id, sample):
         query = (
-                 "MATCH (ome:BiologicalOme), " +
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
                  "(blob:Blob:Cram:Gatk:WGS35) " +
-                 "WHERE ome.name =\"genome\" " +
-                 f"AND ome.sample = \"{sample}\" " +
+                 f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:GENERATED_SEQUENCING_READS]->(blob)")
+                 "MERGE (ome)-[:HAS_SEQUENCING_READS]->(blob)")
         return query
 
 
