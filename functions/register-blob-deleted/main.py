@@ -72,7 +72,7 @@ def get_standard_time_fields(context):
     Return
         (dict): Times in iso (str) and from-epoch (int) formats
     """
-    datetime_deleted = get_datetime_iso8601(context['timestamp'])
+    datetime_deleted = get_datetime_iso8601(context.timestamp)
 
     time_deleted_epoch = get_seconds_from_epoch(datetime_deleted)
     time_deleted_iso = datetime_deleted.isoformat()
