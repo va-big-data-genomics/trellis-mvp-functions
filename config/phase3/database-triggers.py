@@ -2258,7 +2258,7 @@ class MergeBiologicalNodesFromSequencing:
                  "WITH s " +
                  "MERGE (g:BiologicalOme:Genome {sample: s.sample, labels: [\"BiologicalOme\", \"Genome\"]}) " +
                  "WITH s, g " +
-                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample {sample: s.sample, labels: [\"Sample\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:GENERATED_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
+                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample:WgsPhase3 {sample: s.sample, labels: [\"Sample\", \"WgsPhase3\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
         return query
 
 
@@ -2324,14 +2324,14 @@ class ValidateGenomeRelationships:
 
     def _create_query(self, sample):
         query = (
-                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:GENERATED_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
                  f"WHERE s.sample =\"{sample}\" " +
                  "WITH s, o " +
                  "MATCH (o)-[:HAS_QC_DATA]->(:Fastqc), " +
                  "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
                  "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
-                 "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:GENERATED_INDEX]->(:Crai), " +
-                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:GENERATED_INDEX]->(:Tbi) " +
+                 "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:HAS_INDEX]->(:Crai), " +
+                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi) " +
                  "SET s.trellis_optimizeStorage = true " +
                  "RETURN s AS node " +
                  "LIMIT 1")
@@ -2475,10 +2475,9 @@ class RelateVcfstatsToGenome:
 
     def _create_query(self, blob_id, sample):
         query = (
-                 "MATCH (ome:BiologicalOme:Genome), " +
-                 "(blob:Blob:Vcfstats:Text:Data) " +
-                 "WHERE ome.name =\"genome\" " +
-                 f"AND ome.sample = \"{sample}\" " +
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
+                    "(blob:Blob:Vcfstats:Text:Data) " +
+                 f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
                  "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
         return query
@@ -2547,10 +2546,9 @@ class RelateFlagstatToGenome:
 
     def _create_query(self, blob_id, sample):
         query = (
-                 "MATCH (ome:BiologicalOme), " +
-                 "(blob:Blob:Flagstat:Text:Data:WGS35) " +
-                 "WHERE ome.name =\"genome\" " +
-                 f"AND ome.sample = \"{sample}\" " +
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
+                    "(blob:Blob:Flagstat:Text:Data:WGS35) " +
+                 f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
                  "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
         return query
@@ -2619,10 +2617,9 @@ class RelateFastqcToGenome:
 
     def _create_query(self, blob_id, sample):
         query = (
-                 "MATCH (ome:BiologicalOme), " +
-                 "(blob:Blob:Fastqc:Text:Data:WGS35) " +
-                 "WHERE ome.name =\"genome\" " +
-                 f"AND ome.sample = \"{sample}\" " +
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
+                    "(blob:Blob:Fastqc:Text:Data:WGS35) " +
+                 f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
                  "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
         return query
@@ -2975,7 +2972,7 @@ class RelateMergedVcfToTbi:
         query = (
                  "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
                  f"WHERE vcf.id =\"{blob_id}\" " +
-                 "MERGE (vcf)-[:GENERATED_INDEX]->(tbi)")
+                 "MERGE (vcf)-[:HAS_INDEX]->(tbi)")
         return query
 
 
