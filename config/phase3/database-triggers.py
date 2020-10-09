@@ -2906,7 +2906,7 @@ class RelateCramToCrai:
 
     def _create_query(self, blob_id):
         query = (
-                 "MATCH (cram:Blob:Cram)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Crai) ",
+                 "MATCH (cram:Blob:Cram)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Crai) " +
                  f"WHERE cram.id =\"{blob_id}\" " +
                  "MERGE (cram)-[:GENERATED_INDEX]->(crai)")
         return query
@@ -2975,7 +2975,7 @@ class RelateMergedVcfToTbi:
 
     def _create_query(self, blob_id):
         query = (
-                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Tbi) ",
+                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Tbi) " +
                  f"WHERE vcf.id =\"{blob_id}\" " +
                  "MERGE (vcf)-[:GENERATED_INDEX]->(tbi)")
         return query
