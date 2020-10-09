@@ -2691,10 +2691,9 @@ class RelateMergedVcfToGenome:
 
     def _create_query(self, blob_id, sample):
         query = (
-                 "MATCH (ome:BiologicalOme), " +
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
                  "(blob:Blob:Merged:Vcf:WGS35) " +
-                 "WHERE ome.name =\"genome\" " +
-                 f"AND ome.sample = \"{sample}\" " +
+                 f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
                  "MERGE (ome)-[:GENERATED_VARIANT_CALLS]->(blob)")
         return query
@@ -2908,7 +2907,7 @@ class RelateCramToCrai:
         query = (
                  "MATCH (cram:Blob:Cram)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Crai) " +
                  f"WHERE cram.id =\"{blob_id}\" " +
-                 "MERGE (cram)-[:GENERATED_INDEX]->(crai)")
+                 "MERGE (cram)-[:HAS_INDEX]->(crai)")
         return query
 
 
@@ -2975,7 +2974,7 @@ class RelateMergedVcfToTbi:
 
     def _create_query(self, blob_id):
         query = (
-                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Tbi) " +
+                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
                  f"WHERE vcf.id =\"{blob_id}\" " +
                  "MERGE (vcf)-[:GENERATED_INDEX]->(tbi)")
         return query
