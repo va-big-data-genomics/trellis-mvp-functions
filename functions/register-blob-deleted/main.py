@@ -5,6 +5,7 @@ import json
 import pytz
 import yaml
 import iso8601
+import logging
 import importlib
 
 from datetime import datetime
@@ -65,6 +66,45 @@ def publish_to_topic(topic, data):
     return result
 
 
+def clean_metadata_dict(raw_dict):
+    """Remove dict entries where the value is of type dict"""
+    clean_dict = dict(raw_dict)
+
+    # Remove values that are dicts
+    delete_keys = []
+    for key, value in clean_dict.items():
+        if isinstance(value, dict):
+            #del clean_dict[key]
+            delete_keys.append(key)
+
+    for key in delete_keys:
+        del clean_dict[key]
+
+    # Convert size field from str to int
+    clean_dict['size'] = int(clean_dict['size'])
+
+    return clean_dict
+
+
+def get_standard_name_fields(event_name, event_bucket):
+    """(pbilling 200226): This should probably be moved to config file.
+    """
+    path_elements = event_name.split('/')
+    name_elements = path_elements[-1].split('.')
+    name_fields = {
+                   "path": event_name,
+                   "dirname": '/'.join(path_elements[:-1]),
+                   "basename": path_elements[-1],
+                   "name": name_elements[0],
+                   "extension": '.'.join(name_elements[1:]),
+                   "filetype": name_elements[-1],
+                   "gitCommitHash": GIT_COMMIT_HASH,
+                   "gitVersionTag": GIT_VERSION_TAG,
+                   "uri" : "gs://" + event_bucket + "/" + event_name,
+    }
+    return name_fields
+
+
 def get_standard_time_fields(context):
     """
     Args:
@@ -118,9 +158,9 @@ def format_node_merge_query(db_dict, dry_run=False):
     query = (
         f"MATCH (node:Blob {{ " +
             f'id: "{db_dict["id"]}", ' +
-            f'path: "{db_dict["path"]}" }}) ' +
         f"SET node.obj_timeDeleted = datetime({db_dict['timeDeletedIso']}), " +
             f"node.obj_timeDeletedEpoch = {db_dict['timeDeletedEpoch']}, " +
+            "node.obj_exists = False " +
         "RETURN node")
     return query
 
@@ -141,27 +181,44 @@ def register_blob_deleted(event, context):
     # Trellis config data
     blob_id = event['id']
 
+    log_patterns = [
+                    '.*\.log$',
+                    '.*/stderr$',
+                    '.*/stdout$']
+    for pattern in log_patterns:
+        if re.search(pattern, event['name']):
+            logging.info(f"> Object is log file; ignore. Path: {event['name']}.")
+            return
+
+
     # Add standard fields
-    db_dict = get_standard_time_fields(context)
+    db_dict = clean_metadata_dict(event)
+
+    # Add standard fields
+    name_fields = get_standard_name_fields(event['name'], event['bucket'])
+    time_fields = get_standard_time_fields(context)
+
+    db_dict.update(name_fields)
+    db_dict.update(time_fields)
 
     # Add trigger operation as metadata property
     db_dict['triggerOperation'] = TRIGGER_OPERATION
 
     # Ignore log files
-    log_labels = set(['Log', 'Stderr', 'Stdout'])
-    log_intersection = log_labels.intersection(db_dict['labels'])
-    if log_intersection:
-        print(f"> This is a log file; ignoring. {db_dict['labels']}")
-        return
+    #log_labels = set(['Log', 'Stderr', 'Stdout'])
+    #log_intersection = log_labels.intersection(db_dict['labels'])
+    #if log_intersection:
+    #    print(f"> This is a log file; ignoring. {db_dict['labels']}")
+    #    return
 
-    print(f"> Generating database query for node: {db_dict}.")
+    logging.info(f"> Generating database query for node: {db_dict}.")
     db_query = format_node_merge_query(db_dict)
-    print(f"> Database query: \"{db_query}\".")
+    logging.info(f"> Database query: \"{db_query}\".")
 
     message = format_pubsub_message(db_query, seed_id)
-    print(f"> Pubsub message: {message}.")
+    logging.info(f"> Pubsub message: {message}.")
     result = publish_to_topic(DB_QUERY_TOPIC, message)
-    print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+    logging.info(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
 
 
 
