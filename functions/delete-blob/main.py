@@ -35,15 +35,10 @@ def delete_blob(event, context):
     header = data['header']
     body = data['body']
 
-    blob = body['results'].get('node')
-    if not blob:
-        print("> No blob found; exiting.")
+    node = body['results'].get('node')
+    if not node:
+        print("> No node metadata found; exiting.")
         return  
-
-    bucket = blob['bucket']
-    path = blob['path']
-    name = blob['name']
-    extension = blob['extension']
 
     # Hardcode protections against deleted essential data types
     protected_patterns = [
@@ -58,16 +53,16 @@ def delete_blob(event, context):
     ]
 
     for pattern in protected_patterns:
-        if re.search(pattern, path):
-            logging.warning("> Attempted to delete protected object. Aborting. {pattern}: {path}.")
+        if re.search(pattern, node['path']):
+            logging.warning("> Attempted to delete protected object. Aborting. {pattern}: {node['path']}.")
             return
 
     logging.info(f"> Attempting to delete blob gs://{bucket}/{path}.")
     
     """ Commenting out for development """
-    bucket = CLIENT.get_bucket(bucket)
-    blob = bucket.blob(path)
+    bucket = CLIENT.get_bucket(node["bucket"])
+    blob = bucket.blob(node["path"])
     blob.delete()
     
-    logging.info(f"> Blob delete: {name}.{extension}. URI: gs://{bucket}/{path}.")
+    logging.info(f"> Blob delete: {node['name']}.{node['extension']}. URI: gs://{node['bucket']}/{node['path']}.")
         
