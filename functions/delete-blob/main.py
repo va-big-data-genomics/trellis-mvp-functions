@@ -57,7 +57,7 @@ def delete_blob(event, context):
             logging.warning("> Attempted to delete protected object. Aborting. {pattern}: {node['path']}.")
             return
 
-    logging.info(f"> Attempting to delete blob gs://{bucket}/{path}.")
+    logging.info(f"> Attempting to delete blob gs://{node['bucket']}/{node['path']}.")
     
     """ Commenting out for development """
     bucket = CLIENT.get_bucket(node["bucket"])
