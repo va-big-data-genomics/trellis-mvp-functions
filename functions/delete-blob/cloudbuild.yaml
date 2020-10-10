@@ -1,11 +1,11 @@
 steps:
-- name: 'gcr.io/cloud-builders/gcloud'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   args: [
-         'beta', 'functions', 'deploy', 'trellis-delete-blob',
+         'gcloud', 'functions', 'deploy', 'trellis-delete-blob',
          '--project=${PROJECT_ID}',
          '--source=functions/delete-blob',
          '--memory=128MB',
-         '--max-instances=40',
+         '--max-instances=200',
          '--timeout=60',
          '--entry-point=delete_blob',
          '--runtime=python37',
