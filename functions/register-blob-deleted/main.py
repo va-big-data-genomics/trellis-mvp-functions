@@ -157,8 +157,9 @@ def format_node_merge_query(db_dict, dry_run=False):
 
     query = (
         f"MATCH (node:Blob {{ " +
-            f'id: "{db_dict["id"]}", ' +
-        f"SET node.obj_timeDeleted = datetime({db_dict['timeDeletedIso']}), " +
+            f'id: "{db_dict["id"]}" ' +
+         "}) " +
+        f"SET node.obj_timeDeleted = datetime(\"{db_dict['timeDeletedIso']}\"), " +
             f"node.obj_timeDeletedEpoch = {db_dict['timeDeletedEpoch']}, " +
             "node.obj_exists = False " +
         "RETURN node")
