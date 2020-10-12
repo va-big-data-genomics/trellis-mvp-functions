@@ -5,6 +5,7 @@ import base64
 import logging
 
 from google.cloud import storage
+from google.api_core import exceptions
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
@@ -62,7 +63,13 @@ def delete_blob(event, context):
     """ Commenting out for development """
     bucket = CLIENT.get_bucket(node["bucket"])
     blob = bucket.blob(node["path"])
-    blob.delete()
+
+    try:
+        blob.delete()
+    except exceptions.NotFound as e:
+        logging.warning(f"> Blob has already been deleted.")
+        return
+
     
-    logging.info(f"> Blob delete: {node['name']}.{node['extension']}. URI: gs://{node['bucket']}/{node['path']}.")
+    logging.info(f"> Blob deleted: {node['name']}.{node['extension']}. URI: gs://{node['bucket']}/{node['path']}.")
         
