@@ -243,6 +243,11 @@ def query_db(event, context):
     if isinstance(topics, str):
         topics = [topics]
 
+    # Track how many messages are published to each topic
+    published_message_counts = {}
+    for topic in topics:
+        published_message_counts[topic] = 0
+
     for topic in topics:
         if result_split == 'True':
             if not query_results:
@@ -259,6 +264,7 @@ def query_db(event, context):
                 print(f"> Pubsub message: {message}.")
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
+                published_message_counts[topic] += 1
 
             for result in query_results:
                 message = format_pubsub_message(
@@ -272,6 +278,7 @@ def query_db(event, context):
                 print(f"> Pubsub message: {message}.")
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
+                published_message_counts[topic] += 1
         else:
             #message['body']['results'] = results
             message = format_pubsub_message(
@@ -285,6 +292,8 @@ def query_db(event, context):
             print(f"> Pubsub message: {message}.")
             publish_result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {publish_result}.")
+            published_message_counts[topic] += 1
+    logging.info(f"> Summary of published messages: {published_message_counts}")
 
     # Execution time block
     end = datetime.now()
