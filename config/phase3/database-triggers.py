@@ -2258,7 +2258,7 @@ class MergeBiologicalNodesFromSequencing:
                  "WITH s " +
                  "MERGE (g:BiologicalOme:Genome {sample: s.sample, labels: [\"BiologicalOme\", \"Genome\"]}) " +
                  "WITH s, g " +
-                 "MERGE (s)<-[:WAS_USED_BY]-(:Sample:WgsPhase3 {sample: s.sample, labels: [\"Sample\", \"WgsPhase3\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
+                 "MERGE (s)<-[:WAS_USED_BY {ontology: \"provenance\"}]-(:Sample:WgsPhase3 {sample: s.sample, labels: [\"Sample\", \"WgsPhase3\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
         return query
 
 
@@ -2481,7 +2481,7 @@ class RelateVcfstatsToGenome:
                     "(blob:Blob:Vcfstats:Text:Data) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
         return query
 
 
@@ -2552,7 +2552,7 @@ class RelateFlagstatToGenome:
                     "(blob:Blob:Flagstat:Text:Data:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
         return query
 
 
@@ -2623,7 +2623,7 @@ class RelateFastqcToGenome:
                     "(blob:Blob:Fastqc:Text:Data:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
         return query
 
 
@@ -2694,7 +2694,7 @@ class RelateMergedVcfToGenome:
                  "(blob:Blob:Merged:Vcf:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_VARIANT_CALLS]->(blob)")
+                 "MERGE (ome)-[:HAS_VARIANT_CALLS {ontology: \"bioinformatics\"}]->(blob)")
         return query
 
 
@@ -2837,7 +2837,7 @@ class RelateCramToGenome:
                  "(blob:Blob:Cram:Gatk:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_SEQUENCING_READS]->(blob)")
+                 "MERGE (ome)-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]->(blob)")
         return query
 
 
@@ -2905,7 +2905,7 @@ class RelateCramToCrai:
         query = (
                  "MATCH (cram:Blob:Cram)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Crai) " +
                  f"WHERE cram.id =\"{blob_id}\" " +
-                 "MERGE (cram)-[:HAS_INDEX]->(crai)")
+                 "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai)")
         return query
 
 
@@ -2974,7 +2974,7 @@ class RelateMergedVcfToTbi:
         query = (
                  "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
                  f"WHERE vcf.id =\"{blob_id}\" " +
-                 "MERGE (vcf)-[:HAS_INDEX]->(tbi)")
+                 "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi)")
         return query
 
 
