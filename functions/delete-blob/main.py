@@ -53,6 +53,7 @@ def delete_blob(event, context):
                           "vcfstats.data.txt$",
     ]
 
+    blob_counter = 0
     for node in nodes:
         for pattern in protected_patterns:
             if re.search(pattern, node['path']):
@@ -71,5 +72,7 @@ def delete_blob(event, context):
             return
 
         
-        logging.info(f"> Blob deleted: {node['name']}.{node['extension']}. URI: gs://{node['bucket']}/{node['path']}.")
+        logging.info(f"> Blob deleted.")
+        blob_counter +=1
+    logging.info(f"> Count of blobs deleted: {blob_counter}.")
         
