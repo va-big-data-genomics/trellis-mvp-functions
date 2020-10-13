@@ -84,7 +84,8 @@ def format_pubsub_message(method, labels, query, results, seed_id, event_id, ret
 
 def publish_to_topic(topic, json_data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
-    message = json.dumps(json_data).encode('utf-8')
+    # https://stackoverflow.com/questions/11875770/how-to-overcome-datetime-datetime-not-json-serializable/36142844#36142844
+    message = json.dumps(json_data, indent=4, sort_keys=True, default=str).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
 
