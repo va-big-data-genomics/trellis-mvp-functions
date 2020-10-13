@@ -6,7 +6,7 @@ steps:
          '--source=functions/delete-blob',
          '--memory=128MB',
          '--max-instances=200',
-         '--timeout=60',
+         '--timeout=360',
          '--entry-point=delete_blob',
          '--runtime=python37',
          '--trigger-topic=${_TRIGGER_TOPIC}',
