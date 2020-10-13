@@ -28,9 +28,6 @@ import subprocess
 from google.cloud import pubsub
 from google.cloud import storage
 
-#app = Flask(__name__)
-# [END run_pubsub_server_setup]
-
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 print(f"Environment: {ENVIRONMENT}.")
 if ENVIRONMENT == 'google-cloud':
@@ -187,11 +184,6 @@ def get_dstat_result(event, context):
     print(f"> Received pubsub message: {data}.")
     print(f"> Context: {context}.")
 
-    pubsub_message = envelope['message']
-    message_id = pubsub_message['message_id']
-    trunc_id = message_id[-7:]
-    print(f"{trunc_id}> Received pubsub message: {pubsub_message}.")
-
     header = data["header"]
     body = data["body"]
 
@@ -202,22 +194,22 @@ def get_dstat_result(event, context):
     if not seed_id:
         seed_id = event_id
 
-    retry_count = header.get('retry-co')
+    retry_count = header.get('retry-count')
     dstat_cmd = body['command']
 
     try:
         dstat_results = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
     except:
-        logging.error(f"{trunc_id}> Error: could not run dstat command {dstat_cmd}.")
+        logging.error(f"> Error: could not run dstat command {dstat_cmd}.")
         return('', 204)
 
-    print(f"{trunc_id}> Dstat results: {dstat_results}.")
+    print(f"> Dstat results: {dstat_results}.")
     try:
         json_results = json.loads(dstat_results)
     except:
-        logging.error(f"{trunc_id}> Could not load dstat result as json.")
+        logging.error(f"> Could not load dstat result as json.")
         return('', 204)
-    print(f"{trunc_id}> Json result: {json_results}.")
+    print(f"> Json result: {json_results}.")
 
     for json_result in json_results:
         # Only update database once job has stopped
@@ -228,9 +220,9 @@ def get_dstat_result(event, context):
                                          query = query,
                                          event_id = message_id,
                                          retry_count = retry_count)
-        print(f"{trunc_id}> Pubsub message: {message}.")
+        print(f"> Pubsub message: {message}.")
         result = _publish_to_topic(DB_TOPIC, message)
-        print(f"{trunc_id}> Published message to {DB_TOPIC} with result: {result}.")
+        print(f"> Published message to {DB_TOPIC} with result: {result}.")
 
     # Flush the stdout to avoid log buffering.
     #sys.stdout.flush()
