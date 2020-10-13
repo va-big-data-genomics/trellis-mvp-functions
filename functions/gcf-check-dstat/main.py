@@ -168,7 +168,7 @@ def _publish_to_topic(topic, data):
 
 # [START run_pubsub_handler]
 #@app.route('/', methods=['POST'])
-def get_dstat_result():
+def get_dstat_result(event, context):
     '''
     envelope = request.get_json()
     if not envelope:
