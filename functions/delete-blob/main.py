@@ -69,8 +69,7 @@ def delete_blob(event, context):
             blob.delete()
         except exceptions.NotFound as e:
             logging.warning(f"> Blob has already been deleted.")
-            return
-
+            continue
         
         logging.info(f"> Blob deleted.")
         blob_counter +=1
