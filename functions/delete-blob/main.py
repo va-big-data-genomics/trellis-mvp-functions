@@ -57,7 +57,7 @@ def delete_blob(event, context):
     for node in nodes:
         for pattern in protected_patterns:
             if re.search(pattern, node['path']):
-                logging.warning("> Attempted to delete protected object. Aborting. {pattern}: {node['path']}.")
+                logging.error(f"> Attempted to delete protected object. Aborting. {pattern}: {node['path']}.")
                 return
 
         logging.info(f"> Attempting to delete blob gs://{node['bucket']}/{node['path']}.")
