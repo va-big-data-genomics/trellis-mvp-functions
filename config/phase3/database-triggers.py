@@ -2390,7 +2390,7 @@ class DeleteNonessentialSequencingData:
                             "cypher": query,
                             "result-mode": "data",
                             "result-structure": "list",
-                            "result-split": "True"
+                            "result-split": "False"
                    }
         }
         return([(topic, message)])
@@ -2409,7 +2409,9 @@ class DeleteNonessentialSequencingData:
                  "WHERE NOT b IN essential_blobs " +
                  "AND (NOT b.obj_exists = false OR NOT EXISTS(b.obj_exists)) " +
                  f"AND b.bucket = \"{self.env_vars['DSUB_OUT_BUCKET']}\" " + 
-                 "RETURN b AS node")
+                 "RETURN b.bucket AS bucket, b.path AS path " +
+                 "ORDER BY b.size DESC " +
+                 "LIMIT 10")
         return query
 
 
