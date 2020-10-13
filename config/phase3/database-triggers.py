@@ -2411,7 +2411,7 @@ class DeleteNonessentialSequencingData:
                  f"AND b.bucket = \"{self.env_vars['DSUB_OUT_BUCKET']}\" " + 
                  "RETURN b.bucket AS bucket, b.path AS path " +
                  "ORDER BY b.size DESC " +
-                 "LIMIT 10")
+                 "LIMIT 100")
         return query
 
 
