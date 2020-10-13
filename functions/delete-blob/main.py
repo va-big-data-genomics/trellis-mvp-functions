@@ -36,8 +36,8 @@ def delete_blob(event, context):
     header = data['header']
     body = data['body']
 
-    node = body['results'].get('node')
-    if not node:
+    nodes = body['results']
+    if not nodes:
         print("> No node metadata found; exiting.")
         return  
 
@@ -53,23 +53,23 @@ def delete_blob(event, context):
                           "vcfstats.data.txt$",
     ]
 
-    for pattern in protected_patterns:
-        if re.search(pattern, node['path']):
-            logging.warning("> Attempted to delete protected object. Aborting. {pattern}: {node['path']}.")
+    for node in nodes:
+        for pattern in protected_patterns:
+            if re.search(pattern, node['path']):
+                logging.warning("> Attempted to delete protected object. Aborting. {pattern}: {node['path']}.")
+                return
+
+        logging.info(f"> Attempting to delete blob gs://{node['bucket']}/{node['path']}.")
+        
+        bucket = CLIENT.get_bucket(node["bucket"])
+        blob = bucket.blob(node["path"])
+
+        try:
+            blob.delete()
+        except exceptions.NotFound as e:
+            logging.warning(f"> Blob has already been deleted.")
             return
 
-    logging.info(f"> Attempting to delete blob gs://{node['bucket']}/{node['path']}.")
-    
-    """ Commenting out for development """
-    bucket = CLIENT.get_bucket(node["bucket"])
-    blob = bucket.blob(node["path"])
-
-    try:
-        blob.delete()
-    except exceptions.NotFound as e:
-        logging.warning(f"> Blob has already been deleted.")
-        return
-
-    
-    logging.info(f"> Blob deleted: {node['name']}.{node['extension']}. URI: gs://{node['bucket']}/{node['path']}.")
+        
+        logging.info(f"> Blob deleted: {node['name']}.{node['extension']}. URI: gs://{node['bucket']}/{node['path']}.")
         
