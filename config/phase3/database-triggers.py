@@ -2238,7 +2238,8 @@ class MergeBiologicalNodesFromSequencing:
                               "labels": ["Trigger", "Create", "Biological", "Nodes", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "MergeBiologicalNodesFromSequencing",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              # Topic that db result of this trigger query will be published to
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2255,10 +2256,81 @@ class MergeBiologicalNodesFromSequencing:
         query = (
                  "MATCH (s:PersonalisSequencing) " +
                  f"WHERE s.sample =\"{sample}\" " +
-                 "WITH s " +
-                 "MERGE (g:BiologicalOme:Genome {sample: s.sample, labels: [\"BiologicalOme\", \"Genome\"]}) " +
-                 "WITH s, g " +
-                 "MERGE (s)<-[:WAS_USED_BY {ontology: \"provenance\"}]-(:Sample:WgsPhase3 {sample: s.sample, labels: [\"Sample\", \"WgsPhase3\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g)")
+                 "MERGE (s)<-[:WAS_USED_BY {ontology: \"provenance\"}]-(:Sample:WgsPhase3 {sample: s.sample, labels: [\"Sample\", \"WgsPhase3\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g:BiologicalOme:Genome {sample: s.sample, labels: [\"BiologicalOme\", \"Genome\"]}) " +
+                 "RETURN g")
+        return query
+
+
+class RelateGenomeToFastq:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Trigger', 'Create', 'Biological', 'Nodes', 'Database', 'Result']
+        reqd_node_labels = [
+                            'Genome',
+                            'BiologicalOme',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(reqd_node_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            
+            # Metadata required for populating trigger query:
+            node.get("sample"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Genome", "Fastq", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateGenomeToFastq",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (g:Genome:BiologicalOme)<-[:HAS_BIOLOGICAL_OME]-(:Person)-[:GENERATED]->(:Sample)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                 f"WHERE g.sample =\"{sample}\" " +
+                 "MERGE (g)-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]->(f)")
         return query
 
 
@@ -2761,12 +2833,10 @@ class RelateFastqToGenome:
 
     def _create_query(self, blob_id, sample):
         query = (
-                 "MATCH (blob:Blob:Fastq:FromPersonalis:WGS35) " +
-                 f"WHERE blob.id = \"{blob_id}\" " +
-                 "WITH blob " +
-                 "MERGE (g:BiologicalOme:Genome {sample: blob.sample}) " +
-                 "WITH blob, g " +
-                 "MERGE (blob)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
+                 "MATCH (f:Blob:Fastq:FromPersonalis:WGS35), " +
+                 "(g:BiologicalOme:Genome {sample: f.sample}) " +
+                 f"WHERE f.id = \"{blob_id}\" " +
+                 "MERGE (f)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
         return query
 
 
@@ -4344,6 +4414,9 @@ def get_triggers(function_name, env_vars):
     ## Trellis v1.2 refactor
     triggers.append(MergeBiologicalNodesFromSequencing(
                                     function_name,
+                                    env_vars))
+    triggers.append(RelateGenomeToFastq(
+                                    funcion_name,
                                     env_vars))
     triggers.append(ValidateGenomeRelationships(
                                     function_name,
