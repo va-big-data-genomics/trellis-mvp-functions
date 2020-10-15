@@ -2257,7 +2257,7 @@ class MergeBiologicalNodesFromSequencing:
                  "MATCH (s:PersonalisSequencing) " +
                  f"WHERE s.sample =\"{sample}\" " +
                  "MERGE (s)<-[:WAS_USED_BY {ontology: \"provenance\"}]-(:Sample:WgsPhase3 {sample: s.sample, labels: [\"Sample\", \"WgsPhase3\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g:BiologicalOme:Genome {sample: s.sample, labels: [\"BiologicalOme\", \"Genome\"]}) " +
-                 "RETURN g")
+                 "RETURN g AS node")
         return query
 
 
