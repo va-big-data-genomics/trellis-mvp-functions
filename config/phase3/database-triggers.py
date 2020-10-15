@@ -2979,6 +2979,74 @@ class RelateCramToCrai:
         return query
 
 
+class RelateCraiToCram:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Crai',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+
+        query = self._create_query(blob_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Crai", "Cram", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCraiToCram",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id):
+        query = (
+                 "MATCH (cram:Blob:Crai)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(cram:Cram) " +
+                 f"WHERE crai.id =\"{blob_id}\" " +
+                 "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai)")
+        return query
+
+
 class RelateMergedVcfToTbi:
 
     def __init__(self, function_name, env_vars):
@@ -3044,6 +3112,74 @@ class RelateMergedVcfToTbi:
         query = (
                  "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
                  f"WHERE vcf.id =\"{blob_id}\" " +
+                 "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi)")
+        return query
+
+
+class RelateTbiToMergedVcf:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Tbi',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+
+        query = self._create_query(blob_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Merged", "Vcf", "Tbi", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateMergedVcfToTbi",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id):
+        query = (
+                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
+                 f"WHERE tbi.id =\"{blob_id}\" " +
                  "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi)")
         return query
 
@@ -4445,7 +4581,13 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateCramToCrai(
                                     function_name,
                                     env_vars))
+    triggers.append(RelateCraiToCram(
+                                    function_name,
+                                    env_vars))
     triggers.append(RelateMergedVcfToTbi(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateTbiToMergedVcf(
                                     function_name,
                                     env_vars))
     triggers.append(RequestGetSignatureSnps(
