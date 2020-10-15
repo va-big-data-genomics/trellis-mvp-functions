@@ -4552,7 +4552,7 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RelateGenomeToFastq(
-                                    funcion_name,
+                                    function_name,
                                     env_vars))
     triggers.append(ValidateGenomeRelationships(
                                     function_name,
