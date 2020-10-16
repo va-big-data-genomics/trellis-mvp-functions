@@ -197,11 +197,11 @@ def get_dstat_result(event, context):
     retry_count = header.get('retry-count')
     dstat_cmd = body['command']
 
-    try:
-        dstat_results = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
-    except:
-        logging.error(f"> Error: could not run dstat command {dstat_cmd}.")
-        return('', 204)
+    #try:
+    dstat_results = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
+    #except:
+    #    logging.error(f"> Error: could not run dstat command {dstat_cmd}.")
+    #    return('', 204)
 
     print(f"> Dstat results: {dstat_results}.")
     try:
