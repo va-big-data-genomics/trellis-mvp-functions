@@ -3041,7 +3041,7 @@ class RelateCraiToCram:
 
     def _create_query(self, blob_id):
         query = (
-                 "MATCH (cram:Blob:Crai)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(cram:Cram) " +
+                 "MATCH (crai:Blob:Crai)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(cram:Cram) " +
                  f"WHERE crai.id =\"{blob_id}\" " +
                  "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai)")
         return query
