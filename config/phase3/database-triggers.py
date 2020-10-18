@@ -2328,8 +2328,9 @@ class RelateGenomeToFastq:
 
     def _create_query(self, sample):
         query = (
-                 "MATCH (g:Genome:BiologicalOme)<-[:HAS_BIOLOGICAL_OME]-(:Person)-[:GENERATED]->(:Sample)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                 "MATCH (g:Genome:BiologicalOme), (f:Blob:Fastq) " +
                  f"WHERE g.sample =\"{sample}\" " +
+                 "AND f.sample = g.sample " +
                  "MERGE (g)-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]->(f)")
         return query
 
@@ -2834,8 +2835,9 @@ class RelateFastqToGenome:
     def _create_query(self, blob_id, sample):
         query = (
                  "MATCH (f:Blob:Fastq:FromPersonalis:WGS35), " +
-                 "(g:BiologicalOme:Genome {sample: f.sample}) " +
+                 "(g:BiologicalOme:Genome) " +
                  f"WHERE f.id = \"{blob_id}\" " +
+                 "AND g.sample = f.sample " +
                  "MERGE (f)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
         return query
 
