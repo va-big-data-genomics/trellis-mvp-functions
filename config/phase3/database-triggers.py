@@ -155,10 +155,10 @@ class RequestLaunchGatk5Dollar:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:Sample)" +      #1
-                    "-[:HAS]->(:Fastq)" +                           #2
-                    "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam) " +                       #4
+                 f"MATCH (s:PersonalisSequencing)" +      #1
+                    "-[:GENERATED]->(:Fastq)" +                           #2
+                    "-[:WAS_USED_BY]->(:Job)" +                        #3
+                    "-[:GENERATED]->(n:Ubam) " +                       #4
                  "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " + #5
                  "WITH s.sample AS sample, " +                      #6
                        "n.readGroup AS readGroup, " +               #8
@@ -184,7 +184,7 @@ class RequestLaunchGatk5Dollar:
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
                             "sample: sample, " +                    #25
                             "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
                  "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
@@ -269,52 +269,6 @@ class RequestLaunchFailedGatk5Dollar:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
 
-        """ OLD QUERY
-        query = (
-                 f"MATCH (s:Sample)" +      #1
-                    "-[:HAS]->(:Fastq)" +                           #2
-                    "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam) " +                      #4
-                 # Find samples with a failed $5 GATK workflow
-                 "WHERE (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
-                    "-[:STATUS]->(:Dstat {status:\"FAILURE\"}) " +
-                 # Don't launch job is another is currently running
-                 "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"RUNNING\"})" +
-                 # Don't launch job if another has succeeded
-                 "AND NOT (s)-[*4]->(:JobRequest:Gatk5Dollar)" + #5
-                    "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
-                    "-[:STATUS]->(:Dstat {status:\"SUCCESS\"}) " +
-                 "WITH s.sample AS sample, " +                      #6
-                       "n.readGroup AS readGroup, " +               #8
-                       "COLLECT(DISTINCT n) AS allNodes " +
-                 "WITH head(allNodes) AS heads " +                  #9
-                 "UNWIND [heads] AS uniqueNodes " +                 #10
-                 "WITH uniqueNodes.sample AS sample, " +            #11
-                      "uniqueNodes.setSize AS setSize, " +          #12
-                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
-                 "WHERE size(sampleNodes) = setSize " +             #14
-                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
-                            "sample: sample, " +                    #16
-                            "nodeCreated: datetime(), " +           #17
-                            "nodeCreatedEpoch: " +                  #18
-                                "datetime().epochSeconds, " +
-                            "name: \"gatk-5-dollar\", " +
-                            f"eventId: {event_id} }}) " +           #19
-                 "WITH sampleNodes, " +                             #20
-                      "sample, " +
-                      "j.eventId AS eventId, " +                     #21
-                      "j.nodeCreatedEpoch AS epochTime " +          #22
-                 "UNWIND sampleNodes AS sampleNode " +              #23
-                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
-                            "sample: sample, " +                    #25
-                            "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
-                 "RETURN DISTINCT(sampleNodes) AS nodes ")           #28                                                 #13
-        return query
-        """
-
         query = (
                  # Match GATK workflows that are stopped 
                  "MATCH (w:Gatk5Dollar:CromwellWorkflow) " +
@@ -328,10 +282,10 @@ class RequestLaunchFailedGatk5Dollar:
                  "WITH sampleName, COLLECT(d.status) AS statuses " +
                  # Select samples where none of the workflows have succeeded
                  "WHERE NOT \"SUCCESS\" IN statuses " +
-                 "MATCH (s:Sample {sample:sampleName})" +  
-                    "-[:HAS]->(:Fastq)" +                        
-                    "-[:INPUT_TO]->(:Job)" +                      
-                    "-[:OUTPUT]->(n:Ubam) " +
+                 "MATCH (s:PersonalisSequencing {sample:sampleName})" +  
+                    "-[:GENERATED]->(:Fastq)" +                        
+                    "-[:WAS_USED_BY]->(:Job)" +                      
+                    "-[:GENERATED]->(n:Ubam) " +
                  "WITH s.sample AS sample, " +                     
                    "n.readGroup AS readGroup, " +         
                    "COLLECT(DISTINCT n) AS allNodes " +
@@ -359,7 +313,7 @@ class RequestLaunchFailedGatk5Dollar:
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +
                             "sample: sample, " +
                             "eventId: eventId}) " +
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +
                  "RETURN DISTINCT(sampleNodes) AS nodes " +
                  "LIMIT 25")
         return query
@@ -445,11 +399,11 @@ class RequestGatk5DollarNoJob:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:Sample)" +      #1
-                    "-[:HAS]->(:Fastq)" +                           #2
-                    "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam)" +                      #4
-                    "-[:INPUT_TO]->(jobRequest:JobRequest:Gatk5Dollar) " +
+                 f"MATCH (s:PersonalisSequencing)" +      #1
+                    "-[:GENERATED]->(:Fastq)" +                           #2
+                    "-[:WAS_USED_BY]->(:Job)" +                        #3
+                    "-[:GENERATED]->(n:Ubam)" +                      #4
+                    "-[:WAS_USED_BY]->(jobRequest:JobRequest:Gatk5Dollar) " +
                  # Find samples with a $5 GATK job request & no job
                  "WHERE NOT (jobRequest)-[:TRIGGERED]->(:Job:Gatk5Dollar) "
                  # Don't launch job is another is currently running
@@ -485,7 +439,124 @@ class RequestGatk5DollarNoJob:
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
                             "sample: sample, " +                    #25
                             "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
+                 "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
+        return query
+
+
+class RequestGatk5DollarNoRequest:
+    """Trigger re-launching $5 GATK workflows that have failed.
+
+    Check whether all ubams for a sample are present, and
+    that they haven't already been input to a $5 workflow.
+    If so, send all ubam nodes metadata to the gatk-5-dollar
+    pub/sub topic.
+    """
+
+    def __init__(self, function_name, env_vars):
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+        reqd_header_labels = ['Request', 'LaunchFailedGatk5Dollar', 'All']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        """Send full set of ubams to GATK task"""
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        #sample = node['sample']
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        query = self._create_query(event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Ubam", "Failed", "GATK", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestGatk5DollarNoRequest",
+                              "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data", 
+                            "result-structure": "list",
+                            "result-split": "True",
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id):
+        """Check if all ubams for a sample are in the database & send to GATK $5 function.
+
+        Description of query, by line:
+            (1-2)   Find all ubams associated with this ubams sample.
+            (3,8)   Check that there is not an existing GATK $5 workflow for this sample.
+            (4-7)   Collect all ubams by sample/read group.
+            (9-10)  In case there are duplicate ubams, only get the first node of each 
+                    group of unique sample/read group ubams.
+            (11-13) Group all the ubams with the same sample and setSize, where setSize
+                    indicates how many ubams should be present for this sample.
+            (14)    Check that the count of bams with unique read groups matches the 
+                    expected number of bams.
+            (15)    Return number of ubam nodes.
+
+        Update notes:
+            v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
+                    check that sample is not related to an existing GATK $5 workflow. 
+        """
+        query = (
+                 f"MATCH (s:PersonalisSequencing)" +      #1
+                    "-[:GENERATED]->(:Fastq)" +                           #2
+                    "-[:WAS_USED_BY]->(:Job)" +                        #3
+                    "-[:GENERATED]->(n:Ubam) " +                      #4
+                 # Find samples with ubams but no $5 GATK job request
+                 "WHERE NOT (n)-[:WAS_USED_BY]->(:JobRequest:Gatk5Dollar) " +
+                 # Create JobRequest node
+                 "WITH s.sample AS sample, " +                      #6
+                       "n.readGroup AS readGroup, " +               #8
+                       "COLLECT(DISTINCT n) AS allNodes " +
+                 "WITH head(allNodes) AS heads " +                  #9
+                 "UNWIND [heads] AS uniqueNodes " +                 #10
+                 "WITH uniqueNodes.sample AS sample, " +            #11
+                      "uniqueNodes.setSize AS setSize, " +          #12
+                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
+                 "WHERE size(sampleNodes) = setSize " +             #14
+                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
+                            "sample: sample, " +                    #16
+                            "nodeCreated: datetime(), " +           #17
+                            "nodeCreatedEpoch: " +                  #18
+                                "datetime().epochSeconds, " +
+                            "name: \"gatk-5-dollar\", " +
+                            f"eventId: {event_id} }}) " +           #19
+                 # Send nodes to launch-gatk-5-dollar
+                 "WITH sampleNodes, " +                             #20
+                      "sample, " +
+                      "j.eventId AS eventId, " +                     #21
+                      "j.nodeCreatedEpoch AS epochTime " +          #22
+                 "UNWIND sampleNodes AS sampleNode " +              #23
+                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
+                            "sample: sample, " +                    #25
+                            "eventId: eventId}) " +                 #26
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
                  "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
@@ -578,10 +649,10 @@ class LaunchGatk5Dollar:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:Sample {{sample:\"{sample}\"}})" +      #1
-                    "-[:HAS]->(:Fastq)" +                           #2
-                    "-[:INPUT_TO]->(:Job)" +                        #3
-                    "-[:OUTPUT]->(n:Ubam) " +                       #4
+                 f"MATCH (s:PersonalisSequencing {{sample:\"{sample}\"}})" +      #1
+                    "-[:GENERATED]->(:Fastq)" +                           #2
+                    "-[:WAS_USED_BY]->(:Job)" +                        #3
+                    "-[:GENERATED]->(n:Ubam) " +                       #4
                  "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " + #5
                  "WITH s.sample AS sample, " +                      #6
                        "n.readGroup AS readGroup, " +               #8
@@ -607,7 +678,7 @@ class LaunchGatk5Dollar:
                  "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
                             "sample: sample, " +                    #25
                             "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:INPUT_TO]->(jobReq) " +      #27
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
                  "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
@@ -684,7 +755,7 @@ class LaunchFastqToUbam:
                             f"sample:\"{sample}\", " +
                             f"readGroup:{read_group} }}) " +
                  "WHERE NOT " +
-                    "(n)-[:INPUT_TO]->(:JobRequest:FastqToUbam) " +
+                    "(n)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
                  "WITH n.sample AS sample, " +
                       "n.matePair AS matePair, " +
                       "n.setSize AS setSize, "
@@ -706,8 +777,78 @@ class LaunchFastqToUbam:
                 #"MATCH (jobReq:JobRequest:FastqToUbam { " +
                 #            "sample: sample, " +
                 #            "eventId: eventId}) " +
-                "MERGE (uniqueMatePair)-[:INPUT_TO]->(j) " +
+                "MERGE (uniqueMatePair)-[:WAS_USED_BY]->(j) " +
                 "RETURN DISTINCT(uniqueMatePairs) AS nodes")
+        return query
+
+
+class RequestGetSignatureSnps:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'LaunchViewSignatureSnps']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        query = self._create_query(event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Gvcf", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestGetSignatureSnps",
+                              "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id):
+        query = (
+                 "MATCH (n:Merged:Vcf) " +
+                 "WHERE NOT " +
+                    "(n)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
+                 "WITH n LIMIT 100 " +
+                 "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
+                            "sample:n.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"view-gvcf-snps\", " +
+                            f"eventId: {event_id} }}) " +
+                "MERGE (n)-[:WAS_USED_BY]->(j) " +
+                "RETURN n AS node")
         return query
 
 
@@ -1165,17 +1306,17 @@ class LaunchBamFastqc:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob:Bam) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob:Bam) " +
                  "WHERE s.wdlCallAlias=\"gatherbamfiles\" " +
                  f"AND node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BamFastqc) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:BamFastqc) " +
                  "CREATE (jr:JobRequest:BamFastqc { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"bam-fastqc\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1249,17 +1390,17 @@ class LaunchFlagstat:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob:Bam) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob:Bam) " +
                  "WHERE s.wdlCallAlias=\"gatherbamfiles\" " +
                  f"AND node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:Flagstat) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:Flagstat) " +
                  "CREATE (jr:JobRequest:Flagstat { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"flagstat\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1334,17 +1475,17 @@ class LaunchVcfstats:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob:Vcf) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob:Vcf) " +
                  "WHERE s.wdlCallAlias=\"mergevcfs\" " +
                  f"AND node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:Vcfstats) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:Vcfstats) " +
                  "CREATE (jr:JobRequest:Vcfstats { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"vcfstats\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1425,16 +1566,16 @@ class LaunchTextToTable:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (:Job)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (:Job)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:TextToTable) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:TextToTable) " +
                  "CREATE (jr:JobRequest:TextToTable { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"text-to-table\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1517,16 +1658,16 @@ class BigQueryImportCsv:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (:Job:TextToTable)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (:Job:TextToTable)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BigQueryImportCsv) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:BigQueryImportCsv) " +
                  "CREATE (jr:JobRequest:BigQueryImportCsv { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"bigquery-import-csv\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1606,17 +1747,17 @@ class BigQueryImportContamination:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BigQueryAppendTsv) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:BigQueryAppendTsv) " +
                  "CREATE (jr:JobRequest:BigQueryAppendTsv { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"bigquery-append-tsv\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1688,17 +1829,17 @@ class RequestBigQueryImportContamination:
 
     def _create_query(self, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.extension =\"preBqsr.selfSM\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:BigQueryAppendTsv) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:BigQueryAppendTsv) " +
                  "CREATE (jr:JobRequest:BigQueryAppendTsv { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"bigquery-append-tsv\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1781,16 +1922,16 @@ class PostgresInsertCsv:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (:Job:TextToTable)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (:Job:TextToTable)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:PostgresInsertData) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1870,17 +2011,17 @@ class PostgresInsertContamination:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.id =\"{blob_id}\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:JobRequest:PostgresInsertData) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 1")
         return query
@@ -1951,17 +2092,17 @@ class RequestPostgresInsertContamination:
 
     def _create_query(self, event_id):
         query = (
-                 f"MATCH (s:CromwellStep)-[:OUTPUT]->(node:Blob) " +
+                 f"MATCH (s:CromwellStep)-[:GENERATED]->(node:Blob) " +
                  f"WHERE node.extension =\"preBqsr.selfSM\" " +
                  "AND s.wdlCallAlias = \"checkcontamination\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:Job:PostgresInsertData) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:Job:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 100")
         return query
@@ -2032,16 +2173,1016 @@ class RequestPostgresInsertTextToTable:
         query = (
                  f"MATCH (node:Blob:TextToTable) " +
                  f"WHERE node.filetype =\"csv\" " +
-                 "AND NOT (node)-[:INPUT_TO]->(:Job:PostgresInsertData) " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:Job:PostgresInsertData) " +
                  "CREATE (jr:JobRequest:PostgresInsertData { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"postgres-insert-data\", " +
                             f"eventId: {event_id} }}) " +
-                 "MERGE (node)-[:INPUT_TO]->(jr) " +
+                 "MERGE (node)-[:WAS_USED_BY]->(jr) " +
                  "RETURN node " +
                  "LIMIT 100")
+        return query
+
+# Trellis v1.2 Data optimization triggers
+class MergeBiologicalNodesFromSequencing:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        reqd_node_labels = [
+                            'PersonalisSequencing',
+                            'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(reqd_node_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            
+            # Metadata required for populating trigger query:
+            node.get("sample"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Create", "Biological", "Nodes", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "MergeBiologicalNodesFromSequencing",
+                              # Topic that db result of this trigger query will be published to
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (s:PersonalisSequencing) " +
+                 f"WHERE s.sample =\"{sample}\" " +
+                 "MERGE (s)<-[:WAS_USED_BY {ontology: \"provenance\"}]-(:Sample:WgsPhase3 {sample: s.sample, labels: [\"Sample\", \"WgsPhase3\"]})<-[:GENERATED {ontology:\"provenance\"}]-(:Person {sample: s.sample, labels: [\"Person\"]})-[:HAS_BIOLOGICAL_OME {ontology:\"bioinformatics\"}]->(g:BiologicalOme:Genome {sample: s.sample, labels: [\"BiologicalOme\", \"Genome\"]}) " +
+                 "RETURN g AS node")
+        return query
+
+
+class RelateGenomeToFastq:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Trigger', 'Create', 'Biological', 'Nodes', 'Database', 'Result']
+        reqd_node_labels = [
+                            'Genome',
+                            'BiologicalOme',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(reqd_node_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+
+            # Check that retry count has not been met/exceeded
+            (not header.get('retry-count') 
+             or header.get('retry-count') < MAX_RETRIES),
+            
+            # Metadata required for populating trigger query:
+            node.get("sample"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Genome", "Fastq", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateGenomeToFastq",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (g:Genome:BiologicalOme), (f:Blob:Fastq) " +
+                 f"WHERE g.sample =\"{sample}\" " +
+                 "AND f.sample = g.sample " +
+                 "MERGE (g)-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]->(f)")
+        return query
+
+
+class ValidateGenomeRelationships:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Update', 'Sample', 'Node']
+        required_labels = [
+                           'Sample',
+                           'WgsPhase3',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("trellis_snvQa") == True,
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Trigger", "Validate", "Genome", "Relationships", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "ValidateGenomeRelationships",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(o:BiologicalOme:Genome) " +
+                 f"WHERE s.sample =\"{sample}\" " +
+                 "WITH s, o " +
+                 "MATCH (o)-[:HAS_QC_DATA]->(:Fastqc), " +
+                 "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
+                 "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
+                 "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:HAS_INDEX]->(:Crai), " +
+                 "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi) " +
+                 "SET s.trellis_optimizeStorage = true " +
+                 "RETURN s AS node " +
+                 "LIMIT 1")
+        return query
+
+
+class DeleteNonessentialSequencingData:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Validate', 'Genome', 'Relationships']
+        required_labels = ['Sample']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("trellis_optimizeStorage") == True,
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample = node['sample']
+
+        query = self._create_query(sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Trigger", "Validate", "Genome", "Relationships", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "ValidateGenomeRelationships",
+                              "publishTo": self.env_vars['TOPIC_DELETE_BLOB'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "False"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample):
+        query = (
+                 "MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) " +
+                 f"WHERE s.sample = \"{sample}\" " +
+                 "WITH COLLECT(DISTINCT(b)) AS all_blobs " +
+                 "UNWIND all_blobs AS b " +
+                 "MATCH p=(b)-[*1..2]-(:BiologicalOme) " +
+                 "WHERE ALL (r in relationships(p) WHERE r.ontology=\"bioinformatics\") " +
+                 "WITH all_blobs, COLLECT(b) AS essential_blobs " +
+                 "UNWIND all_blobs AS b " +
+                 "MATCH (b) " +
+                 "WHERE NOT b IN essential_blobs " +
+                 "AND (NOT b.obj_exists = false OR NOT EXISTS(b.obj_exists)) " +
+                 f"AND b.bucket = \"{self.env_vars['DSUB_OUT_BUCKET']}\" " + 
+                 "RETURN b.bucket AS bucket, b.path AS path " +
+                 "ORDER BY b.size DESC " +
+                 "LIMIT 100")
+        return query
+
+
+class RelateVcfstatsToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Vcfstats',
+                           'Text',
+                           'Data'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Vcfstats", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateVcfstatsToGenome",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
+                    "(blob:Blob:Vcfstats:Text:Data) " +
+                 f"WHERE s.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
+        return query
+
+
+class RelateFlagstatToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Flagstat',
+                           'Text',
+                           'Data',
+                           'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Flagstat", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateFlagstatToGenome",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
+                    "(blob:Blob:Flagstat:Text:Data:WGS35) " +
+                 f"WHERE s.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
+        return query
+
+
+class RelateFastqcToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Fastqc',
+                           'Text',
+                           'Data',
+                           'WGS35',
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Fastqc", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateFastqcToGenome",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
+                    "(blob:Blob:Fastqc:Text:Data:WGS35) " +
+                 f"WHERE s.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
+        return query
+
+
+class RelateMergedVcfToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Vcf',
+                           'Merged',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Vcf", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateMergedVcfToGenome",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
+                 "(blob:Blob:Merged:Vcf:WGS35) " +
+                 f"WHERE s.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_VARIANT_CALLS {ontology: \"bioinformatics\"}]->(blob)")
+        return query
+
+
+class RelateFastqToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Fastq',
+                           'FromPersonalis',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Fastq", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateFastqToGenome",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (f:Blob:Fastq:FromPersonalis:WGS35), " +
+                 "(g:BiologicalOme:Genome) " +
+                 f"WHERE f.id = \"{blob_id}\" " +
+                 "AND g.sample = f.sample " +
+                 "MERGE (f)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
+        return query
+
+
+class RelateCramToGenome:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        required_labels = [
+                           'Cram',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        sample = node['sample']
+
+        query = self._create_query(blob_id, sample)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Cram", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCramToGenome",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id, sample):
+        query = (
+                 "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
+                 "(blob:Blob:Cram:Gatk:WGS35) " +
+                 f"WHERE s.sample = \"{sample}\" " +
+                 f"AND blob.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]->(blob)")
+        return query
+
+
+class RelateCramToCrai:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Cram',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+
+        query = self._create_query(blob_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Cram", "Crai", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCramToCrai",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id):
+        query = (
+                 "MATCH (cram:Blob:Cram)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Crai) " +
+                 f"WHERE cram.id =\"{blob_id}\" " +
+                 "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai)")
+        return query
+
+
+class RelateCraiToCram:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Crai',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+
+        query = self._create_query(blob_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Crai", "Cram", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateCraiToCram",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id):
+        query = (
+                 "MATCH (crai:Blob:Crai)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(cram:Cram) " +
+                 f"WHERE crai.id =\"{blob_id}\" " +
+                 "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai)")
+        return query
+
+
+class RelateMergedVcfToTbi:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Merged',
+                           'Vcf',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+
+        query = self._create_query(blob_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Merged", "Vcf", "Tbi", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateMergedVcfToTbi",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id):
+        query = (
+                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
+                 f"WHERE vcf.id =\"{blob_id}\" " +
+                 "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi)")
+        return query
+
+
+class RelateTbiToMergedVcf:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        required_labels = [
+                           'Tbi',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+
+        query = self._create_query(blob_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Relate", "Merged", "Vcf", "Tbi", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RelateMergedVcfToTbi",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, blob_id):
+        query = (
+                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
+                 f"WHERE tbi.id =\"{blob_id}\" " +
+                 "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi)")
         return query
 
 
@@ -2111,7 +3252,7 @@ class RelateTrellisOutputToJob:
                               f"id:\"{node_id}\" }}) " +
                   "WHERE NOT EXISTS(j.duplicate) " +
                   "OR NOT j.duplicate=True " +
-                  "MERGE (j)-[:OUTPUT]->(node) " +
+                  "MERGE (j)-[:GENERATED]->(node) " +
                   "RETURN node")
         return query
     """
@@ -2125,7 +3266,7 @@ class RelateTrellisOutputToJob:
                     f"trellisTaskId: \"{task_id}\", " +
                     f"id: \"{node_id}\" " +
                  "}) " +
-                 "MERGE (j)-[:OUTPUT]->(node) " +
+                 "MERGE (j)-[:GENERATED]->(node) " +
                  "RETURN node")
         return query
 
@@ -2192,7 +3333,7 @@ class RelateTrellisInputToJob:
         query = (
                  f"MATCH (input:Blob {{ id:\"{input_id}\" }}), " +
                  f"(job:Job {{ trellisTaskId:\"{trellis_task_id}\"  }}) " +
-                 f"CREATE (input)-[:INPUT_TO]->(job) " +
+                 f"CREATE (input)-[:WAS_USED_BY]->(job) " +
                   "RETURN job AS node")
         return query
 
@@ -2266,9 +3407,9 @@ class RelateJobToJobRequest:
         # NOTE: If this doesn't work, I can try also try using the
         # input IDs attached to the job node to find input blobs
         query = (
-            f"MATCH (b:Blob)-[:INPUT_TO]->(j:Job {{ trellisTaskId: \"{trellis_task_id}\" }}), " +
-            "(b)-[:INPUT_TO]->(jr:JobRequest {name: j.name}) " +
-            "MATCH (b2:Blob)-[:INPUT_TO]->(jr) " +
+            f"MATCH (b:Blob)-[:WAS_USED_BY]->(j:Job {{ trellisTaskId: \"{trellis_task_id}\" }}), " +
+            "(b)-[:WAS_USED_BY]->(jr:JobRequest {name: j.name}) " +
+            "MATCH (b2:Blob)-[:WAS_USED_BY]->(jr) " +
             "WHERE NOT (jr)-[:TRIGGERED]->(:Job) " +
             "WITH j, jr, " +
             "COLLECT(DISTINCT b) AS jobInputs, " +
@@ -2348,7 +3489,7 @@ class RelateDstatToJob:
         return query
 
 
-class RelateSampleToFromPersonalis:
+class RelatePersonalisSequencingToFromPersonalis:
 
     def __init__(self, function_name, env_vars):
         '''NOTE: Currently not in use(?)
@@ -2363,18 +3504,20 @@ class RelateSampleToFromPersonalis:
 
     def check_conditions(self, header, body, node):
         reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        reqd_node_labels = ['PersonalisSequencing']
 
         if not node:
                 return False
 
         conditions = [
             # Check that message has appropriate headers
+            set(reqd_node_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
+
             # Check that retry count has not been met/exceeded
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             # Check node-specific information
-            "Sample" in node.get("labels"),
             node.get("sample"),
             node.get("bucket")
         ]
@@ -2399,7 +3542,7 @@ class RelateSampleToFromPersonalis:
                               "method": "POST",
                               "labels": ["Create", "Relationship", "Sample", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateSampleToFromPersonalis",
+                              "trigger": "RelatePersonalisSequencingToFromPersonalis",
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2413,16 +3556,16 @@ class RelateSampleToFromPersonalis:
     def _create_query(self, sample_node):
         sample = sample_node['sample']
         query = (
-                 f"MATCH (j:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                 f"MATCH (s:Blob:Json:FromPersonalis:PersonalisSequencing {{ sample:\"{sample}\" }}), " +
                   "(b:Blob:FromPersonalis) " +
-                  "WHERE b.sample = j.sample " +
-                  "AND b.bucket = j.bucket " +
-                  "AND NOT \"Sample\" IN labels(b) " +
-                  "MERGE (j)-[:HAS]->(b)")
+                  "WHERE b.sample = s.sample " +
+                  "AND b.bucket = s.bucket " +
+                  "AND NOT \"PersonalisSequencing\" IN labels(b) " +
+                  "MERGE (s)-[:GENERATED]->(b)")
         return query
 
 
-class RelateFromPersonalisToSample:
+class RelateFromPersonalisToPersonalisSequencing:
 
     def __init__(self, function_name, env_vars):
 
@@ -2432,19 +3575,20 @@ class RelateFromPersonalisToSample:
 
     def check_conditions(self, header, body, node):
         reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        reqd_node_labels = ['FromPersonalis']
 
         if not node:
                 return False
 
         conditions = [
             # Check that message has appropriate headers
+            set(reqd_node_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Check that retry count has not been met/exceeded
             (not header.get('retry-count') 
              or header.get('retry-count') < MAX_RETRIES),
             # Check node-specific information
-            "FromPersonalis" in node.get("labels"),
-            not "Sample" in node.get("labels"),
+            not "PersonalisSequencing" in node.get("labels"),
             node.get("sample"),
             node.get("bucket")
         ]
@@ -2467,9 +3611,9 @@ class RelateFromPersonalisToSample:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Create", "Relationship", "Sample", "Blob", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "PersonalisSequencing", "Blob", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateFromPersonalisToSample",
+                              "trigger": "RelateFromPersonalisToPersonalisSequencing",
                               "publishTo": self.env_vars['TOPIC_TRIGGERS'],   # Requeue message if fails initially
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
@@ -2488,9 +3632,9 @@ class RelateFromPersonalisToSample:
         bucket = node['bucket']
         path = node['path']
         query = (
-                 f"MATCH (sample:Blob:Json:FromPersonalis:Sample {{ sample:\"{sample}\" }}), " +
+                 f"MATCH (seq:Blob:Json:FromPersonalis:PersonalisSequencing {{ sample:\"{sample}\" }}), " +
                  f"(node:Blob:FromPersonalis {{ bucket:\"{bucket}\", path:\"{path}\" }}) " +
-                  "MERGE (sample)-[:HAS]->(node) " +
+                  "MERGE (seq)-[:GENERATED]->(node) " +
                   "RETURN node")
         return query
 
@@ -2569,7 +3713,7 @@ class RelateCromwellOutputToStep:
                  "}) " +
                  #"WHERE NOT EXISTS(step.duplicate) " +
                  #"OR NOT step.duplicate=True " +
-                 "MERGE (step)-[:OUTPUT]->(node) " +
+                 "MERGE (step)-[:GENERATED]->(node) " +
                  "RETURN node")
         return query
 
@@ -3004,7 +4148,7 @@ class RelateCromwellStepToLatestAttempt:
                  "UNWIND attempts AS attempt " +
                  "MATCH (attempt) " +
                  "WHERE attempt.startTimeEpoch = maxTime " +
-                 "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
+                 "MERGE (step)-[:GENERATED_ATTEMPT]->(attempt) " +
                  "RETURN step AS node")
         return query
   
@@ -3104,7 +4248,7 @@ class RelateCromwellStepToAttempt:
 
     def __init__(self, function_name, env_vars):
         '''When a new Cromwell attempt is added after a previous one, 
-           create a new :HAS_ATTEMPT relationships between the step and 
+           create a new :GENERATED_ATTEMPT relationships between the step and 
            the newest attempt.
         '''
 
@@ -3180,7 +4324,7 @@ class RelateCromwellStepToAttempt:
                  "(attempt:Job { " +
                     f"instanceName: \"{instance_name}\" " +
                  "}) " +
-                 "MERGE (step)-[:HAS_ATTEMPT]->(attempt) " +
+                 "MERGE (step)-[:GENERATED_ATTEMPT]->(attempt) " +
                  "RETURN attempt AS node")
         return query
 
@@ -3189,7 +4333,7 @@ class DeleteRelationshipCromwellStepHasAttempt:
     
 
     def __init__(self, function_name, env_vars):
-        '''Delete :HAS_ATTEMPT relationship between Cromwell step and old attempts
+        '''Delete :GENERATED_ATTEMPT relationship between Cromwell step and old attempts
            once a newer attempt has been added to the database.
         '''
 
@@ -3260,9 +4404,9 @@ class DeleteRelationshipCromwellStepHasAttempt:
                   "MATCH (step:CromwellStep { " +
                     f"cromwellWorkflowId: \"{cromwell_workflow_id}\", " +
                     f"wdlCallAlias: \"{wdl_call_alias}\" " +
-                  "})-[:HAS_ATTEMPT]->(newAttempt:CromwellAttempt)-[:AFTER*..5]->(oldAttempt:CromwellAttempt) " +
+                  "})-[:GENERATED_ATTEMPT]->(newAttempt:CromwellAttempt)-[:AFTER*..5]->(oldAttempt:CromwellAttempt) " +
                   "WITH step, newAttempt, oldAttempt " +
-                  "MATCH (step)-[r:HAS_ATTEMPT]->(oldAttempt) " +
+                  "MATCH (step)-[r:GENERATED_ATTEMPT]->(oldAttempt) " +
                   "DELETE r " +
                   "RETURN newAttempt AS node"
         )
@@ -3280,7 +4424,8 @@ def get_triggers(function_name, env_vars):
     triggers.append(LaunchFastqToUbam(
                                     function_name,
                                     env_vars))
-    # User can submit request to launch all open GATK jobs
+    
+    ## Request-driven triggers to re-launch failed/missing jobs
     triggers.append(RequestLaunchGatk5Dollar(
                                     function_name,
                                     env_vars))
@@ -3288,6 +4433,9 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RequestGatk5DollarNoJob(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestGatk5DollarNoRequest(
                                     function_name,
                                     env_vars))
 
@@ -3365,10 +4513,10 @@ def get_triggers(function_name, env_vars):
     triggers.append(RelateDstatToJob(
                                     function_name,
                                     env_vars))
-    triggers.append(RelateFromPersonalisToSample(
+    triggers.append(RelateFromPersonalisToPersonalisSequencing(
                                     function_name,
                                     env_vars))
-    triggers.append(RelateSampleToFromPersonalis(
+    triggers.append(RelatePersonalisSequencingToFromPersonalis(
                                     function_name,
                                     env_vars))
 
@@ -3398,6 +4546,53 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(DeleteRelationshipCromwellStepHasAttempt(
+                                    function_name,
+                                    env_vars))
+
+    ## Trellis v1.2 refactor
+    triggers.append(MergeBiologicalNodesFromSequencing(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateGenomeToFastq(
+                                    function_name,
+                                    env_vars))
+    triggers.append(ValidateGenomeRelationships(
+                                    function_name,
+                                    env_vars))
+    triggers.append(DeleteNonessentialSequencingData(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateVcfstatsToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFlagstatToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFastqcToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateMergedVcfToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateFastqToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCramToGenome(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCramToCrai(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateCraiToCram(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateMergedVcfToTbi(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RelateTbiToMergedVcf(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestGetSignatureSnps(
                                     function_name,
                                     env_vars))
     return triggers

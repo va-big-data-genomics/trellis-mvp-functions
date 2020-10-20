@@ -17,5 +17,8 @@ steps:
          '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
          '--update-env-vars=GIT_COMMIT_HASH=${SHORT_SHA}',
          '--update-env-vars=GIT_VERSION_TAG=${TAG_NAME}',
+         # Fix for logging issue: https://issuetracker.google.com/issues/155215191#comment112
+         '--update-env-vars=USE_WORKER_V2=true',
+         '--update-env-vars=PYTHON37_DRAIN_LOGS_ON_CRASH_WAIT_SEC=5',
          '--update-labels=user=trellis',
   ]
