@@ -1,0 +1,24 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-register-blob-deleted-${_BUCKET_SHORT_NAME}',
+         '--project=${PROJECT_ID}',
+         '--source=functions/register-blob-deleted',
+         '--memory=128MB',
+         '--max-instances=100',
+         '--entry-point=register_blob_deleted',
+         '--runtime=python37',
+         '--trigger-resource=${_TRIGGER_RESOURCE}',
+         '--trigger-event=google.storage.object.delete',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-env-vars=GIT_COMMIT_HASH=${SHORT_SHA}',
+         '--update-env-vars=GIT_VERSION_TAG=${TAG_NAME}',
+         '--update-env-vars=TRIGGER_OPERATION=${_TRIGGER_OPERATION}',
+         '--update-labels=trigger-resource=${_TRIGGER_RESOURCE}',
+         '--update-labels=user=trellis',
+  ]

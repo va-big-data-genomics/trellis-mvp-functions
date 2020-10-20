@@ -204,6 +204,7 @@ class TestGetDelimiter:
 
         assert delimiter == None
 
+
 class TestGetDatetimeStamp:
 
     def test(self):
