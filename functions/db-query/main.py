@@ -84,7 +84,8 @@ def format_pubsub_message(method, labels, query, results, seed_id, event_id, ret
 
 def publish_to_topic(topic, json_data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
-    message = json.dumps(json_data).encode('utf-8')
+    # https://stackoverflow.com/questions/11875770/how-to-overcome-datetime-datetime-not-json-serializable/36142844#36142844
+    message = json.dumps(json_data, indent=4, sort_keys=True, default=str).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
 
@@ -243,6 +244,11 @@ def query_db(event, context):
     if isinstance(topics, str):
         topics = [topics]
 
+    # Track how many messages are published to each topic
+    published_message_counts = {}
+    for topic in topics:
+        published_message_counts[topic] = 0
+
     for topic in topics:
         if result_split == 'True':
             if not query_results:
@@ -259,6 +265,7 @@ def query_db(event, context):
                 print(f"> Pubsub message: {message}.")
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
+                published_message_counts[topic] += 1
 
             for result in query_results:
                 message = format_pubsub_message(
@@ -272,6 +279,7 @@ def query_db(event, context):
                 print(f"> Pubsub message: {message}.")
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
+                published_message_counts[topic] += 1
         else:
             #message['body']['results'] = results
             message = format_pubsub_message(
@@ -285,6 +293,8 @@ def query_db(event, context):
             print(f"> Pubsub message: {message}.")
             publish_result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {publish_result}.")
+            published_message_counts[topic] += 1
+    logging.info(f"> Summary of published messages: {published_message_counts}")
 
     # Execution time block
     end = datetime.now()

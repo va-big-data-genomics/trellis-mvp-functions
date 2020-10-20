@@ -85,7 +85,7 @@ def clean_metadata_dict(raw_dict):
     return clean_dict
 
 
-def get_standard_name_fields(event_name):
+def get_standard_name_fields(event_name, event_bucket):
     """(pbilling 200226): This should probably be moved to config file.
     """
     path_elements = event_name.split('/')
@@ -99,6 +99,7 @@ def get_standard_name_fields(event_name):
                    "filetype": name_elements[-1],
                    "gitCommitHash": GIT_COMMIT_HASH,
                    "gitVersionTag": GIT_VERSION_TAG,
+                   "uri" : "gs://" + event_bucket + "/" + event_name,
     }
     return name_fields
 
@@ -243,7 +244,7 @@ def create_node_query(event, context):
     db_dict = clean_metadata_dict(event)
 
     # Add standard fields
-    name_fields = get_standard_name_fields(event['name'])
+    name_fields = get_standard_name_fields(event['name'], event['bucket'])
     time_fields = get_standard_time_fields(event)
 
     db_dict.update(name_fields)
