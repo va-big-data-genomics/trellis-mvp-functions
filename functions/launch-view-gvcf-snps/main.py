@@ -251,7 +251,7 @@ def launch_view_gvcf_snps(event, context, test=False):
 
         "command": (
                     "bcftools index --tbi ${INPUT} | " +
-                    "bcftools view ${INPUT} -R {$SNP_LIST} -Ou | " +
+                    "bcftools view ${INPUT} -R ${SNP_LIST} -Ou | " +
                     "bcftools convert --gvcf2vcf --fasta-ref ${REF_FASTA} -Ou | " +
                     "bcftools view -T ${SNP_LIST} -Oz -o ${OUTPUT}"),
         "envs": {
@@ -292,7 +292,7 @@ def launch_view_gvcf_snps(event, context, test=False):
         "--min-cores", str(job_dict["minCores"]), 
         "--logging", job_dict["logging"],
         "--image", job_dict["image"],
-        #"--use-private-address",
+        "--use-private-address",
         "--network", job_dict["network"],
         "--subnetwork", job_dict["subnetwork"],        
         "--command", job_dict["command"],
