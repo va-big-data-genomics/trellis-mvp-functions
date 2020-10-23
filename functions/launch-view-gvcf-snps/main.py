@@ -98,9 +98,9 @@ class TrellisMessage:
         if body.get('results'):
             self.results = body.get('results')
 
-        self.node = None
-        if self.results.get('node'):
-            self.node = self.results['node']
+#        self.node = None
+#        if self.results.get('node'):
+#            self.node = self.results['node']
 
 
 def format_pubsub_message(job_dict, seed_id, event_id, function_name):
@@ -212,6 +212,9 @@ def launch_view_gvcf_snps(event, context, test=False):
     message = TrellisMessage(event, context)
     node = message.node
 
+    gvcf = message.results["gvcf"]
+    index = message.results["index"]
+
     # Check that message includes node metadata
     if not node:
         logging.warning("> No node provided. Exiting.")
@@ -229,11 +232,11 @@ def launch_view_gvcf_snps(event, context, test=False):
         raise RuntimeError(f"> Input node does not match requirements. Node: {node}.")
 
     # Database entry variables
-    bucket = node['bucket']
-    plate = node['plate']
-    path = node['path']
-    sample = node['sample']
-    basename = node['basename']
+    #bucket = gvcf['bucket']
+    plate = gvcf['plate']
+    #path = node['path']
+    sample = gvcf['sample']
+    #basename = node['basename']
 
     task_name = 'view-gvcf-snps'
     unique_task_label = 'ViewGvcfSnps'
@@ -250,15 +253,16 @@ def launch_view_gvcf_snps(event, context, test=False):
         # bcftools view -T signatureSNPs.txt -Oz -o <SAMPLE>.signatureSNPs.vcf.gz
 
         "command": (
-                    "bcftools index --tbi ${INPUT} | " +
-                    "bcftools view ${INPUT} -R ${SNP_LIST} -Ou | " +
+                    "bcftools index --tbi ${GVCF} | " +
+                    "bcftools view ${GVCF} -R ${SNP_LIST} -Ou | " +
                     "bcftools convert --gvcf2vcf --fasta-ref ${REF_FASTA} -Ou | " +
                     "bcftools view -T ${SNP_LIST} -Oz -o ${OUTPUT}"),
         "envs": {
             "SAMPLE_ID": sample
         },
         "inputs": {
-            "INPUT": f"gs://{bucket}/{path}",
+            "GVCF": f"{gvcf['uri']}",
+            "GVCF_INDEX": f"{index['uri']}",
             "SNP_LIST": SNP_LIST, 
             "REF_FASTA": REF_FASTA,
             "REF_FASTA_INDEX": REF_FASTA_INDEX
