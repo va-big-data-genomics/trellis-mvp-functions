@@ -33,12 +33,13 @@ if ENVIRONMENT == 'google-cloud':
 
     PROJECT_ID     = parsed_vars['GOOGLE_CLOUD_PROJECT']
     NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
-    REGIONS = parsed_vars['DSUB_REGIONS']
+
     OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
     LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
     DSUB_USER = parsed_vars['DSUB_USER']
-    NETWORK = parsed_vars['DSUB_NETWORK']
-    SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
+    DSUB_REGIONS = parsed_vars['DSUB_REGIONS']
+    DSUB_NETWORK = parsed_vars['DSUB_NETWORK']
+    DSUB_SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
 
     # Job specific variables
     REF_FASTA = parsed_vars['REF_FASTA']
