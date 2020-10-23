@@ -252,7 +252,7 @@ def launch_view_gvcf_snps(event, context, test=False):
         # bcftools view -T signatureSNPs.txt -Oz -o <SAMPLE>.signatureSNPs.vcf.gz
 
         "command": (
-                    "bcftools index --tbi ${GVCF} | " +
+                    #"bcftools index --tbi ${GVCF} | " +
                     "bcftools view ${GVCF} -R ${SNP_LIST} -Ou | " +
                     "bcftools convert --gvcf2vcf --fasta-ref ${REF_FASTA} -Ou | " +
                     "bcftools view -T ${SNP_LIST} -Oz -o ${OUTPUT}"),
