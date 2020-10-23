@@ -840,7 +840,7 @@ class RequestGetSignatureSnps:
                  "MATCH (n:Merged:Vcf) " +
                  "WHERE NOT " +
                     "(n)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
-                 "WITH n LIMIT 100 " +
+                 "WITH n LIMIT 1 " +
                  "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
                             "sample:n.sample, " +
                             "nodeCreated: datetime(), " +
