@@ -210,26 +210,25 @@ def launch_view_gvcf_snps(event, context, test=False):
 
     # Parse message
     message = TrellisMessage(event, context)
-    node = message.node
+    #node = message.node
 
     gvcf = message.results["gvcf"]
     index = message.results["index"]
 
     # Check that message includes node metadata
-    if not node:
-        logging.warning("> No node provided. Exiting.")
+    if not gvcf or not index:
+        logging.warning("> Gvcf or index is missing. Exiting.")
         return(1)
 
-    #filetype = node['filetype'].upper()
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    task_id, trunc_nodes_hash = make_unique_task_id([node], datetime_stamp)
+    task_id, trunc_nodes_hash = make_unique_task_id([gvcf,index], datetime_stamp)
 
     # Check whether node & message metadata meets function conditions
-    conditions_met = check_conditions(node)
+    conditions_met = check_conditions(gvcf)
     if not conditions_met:
-        raise RuntimeError(f"> Input node does not match requirements. Node: {node}.")
+        raise RuntimeError(f"> Input gvcf does not match requirements. Node: {gvcf}.")
 
     # Database entry variables
     #bucket = gvcf['bucket']
@@ -276,7 +275,7 @@ def launch_view_gvcf_snps(event, context, test=False):
         "name": task_name,
         "inputHash": trunc_nodes_hash,
         "labels": ["Job", "Dsub", unique_task_label],
-        "inputIds": [node['id']],
+        "inputIds": [gvcf['id'], index['id']],
         "network": DSUB_NETWORK,
         "subnetwork": DSUB_SUBNETWORK,       
     }
