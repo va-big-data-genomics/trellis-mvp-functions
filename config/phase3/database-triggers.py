@@ -837,10 +837,10 @@ class RequestGetSignatureSnps:
 
     def _create_query(self, event_id):
         query = (
-                 "MATCH (n:Merged:Vcf) " +
+                 "MATCH (n:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
                  "WHERE NOT " +
                     "(n)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
-                 "WITH n LIMIT 1 " +
+                 "WITH n,t LIMIT 1 " +
                  "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
                             "sample:n.sample, " +
                             "nodeCreated: datetime(), " +
@@ -848,7 +848,7 @@ class RequestGetSignatureSnps:
                             "name: \"view-gvcf-snps\", " +
                             f"eventId: {event_id} }}) " +
                 "MERGE (n)-[:WAS_USED_BY]->(j) " +
-                "RETURN n AS node")
+                "RETURN n AS gvcf, t AS index")
         return query
 
 
