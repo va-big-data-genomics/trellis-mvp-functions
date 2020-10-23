@@ -31,23 +31,24 @@ if ENVIRONMENT == 'google-cloud':
                 .download_as_string()
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
-    PROJECT_ID     = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+    GOOGLE_CLOUD_PROJECT = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    NEW_JOBS_TOPIC       = parsed_vars['NEW_JOBS_TOPIC']
 
-    OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
-    LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
-    DSUB_USER = parsed_vars['DSUB_USER']
-    DSUB_REGIONS = parsed_vars['DSUB_REGIONS']
-    DSUB_NETWORK = parsed_vars['DSUB_NETWORK']
+    DSUB_OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
+    DSUB_LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
+    DSUB_USER       = parsed_vars['DSUB_USER']
+    DSUB_REGIONS    = parsed_vars['DSUB_REGIONS']
+    DSUB_NETWORK    = parsed_vars['DSUB_NETWORK']
     DSUB_SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
 
     # Job specific variables
-    REF_FASTA = parsed_vars['REF_FASTA']
+    REF_FASTA       = parsed_vars['REF_FASTA']
     REF_FASTA_INDEX = parsed_vars['REF_FASTA_INDEX']
-    SNP_LIST = parsed_vars['SIGNATURE_SNPS']
+    SNP_LIST        = parsed_vars['SIGNATURE_SNPS']
 
-    PUBLISHER = pubsub.PublisherClient()
-    CLIENT = storage.Client()
+    # Google API clients
+    PUBLISHER   = pubsub.PublisherClient()
+    CLIENT      = storage.Client()
 
 class TrellisMessage:
 
@@ -258,7 +259,7 @@ def launch_view_gvcf_snps(event, context, test=False):
         },
         "inputs": {
             "INPUT": f"gs://{bucket}/{path}",
-            "SNP_LIST": SIGNATURE_SNPS, 
+            "SNP_LIST": SNP_LIST, 
             "REF_FASTA": REF_FASTA,
             "REF_FASTA_INDEX": REF_FASTA_INDEX
         },
