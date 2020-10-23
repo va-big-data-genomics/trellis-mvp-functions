@@ -17,11 +17,6 @@ from datetime import datetime
 
 from dsub.commands import dsub
 
-class Struct:
-    # https://stackoverflow.com/questions/6866600/how-to-parse-read-a-yaml-file-into-a-python-object
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
-
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if not ENVIRONMENT:
@@ -206,10 +201,10 @@ def launch_view_gvcf_snps(event, context, test=False):
             context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    if test:
-        trellis = load_local_env()
-        FUNCTION_NAME = 'trellis-launch-gvcf-snps'
-        PUBLISHER = pubsub.PublisherClient()
+    #if test:
+    #    trellis = load_local_env()
+    #    FUNCTION_NAME = 'trellis-launch-gvcf-snps'
+    #    PUBLISHER = pubsub.PublisherClient()
 
     # Parse message
     message = TrellisMessage(event, context)
@@ -242,12 +237,12 @@ def launch_view_gvcf_snps(event, context, test=False):
     unique_task_label = 'ViewGvcfSnps'
     job_dict = {
         "provider": "google-v2",
-        "user": trellis.DSUB_USER,
-        "regions": trellis.DSUB_REGIONS,
-        "project": trellis.GOOGLE_CLOUD_PROJECT,
+        "user": DSUB_USER,
+        "regions": DSUB_REGIONS,
+        "project": GOOGLE_CLOUD_PROJECT,
         "minCores": 1,
-        "image": f"gcr.io/{trellis.GOOGLE_CLOUD_PROJECT}/bschiffthaler/bcftools:1.11",
-        "logging": f"gs://{trellis.DSUB_LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
+        "image": f"gcr.io/{GOOGLE_CLOUD_PROJECT}/bschiffthaler/bcftools:1.11",
+        "logging": f"gs://{DSUB_LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
         # bcftools view <SAMPLE>.g.vcf.gz -R signatureSNPs.txt -Ou | 
         # bcftools convert --gvcf2vcf --fasta-ref Homo_sapiens_assembly38.fasta -Ou | 
         # bcftools view -T signatureSNPs.txt -Oz -o <SAMPLE>.signatureSNPs.vcf.gz
@@ -262,12 +257,12 @@ def launch_view_gvcf_snps(event, context, test=False):
         },
         "inputs": {
             "INPUT": f"gs://{bucket}/{path}",
-            "SNP_LIST": trellis.SNP_LIST, 
-            "REF_FASTA": trellis.REF_FASTA,
-            "REF_FASTA_INDEX": trellis.REF_FASTA_INDEX
+            "SNP_LIST": SIGNATURE_SNPS, 
+            "REF_FASTA": REF_FASTA,
+            "REF_FASTA_INDEX": REF_FASTA_INDEX
         },
         "outputs": {
-            "OUTPUT": f"gs://{trellis.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.signatureSNPs.vcf.gz"
+            "OUTPUT": f"gs://{DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.signatureSNPs.vcf.gz"
         },
         "trellisTaskId": task_id,
         "sample": sample,
@@ -276,8 +271,8 @@ def launch_view_gvcf_snps(event, context, test=False):
         "inputHash": trunc_nodes_hash,
         "labels": ["Job", "Dsub", unique_task_label],
         "inputIds": [node['id']],
-        "network": trellis.DSUB_NETWORK,
-        "subnetwork": trellis.DSUB_SUBNETWORK,       
+        "network": DSUB_NETWORK,
+        "subnetwork": DSUB_SUBNETWORK,       
     }
 
     dsub_args = [
@@ -355,9 +350,9 @@ def launch_view_gvcf_snps(event, context, test=False):
         print(f"> Pubsub message: {message_to_publish}.")
         result = publish_to_topic(
                                   publisher = PUBLISHER,
-                                  project_id = trellis.GOOGLE_CLOUD_PROJECT,
-                                  topic = trellis.NEW_JOBS_TOPIC,
+                                  project_id = GOOGLE_CLOUD_PROJECT,
+                                  topic = NEW_JOBS_TOPIC,
                                   data = message_to_publish) 
-        print(f"> Published message to {trellis.NEW_JOBS_TOPIC} with result: {result}.")  
+        print(f"> Published message to {NEW_JOBS_TOPIC} with result: {result}.")  
 
 
