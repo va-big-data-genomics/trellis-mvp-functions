@@ -3266,15 +3266,16 @@ class RequestChangeFastqStorage:
 
         reqd_header_labels = ['Request', 'Move', 'Fastqs', 'Coldline']
 
-        if not body:
+        request = body.get("request")
+        if not request:
             return False
 
         conditions = [
             # Check that node matches metadata criteria:
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
-            body.get("count") == True,
-            body.get("storageClass") == True
+            request.get("count") == True,
+            request.get("storageClass") == True
         ]
 
         for condition in conditions:
@@ -3287,8 +3288,10 @@ class RequestChangeFastqStorage:
     def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
-        count = body["count"]
-        storage_class = body["storage_class"]
+        request = body["request"]
+
+        count = request["count"]
+        storage_class = request["storage_class"]
 
         query = self._create_query(count, storage_class)
 
