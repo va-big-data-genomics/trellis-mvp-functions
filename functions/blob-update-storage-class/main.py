@@ -44,16 +44,13 @@ def check_storage_class_request(extension, current_class, requested_class):
         logging.error(f"Blob type \"{extension}\" is not supported.")
         return False
 
-
 def update_storage_class(client, bucket, path, storage_class, dry_run):
     bucket = client.get_bucket(bucket)
     blob = bucket.blob(path)
 
-
     if not dry_run:
         blob.update_storage_class(storage_class)
     return True
-
 
 def main(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
