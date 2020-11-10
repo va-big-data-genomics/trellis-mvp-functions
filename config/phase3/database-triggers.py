@@ -3288,6 +3288,9 @@ class RequestChangeFastqStorage:
     def compose_message(self, header, body, node, context):
         topic = self.env_vars['DB_QUERY_TOPIC']
 
+        event_id = context.event_id
+        seed_id = context.event_id
+
         request = body["request"]
 
         count = request["count"]
