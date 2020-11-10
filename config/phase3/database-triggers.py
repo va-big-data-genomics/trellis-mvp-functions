@@ -3327,7 +3327,7 @@ class RequestChangeFastqStorage:
                  "MATCH (s)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
                  f"WHERE f.storageClass <> \"{storage_class}\" " +
                  "AND NOT f.storageClass IN [\"COLDLINE\", \"ARCHIVE\"] " +
-                 "RETURN f.bucket AS bucket, f.path AS path, f.extension AS extension, f.storageClass AS current_class, \"{storage_class}\" AS requested_class")
+                 f"RETURN f.bucket AS bucket, f.path AS path, f.extension AS extension, f.storageClass AS current_class, \"{storage_class}\" AS requested_class")
         return query
 
 
