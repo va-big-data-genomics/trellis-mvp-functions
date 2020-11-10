@@ -3264,7 +3264,7 @@ class RequestChangeFastqStorage:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Request', 'Move', 'Fastqs', 'Coldline']
+        reqd_header_labels = ['Request', 'Change', 'Fastq', 'Storage']
 
         request = body.get("request")
         if not request:
@@ -3274,11 +3274,12 @@ class RequestChangeFastqStorage:
             # Check that node matches metadata criteria:
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
-            request.get("count") == True,
-            request.get("storageClass") == True
+            request.get("count"),
+            request.get("storageClass")
         ]
 
         for condition in conditions:
+            print(condition)
             if condition:
                 continue
             else:
