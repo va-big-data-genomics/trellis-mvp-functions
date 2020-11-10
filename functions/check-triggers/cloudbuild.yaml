@@ -7,12 +7,9 @@ steps:
          'functions/check-triggers/']
 - name: 'ubuntu'
   args: ['ls', 'functions/check-triggers']
-- name: 'gcr.io/cloud-builders/gcloud'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   args: [
-         'beta',
-         'functions',
-         'deploy',
-         'trellis-check-triggers',
+         'gcloud', 'functions', 'deploy', 'trellis-check-triggers',
          '--project=${PROJECT_ID}',
          '--source=functions/check-triggers',
          '--memory=256MB',
