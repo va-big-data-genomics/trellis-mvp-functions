@@ -3273,7 +3273,7 @@ class RequestChangeFastqStorage:
             # Check that node matches metadata criteria:
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
-            body.get("count") == True
+            body.get("count") == True,
             body.get("storageClass") == True
         ]
 
