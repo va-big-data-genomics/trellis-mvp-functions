@@ -3256,9 +3256,6 @@ class MoveFastqsToColdline:
 
 
 class RequestChangeFastqStorage:
-  """ Should be triggered by positive result of 
-      ValidateGenomeRelationships trigger.
-  """
 
     def __init__(self, function_name, env_vars):
 
