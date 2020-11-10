@@ -3187,10 +3187,10 @@ class RelateTbiToMergedVcf:
 
 
 class MoveFastqsToColdline:
-  """ Should be triggered by positive result of 
-      ValidateGenomeRelationships trigger.
-  """
-
+    """ Should be triggered by positive result of 
+        ValidateGenomeRelationships trigger.
+    """
+    
     def __init__(self, function_name, env_vars):
 
         self.function_name = function_name
