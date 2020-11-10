@@ -3275,11 +3275,10 @@ class RequestChangeFastqStorage:
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
             request.get("count"),
-            request.get("storageClass")
+            request.get("storage_class")
         ]
 
         for condition in conditions:
-            print(condition)
             if condition:
                 continue
             else:
