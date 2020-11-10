@@ -3305,7 +3305,7 @@ class RequestChangeFastqStorage:
                               "labels": ["Trigger", "Fastq", "Coldline", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RequestMoveFastqsToColdline",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_BLOB_UPDATE_STORAGE'],
                               "seedId": seed_id,
                               "previousEventId": event_id,
                    },
