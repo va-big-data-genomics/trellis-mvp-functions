@@ -17,26 +17,33 @@ if ENVIRONMENT == 'google-cloud':
 
 def check_storage_class_request(extension, current_class, requested_class):
 
-    supported_classes = {
-                         "NEARLINE": "NEARLINE_STORAGE_CLASS",
-                         "COLDLINE": "COLDLINE_STORAGE_CLASS",
-                         "STANDARD": "STANDARD_STORAGE_CLASS",
-                         "ARCHIVE" : "ARCHIVE_STORAGE_CLASS"
-    }
+    #supported_classes = {
+    #                     "NEARLINE": "NEARLINE_STORAGE_CLASS",
+    #                     "COLDLINE": "COLDLINE_STORAGE_CLASS",
+    #                     "STANDARD": "STANDARD_STORAGE_CLASS",
+    #                     "ARCHIVE" : "ARCHIVE_STORAGE_CLASS"
+    #}
     
+    supported_classes = [
+                         "NEARLINE",
+                         "COLDLINE",
+                         "STANDARD",
+                         "ARCHIVE"
+    ]
+
     # Key = extension, value = requested storage class
     supported_updates = {
                          "fastq.gz": ["COLDLINE"],
     }
 
-    if requested_class not in supported_classes.keys():
+    if requested_class not in supported_classes:
         logging.error(f"Storage class {requested_class} is not supported.")
         return False
 
     if supported_updates.get(extension):
         if requested_class in supported_updates[extension]:
             # Success case
-            return supported_classes[requested_class]
+            return True
         else:
             logging.error(f"Storage class {requested_class} is not supported for {extension}.")
             return False
@@ -50,7 +57,7 @@ def update_storage_class(client, bucket, path, storage_class, dry_run):
 
     if not dry_run:
         blob.update_storage_class(storage_class)
-    return True
+    return storage_class
 
 def main(event, context):
     """Triggered from a message on a Cloud Pub/Sub topic.
@@ -93,8 +100,8 @@ def main(event, context):
         current_class = node['current_class']
         requested_class = node['requested_class']
 
-        storage_class = check_storage_class_request(extension, current_class, requested_class)
-        if not storage_class:
+        valid_storage = check_storage_class_request(extension, current_class, requested_class)
+        if not valid_storage:
             logging.error(f"> Invalid storage class request. {extension}, {current_class}, {requested_class}.") 
             return
 
@@ -103,11 +110,11 @@ def main(event, context):
                                    client = CLIENT,
                                    bucket = bucket_name,
                                    path = blob_path,
-                                   storage_class = storage_class,
+                                   storage_class = requested_class,
                                    dry_run = dry_run)
         
         if storage_change:
-            logging.info(f"> Storage class updated.")
+            logging.info(f"> Storage class updated to {storage_change}.")
             blob_counter +=1
     logging.info(f"> Count of blobs updated: {blob_counter}.")
     return blob_counter

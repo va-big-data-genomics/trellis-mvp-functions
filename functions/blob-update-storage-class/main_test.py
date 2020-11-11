@@ -27,9 +27,9 @@ class TestUpdateStorageClass:
                                   client = CLIENT,
                                   bucket = '***REMOVED***-dev-trellis',
                                   path = 'README.txt',
-                                  storage_class = 'COLDLINE_STORAGE_CLASS',
+                                  storage_class = 'COLDLINE',
                                   dry_run = True)
-        assert result == True
+        assert result == 'COLDLINE'
 
 
 class TestCheckStorageClassRequest:
