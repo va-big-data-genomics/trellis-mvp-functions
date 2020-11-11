@@ -86,36 +86,36 @@ def main(event, context):
     else:
         dry_run = False
 
-    nodes = body['results']
-    if not nodes:
+    node = body['results']
+    if not node:
         print("> No node metadata found; exiting.")
         return  
 
-    blob_counter = 0
-    for node in nodes:
+    #blob_counter = 0
+    #for node in nodes:
 
-        bucket_name = node['bucket']
-        blob_path = node['path']
-        extension = node['extension']
-        current_class = node['current_class']
-        requested_class = node['requested_class']
+    bucket_name = node['bucket']
+    blob_path = node['path']
+    extension = node['extension']
+    current_class = node['current_class']
+    requested_class = node['requested_class']
 
-        valid_storage = check_storage_class_request(extension, current_class, requested_class)
-        if not valid_storage:
-            logging.error(f"> Invalid storage class request. {extension}, {current_class}, {requested_class}.") 
-            return
+    valid_storage = check_storage_class_request(extension, current_class, requested_class)
+    if not valid_storage:
+        logging.error(f"> Invalid storage class request. {extension}, {current_class}, {requested_class}.") 
+        return
 
-        logging.info(f"> Attempting to change storage class for gs://{bucket_name}/{blob_path}.")     
-        storage_change = update_storage_class(
-                                   client = CLIENT,
-                                   bucket = bucket_name,
-                                   path = blob_path,
-                                   storage_class = requested_class,
-                                   dry_run = dry_run)
-        
-        if storage_change:
-            logging.info(f"> Storage class updated to {storage_change}.")
-            blob_counter +=1
-    logging.info(f"> Count of blobs updated: {blob_counter}.")
-    return blob_counter
+    logging.info(f"> Attempting to change storage class for gs://{bucket_name}/{blob_path}.")     
+    storage_change = update_storage_class(
+                               client = CLIENT,
+                               bucket = bucket_name,
+                               path = blob_path,
+                               storage_class = requested_class,
+                               dry_run = dry_run)
+    
+    if storage_change:
+        logging.info(f"> Storage class updated to {storage_change}.")
+        blob_counter +=1
+    #logging.info(f"> Count of blobs updated: {blob_counter}.")
+    #return blob_counter
         
