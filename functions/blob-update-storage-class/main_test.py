@@ -77,28 +77,19 @@ class TestMain:
         data = {
                 'body': {
                          'cypher': 'MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) WHERE s.sample = "SHIP4946369" WITH COLLECT(DISTINCT(b)) AS all_blobs UNWIND all_blobs AS b MATCH p=(b)-[*1..2]-(:BiologicalOme) WHERE ALL (r in relationships(p) WHERE r.ontology="bioinformatics") WITH all_blobs, COLLECT(b) AS essential_blobs UNWIND all_blobs AS b MATCH (b) WHERE NOT b IN essential_blobs AND (NOT b.obj_exists = false OR NOT EXISTS(b.obj_exists)) AND b.bucket = "gbsc-gcp-project-mvp-dev-from-personalis-phase3-data" RETURN b.bucket AS bucket, b.path AS path ORDER BY b.size DESC LIMIT 100', 
-                         'results': [
-                                     {
-                                      'bucket': 'gbsc-gcp-project-mvp-test-from-personalis', 
-                                      'path': 'va_mvp_phase2/DVALABP000444/SHIP5141928/FASTQ/SHIP5141928_3_R2.fastq.gz',
-                                      'extension': 'fastq.gz',
-                                      'current_class': 'REGIONAL',
-                                      'requested_class': 'COLDLINE'
-                                     }, 
-                                     {
-                                      'bucket': 'gbsc-gcp-project-mvp-test-from-personalis', 
-                                      'path': 'va_mvp_phase2/DVALABP000444/SHIP5141931/FASTQ/SHIP5141931_0_R2.fastq.gz',
-                                      'extension': 'fastq.gz',
-                                      'current_class': 'REGIONAL',
-                                      'requested_class': 'COLDLINE'
-                                     }
-                                    ]
-                        },
-                 'header': {
-                            'resource': 'queryResult',
-                            'method': 'VIEW',
-                            'dry-run': 'True'
-                 }
+                         'results': {
+                                     'bucket': 'gbsc-gcp-project-mvp-test-from-personalis', 
+                                     'path': 'va_mvp_phase2/DVALABP000444/SHIP5141928/FASTQ/SHIP5141928_3_R2.fastq.gz',
+                                     'extension': 'fastq.gz',
+                                     'current_class': 'REGIONAL',
+                                     'requested_class': 'COLDLINE'
+                         }, 
+                },
+                'header': {
+                           'resource': 'queryResult',
+                           'method': 'VIEW',
+                           'dry-run': 'True'
+                }
         }
         data_str = json.dumps(data)
         data_utf8 = data_str.encode('utf-8')
