@@ -184,7 +184,8 @@ def format_node_merge_query(db_dict, dry_run=False):
                   'updated',
                   'id',
                   'crc32c',
-                  'generation']
+                  'generation',
+                  'storageClass']
 
     merge_strings = []
     for key in merge_keys:
