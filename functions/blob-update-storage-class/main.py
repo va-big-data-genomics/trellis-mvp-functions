@@ -115,7 +115,7 @@ def main(event, context):
     
     if storage_change:
         logging.info(f"> Storage class updated to {storage_change}.")
-        blob_counter +=1
+        #blob_counter +=1
     #logging.info(f"> Count of blobs updated: {blob_counter}.")
     #return blob_counter
         
