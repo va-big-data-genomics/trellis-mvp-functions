@@ -1,0 +1,2 @@
+google-cloud-storage==1.32.0
+google-api-core==1.22.4
