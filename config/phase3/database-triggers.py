@@ -2328,8 +2328,9 @@ class RelateGenomeToFastq:
 
     def _create_query(self, sample):
         query = (
-                 "MATCH (g:Genome:BiologicalOme)<-[:HAS_BIOLOGICAL_OME]-(:Person)-[:GENERATED]->(:Sample)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                 "MATCH (g:Genome:BiologicalOme), (f:Blob:Fastq) " +
                  f"WHERE g.sample =\"{sample}\" " +
+                 "AND f.sample = g.sample " +
                  "MERGE (g)-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]->(f)")
         return query
 
@@ -2834,8 +2835,9 @@ class RelateFastqToGenome:
     def _create_query(self, blob_id, sample):
         query = (
                  "MATCH (f:Blob:Fastq:FromPersonalis:WGS35), " +
-                 "(g:BiologicalOme:Genome {sample: f.sample}) " +
+                 "(g:BiologicalOme:Genome) " +
                  f"WHERE f.id = \"{blob_id}\" " +
+                 "AND g.sample = f.sample " +
                  "MERGE (f)<-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]-(g)")
         return query
 
@@ -3181,6 +3183,153 @@ class RelateTbiToMergedVcf:
                  "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
                  f"WHERE tbi.id =\"{blob_id}\" " +
                  "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi)")
+        return query
+
+
+class MoveFastqsToColdline:
+    """ Should be triggered by positive result of 
+        ValidateGenomeRelationships trigger.
+    """
+    
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Validate', 'Genome', 'Relationships']
+        required_labels = ['Sample']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("trellis_optimizeStorage") == True,
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample_id = node['sample']
+
+        query = self._create_query(sample_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Fastq", "Coldline", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "MoveFastqsToColdline",
+                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample_id):
+        query = (
+                 "MATCH (s:Sample)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                 f"WHERE s.sample =\"{sample_id}\" " +
+                 "AND f.storageClass <> \"COLDLINE\" " +
+                 "RETURN f)")
+        return query
+
+
+class RequestChangeFastqStorage:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'Change', 'Fastq', 'Storage']
+
+        request = body.get("request")
+        if not request:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            request.get("count"),
+            request.get("storage_class")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        request = body["request"]
+
+        count = request["count"]
+        storage_class = request["storage_class"]
+
+        query = self._create_query(count, storage_class)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Fastq", "Coldline", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestMoveFastqsToColdline",
+                              "publishTo": self.env_vars['TOPIC_BLOB_UPDATE_STORAGE'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, count, storage_class):
+        query = (
+                 "MATCH (s:Sample) " +
+                 "WHERE s.trellis_snvQa=true " +
+                 "AND NOT EXISTS(s.trellis_coldlineFastqs) " +
+                 "WITH s " +
+                 f"LIMIT {count} " +
+                 "MATCH (s)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                 f"WHERE f.storageClass <> \"{storage_class}\" " +
+                 "AND NOT f.storageClass IN [\"COLDLINE\", \"ARCHIVE\"] " +
+                 "SET s.trellis_coldlineFastqs = localdatetime() " +
+                 f"RETURN f.bucket AS bucket, f.path AS path, f.extension AS extension, f.storageClass AS current_class, \"{storage_class}\" AS requested_class")
         return query
 
 
@@ -4591,6 +4740,12 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RequestGetSignatureSnps(
+                                    function_name,
+                                    env_vars))
+    triggers.append(MoveFastqsToColdline(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestChangeFastqStorage(
                                     function_name,
                                     env_vars))
     return triggers
