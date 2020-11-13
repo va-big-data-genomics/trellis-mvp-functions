@@ -7,12 +7,9 @@ steps:
          'functions/check-triggers/']
 - name: 'ubuntu'
   args: ['ls', 'functions/check-triggers']
-- name: 'gcr.io/cloud-builders/gcloud'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   args: [
-         'beta',
-         'functions',
-         'deploy',
-         'trellis-check-triggers',
+         'gcloud', 'functions', 'deploy', 'trellis-check-triggers',
          '--project=${PROJECT_ID}',
          '--source=functions/check-triggers',
          '--memory=256MB',
@@ -27,5 +24,4 @@ steps:
          '--update-env-vars=USE_WORKER_V2=true',
          '--update-env-vars=PYTHON37_DRAIN_LOGS_ON_CRASH_WAIT_SEC=5',
          '--update-labels=user=trellis',
-         '--update-labels=func-group=${_FUNC_GROUP}',
   ]
