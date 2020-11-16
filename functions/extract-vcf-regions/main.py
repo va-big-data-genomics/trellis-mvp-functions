@@ -125,12 +125,12 @@ def main(event, context):
     regions_label = body['results']['regions_label']
 
     if not 'Vcf' in vcf['labels']:
-        logging.error(f"Not a VCF object. Ignoring node: {node}.")
+        logging.error(f"Not a VCF object. Ignoring node: {vcf}.")
         return 
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    task_id, trunc_nodes_hash = make_unique_task_id([node], datetime_stamp)
+    task_id, trunc_nodes_hash = make_unique_task_id([vcf], datetime_stamp)
 
     # Database entry variables
     bucket = vcf['bucket']
@@ -168,7 +168,7 @@ def main(event, context):
         "name": task_name,
         "inputHash": trunc_nodes_hash,
         "labels": ["Job", "Dsub", unique_task_label],
-        "inputIds": [node['id']],
+        "inputIds": [vcf['id']],
         "network": NETWORK,
         "subnetwork": SUBNETWORK,       
     }
