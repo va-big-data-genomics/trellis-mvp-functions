@@ -2185,6 +2185,96 @@ class RequestPostgresInsertTextToTable:
                  "LIMIT 100")
         return query
 
+# Pharmacogenetics triggers
+class RequestExtractPgxRegions:
+    
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'Extract', 'Pgx', 'Regions']
+
+        request = body.get("request")
+        if not request:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            request.get("count"),
+            #request.get("bed"),
+            #request.get("fasta_ref"),
+            #request.get("fasta_index"),
+            #request.get("regions_label")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id  = context.event_id
+
+        request = body["request"]
+
+        count           = request["count"]
+        #bed             = request["bed"]
+        #fasta_ref       = request["fasta_ref"]
+        #fasta_index     = request["fasta_index"]
+        #regions_label   = request["regions_label"]
+
+        query = self._create_query(count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Extract", "Pgx", "Regions", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestExtractPgxRegions",
+                              "publishTo": self.env_vars['TOPIC_EXTRACT_VCF_REGIONS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, count):
+        query = (
+                 "MATCH (v:Merged:Vcf) " +
+                 "WHERE NOT (v)-[:WAS_USED_BY]->(:JobRequest:ExtractVcfRegions:PgxPop) " +
+                 f"WITH v LIMIT {count} " +
+                 "CREATE (j:JobRequest:ExtractVcfRegions:PgxPop { " +
+                        "sample:n.sample, " +
+                        "nodeCreated: datetime(), " +
+                        "nodeCreatedEpoch: datetime().epochSeconds, " +
+                        "name: \"extract-vcf-regions\", " +
+                        "regions: \"pgx-pop\", " +
+                        f"eventId: {event_id} }}) " +
+                "MERGE (v)-[:WAS_USED_BY]->(j) " +
+                "RETURN v AS vcf, " +
+                    f"\"{self.env_vars['PGX_GRCH38_BED']}\" AS bed, " +
+                    f"\"{self.env_vars['REF_FASTA']}\" AS fasta_ref, " +
+                    f"\"{self.env_vars['REF_FASTA_INDEX']}\" AS fasta_index, " +
+                    "\"pgx-pop\" AS regions_label")
+        return query
+
 # Trellis v1.2 Data optimization triggers
 class MergeBiologicalNodesFromSequencing:
 
@@ -4746,6 +4836,10 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RequestChangeFastqStorage(
+                                    function_name,
+                                    env_vars))
+    # Pharmacogenetics
+    triggers.append(RequestExtractPgxRegions(
                                     function_name,
                                     env_vars))
     return triggers
