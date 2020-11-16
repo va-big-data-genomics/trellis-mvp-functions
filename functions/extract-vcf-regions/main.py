@@ -112,13 +112,16 @@ def main(event, context):
     """
     
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    event_id = context.event_id
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
 
     header = data['header']
     body = data['body']
+
+    # Get seed/event ID to track provenance of Trellis events
+    seed_id = header['seedId']
+    event_id = context.event_id
 
     # Used for local testing
     if header.get('dry-run') == 'True':
