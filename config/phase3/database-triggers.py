@@ -2233,7 +2233,7 @@ class RequestExtractPgxRegions:
         #fasta_index     = request["fasta_index"]
         #regions_label   = request["regions_label"]
 
-        query = self._create_query(count)
+        query = self._create_query(count, event_id)
 
         message = {
                    "header": {
@@ -2255,7 +2255,7 @@ class RequestExtractPgxRegions:
         }
         return([(topic, message)])
 
-    def _create_query(self, count):
+    def _create_query(self, count, event_id):
         query = (
                  "MATCH (v:Merged:Vcf) " +
                  "WHERE NOT (v)-[:WAS_USED_BY]->(:JobRequest:ExtractVcfRegions:PgxPop) " +
