@@ -2261,7 +2261,7 @@ class RequestExtractPgxRegions:
                  "WHERE NOT (v)-[:WAS_USED_BY]->(:JobRequest:ExtractVcfRegions:PgxPop) " +
                  f"WITH v LIMIT {count} " +
                  "CREATE (j:JobRequest:ExtractVcfRegions:PgxPop { " +
-                        "sample:n.sample, " +
+                        "sample:v.sample, " +
                         "nodeCreated: datetime(), " +
                         "nodeCreatedEpoch: datetime().epochSeconds, " +
                         "name: \"extract-vcf-regions\", " +
