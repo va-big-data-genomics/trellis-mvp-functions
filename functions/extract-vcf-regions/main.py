@@ -124,7 +124,7 @@ def main(event, context):
     fasta_index   = body['results']['fasta_index']
     regions_label = body['results']['regions_label']
 
-    if not 'Vcf' in node['labels']:
+    if not 'Vcf' in vcf['labels']:
         logging.error(f"Not a VCF object. Ignoring node: {node}.")
         return 
 
