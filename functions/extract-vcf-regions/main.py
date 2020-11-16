@@ -159,7 +159,7 @@ def main(event, context):
         "regions": REGIONS,
         "project": PROJECT_ID,
         "minCores": 1,
-        "image": f"gcr.io/{PROJECT_ID}/extract-pack:latest",
+        "image": f"gcr.io/{PROJECT_ID}/pgxpop/extract-pack:1.0",
         "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
         "command": "python main.py -f ${VCF} -b ${BED} --fasta ${FASTA_REF} -o ${OUTPUT}",
         "envs": {
