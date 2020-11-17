@@ -111,7 +111,7 @@ def main(event, context):
                              used to label output.
     """
     
-    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+    pubsub_message = base64.b64decode(event['data']).decode('utf-8')    
     data = json.loads(pubsub_message)
     print(f"> Context: {context}.")
     print(f"> Data: {data}.")
@@ -164,7 +164,7 @@ def main(event, context):
         "minCores": 1,
         "image": f"gcr.io/{PROJECT_ID}/pgxpop/extract-pack:1.0",
         "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-        "command": "python main.py -f ${VCF} -b ${BED} --fasta ${FASTA_REF} -o ${OUTPUT}",
+        "command": "python /pgxpop-pack/extract-pack/main.py -f ${VCF} -b ${BED} --fasta ${FASTA_REF} -o ${OUTPUT}",
         "envs": {
             "SAMPLE_ID": sample
         },
