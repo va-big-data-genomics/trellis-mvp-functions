@@ -134,6 +134,7 @@ def main(event, context):
         print("> No node provided. Exiting.")
         return
 
+    tbi           = body['results']['tbi']
     bed           = body['results']['bed']
     fasta_ref     = body['results']['fasta_ref']
     fasta_index   = body['results']['fasta_index']
@@ -176,6 +177,7 @@ def main(event, context):
         },
         "inputs": {
             "VCF": f"gs://{bucket}/{path}",
+            "VCF_INDEX": f"gs://{tbi.bucket}/{tbi.path}",
             "BED": bed,
             "FASTA_REF": fasta_ref,
             "FASTA_INDEX": fasta_index
