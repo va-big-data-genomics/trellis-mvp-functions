@@ -2257,9 +2257,10 @@ class RequestExtractPgxRegions:
 
     def _create_query(self, count, event_id):
         query = (
-                 "MATCH (v:Merged:Vcf) " +
+                 "MATCH (v:Merged:Vcf)-[:HAS_INDEX]->(tbi) " +
                  "WHERE NOT (v)-[:WAS_USED_BY]->(:JobRequest:ExtractVcfRegions:PgxPop) " +
-                 f"WITH v LIMIT {count} " +
+                 "WITH v, tbi " +
+                 f"LIMIT {count} " +
                  "CREATE (j:JobRequest:ExtractVcfRegions:PgxPop { " +
                         "sample: v.sample, " +
                         "nodeCreated: datetime(), " +
@@ -2268,7 +2269,7 @@ class RequestExtractPgxRegions:
                         "regions: \"pgx-pop\", " +
                         f"eventId: {event_id} }}) " +
                 "MERGE (v)-[:WAS_USED_BY]->(j) " +
-                "RETURN v AS vcf, " +
+                "RETURN v AS vcf, tbi AS tbi, " +
                     f"\"{self.env_vars['PGX_GRCH38_BED']}\" AS bed, " +
                     f"\"{self.env_vars['REF_FASTA']}\" AS fasta_ref, " +
                     f"\"{self.env_vars['REF_FASTA_INDEX']}\" AS fasta_index, " +
