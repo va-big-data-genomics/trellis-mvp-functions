@@ -164,7 +164,13 @@ def main(event, context):
         "minCores": 1,
         "image": f"gcr.io/{PROJECT_ID}/pgxpop/extract-pack:1.0",
         "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-        "command": "python /pgxpop-pack/extract-pack/main.py -f ${VCF} -b ${BED} --fasta ${FASTA_REF} -o ${OUTPUT}",
+        "command": (
+                    "pgx-extract " +
+                    "--vcf ${VCF} " +
+                    "--bed ${BED} " +
+                    "--fasta ${FASTA_REF} " +
+                    "--output ${BCF} " +
+                    "--index ${BCF_INDEX} ")
         "envs": {
             "SAMPLE_ID": sample
         },
@@ -175,7 +181,8 @@ def main(event, context):
             "FASTA_INDEX": fasta_index
         },
         "outputs": {
-            "OUTPUT": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.{regions_label}.vcf.gz"
+            "BCF": f"gs://{OUT_BUCKET}/{task_name}/{regions_label}/output/{sample}.{regions_label}.bcf",
+            "BCF_INDEX": f"gs://{OUT_BUCKET}/{task_name}/{regions_label}/output/{sample}.{regions_label}.bcf.csi"
         },
         "trellisTaskId": task_id,
         "sample": sample,
