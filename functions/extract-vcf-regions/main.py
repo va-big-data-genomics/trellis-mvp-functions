@@ -165,7 +165,7 @@ def main(event, context):
         "image": f"gcr.io/{PROJECT_ID}/pgxpop/extract-pack:1.0",
         "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
         "command": (
-                    "pgx-extract " +
+                    "python3 /pgxpop-pack/extract-pack/main.py " +
                     "--vcf ${VCF} " +
                     "--bed ${BED} " +
                     "--fasta ${FASTA_REF} " +
