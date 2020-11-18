@@ -171,9 +171,9 @@ def main(event, context):
                     "--fasta ${FASTA_REF} " +
                     "--output ${BCF} " +
                     "--index ${BCF_INDEX}"),
-        #"envs": {
+        "envs": {
         #    "SAMPLE_ID": sample
-        #},
+        },
         "inputs": {
             "VCF": f"gs://{bucket}/{path}",
             "BED": bed,
