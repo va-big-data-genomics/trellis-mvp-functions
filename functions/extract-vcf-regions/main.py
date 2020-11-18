@@ -177,7 +177,7 @@ def main(event, context):
         },
         "inputs": {
             "VCF": f"gs://{bucket}/{path}",
-            "VCF_INDEX": f"gs://{tbi.bucket}/{tbi.path}",
+            "VCF_INDEX": f"gs://{tbi['bucket']}/{tbi['path']}",
             "BED": bed,
             "FASTA_REF": fasta_ref,
             "FASTA_INDEX": fasta_index
