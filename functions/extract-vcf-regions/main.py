@@ -170,10 +170,10 @@ def main(event, context):
                     "--bed ${BED} " +
                     "--fasta ${FASTA_REF} " +
                     "--output ${BCF} " +
-                    "--index ${BCF_INDEX} ")
-        "envs": {
-            "SAMPLE_ID": sample
-        },
+                    "--index ${BCF_INDEX}"),
+        #"envs": {
+        #    "SAMPLE_ID": sample
+        #},
         "inputs": {
             "VCF": f"gs://{bucket}/{path}",
             "BED": bed,
