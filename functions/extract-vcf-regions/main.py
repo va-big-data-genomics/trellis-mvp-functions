@@ -192,7 +192,8 @@ def main(event, context):
         "name": task_name,
         "inputHash": trunc_nodes_hash,
         "labels": ["Job", "Dsub", unique_task_label],
-        "inputIds": [vcf['id']],
+        # Used to connect jobs to input nodes in the graph db
+        "inputIds": [vcf['id'], tbi['id']],
         "network": NETWORK,
         "subnetwork": SUBNETWORK,       
     }
