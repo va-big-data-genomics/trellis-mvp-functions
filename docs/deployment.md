@@ -1,3 +1,5 @@
+### NOTE: For Trellis deployment this method has been deprecated in favor of using Terraform (https://github.com/StanfordBioinformatics/trellis-mvp-terraform). We've left these instructions in case anyone might find them useful.
+
 # Trellis Deployment Instructions
 
 ## A. Fork the Trellis repository
