@@ -1,3 +1,5 @@
+### NOTE: For Trellis deployment this method has been deprecated in favor of using Terraform (https://github.com/StanfordBioinformatics/trellis-mvp-terraform). We've left these instructions in case they are useful to folks who specifically want to deploy a Neo4j instance and are not interested in the more involved Terraform process.
+
 # Neo4j database deployment
 
 These instructions describe how to deploy a Neo4j instance on Google Cloud Platform using the Neo4j community Docker image. Before doing this, we recommend setting up your VPC network via the network configuration instructions.
