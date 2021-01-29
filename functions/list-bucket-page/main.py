@@ -138,4 +138,3 @@ def list_bucket_page(event, context):
 
     page_str = json.dumps(page_data)
     out_object.upload_from_string(page_str)
-

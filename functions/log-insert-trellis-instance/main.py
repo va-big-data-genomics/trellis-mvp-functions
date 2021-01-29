@@ -187,4 +187,3 @@ def log_insert_trellis_instance(event, context):
 
     result = publish_to_topic(DB_TOPIC, message)
     print(f"> Published message to {DB_TOPIC} with result: {result}.")
-    
