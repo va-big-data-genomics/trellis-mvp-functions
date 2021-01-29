@@ -1,6 +1,13 @@
 # Trellis for Management of VA Million Veteran Program Data & Tasks
 
-We recently published a manuscript describing Trellis in detail, that can be found here: <INSERT LINK>
+This repository contains the source code for the microservices that run Trellis. We recently published a manuscript describing Trellis in detail, that can be found here: <INSERT LINK>
+
+Other relevant repositories:
+https://github.com/StanfordBioinformatics/trellis-mvp-terraform: Terraform resources for deploying Trellis.
+https://github.com/StanfordBioinformatics/trellis-mvp-api: GraphQL API schema for interacting with the Trellis Neo4j database.
+https://github.com/StanfordBioinformatics/trellis-mvp-analysis: Source for Jupyter notebooks used to summarize metadata in Neo4j database.
+  
+
   
 ## Repository Structure
 * __config__: This directory contains configuration files that describe various ways in which metadata should be handled by Trellis.
