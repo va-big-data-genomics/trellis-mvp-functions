@@ -10,7 +10,7 @@
  },
  "serviceName": "compute.googleapis.com",
  "methodName": "v1.compute.instances.delete",
- "resourceName": "projects/***REMOVED***-dev/zones/us-west1-a/instances/google-pipelines-worker-test-3",
+ "resourceName": "projects/gbsc-gcp-project-mvp-dev/zones/us-west1-a/instances/google-pipelines-worker-test-3",
  "request": {
    "@type": "type.googleapis.com/compute.instances.delete"
  }
@@ -21,12 +21,12 @@
  "labels": {
    "instance_id": "5444785242265443190",
    "zone": "us-west1-a",
-   "project_id": "***REMOVED***-dev"
+   "project_id": "gbsc-gcp-project-mvp-dev"
  }
 },
 "timestamp": "2019-07-12T20:00:26.314Z",
 "severity": "NOTICE",
-"logName": "projects/***REMOVED***-dev/logs/cloudaudit.googleapis.com%2Factivity",
+"logName": "projects/gbsc-gcp-project-mvp-dev/logs/cloudaudit.googleapis.com%2Factivity",
 "operation": {
  "id": "operation-1562961588397-58d815a46273a-7ccc668e-b053a3b5",
  "producer": "compute.googleapis.com",

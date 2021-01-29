@@ -14,7 +14,7 @@ mock_context.event_id = '617187464135194'
 mock_context.timestamp = '2019-07-15T22:09:03.761Z'
 mock_context.resource = {
                          'service': 'pubsub.googleapis.com', 
-                         'name': 'projects/***REMOVED***-dev/topics/delete-blob', 
+                         'name': 'projects/gbsc-gcp-project-mvp-dev/topics/delete-blob', 
                          'type': 'type.googleapis.com/google.pubsub.v1.PubsubMessage'
 }
 
@@ -25,7 +25,7 @@ class TestDeleteBlob:
     def test_expected(self):
         result = main.delete_blob(
                                   client = CLIENT,
-                                  bucket = '***REMOVED***-dev-trellis',
+                                  bucket = 'gbsc-gcp-project-mvp-dev-trellis',
                                   path = 'README.txt',
                                   dry_run = True)
         assert result == True
@@ -99,14 +99,14 @@ class TestMain:
     def test_expected(self):
         data = {
                 'body': {
-                         'cypher': 'MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) WHERE s.sample = "SHIP4946369" WITH COLLECT(DISTINCT(b)) AS all_blobs UNWIND all_blobs AS b MATCH p=(b)-[*1..2]-(:BiologicalOme) WHERE ALL (r in relationships(p) WHERE r.ontology="bioinformatics") WITH all_blobs, COLLECT(b) AS essential_blobs UNWIND all_blobs AS b MATCH (b) WHERE NOT b IN essential_blobs AND (NOT b.obj_exists = false OR NOT EXISTS(b.obj_exists)) AND b.bucket = "***REMOVED***-dev-from-personalis-phase3-data" RETURN b.bucket AS bucket, b.path AS path ORDER BY b.size DESC LIMIT 100', 
+                         'cypher': 'MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) WHERE s.sample = "SHIP4946369" WITH COLLECT(DISTINCT(b)) AS all_blobs UNWIND all_blobs AS b MATCH p=(b)-[*1..2]-(:BiologicalOme) WHERE ALL (r in relationships(p) WHERE r.ontology="bioinformatics") WITH all_blobs, COLLECT(b) AS essential_blobs UNWIND all_blobs AS b MATCH (b) WHERE NOT b IN essential_blobs AND (NOT b.obj_exists = false OR NOT EXISTS(b.obj_exists)) AND b.bucket = "gbsc-gcp-project-mvp-dev-from-personalis-phase3-data" RETURN b.bucket AS bucket, b.path AS path ORDER BY b.size DESC LIMIT 100', 
                          'results': [
                                      {
-                                      'bucket': '***REMOVED***-dev-from-personalis-phase3-data', 
+                                      'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis-phase3-data', 
                                       'path': 'DVALABP000398/SHIP4946369/gatk-5-dollar/201016-010047-632-ed170a4a/output/germline_single_sample_workflow/392d181f-d459-4ae9-bda4-3ef528f67286/call-MarkDuplicates/SHIP4946369.aligned.unsorted.duplicates_marked.bam'
                                      }, 
                                      {
-                                      'bucket': '***REMOVED***-dev-from-personalis-phase3-data', 
+                                      'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis-phase3-data', 
                                       'path': 'DVALABP000398/SHIP4946369/gatk-5-dollar/201016-010047-632-ed170a4a/output/germline_single_sample_workflow/392d181f-d459-4ae9-bda4-3ef528f67286/call-SortSampleBam/SHIP4946369.aligned.duplicate_marked.sorted.bam'
                                      }
                                     ]

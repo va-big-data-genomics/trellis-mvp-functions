@@ -237,7 +237,7 @@ if __name__ == '__main__':
     # application on Cloud Run. See entrypoint in Dockerfile.
     #app.run(host='127.0.0.1', port=PORT, debug=True)
 
-    dstat_cmd = "dstat --provider google-v2 --project ***REMOVED***-dev --jobs 'echo--pbilling--190903-164833-50' --users 'pbilling' --status '*' --full --format json"
+    dstat_cmd = "dstat --provider google-v2 --project gbsc-gcp-project-mvp-dev --jobs 'echo--pbilling--190903-164833-50' --users 'pbilling' --status '*' --full --format json"
     dstat_result = subprocess.check_output(dstat_cmd, stderr=subprocess.STDOUT, shell=True)
     json_result = json.loads(dstat_result)
 

@@ -140,11 +140,11 @@ def list_bucket_page(event, context):
     out_object.upload_from_string(page_str)
 
 if __name__ == "__main__": 
-    project_id = "***REMOVED***"
-    write_bucket_name = "***REMOVED***-trellis-test"
+    project_id = "gbsc-gcp-project-mvp"
+    write_bucket_name = "gbsc-gcp-project-mvp-trellis-test"
     write_prefix = "trellis/list-bucket-page"
     publish_topic = "bucket-page-tokens"
-    approved_buckets_str = '***REMOVED***-group'
+    approved_buckets_str = 'gbsc-gcp-project-mvp-group'
 
     topic_path = publisher.topic_path(
                                   project_id, 
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     data = {
             "resource": "bucket", 
             "gcp-metadata": {
-                             "name": "***REMOVED***-group"
+                             "name": "gbsc-gcp-project-mvp-group"
             }
     }
     data = json.dumps(data)

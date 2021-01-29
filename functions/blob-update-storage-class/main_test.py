@@ -14,7 +14,7 @@ mock_context.event_id = '617187464135194'
 mock_context.timestamp = '2019-07-15T22:09:03.761Z'
 mock_context.resource = {
                          'service': 'pubsub.googleapis.com', 
-                         'name': 'projects/***REMOVED***-dev/topics/blob-update-storage-class', 
+                         'name': 'projects/gbsc-gcp-project-mvp-dev/topics/blob-update-storage-class', 
                          'type': 'type.googleapis.com/google.pubsub.v1.PubsubMessage'
 }
 
@@ -25,7 +25,7 @@ class TestUpdateStorageClass:
     def test_expected(self):
         result = main.update_storage_class(
                                   client = CLIENT,
-                                  bucket = '***REMOVED***-dev-trellis',
+                                  bucket = 'gbsc-gcp-project-mvp-dev-trellis',
                                   path = 'README.txt',
                                   storage_class = 'COLDLINE',
                                   dry_run = True)
@@ -76,9 +76,9 @@ class TestMain:
     def test_expected(self):
         data = {
                 'body': {
-                         'cypher': 'MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) WHERE s.sample = "SHIP4946369" WITH COLLECT(DISTINCT(b)) AS all_blobs UNWIND all_blobs AS b MATCH p=(b)-[*1..2]-(:BiologicalOme) WHERE ALL (r in relationships(p) WHERE r.ontology="bioinformatics") WITH all_blobs, COLLECT(b) AS essential_blobs UNWIND all_blobs AS b MATCH (b) WHERE NOT b IN essential_blobs AND (NOT b.obj_exists = false OR NOT EXISTS(b.obj_exists)) AND b.bucket = "***REMOVED***-dev-from-personalis-phase3-data" RETURN b.bucket AS bucket, b.path AS path ORDER BY b.size DESC LIMIT 100', 
+                         'cypher': 'MATCH (s:PersonalisSequencing)-[:GENERATED|WAS_USED_BY|LED_TO*]->(b:Blob) WHERE s.sample = "SHIP4946369" WITH COLLECT(DISTINCT(b)) AS all_blobs UNWIND all_blobs AS b MATCH p=(b)-[*1..2]-(:BiologicalOme) WHERE ALL (r in relationships(p) WHERE r.ontology="bioinformatics") WITH all_blobs, COLLECT(b) AS essential_blobs UNWIND all_blobs AS b MATCH (b) WHERE NOT b IN essential_blobs AND (NOT b.obj_exists = false OR NOT EXISTS(b.obj_exists)) AND b.bucket = "gbsc-gcp-project-mvp-dev-from-personalis-phase3-data" RETURN b.bucket AS bucket, b.path AS path ORDER BY b.size DESC LIMIT 100', 
                          'results': {
-                                     'bucket': '***REMOVED***-test-from-personalis', 
+                                     'bucket': 'gbsc-gcp-project-mvp-test-from-personalis', 
                                      'path': 'va_mvp_phase2/DVALABP000444/SHIP5141928/FASTQ/SHIP5141928_3_R2.fastq.gz',
                                      'extension': 'fastq.gz',
                                      'current_class': 'REGIONAL',

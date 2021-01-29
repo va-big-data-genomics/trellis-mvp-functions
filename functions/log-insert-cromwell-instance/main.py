@@ -215,7 +215,7 @@ def log_insert_cromwell_instance(event, context):
 
 if __name__ == "__main__":
     # Run unit tests in local
-    PROJECT_ID = "***REMOVED***-dev"
+    PROJECT_ID = "gbsc-gcp-project-mvp-dev"
     DB_TOPIC = "wgs35-db-queries"
     KILL_DUPS_TOPIC = "wgs35-kill-duplicate-jobs"
     DATA_GROUP = "wgs35"
@@ -238,6 +238,6 @@ if __name__ == "__main__":
         data = json.load(fh)
     data = json.dumps(data).encode('utf-8')
     event = {'data': base64.b64encode(data)}
-    context = {'event_id': 611225247182937, 'timestamp': '2019-07-10T04:11:53.865Z', 'event_type': 'google.pubsub.topic.publish', 'resource': {'service': 'pubsub.googleapis.com', 'name': 'projects/***REMOVED***-test/topics/wgs35-update-vm-status', 'type': 'type.googleapis.com/google.pubsub.v1.PubsubMessage'}}
+    context = {'event_id': 611225247182937, 'timestamp': '2019-07-10T04:11:53.865Z', 'event_type': 'google.pubsub.topic.publish', 'resource': {'service': 'pubsub.googleapis.com', 'name': 'projects/gbsc-gcp-project-mvp-test/topics/wgs35-update-vm-status', 'type': 'type.googleapis.com/google.pubsub.v1.PubsubMessage'}}
 
     update_job_status(event, context)

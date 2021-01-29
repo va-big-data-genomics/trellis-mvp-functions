@@ -361,12 +361,12 @@ def launch_gatk_5_dollar(event, context):
 
 # For local testing
 if __name__ == "__main__":
-    PROJECT_ID = "***REMOVED***-dev"
+    PROJECT_ID = "gbsc-gcp-project-mvp-dev"
     ZONES =  "us-west1*"
-    TRELLIS_BUCKET = "***REMOVED***-dev-trellis"
+    TRELLIS_BUCKET = "gbsc-gcp-project-mvp-dev-trellis"
     GATK_INPUTS_PATH = "workflow-inputs/gatk-mvp/mvp.hg38.inputs.json"
-    OUT_BUCKET = "***REMOVED***-dev-from-personalis-gatk"
-    LOG_BUCKET = "***REMOVED***-dev-from-personalis-gatk-logs"
+    OUT_BUCKET = "gbsc-gcp-project-mvp-dev-from-personalis-gatk"
+    LOG_BUCKET = "gbsc-gcp-project-mvp-dev-from-personalis-gatk-logs"
     DSUB_USER = "trellis"
     NEW_JOBS_TOPIC = "wgs35-new-jobs"
 
@@ -387,23 +387,23 @@ if __name__ == "__main__":
                     'CASE \nWHEN size(nodes) = 4 \nTHEN nodes \nELSE NULL \nEND': [
                         {
                             'basename': 'SHIP4946367_2.ubam',
-                            'bucket': '***REMOVED***-dev-from-personalis-gatk',
+                            'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis-gatk',
                             'contentType': 'application/octet-stream',
                             'crc32c': 'ojStVg==',
                             'dirname': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/output',
                             'etag': 'CJTpxe3ynuICEAM=',
                             'extension': 'ubam',
                             'generation': '1557970088457364',
-                            'id': '***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam/1557970088457364',
+                            'id': 'gbsc-gcp-project-mvp-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam/1557970088457364',
                             'kind': 'storage#object',
                             'labels': ['WGS35', 'Blob', 'Ubam'],
                             'md5Hash': 'opGAi0f9olAu4DKzvYiayg==',
-                            'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam?generation=1557970088457364&alt=media',
+                            'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam?generation=1557970088457364&alt=media',
                             'metageneration': '3',
                             'name': 'SHIP4946367_2',
                             'path': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_2.ubam',
                             'sample': 'SHIP4946367',
-                            'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam',
+                            'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_2.ubam',
                             'size': 16886179620,
                             'storageClass': 'REGIONAL',
                             'timeCreated': '2019-05-16T01:28:08.455Z',
@@ -418,23 +418,23 @@ if __name__ == "__main__":
                         },
                         {
                             'basename': 'SHIP4946367_0.ubam',
-                            'bucket': '***REMOVED***-dev-from-personalis-gatk',
+                            'bucket': 'gbsc-gcp-project-mvp-dev-from-personalis-gatk',
                             'contentType': 'application/octet-stream',
                             'crc32c': 'ZaJM+g==',
                             'dirname': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/output',
                             'etag': 'CM+sxKDynuICEAY=',
                             'extension': 'ubam',
                             'generation': '1557969926952527',
-                            'id': '***REMOVED***-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam/1557969926952527',
+                            'id': 'gbsc-gcp-project-mvp-dev-from-personalis-gatk/SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam/1557969926952527',
                             'kind': 'storage#object',
                             'labels': ['WGS35', 'Blob', 'Ubam'],
                             'md5Hash': 'Tgh+eyIiKe8TRWV6vohGJQ==',
-                            'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam?generation=1557969926952527&alt=media',
+                            'mediaLink': 'https://www.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam?generation=1557969926952527&alt=media',
                             'metageneration': '6',
                             'name': 'SHIP4946367_0',
                             'path': 'SHIP4946367/fastq-to-vcf/fastq-to-ubam/output/SHIP4946367_0.ubam',
                             'sample': 'SHIP4946367',
-                            'selfLink': 'https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam',
+                            'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-dev-from-personalis-gatk/o/SHIP4946367%2Ffastq-to-vcf%2Ffastq-to-ubam%2Foutput%2FSHIP4946367_0.ubam',
                             'size': 16871102587,
                             'storageClass': 'REGIONAL',
                             'timeCreated': '2019-05-16T01:25:26.952Z',
