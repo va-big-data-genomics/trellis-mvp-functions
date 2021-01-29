@@ -756,7 +756,7 @@ nodes:
                     propertyTypes:
                         - String
                     mandatory: true
-                    example: "***REMOVED***"
+                    example: "DVALABP000398"
             relationships:
                 in:
                     - WAS_USED_BY:
