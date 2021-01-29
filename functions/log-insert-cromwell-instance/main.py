@@ -211,33 +211,3 @@ def log_insert_cromwell_instance(event, context):
 
     result = publish_to_topic(DB_TOPIC, message)
     print(f"> Published message to {DB_TOPIC} with result: {result}.")
-
-
-if __name__ == "__main__":
-    # Run unit tests in local
-    PROJECT_ID = "***REMOVED***-dev"
-    DB_TOPIC = "wgs35-db-queries"
-    KILL_DUPS_TOPIC = "wgs35-kill-duplicate-jobs"
-    DATA_GROUP = "wgs35"
-    FUNCTION_NAME = "wgs35-update-job-status"
-
-    PUBLISHER = pubsub.PublisherClient()
-
-    # Insert operation
-    with open("insert_data_sample.json", "r") as fh:
-        data = json.load(fh)
-    data = json.dumps(data).encode('utf-8')
-    event = {'data': base64.b64encode(data)}
-    context = {'test': 123}
-    update_job_status(event, context)
-
-    pdb.set_trace()
-
-    # Delete operation
-    with open("delete_data_sample.json", "r") as fh:
-        data = json.load(fh)
-    data = json.dumps(data).encode('utf-8')
-    event = {'data': base64.b64encode(data)}
-    context = {'event_id': 611225247182937, 'timestamp': '2019-07-10T04:11:53.865Z', 'event_type': 'google.pubsub.topic.publish', 'resource': {'service': 'pubsub.googleapis.com', 'name': 'projects/***REMOVED***-test/topics/wgs35-update-vm-status', 'type': 'type.googleapis.com/google.pubsub.v1.PubsubMessage'}}
-
-    update_job_status(event, context)
