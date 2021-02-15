@@ -115,3 +115,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# File with list of secret words to be purged from the repo
+secrets.txt

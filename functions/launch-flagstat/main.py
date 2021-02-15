@@ -239,19 +239,3 @@ def launch_flagstat(event, context):
                                   NEW_JOB_TOPIC,
                                   message) 
         print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")       
-
-
-# For local testing
-if __name__ == "__main__":
-    project_id = "***REMOVED***-dev"
-    zones =  "us-west1*"
-    out_bucket = "***REMOVED***-dev-from-personalis-qc"
-    out_root = "dsub"
-
-    data = {"resource": "blob", "gcp-metadata": {"bucket": "***REMOVED***-dev-from-personalis", "contentLanguage": "en", "contentType": "application/octet-stream", "crc32c": "XPwmhA==", "etag": "CMTx8Y/t8+ACEAE=", "generation": "1552093034608836", "id": "***REMOVED***-dev-from-personalis/SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam/1552093034608836", "kind": "storage#object", "md5Hash": "qm+p+AbPhpyXwmXtAQ/fkA==", "mediaLink": "https://www.googleapis.com/download/storage/v1/b/***REMOVED***-dev-from-personalis/o/SHIP4420818%2FAlignments%2FSHIP4420818_chromosome_Y.recal.bam?generation=1552093034608836&alt=media", "metadata": {"goog-reserved-file-mtime": "1527072114"}, "metageneration": "1", "name": "SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam", "selfLink": "https://www.googleapis.com/storage/v1/b/***REMOVED***-dev-from-personalis/o/SHIP4420818%2FAlignments%2FSHIP4420818_chromosome_Y.recal.bam", "size": "921001444", "storageClass": "REGIONAL", "timeCreated": "2019-03-09T00:57:14.607Z", "timeStorageClassUpdated": "2019-03-09T00:57:14.607Z", "updated": "2019-03-09T00:57:14.607Z"}, "trellis-metadata": {"path": "SHIP4420818/Alignments/SHIP4420818_chromosome_Y.recal.bam", "dirname": "SHIP4420818/Alignments", "basename": "SHIP4420818_chromosome_Y.recal.bam", "extension": "recal.bam", "time-created-epoch": 1552093034.607, "time-updated-epoch": 1552093034.607, "time-created-iso": "2019-03-09T00:57:14.607000+00:00", "time-updated-iso": "2019-03-09T00:57:14.607000+00:00", "labels": ["Bam", "WGS_9000", "Blob"], "sample": "SHIP4420818", "chromosome": "Y"}}
-    data = json.dumps(data)
-    data = data.encode('utf-8')
-    
-    event = {'data': base64.b64encode(data)}
-
-    launch_flagstat(event, context=None)
