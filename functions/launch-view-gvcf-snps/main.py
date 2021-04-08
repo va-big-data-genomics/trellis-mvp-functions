@@ -297,7 +297,7 @@ def launch_view_gvcf_snps(event, context, test=False):
         "--min-cores", str(job_dict["minCores"]), 
         "--logging", job_dict["logging"],
         "--image", job_dict["image"],
-        #"--use-private-address",
+        "--use-private-address",
         "--network", job_dict["network"],
         "--subnetwork", job_dict["subnetwork"],        
         "--command", job_dict["command"],
