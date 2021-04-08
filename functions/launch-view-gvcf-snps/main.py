@@ -55,17 +55,6 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
     CLIENT = storage.Client()
 
-def load_local_env():
-    class Struct:
-        # https://stackoverflow.com/questions/6866600/how-to-parse-read-a-yaml-file-into-a-python-object
-        def __init__(self, **entries):
-            self.__dict__.update(entries)
-
-    with open('trellis-config.yaml', 'r') as fh:
-        trellis_vars = yaml.load(fh, Loader=yaml.Loader)
-    trellis = Struct(**trellis_vars)
-    return trellis
-
 class TrellisMessage:
 
     def __init__(self, event, context):
@@ -219,10 +208,10 @@ def launch_view_gvcf_snps(event, context, test=False):
             context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    if test:
-        TRELLIS = load_local_env()
-        FUNCTION_NAME = 'trellis-launch-gvcf-snps'
-        PUBLISHER = pubsub.PublisherClient()
+    #if test:
+    #    TRELLIS = load_local_env()
+    #    FUNCTION_NAME = 'trellis-launch-gvcf-snps'
+    #    PUBLISHER = pubsub.PublisherClient()
 
     # Parse message
     message = TrellisMessage(event, context)
