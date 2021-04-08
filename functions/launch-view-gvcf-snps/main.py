@@ -264,7 +264,7 @@ def launch_view_gvcf_snps(event, context, test=False):
         },
         "inputs": {
             "INPUT": f"gs://{bucket}/{path}",
-            "SNP_LIST": TRELLIS.SNP_LIST, 
+            "SNP_LIST": TRELLIS.SIGNATURE_SNPS, 
             "REF_FASTA": TRELLIS.REF_FASTA,
             "REF_FASTA_INDEX": TRELLIS.REF_FASTA_INDEX
         },
