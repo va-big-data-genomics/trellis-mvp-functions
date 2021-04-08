@@ -298,6 +298,7 @@ def launch_view_gvcf_snps(event, context, test=False):
         "--logging", job_dict["logging"],
         "--image", job_dict["image"],
         "--use-private-address",
+        "--block-external-network",
         "--network", job_dict["network"],
         "--subnetwork", job_dict["subnetwork"],        
         "--command", job_dict["command"],
