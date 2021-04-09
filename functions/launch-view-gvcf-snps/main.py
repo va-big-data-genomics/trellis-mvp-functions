@@ -257,7 +257,7 @@ def launch_view_gvcf_snps(event, context, test=False):
         "command": (
                     "sleep 20m | " +
                     "bcftools index --tbi ${INPUT} | " +
-                    "bcftools view ${INPUT} -R {$SNP_LIST} -Ou | " +
+                    "bcftools view ${INPUT} -R ${SNP_LIST} -Ou | " +
                     "bcftools convert --gvcf2vcf --fasta-ref ${REF_FASTA} -Ou | " +
                     "bcftools view -T ${SNP_LIST} -Oz -o ${OUTPUT}"),
         "envs": {
