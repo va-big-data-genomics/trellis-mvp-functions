@@ -844,7 +844,7 @@ class RequestGetSignatureSnps:
                     "(v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
                  f"WITH n LIMIT {limit_count} " +
                  "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
-                            "sample:n.sample, " +
+                            "sample:v.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"view-gvcf-snps\", " +
