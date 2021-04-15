@@ -792,7 +792,7 @@ class RequestGetSignatureSnps:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Request', 'LaunchViewSignatureSnps']
+        reqd_header_labels = ['Request', 'LaunchViewSignatureSnps', 'MergedVcf']
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
