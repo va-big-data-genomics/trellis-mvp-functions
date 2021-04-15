@@ -796,7 +796,7 @@ class RequestGetSignatureSnps:
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            body.get('limitCount'),
+            body.get("limitCount"),
         ]
 
         for condition in conditions:
@@ -812,7 +812,7 @@ class RequestGetSignatureSnps:
 
         event_id = context.event_id
         seed_id = context.event_id
-        limit_count = body.limitCount
+        limit_count = body["limitCount"]
 
         query = self._create_query(event_id, limit_count)
 
@@ -820,7 +820,7 @@ class RequestGetSignatureSnps:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Gvcf", "Nodes"],
+                              "labels": ["Cypher", "Query", "Vcf", "Tbi", "Nodes"],
                               "sentFrom": self.function_name,
                               "trigger": "RequestGetSignatureSnps",
                               "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
