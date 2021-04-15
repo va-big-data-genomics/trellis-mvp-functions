@@ -842,16 +842,16 @@ class RequestGetSignatureSnps:
                  "MATCH (v:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
                  "WHERE NOT " +
                     "(v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
-                 f"WITH n LIMIT {limit_count} " +
+                 f"WITH v,t LIMIT {limit_count} " +
                  "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
                             "sample:v.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"view-gvcf-snps\", " +
                             f"eventId: {event_id} }}) " +
-                "MERGE (n)-[:WAS_USED_BY]->(j) " +
+                "MERGE (v)-[:WAS_USED_BY]->(j) " +
                 "MERGE (t)-[:WAS_USED_BY]->(j) " +
-                "RETURN n AS vcf, t AS index")
+                "RETURN v AS vcf, t AS index")
         return query
 
 
