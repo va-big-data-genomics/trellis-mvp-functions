@@ -855,6 +855,79 @@ class RequestGetSignatureSnps:
         return query
 
 
+class RequestGetSignatureSnpsCovid19:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'LaunchViewSignatureSnps', 'Covid19']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        limit_count = body["limitCount"]
+
+        query = self._create_query(event_id, limit_count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Vcf", "Tbi", "Covid19", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestGetSignatureSnpsCovid19",
+                              "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, limit_count):
+        query = (
+                 "MATCH (:Person:Covid19)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_VARIANT_CALLS]->(v:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
+                 "WHERE NOT " +
+                    "(v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
+                 f"WITH v,t LIMIT {limit_count} " +
+                 "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
+                            "sample:v.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"view-gvcf-snps\", " +
+                            f"eventId: {event_id} }}) " +
+                "MERGE (v)-[:WAS_USED_BY]->(j) " +
+                "MERGE (t)-[:WAS_USED_BY]->(j) " +
+                "RETURN v AS vcf, t AS index")
+        return query
+
+
 class KillDuplicateJobs:
 
     def __init__(self, function_name, env_vars):
