@@ -796,6 +796,7 @@ class RequestGetSignatureSnps:
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get('limitCount'),
         ]
 
         for condition in conditions:
@@ -811,8 +812,9 @@ class RequestGetSignatureSnps:
 
         event_id = context.event_id
         seed_id = context.event_id
+        limit_count = body.limitCount
 
-        query = self._create_query(event_id)
+        query = self._create_query(event_id, limit_count)
 
         message = {
                    "header": {
@@ -835,12 +837,12 @@ class RequestGetSignatureSnps:
         return([(topic, message)])
 
 
-    def _create_query(self, event_id):
+    def _create_query(self, event_id, limit_count):
         query = (
-                 "MATCH (n:Merged:Vcf) " +
+                 "MATCH (v:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
                  "WHERE NOT " +
-                    "(n)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
-                 "WITH n LIMIT 5 " +
+                    "(v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
+                 f"WITH n LIMIT {limit_count} " +
                  "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
                             "sample:n.sample, " +
                             "nodeCreated: datetime(), " +
@@ -848,7 +850,8 @@ class RequestGetSignatureSnps:
                             "name: \"view-gvcf-snps\", " +
                             f"eventId: {event_id} }}) " +
                 "MERGE (n)-[:WAS_USED_BY]->(j) " +
-                "RETURN n AS node")
+                "MERGE (t)-[:WAS_USED_BY]->(j) " +
+                "RETURN n AS vcf, t AS index")
         return query
 
 
