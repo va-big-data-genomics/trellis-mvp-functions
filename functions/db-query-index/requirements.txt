@@ -3,4 +3,4 @@ google-cloud-pubsub==0.40.0
 py2neo==4.3.0
 neo4j-driver==1.6.2
 urllib3==1.24.3
-pyyaml==5.1.1
+pyyaml==5.4
