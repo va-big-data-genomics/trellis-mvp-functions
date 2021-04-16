@@ -928,6 +928,94 @@ class RequestGetSignatureSnpsCovid19:
         return query
 
 
+class LaunchViewSignatureSnps:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        required_labels = [
+                           'Blob', 
+                           'Merged', 
+                           'Vcf', 
+                           'WGS35']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Only run on VCFs output from the 'MergeVCFs' step of the GATK pipeline
+            node.get('wdlCallAlias') == 'MergeVCFs',
+            node.get('sample'),
+            node.get('id'),
+            # Don't run on objects in pay-to-access storage classes (e.g. Nearline, Coldline)
+            node.get('storageClass') == 'REGIONAL',
+            set(required_labels).issubset(set(node.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        node_id = node['id']
+
+        query = self._create_query(event_id, seed_id, node_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Vcf", "Tbi", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "LaunchViewSignatureSnps",
+                              "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, seed_id, node_id):
+        query = (
+                 "MATCH (v:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
+                 f"WHERE v.id = {node_id} " +
+                 "AND NOT (v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
+                 "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
+                            "sample:v.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"view-gvcf-snps\", " +
+                            f"eventId: {event_id}, " +
+                            f"seedId: {seed_id} }}) " +
+                "MERGE (v)-[:WAS_USED_BY]->(j) " +
+                "MERGE (t)-[:WAS_USED_BY]->(j) " +
+                "RETURN v AS vcf, t AS index")
+        return query
+
+
+
+
+
 class KillDuplicateJobs:
 
     def __init__(self, function_name, env_vars):
@@ -4816,6 +4904,12 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RequestGetSignatureSnps(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestGetSignatureSnpsCovid19(
+                                    function_name,
+                                    env_vars))
+    triggers.append(LaunchViewSignatureSnps(
                                     function_name,
                                     env_vars))
     triggers.append(MoveFastqsToColdline(
