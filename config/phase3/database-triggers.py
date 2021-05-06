@@ -132,7 +132,7 @@ class AddFastqSetSize:
                               "previousEventId": context.event_id,
                    },
                    "body": {
-                          "cypher": query
+                          "cypher": query,
                           "result-mode": "data",
                           "result-structure": "list",
                           "result-split": "True",
