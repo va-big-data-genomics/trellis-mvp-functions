@@ -2,8 +2,158 @@ import time
 
 MAX_RETRIES = 3
 
+class RequestFastqToUbamCovid19:
+    """ Initiate variant calling for Covid19 genomes.
+
+    Initiate the first step in the variant calling workflow,
+    FastqToUbam, for genomes of people included in the Covid19
+    (:Study).
+
+    Cypher query finds Fastqs of Covid19 genomes that have not
+    been processed and sends the Fastq node metadata back to 
+    the check-triggers service so it will activate the
+    "LaunchFastqToUbam" trigger.
+    """
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'FastqToUbam', 'Covid19']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        limit_count = body["limitCount"]
+
+        query = self._create_query(event_id, limit_count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Fastq", "Covid19", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestFastqToUbamCovid19",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, limit_count):
+        query = (
+                 "MATCH (:Study {name:'Covid19'})-[*2]->(:Person)-[:GENERATED]->(:Sample)-[]->(p:PersonalisSequencing)-[]->(f:Fastq) " +
+                 "WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 "AND f.matePair = 1 " +
+                 "RETURN f AS node " +
+                 f"LIMIT {limit_count}")
+        return query
+
+
 class AddFastqSetSize:
-    """Add setSize property to Fastqs and send them back to 
+    """ Add (:Fastq) setSize property once (:PersonalisSequencing) exists.
+
+    The (:PersonalisSequencing) node is created based on metadata in
+    the JSON that Personalis uploads once all the Fastqs have been 
+    uploaded.
+    """
+
+    def __init__(self, function_name, env_vars):
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        required_labels = [
+                           'Json',
+                           'PersonalisSequencing']
+
+        if not node:
+            return False
+
+        conditions = [
+            set(required_labels).issubset(set(node.get('labels'))),
+            node.get('id'),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        node_id = node['id']
+
+        query = self._create_query(node_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Cypher", "Query", "Set", "Fastq" "SetSize"], 
+                              "sentFrom": self.function_name,
+                              "trigger": "AddFastqSetSize",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                          "cypher": query
+                          "result-mode": "data",
+                          "result-structure": "list",
+                          "result-split": "True",
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, node_id)
+        query = (
+                 "MATCH (p:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                f"WHERE p.id=\"{node_id}\" " +
+                 "COLLECT(f) AS nodes " +
+                 "UNWIND nodes AS node " +
+                 "SET node.setSize = size(nodes) " +
+                 "RETURN node")
+        return query
+
+
+class OLDAddFastqSetSize:
+    """ DEPRECATED
+    Add setSize property to Fastqs and send them back to 
     triggers to launch fastq-to-ubam.
     """
 
@@ -709,6 +859,10 @@ class LaunchFastqToUbam:
             isinstance(node.get('readGroup'), int),
             node.get('matePair') == 1,
             set(required_labels).issubset(set(node.get('labels'))),
+            
+            # On/off switch to control whether variant calling
+            #   should proceed in event-driven fashion.
+            self.env_vars['WGS_VARIANT_CALLING'] == "True",
         ]
 
         for condition in conditions:
@@ -774,9 +928,6 @@ class LaunchFastqToUbam:
                      "sample, " +
                      "j.eventId AS eventId " +
                 "UNWIND uniqueMatePairs AS uniqueMatePair " +
-                #"MATCH (jobReq:JobRequest:FastqToUbam { " +
-                #            "sample: sample, " +
-                #            "eventId: eventId}) " +
                 "MERGE (uniqueMatePair)-[:WAS_USED_BY]->(j) " +
                 "RETURN DISTINCT(uniqueMatePairs) AS nodes")
         return query
@@ -4735,6 +4886,9 @@ def get_triggers(function_name, env_vars):
     triggers.append(LaunchFastqToUbam(
                                     function_name,
                                     env_vars))
+    triggers.append(RequestFastqToUbamCovid19(
+                                    function_name,
+                                    env_vars))
     
     ## Request-driven triggers to re-launch failed/missing jobs
     triggers.append(RequestLaunchGatk5Dollar(
@@ -4918,5 +5072,6 @@ def get_triggers(function_name, env_vars):
     triggers.append(RequestChangeFastqStorage(
                                     function_name,
                                     env_vars))
+
     return triggers
 
