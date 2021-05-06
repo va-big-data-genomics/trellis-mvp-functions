@@ -140,7 +140,7 @@ class AddFastqSetSize:
         }
         return([(topic, message)])
 
-    def _create_query(self, node_id)
+    def _create_query(self, node_id):
         query = (
                  "MATCH (p:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
                 f"WHERE p.id=\"{node_id}\" " +
