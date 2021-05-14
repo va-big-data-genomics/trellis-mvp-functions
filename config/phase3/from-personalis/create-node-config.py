@@ -217,14 +217,14 @@ def read_checksum(db_dict, groupdict):
             # Increment counter value for 'fastqCount' field
             fastq_counter +=1
             # Add basename/checksum as individual field
-            json_data[fastq_match.group('basename')] = fastq_match.group('checksum')
+            #json_data[fastq_match.group('basename')] = fastq_match.group('checksum')
             checksums.append({fastq_match.group('basename'): fastq_match.group('checksum')})
 
         microarray_match = re.fullmatch(microarray_pattern, line)
         if microarray_match:
             microarray_counter +=1
             # Add basename/checksum as individual field
-            json_data[microarray_match.group('basename')] = microarray_match.group('checksum')
+            #json_data[microarray_match.group('basename')] = microarray_match.group('checksum')
             checksums.append({microarray_match.group('basename'): microarray_match.group('checksum')})
 
     json_data['fastqCount'] = fastq_counter
