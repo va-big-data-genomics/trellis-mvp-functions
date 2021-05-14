@@ -199,8 +199,8 @@ def read_checksum(db_dict, groupdict):
         .download_as_string()
 
     # Count the number of fastqs & microarray data
-    fastq_pattern = r"(?P<checksum>\w+)\h+\.\/FASTQ\/(?P<basename>.*\.fastq\.gz)"
-    microarray_pattern = r"(?P<checksum>\w+)\h+\.\/Microarray\/(?P<basename>.*)"
+    fastq_pattern = r"(?P<checksum>\w+)\s+\.\/FASTQ\/(?P<basename>.*\.fastq\.gz)"
+    microarray_pattern = r"(?P<checksum>\w+)\s+\.\/Microarray\/(?P<basename>.*)"
     
     fastq_counter = 0
     microarray_counter = 0
