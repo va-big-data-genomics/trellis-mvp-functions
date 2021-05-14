@@ -210,7 +210,6 @@ def read_checksum(db_dict, groupdict):
     microarray_counter = 0
 
     json_data = {}
-    checksums = []
     for line in split_data:
         fastq_match = re.fullmatch(fastq_pattern, line)
         if fastq_match:
@@ -229,7 +228,7 @@ def read_checksum(db_dict, groupdict):
 
     json_data['fastqCount'] = fastq_counter
     json_data['microarrayCount'] = microarray_counter
-    json_data['data'] = stripped_data
+    #json_data['data'] = stripped_data
     print(f"JSON data: {json_data}")
 
     return json_data
