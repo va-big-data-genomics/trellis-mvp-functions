@@ -45,7 +45,7 @@ def format_pubsub_message(query, seed_id):
                           "method": "POST",
                           "labels": ["Create", "Blob", "Node", "Cypher", "Query"],
                           "sentFrom": f"{FUNCTION_NAME}",
-                          "publishTo": f"{TOPIC_TRIGGERS}",
+                          "publishTo": f"{TRELLIS.TOPIC_TRIGGERS}",
                           "seedId": f"{seed_id}",
                           "previousEventId": f"{seed_id}"
                },
@@ -60,7 +60,7 @@ def format_pubsub_message(query, seed_id):
 
 
 def publish_to_topic(topic, data):
-    topic_path = PUBLISHER.topic_path(GOOGLE_CLOUD_PROJECT, topic)
+    topic_path = PUBLISHER.topic_path(TRELLIS.GOOGLE_CLOUD_PROJECT, topic)
     message = json.dumps(data).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
@@ -230,12 +230,12 @@ def create_node_query(event, context):
     bucket_name = event['bucket']
 
     # Module name does not include project prefix
-    pattern = f"{GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
+    pattern = f"{TRELLIS.GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
     match = re.match(pattern, bucket_name)
     suffix = match['suffix']
 
     # Import the config modules that corresponds to event-trigger bucket
-    node_module_name = f"{DATA_GROUP}.{suffix}.create-node-config"
+    node_module_name = f"{TRELLIS.DATA_GROUP}.{suffix}.create-node-config"
     node_module = importlib.import_module(node_module_name)
 
     node_kinds = node_module.NodeKinds()
@@ -289,5 +289,5 @@ def create_node_query(event, context):
 
     message = format_pubsub_message(db_query, seed_id)
     print(f"> Pubsub message: {message}.")
-    result = publish_to_topic(DB_QUERY_TOPIC, message)
-    print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+    result = publish_to_topic(TRELLIS.DB_QUERY_TOPIC, message)
+    print(f"> Published message to {TRELLIS.DB_QUERY_TOPIC} with result: {result}.")
