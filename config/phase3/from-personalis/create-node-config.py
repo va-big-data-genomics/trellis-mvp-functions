@@ -197,10 +197,12 @@ def read_checksum(db_dict, groupdict):
         .get_bucket(db_dict['bucket']) \
         .blob(db_dict['path']) \
         .download_as_string()
+    data = data.decode("utf-8")
+    data = data.split('\n')
 
     # Count the number of fastqs & microarray data
-    fastq_pattern = r"(?P<checksum>\w+)\s+\.\/FASTQ\/(?P<basename>.*\.fastq\.gz)"
-    microarray_pattern = r"(?P<checksum>\w+)\s+\.\/Microarray\/(?P<basename>.*)"
+    fastq_pattern = r"(?P<checksum>\w+)\\t\.\/FASTQ\/(?P<basename>.*\.fastq\.gz)"
+    microarray_pattern = r"(?P<checksum>\w+)\\t\.\/Microarray\/(?P<basename>.*)"
     
     fastq_counter = 0
     microarray_counter = 0
