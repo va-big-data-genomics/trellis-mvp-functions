@@ -197,10 +197,10 @@ def read_checksum(db_dict, groupdict):
         .get_bucket(db_dict['bucket']) \
         .blob(db_dict['path']) \
         .download_as_string()
-    data = data.decode("utf-8")
+    decoded_data = data.decode("utf-8")
     # Strip trailing newline
-    data = data.rstrip()
-    data = data.split('\n')
+    stripped_data = decoded_data.rstrip()
+    split_data = stripped_data.split('\n')
 
     # Count the number of fastqs & microarray data
     fastq_pattern = r"(?P<checksum>\w+)\t+./FASTQ/(?P<basename>.*\.fastq\.gz)"
@@ -216,20 +216,20 @@ def read_checksum(db_dict, groupdict):
         if fastq_match:
             # Increment counter value for 'fastqCount' field
             fastq_counter +=1
-            # Add basename/checksum as individual field
+            # Add basename/checksum as individual field (ERROR: INVALID KEY NAME)
             #json_data[fastq_match.group('basename')] = fastq_match.group('checksum')
-            checksums.append({fastq_match.group('basename'): fastq_match.group('checksum')})
+            #checksums.append({fastq_match.group('basename'): fastq_match.group('checksum')})
 
         microarray_match = re.fullmatch(microarray_pattern, line)
         if microarray_match:
             microarray_counter +=1
-            # Add basename/checksum as individual field
+            # Add basename/checksum as individual field (ERROR: INVALID KEY NAME)
             #json_data[microarray_match.group('basename')] = microarray_match.group('checksum')
-            checksums.append({microarray_match.group('basename'): microarray_match.group('checksum')})
+            #checksums.append({microarray_match.group('basename'): microarray_match.group('checksum')})
 
     json_data['fastqCount'] = fastq_counter
     json_data['microarrayCount'] = microarray_counter
-    json_data['checksums'] = checksums
+    json_data['data'] = stripped_data
     print(f"JSON data: {json_data}")
 
     return json_data
