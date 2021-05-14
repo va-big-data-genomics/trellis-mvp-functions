@@ -211,7 +211,7 @@ def read_checksum(db_dict, groupdict):
 
     json_data = {}
     checksums = []
-    for line in data:
+    for line in split_data:
         fastq_match = re.fullmatch(fastq_pattern, line)
         if fastq_match:
             # Increment counter value for 'fastqCount' field
