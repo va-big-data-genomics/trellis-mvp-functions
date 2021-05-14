@@ -186,7 +186,10 @@ def format_node_merge_query(db_dict, dry_run=False):
                   'id',
                   'crc32c',
                   'generation',
-                  'storageClass']
+                  'storageClass',
+                  # checksum specific
+                  'fastqCount',
+                  'microarrayCount']
 
     merge_strings = []
     for key in merge_keys:
