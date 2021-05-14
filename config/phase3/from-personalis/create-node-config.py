@@ -201,8 +201,8 @@ def read_checksum(db_dict, groupdict):
     data = data.split('\n')
 
     # Count the number of fastqs & microarray data
-    fastq_pattern = r"(?P<checksum>\w+)\\t\.\/FASTQ\/(?P<basename>.*\.fastq\.gz)"
-    microarray_pattern = r"(?P<checksum>\w+)\\t\.\/Microarray\/(?P<basename>.*)"
+    fastq_pattern = r"(?P<checksum>\w+)\t+\.\/FASTQ\/(?P<basename>.*\.fastq\.gz)"
+    microarray_pattern = r"(?P<checksum>\w+)\t+\.\/Microarray\/(?P<basename>.*)"
     
     fastq_counter = 0
     microarray_counter = 0
