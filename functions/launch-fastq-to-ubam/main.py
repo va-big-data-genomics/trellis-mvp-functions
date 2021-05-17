@@ -143,7 +143,7 @@ def launch_fastq_to_ubam(event, context):
     task_id, trunc_nodes_hash = make_unique_task_id(nodes, datetime_stamp)
 
     # TODO: Implement QC checking to make sure fastqs match
-    set_sizes = []
+    #set_sizes = []
     fastq_fields = []
     fastqs = {}
     
@@ -164,7 +164,7 @@ def launch_fastq_to_ubam(event, context):
         fastqs[fastq_name] = f"gs://{bucket}/{path}" 
 
         fastq_fields.extend([plate, sample, read_group])
-        set_sizes.append(set_size)
+        #set_sizes.append(set_size)
         input_ids.append(input_id)
 
     # Check that fastqs are from same sample/read group
@@ -172,8 +172,8 @@ def launch_fastq_to_ubam(event, context):
         raise ValueError(f"> Fastq fields are not in agreement: {fastq_fields}. Exiting.")
 
     # Check to make sure that set sizes are in agreement
-    if len(set(set_sizes)) != 1:
-        raise ValueError(f"> Set sizes of fastqs are not in agreement: {set_sizes}. Exiting.")
+    #if len(set(set_sizes)) != 1:
+    #    raise ValueError(f"> Set sizes of fastqs are not in agreement: {set_sizes}. Exiting.")
 
 
     # Define logging & outputs after task_id
