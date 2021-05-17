@@ -819,7 +819,7 @@ class LaunchFastqToUbam:
             
             # On/off switch to control whether variant calling
             #   should proceed in event-driven fashion.
-            self.env_vars['WGS_VARIANT_CALLING'] == "True",
+            self.env_vars['WGS_VARIANT_CALLING'] == True,
         ]
 
         for condition in conditions:
