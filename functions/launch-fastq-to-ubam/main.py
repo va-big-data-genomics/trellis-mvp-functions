@@ -154,7 +154,7 @@ def launch_fastq_to_ubam(event, context):
         sample = node['sample']
         read_group = node['readGroup']
         mate_pair = node['matePair']
-        set_size = int(node['setSize'])/2
+        #set_size = int(node['setSize'])/2
         input_id = node['id']
 
         bucket = node['bucket']
@@ -285,6 +285,7 @@ def launch_fastq_to_ubam(event, context):
     dsub_result = launch_dsub_task(dsub_args)
     print(f"> Dsub result: {dsub_result}.")
 
+    """ DEPRECATED IN VERSION 1.2.3
     # Metadata to be perpetuated to ubams is written to file
     # Try until success
     metadata = {"setSize": set_size}
@@ -297,7 +298,7 @@ def launch_fastq_to_ubam(event, context):
             if result == True:
                 break
         print(f"> Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
-
+    """
     
     if 'job-id' in dsub_result.keys():
         # Add dsub job ID to neo4j database node
