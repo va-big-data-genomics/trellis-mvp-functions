@@ -747,7 +747,7 @@ class LaunchGatk5Dollar:
                     "-[:GENERATED]->(:Fastq)" +
                     "-[:WAS_USED_BY]->(:Job)" +
                     "-[:GENERATED]->(n:Ubam), " +
-                 "(s)-[:GENERATED]->(check:Checksum) "
+                 "(s)-[:GENERATED]->(c:Checksum) "
                  # Don't start jobs if a job request already exists
                  "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " +
                  # Group ubams by read group
