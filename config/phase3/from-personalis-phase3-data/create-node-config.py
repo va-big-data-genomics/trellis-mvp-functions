@@ -36,7 +36,7 @@ def read_group_name_1(db_dict, groupdict):
     index = db_dict['name'].split('_')[1]
     return {'readGroup': int(index)} 
 
-
+# DEPRECATED WITH VERSION 1.2.3
 def get_metadata_from_all_json(db_dict, groupdict):
 
     meta_bucket = db_dict['bucket']
@@ -136,5 +136,5 @@ class NodeKinds:
                                 ],
                                 "Ubam": [
                                          read_group_name_1,
-                                         get_metadata_from_all_json],
+                                ],
         }
