@@ -270,7 +270,8 @@ class RequestLaunchGatk5Dollar:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Ubam", "Nodes"],
+                              # The 'Relationship' label is necessary to activate LaunchGatk5Dollar
+                              "labels": ["Cypher", "Query", "Ubam", "Relationship", "Nodes"],
                               "sentFrom": self.function_name,
                               "trigger": "RequestLaunchGatk5Dollar",
                               "publishTo": self.env_vars['DB_QUERY_TOPIC'],
@@ -669,6 +670,8 @@ class RequestGatk5DollarNoRequest:
 class LaunchGatk5Dollar:
     """Trigger for launching GATK $5 Cromwell workflow.
 
+    It's activated by relationships, not nodes.
+
     Check whether all ubams for a sample are present, and
     that they haven't already been input to a $5 workflow.
 
@@ -747,14 +750,17 @@ class LaunchGatk5Dollar:
                     "-[:GENERATED]->(:Fastq)" +
                     "-[:WAS_USED_BY]->(:Job)" +
                     "-[:GENERATED]->(n:Ubam), " +
-                 "(s)-[:GENERATED]->(c:Checksum) "
+                 "(s)-[:GENERATED]->(c:Checksum) " +
+                 
                  # Don't start jobs if a job request already exists
                  "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " +
+                 
                  # Group ubams by read group
                  "WITH s.sample AS sample, " +
                     "c.fastqCount AS fastqSetSize, " +
                     "n.readGroup AS readGroup, " +
                     "COLLECT(DISTINCT n) AS allNodes " +
+                 
                  # In case of duplicate ubams or nodes being generated
                  # for a read group, use the head() method to only get
                  # (1) ubam per read group
@@ -764,10 +770,12 @@ class LaunchGatk5Dollar:
                  "WITH uniqueNodes.sample AS sample, " +
                       "fastqSetSize, " +
                       "COLLECT(uniqueNodes) AS sampleNodes " +
+                 
                  # Check that the number of ubams matches the number of 
                  # fastqs divided by 2. Paired-end sequencing generates
                  # (2) fastqs per read group.
                  "WHERE size(sampleNodes) = fastqSetSize/2 " +
+                 
                  # Create a job request, link the input nodes to the 
                  # request node, and return the input nodes so they 
                  # can be passed to the job launching function
@@ -3659,19 +3667,6 @@ class RelateTrellisOutputToJob:
                    }
         }
         return([(topic, message)]) 
-
-    """
-    def _create_query(self, node_id, task_id):
-        query = (
-                 f"MATCH (j:Job {{ trellisTaskId:\"{task_id}\" }} ), " +
-                 f"(node:Blob {{trellisTaskId:\"{task_id}\", " +
-                              f"id:\"{node_id}\" }}) " +
-                  "WHERE NOT EXISTS(j.duplicate) " +
-                  "OR NOT j.duplicate=True " +
-                  "MERGE (j)-[:GENERATED]->(node) " +
-                  "RETURN node")
-        return query
-    """
 
     def _create_query(self, node_id, task_id):
         query = (
