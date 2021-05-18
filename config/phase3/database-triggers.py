@@ -274,7 +274,7 @@ class RequestLaunchGatk5Dollar:
                               "labels": ["Cypher", "Query", "Ubam", "Relationship", "Nodes"],
                               "sentFrom": self.function_name,
                               "trigger": "RequestLaunchGatk5Dollar",
-                              "publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": seed_id,
                               "previousEventId": event_id,
                    },
