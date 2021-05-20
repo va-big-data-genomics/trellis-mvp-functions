@@ -70,11 +70,12 @@ class RequestFastqToUbamCovid19:
 
     def _create_query(self, event_id, limit_count):
         query = (
-                 "MATCH (:Study {name:'Covid19'})-[*2]->(:Person)-[:GENERATED]->(:Sample)-[]->(p:PersonalisSequencing)-[]->(:Fastq) " +
-                 "WHERE NOT (p)-[]->(:Fastq)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 "MATCH (:Study {name:'Covid19'})-[*2]->(:Person)-[:GENERATED]->(:Sample)-[]->(p:PersonalisSequencing)-[]->(f:Fastq) " +
+                 "WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
                  f"WITH p LIMIT {limit_count} " +
                  "MATCH (p)-[:GENERATED]->(f:Fastq) " +
                  "WHERE f.matePair = 1 " +
+                 "AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
                  "RETURN f AS node")
         return query
 
