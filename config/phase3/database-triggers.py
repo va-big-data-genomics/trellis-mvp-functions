@@ -1115,7 +1115,7 @@ class LaunchViewSignatureSnps:
     def _create_query(self, event_id, seed_id, node_id):
         query = (
                  "MATCH (v:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
-                 f"WHERE v.id = {node_id} " +
+                 f"WHERE v.id = \"{node_id}\" " +
                  "AND NOT (v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
                  "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
                             "sample:v.sample, " +
