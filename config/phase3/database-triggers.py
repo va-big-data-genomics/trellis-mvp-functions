@@ -2,8 +2,162 @@ import time
 
 MAX_RETRIES = 3
 
+class RequestFastqToUbamCovid19:
+    """ Initiate variant calling for Covid19 genomes.
+
+    Initiate the first step in the variant calling workflow,
+    FastqToUbam, for genomes of people included in the Covid19
+    (:Study).
+
+    Cypher query finds Fastqs of Covid19 genomes that have not
+    been processed and sends the Fastq node metadata back to 
+    the check-triggers service so it will activate the
+    "LaunchFastqToUbam" trigger.
+    """
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'FastqToUbam', 'Covid19']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        limit_count = body["limitCount"]
+
+        query = self._create_query(event_id, limit_count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Fastq", "Covid19", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestFastqToUbamCovid19",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, limit_count):
+        query = (
+                 "MATCH (:Study {name:'Covid19'})-[*2]->(:Person)-[:GENERATED]->(:Sample)-[]->(p:PersonalisSequencing)-[]->(f:Fastq) " +
+                 "WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 f"WITH DISTINCT p LIMIT {limit_count} " +
+                 "MATCH (p)-[:GENERATED]->(f:Fastq) " +
+                 "WHERE f.matePair = 1 " +
+                 "AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 "RETURN f AS node")
+        return query
+
+## DEPRECATED
 class AddFastqSetSize:
-    """Add setSize property to Fastqs and send them back to 
+    """ DEPRECATED with v.1.2.3
+
+    Add (:Fastq) setSize property once (:PersonalisSequencing) exists.
+
+    The (:PersonalisSequencing) node is created based on metadata in
+    the JSON that Personalis uploads once all the Fastqs have been 
+    uploaded.
+    """
+
+    def __init__(self, function_name, env_vars):
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        required_labels = [
+                           'Json',
+                           'PersonalisSequencing']
+
+        if not node:
+            return False
+
+        conditions = [
+            set(required_labels).issubset(set(node.get('labels'))),
+            node.get('id'),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        node_id = node['id']
+
+        query = self._create_query(node_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "UPDATE",
+                              "labels": ["Cypher", "Query", "Set", "Fastq" "SetSize"], 
+                              "sentFrom": self.function_name,
+                              "trigger": "AddFastqSetSize",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                          "cypher": query,
+                          "result-mode": "data",
+                          "result-structure": "list",
+                          "result-split": "True",
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, node_id):
+        query = (
+                 "MATCH (p:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                f"WHERE p.id=\"{node_id}\" " +
+                 "COLLECT(f) AS nodes " +
+                 "UNWIND nodes AS node " +
+                 "SET node.setSize = size(nodes) " +
+                 "RETURN node")
+        return query
+
+## DEPRECATED
+class OLDAddFastqSetSize:
+    """ DEPRECATED
+    Add setSize property to Fastqs and send them back to 
     triggers to launch fastq-to-ubam.
     """
 
@@ -92,8 +246,7 @@ class RequestLaunchGatk5Dollar:
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            #set(required_labels).issubset(set(node.get('labels'))),
-            #node.get('setSize'),
+            body.get("limitCount"),
         ]
 
         for condition in conditions:
@@ -105,23 +258,24 @@ class RequestLaunchGatk5Dollar:
 
 
     def compose_message(self, header, body, node, context):
-        """Send full set of ubams to GATK task"""
         topic = self.env_vars['DB_QUERY_TOPIC']
 
         #sample = node['sample']
         event_id = context.event_id
         seed_id = context.event_id
+        limit_count = body["limitCount"]
 
-        query = self._create_query(event_id)
+        query = self._create_query(limit_count)
 
         message = {
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Ubam", "GATK", "Nodes"],
+                              # The 'Relationship' label is necessary to activate LaunchGatk5Dollar
+                              "labels": ["Cypher", "Query", "Ubam", "Relationship", "Nodes"],
                               "sentFrom": self.function_name,
                               "trigger": "RequestLaunchGatk5Dollar",
-                              "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": seed_id,
                               "previousEventId": event_id,
                    },
@@ -135,57 +289,18 @@ class RequestLaunchGatk5Dollar:
         return([(topic, message)])
 
 
-    def _create_query(self, event_id):
-        """Check if all ubams for a sample are in the database & send to GATK $5 function.
-
-        Description of query, by line:
-            (1-2)   Find all ubams associated with this ubams sample.
-            (3,8)   Check that there is not an existing GATK $5 workflow for this sample.
-            (4-7)   Collect all ubams by sample/read group.
-            (9-10)  In case there are duplicate ubams, only get the first node of each 
-                    group of unique sample/read group ubams.
-            (11-13) Group all the ubams with the same sample and setSize, where setSize
-                    indicates how many ubams should be present for this sample.
-            (14)    Check that the count of bams with unique read groups matches the 
-                    expected number of bams.
-            (15)    Return number of ubam nodes.
-
-        Update notes:
-            v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
-                    check that sample is not related to an existing GATK $5 workflow. 
-        """
+    def _create_query(self, limit_count):
+        # TODO: How do I implement the LIMIT logic here.
+        ## I want to limit the number of genomes, not ubams
+        ## SOLUTION: limit query to finding RG1
         query = (
-                 f"MATCH (s:PersonalisSequencing)" +      #1
-                    "-[:GENERATED]->(:Fastq)" +                           #2
-                    "-[:WAS_USED_BY]->(:Job)" +                        #3
-                    "-[:GENERATED]->(n:Ubam) " +                       #4
-                 "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " + #5
-                 "WITH s.sample AS sample, " +                      #6
-                       "n.readGroup AS readGroup, " +               #8
-                       "COLLECT(DISTINCT n) AS allNodes " +
-                 "WITH head(allNodes) AS heads " +                  #9
-                 "UNWIND [heads] AS uniqueNodes " +                 #10
-                 "WITH uniqueNodes.sample AS sample, " +            #11
-                      "uniqueNodes.setSize AS setSize, " +          #12
-                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
-                 "WHERE size(sampleNodes) = setSize " +             #14
-                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
-                            "sample: sample, " +                    #16
-                            "nodeCreated: datetime(), " +           #17
-                            "nodeCreatedEpoch: " +                  #18
-                                "datetime().epochSeconds, " +
-                            "name: \"gatk-5-dollar\", " +
-                            f"eventId: {event_id} }}) " +           #19
-                 "WITH sampleNodes, " +                             #20
-                      "sample, " +
-                      "j.eventId AS eventId, " +                     #21
-                      "j.nodeCreatedEpoch AS epochTime " +          #22
-                 "UNWIND sampleNodes AS sampleNode " +              #23
-                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
-                            "sample: sample, " +                    #25
-                            "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
-                 "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
+                 "MATCH (s:PersonalisSequencing)" +
+                 "-[:GENERATED]->(:Fastq)" +
+                 "-[:WAS_USED_BY]->(:Job)" +
+                 "-[:GENERATED]->(n:Ubam {readGroup:1}) " +
+                 "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " +
+                 "RETURN DISTINCT n AS node " +
+                 f"LIMIT {limit_count}")
         return query
 
 
@@ -252,18 +367,6 @@ class RequestLaunchFailedGatk5Dollar:
     def _create_query(self, event_id):
         """Check if all ubams for a sample are in the database & send to GATK $5 function.
 
-        Description of query, by line:
-            (1-2)   Find all ubams associated with this ubams sample.
-            (3,8)   Check that there is not an existing GATK $5 workflow for this sample.
-            (4-7)   Collect all ubams by sample/read group.
-            (9-10)  In case there are duplicate ubams, only get the first node of each 
-                    group of unique sample/read group ubams.
-            (11-13) Group all the ubams with the same sample and setSize, where setSize
-                    indicates how many ubams should be present for this sample.
-            (14)    Check that the count of bams with unique read groups matches the 
-                    expected number of bams.
-            (15)    Return number of ubam nodes.
-
         Update notes:
             v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
                     check that sample is not related to an existing GATK $5 workflow. 
@@ -285,17 +388,19 @@ class RequestLaunchFailedGatk5Dollar:
                  "MATCH (s:PersonalisSequencing {sample:sampleName})" +  
                     "-[:GENERATED]->(:Fastq)" +                        
                     "-[:WAS_USED_BY]->(:Job)" +                      
-                    "-[:GENERATED]->(n:Ubam) " +
-                 "WITH s.sample AS sample, " +                     
+                    "-[:GENERATED]->(n:Ubam), " +
+                 "(s)-[:GENERATED]->(c:Checksum) " +
+                 "WITH s.sample AS sample, " +
+                   "c.fastqCount AS fastqSetSize " +                 
                    "n.readGroup AS readGroup, " +         
                    "COLLECT(DISTINCT n) AS allNodes " +
                  # Ignore duplicate nodes
-                 "WITH head(allNodes) AS heads " +
+                 "WITH fastqSetSize, head(allNodes) AS heads " +
                  "UNWIND [heads] AS uniqueNodes " +
                  "WITH uniqueNodes.sample AS sample, " +
-                      "uniqueNodes.setSize AS setSize, " +
+                      "fastqSetSize, " +
                       "COLLECT(uniqueNodes) AS sampleNodes " +
-                 "WHERE size(sampleNodes) = setSize " +
+                 "WHERE size(sampleNodes) = fastqSetSize/2 " +
                  # Create job request nodes
                  "CREATE (j:JobRequest:Gatk5Dollar {" +
                             "sample: sample, " +
@@ -399,11 +504,12 @@ class RequestGatk5DollarNoJob:
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:PersonalisSequencing)" +      #1
-                    "-[:GENERATED]->(:Fastq)" +                           #2
-                    "-[:WAS_USED_BY]->(:Job)" +                        #3
-                    "-[:GENERATED]->(n:Ubam)" +                      #4
-                    "-[:WAS_USED_BY]->(jobRequest:JobRequest:Gatk5Dollar) " +
+                 f"MATCH (s:PersonalisSequencing)" +
+                    "-[:GENERATED]->(:Fastq)" +
+                    "-[:WAS_USED_BY]->(:Job)" +
+                    "-[:GENERATED]->(n:Ubam)" +
+                    "-[:WAS_USED_BY]->(jobRequest:JobRequest:Gatk5Dollar), " +
+                 "(s)-[:GENERATED]->(check:Checksum) "
                  # Find samples with a $5 GATK job request & no job
                  "WHERE NOT (jobRequest)-[:TRIGGERED]->(:Job:Gatk5Dollar) "
                  # Don't launch job is another is currently running
@@ -414,36 +520,37 @@ class RequestGatk5DollarNoJob:
                     "-[:TRIGGERED]->(:Job:Gatk5Dollar {status:\"STOPPED\"})" +
                     "-[:STATUS]->(:Dstat {status:\"SUCCESS\"}) " +
                  # Create JobRequest node
-                 "WITH s.sample AS sample, " +                      #6
-                       "n.readGroup AS readGroup, " +               #8
+                 "WITH s.sample AS sample, " +
+                       "s.fastqCount AS fastqSetSize, " +
+                       "n.readGroup AS readGroup, " +
                        "COLLECT(DISTINCT n) AS allNodes " +
-                 "WITH head(allNodes) AS heads " +                  #9
-                 "UNWIND [heads] AS uniqueNodes " +                 #10
-                 "WITH uniqueNodes.sample AS sample, " +            #11
-                      "uniqueNodes.setSize AS setSize, " +          #12
-                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
-                 "WHERE size(sampleNodes) = setSize " +             #14
-                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
-                            "sample: sample, " +                    #16
-                            "nodeCreated: datetime(), " +           #17
-                            "nodeCreatedEpoch: " +                  #18
+                 "WITH fastqSetSize, head(allNodes) AS heads " +
+                 "UNWIND [heads] AS uniqueNodes " +
+                 "WITH uniqueNodes.sample AS sample, " +
+                      "fastqSetSize, " +
+                      "COLLECT(uniqueNodes) AS sampleNodes " +
+                 "WHERE size(sampleNodes) = fastqSetSize/2 " +
+                 "CREATE (j:JobRequest:Gatk5Dollar {" +
+                            "sample: sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: " +
                                 "datetime().epochSeconds, " +
                             "name: \"gatk-5-dollar\", " +
-                            f"eventId: {event_id} }}) " +           #19
+                            f"eventId: {event_id} }}) " +
                  # Send nodes to launch-gatk-5-dollar
-                 "WITH sampleNodes, " +                             #20
+                 "WITH sampleNodes, " +
                       "sample, " +
-                      "j.eventId AS eventId, " +                     #21
-                      "j.nodeCreatedEpoch AS epochTime " +          #22
-                 "UNWIND sampleNodes AS sampleNode " +              #23
-                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
-                            "sample: sample, " +                    #25
-                            "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
-                 "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
+                      "j.eventId AS eventId, " +
+                      "j.nodeCreatedEpoch AS epochTime " +
+                 "UNWIND sampleNodes AS sampleNode " +
+                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +
+                            "sample: sample, " +
+                            "eventId: eventId}) " +
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +
+                 "RETURN DISTINCT(sampleNodes) AS nodes")
         return query
 
-
+# DEPRECATED replaced by RequestLaunchGatkDollar
 class RequestGatk5DollarNoRequest:
     """Trigger re-launching $5 GATK workflows that have failed.
 
@@ -564,6 +671,8 @@ class RequestGatk5DollarNoRequest:
 class LaunchGatk5Dollar:
     """Trigger for launching GATK $5 Cromwell workflow.
 
+    It's activated by relationships, not nodes.
+
     Check whether all ubams for a sample are present, and
     that they haven't already been input to a $5 workflow.
 
@@ -588,7 +697,7 @@ class LaunchGatk5Dollar:
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             set(required_labels).issubset(set(node.get('labels'))),
-            node.get('setSize'),
+            #node.get('setSize'),
         ]
 
         for condition in conditions:
@@ -630,56 +739,64 @@ class LaunchGatk5Dollar:
 
 
     def _create_query(self, sample, event_id):
-        """Check if all ubams for a sample are in the database & send to GATK $5 function.
-
-        Description of query, by line:
-            (1-2)   Find all ubams associated with this ubams sample.
-            (3,8)   Check that there is not an existing GATK $5 workflow for this sample.
-            (4-7)   Collect all ubams by sample/read group.
-            (9-10)  In case there are duplicate ubams, only get the first node of each 
-                    group of unique sample/read group ubams.
-            (11-13) Group all the ubams with the same sample and setSize, where setSize
-                    indicates how many ubams should be present for this sample.
-            (14)    Check that the count of bams with unique read groups matches the 
-                    expected number of bams.
-            (15)    Return number of ubam nodes.
+        """Check that all ubams are present for a sample and create a job request.
 
         Update notes:
             v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
                     check that sample is not related to an existing GATK $5 workflow. 
         """
         query = (
-                 f"MATCH (s:PersonalisSequencing {{sample:\"{sample}\"}})" +      #1
-                    "-[:GENERATED]->(:Fastq)" +                           #2
-                    "-[:WAS_USED_BY]->(:Job)" +                        #3
-                    "-[:GENERATED]->(n:Ubam) " +                       #4
-                 "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " + #5
-                 "WITH s.sample AS sample, " +                      #6
-                       "n.readGroup AS readGroup, " +               #8
-                       "COLLECT(DISTINCT n) AS allNodes " +
-                 "WITH head(allNodes) AS heads " +                  #9
-                 "UNWIND [heads] AS uniqueNodes " +                 #10
-                 "WITH uniqueNodes.sample AS sample, " +            #11
-                      "uniqueNodes.setSize AS setSize, " +          #12
-                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
-                 "WHERE size(sampleNodes) = setSize " +             #14
-                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
-                            "sample: sample, " +                    #16
-                            "nodeCreated: datetime(), " +           #17
-                            "nodeCreatedEpoch: " +                  #18
+                 # Find all ubams associated with this sample, and checksum object
+                 f"MATCH (s:PersonalisSequencing {{sample:\"{sample}\"}})" +
+                    "-[:GENERATED]->(:Fastq)" +
+                    "-[:WAS_USED_BY]->(:Job)" +
+                    "-[:GENERATED]->(n:Ubam), " +
+                 "(s)-[:GENERATED]->(c:Checksum) " +
+                 
+                 # Don't start jobs if a job request already exists
+                 "WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) " +
+                 
+                 # Group ubams by read group
+                 "WITH s.sample AS sample, " +
+                    "c.fastqCount AS fastqSetSize, " +
+                    "n.readGroup AS readGroup, " +
+                    "COLLECT(DISTINCT n) AS allNodes " +
+                 
+                 # In case of duplicate ubams or nodes being generated
+                 # for a read group, use the head() method to only get
+                 # (1) ubam per read group
+                 "WITH fastqSetSize, " +
+                    "head(allNodes) AS heads " +
+                 "UNWIND [heads] AS uniqueNodes " +
+                 "WITH uniqueNodes.sample AS sample, " +
+                      "fastqSetSize, " +
+                      "COLLECT(uniqueNodes) AS sampleNodes " +
+                 
+                 # Check that the number of ubams matches the number of 
+                 # fastqs divided by 2. Paired-end sequencing generates
+                 # (2) fastqs per read group.
+                 "WHERE size(sampleNodes) = fastqSetSize/2 " +
+                 
+                 # Create a job request, link the input nodes to the 
+                 # request node, and return the input nodes so they 
+                 # can be passed to the job launching function
+                 "CREATE (j:JobRequest:Gatk5Dollar {" +
+                            "sample: sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: " +
                                 "datetime().epochSeconds, " +
                             "name: \"gatk-5-dollar\", " +
-                            f"eventId: {event_id} }}) " +           #19
-                 "WITH sampleNodes, " +                             #20
+                            f"eventId: {event_id} }}) " +
+                 "WITH sampleNodes, " +
                       "sample, " +
-                      "j.eventId AS eventId, " +                     #21
-                      "j.nodeCreatedEpoch AS epochTime " +          #22
-                 "UNWIND sampleNodes AS sampleNode " +              #23
-                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
-                            "sample: sample, " +                    #25
-                            "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
-                 "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
+                      "j.eventId AS eventId, " +
+                      "j.nodeCreatedEpoch AS epochTime " +
+                 "UNWIND sampleNodes AS sampleNode " +
+                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +
+                            "sample: sample, " +
+                            "eventId: eventId}) " +
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +
+                 "RETURN DISTINCT(sampleNodes) AS nodes")
         return query
 
 
@@ -704,11 +821,15 @@ class LaunchFastqToUbam:
             return False
 
         conditions = [
-            node.get('setSize'),
+            #node.get('setSize'),
             node.get('sample'),
             isinstance(node.get('readGroup'), int),
             node.get('matePair') == 1,
             set(required_labels).issubset(set(node.get('labels'))),
+            
+            # On/off switch to control whether variant calling
+            #   should proceed in event-driven fashion.
+            self.env_vars['WGS_VARIANT_CALLING'] == True,
         ]
 
         for condition in conditions:
@@ -758,7 +879,6 @@ class LaunchFastqToUbam:
                     "(n)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
                  "WITH n.sample AS sample, " +
                       "n.matePair AS matePair, " +
-                      "n.setSize AS setSize, "
                       "COLLECT(n) AS matePairNodes " +
                  "WITH sample, " +
                       "COLLECT(head(matePairNodes)) AS uniqueMatePairs " +
@@ -774,9 +894,6 @@ class LaunchFastqToUbam:
                      "sample, " +
                      "j.eventId AS eventId " +
                 "UNWIND uniqueMatePairs AS uniqueMatePair " +
-                #"MATCH (jobReq:JobRequest:FastqToUbam { " +
-                #            "sample: sample, " +
-                #            "eventId: eventId}) " +
                 "MERGE (uniqueMatePair)-[:WAS_USED_BY]->(j) " +
                 "RETURN DISTINCT(uniqueMatePairs) AS nodes")
         return query
@@ -792,10 +909,11 @@ class RequestGetSignatureSnps:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Request', 'LaunchViewSignatureSnps']
+        reqd_header_labels = ['Request', 'LaunchViewSignatureSnps', 'MergedVcf']
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
         ]
 
         for condition in conditions:
@@ -811,14 +929,15 @@ class RequestGetSignatureSnps:
 
         event_id = context.event_id
         seed_id = context.event_id
+        limit_count = body["limitCount"]
 
-        query = self._create_query(event_id)
+        query = self._create_query(event_id, limit_count)
 
         message = {
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Gvcf", "Nodes"],
+                              "labels": ["Cypher", "Query", "Vcf", "Tbi", "Nodes"],
                               "sentFrom": self.function_name,
                               "trigger": "RequestGetSignatureSnps",
                               "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
@@ -835,20 +954,179 @@ class RequestGetSignatureSnps:
         return([(topic, message)])
 
 
-    def _create_query(self, event_id):
+    def _create_query(self, event_id, limit_count):
         query = (
-                 "MATCH (n:Merged:Vcf) " +
+                 "MATCH (v:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
                  "WHERE NOT " +
-                    "(n)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
-                 "WITH n LIMIT 100 " +
+                    "(v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
+                 f"WITH v,t LIMIT {limit_count} " +
                  "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
-                            "sample:n.sample, " +
+                            "sample:v.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"view-gvcf-snps\", " +
                             f"eventId: {event_id} }}) " +
-                "MERGE (n)-[:WAS_USED_BY]->(j) " +
-                "RETURN n AS node")
+                "MERGE (v)-[:WAS_USED_BY]->(j) " +
+                "MERGE (t)-[:WAS_USED_BY]->(j) " +
+                "RETURN v AS vcf, t AS index")
+        return query
+
+
+class RequestGetSignatureSnpsCovid19:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'LaunchViewSignatureSnps', 'Covid19']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        limit_count = body["limitCount"]
+
+        query = self._create_query(event_id, limit_count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Vcf", "Tbi", "Covid19", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestGetSignatureSnpsCovid19",
+                              "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, limit_count):
+        query = (
+                 "MATCH (:Person:Covid19)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_VARIANT_CALLS]->(v:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
+                 "WHERE NOT " +
+                    "(v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
+                 f"WITH v,t LIMIT {limit_count} " +
+                 "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
+                            "sample:v.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"view-gvcf-snps\", " +
+                            f"eventId: {event_id} }}) " +
+                "MERGE (v)-[:WAS_USED_BY]->(j) " +
+                "MERGE (t)-[:WAS_USED_BY]->(j) " +
+                "RETURN v AS vcf, t AS index")
+        return query
+
+
+class LaunchViewSignatureSnps:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        required_labels = [
+                           'Blob', 
+                           'Merged', 
+                           'Vcf', 
+                           'WGS35']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Only run on VCFs output from the 'MergeVCFs' step of the GATK pipeline
+            node.get('wdlCallAlias') == 'MergeVCFs',
+            node.get('sample'),
+            node.get('id'),
+            # Don't run on objects in pay-to-access storage classes (e.g. Nearline, Coldline)
+            node.get('storageClass') == 'REGIONAL',
+            set(required_labels).issubset(set(node.get('labels'))),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        node_id = node['id']
+
+        query = self._create_query(event_id, seed_id, node_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Vcf", "Tbi", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "LaunchViewSignatureSnps",
+                              "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, seed_id, node_id):
+        query = (
+                 "MATCH (v:Merged:Vcf)-[:HAS_INDEX]->(t:Tbi) " +
+                 f"WHERE v.id = \"{node_id}\" " +
+                 "AND NOT (v)-[:WAS_USED_BY]->(:JobRequest:ViewGvcfSnps:SignatureSnps) " +
+                 "CREATE (j:JobRequest:ViewGvcfSnps:SignatureSnps { " +
+                            "sample:v.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"view-gvcf-snps\", " +
+                            f"eventId: {event_id}, " +
+                            f"seedId: {seed_id} }}) " +
+                "MERGE (v)-[:WAS_USED_BY]->(j) " +
+                "MERGE (t)-[:WAS_USED_BY]->(j) " +
+                "RETURN v AS vcf, t AS index")
         return query
 
 
@@ -2335,6 +2613,8 @@ class RelateGenomeToFastq:
         return query
 
 
+
+## Data archival triggers
 class ValidateGenomeRelationships:
 
     def __init__(self, function_name, env_vars):
@@ -2411,6 +2691,7 @@ class ValidateGenomeRelationships:
         return query
 
 
+# Triggered by results of ValidateGenomeRelationships
 class DeleteNonessentialSequencingData:
 
     def __init__(self, function_name, env_vars):
@@ -2486,6 +2767,7 @@ class DeleteNonessentialSequencingData:
                  "ORDER BY b.size DESC " +
                  "LIMIT 100")
         return query
+## END Data archival triggers
 
 
 class RelateVcfstatsToGenome:
@@ -3251,7 +3533,7 @@ class MoveFastqsToColdline:
                  "MATCH (s:Sample)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
                  f"WHERE s.sample =\"{sample_id}\" " +
                  "AND f.storageClass <> \"COLDLINE\" " +
-                 "RETURN f)")
+                 "RETURN f")
         return query
 
 
@@ -3390,19 +3672,6 @@ class RelateTrellisOutputToJob:
                    }
         }
         return([(topic, message)]) 
-
-    """
-    def _create_query(self, node_id, task_id):
-        query = (
-                 f"MATCH (j:Job {{ trellisTaskId:\"{task_id}\" }} ), " +
-                 f"(node:Blob {{trellisTaskId:\"{task_id}\", " +
-                              f"id:\"{node_id}\" }}) " +
-                  "WHERE NOT EXISTS(j.duplicate) " +
-                  "OR NOT j.duplicate=True " +
-                  "MERGE (j)-[:GENERATED]->(node) " +
-                  "RETURN node")
-        return query
-    """
 
     def _create_query(self, node_id, task_id):
         query = (
@@ -4571,6 +4840,9 @@ def get_triggers(function_name, env_vars):
     triggers.append(LaunchFastqToUbam(
                                     function_name,
                                     env_vars))
+    triggers.append(RequestFastqToUbamCovid19(
+                                    function_name,
+                                    env_vars))
     
     ## Request-driven triggers to re-launch failed/missing jobs
     triggers.append(RequestLaunchGatk5Dollar(
@@ -4623,9 +4895,11 @@ def get_triggers(function_name, env_vars):
 
 
     ### Other
-    triggers.append(AddFastqSetSize(
-                                    function_name,
-                                    env_vars))
+    
+    ## DEPRECATED in v1.2.3
+    #triggers.append(AddFastqSetSize(
+    #                                function_name,
+    #                                env_vars))
     triggers.append(KillDuplicateJobs(
                                     function_name,
                                     env_vars))
@@ -4742,11 +5016,18 @@ def get_triggers(function_name, env_vars):
     triggers.append(RequestGetSignatureSnps(
                                     function_name,
                                     env_vars))
+    triggers.append(RequestGetSignatureSnpsCovid19(
+                                    function_name,
+                                    env_vars))
+    triggers.append(LaunchViewSignatureSnps(
+                                    function_name,
+                                    env_vars))
     triggers.append(MoveFastqsToColdline(
                                     function_name,
                                     env_vars))
     triggers.append(RequestChangeFastqStorage(
                                     function_name,
                                     env_vars))
+
     return triggers
 

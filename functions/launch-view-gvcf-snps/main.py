@@ -28,6 +28,7 @@ if not ENVIRONMENT:
     ENVIRONMENT == 'local'
 
 if ENVIRONMENT == 'google-cloud':
+
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     
     vars_blob = storage.Client() \
@@ -35,20 +36,7 @@ if ENVIRONMENT == 'google-cloud':
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
-
-    PROJECT_ID     = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    NEW_JOBS_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
-    REGIONS = parsed_vars['DSUB_REGIONS']
-    OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
-    LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
-    DSUB_USER = parsed_vars['DSUB_USER']
-    NETWORK = parsed_vars['DSUB_NETWORK']
-    SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
-
-    # Job specific variables
-    REF_FASTA = parsed_vars['REF_FASTA']
-    REF_FASTA_INDEX = parsed_vars['REF_FASTA_INDEX']
-    SNP_LIST = parsed_vars['SIGNATURE_SNPS']
+    TRELLIS = Struct(**parsed_vars)
 
     PUBLISHER = pubsub.PublisherClient()
     CLIENT = storage.Client()
@@ -101,10 +89,13 @@ class TrellisMessage:
         if body.get('results'):
             self.results = body.get('results')
 
-        self.node = None
-        if self.results.get('node'):
-            self.node = self.results['node']
+        self.vcf = None
+        if self.results.get('vcf'):
+            self.vcf = self.results['vcf']
 
+        self.index = None
+        if self.results.get('index'):
+            self.index = self.results['index']
 
 def format_pubsub_message(job_dict, seed_id, event_id, function_name):
     message = {
@@ -154,12 +145,17 @@ def load_json(path):
     return data
 
 
-def check_conditions(node):
-    required_labels = ['Blob', 'Vcf', 'Merged', 'Gzipped']
+def check_conditions(vcf, index):
+    required_vcf_labels = ['Blob', 'Vcf', 'Merged', 'Gzipped']
+    required_index_labels = ['Tbi']
 
     conditions = [
         # Check that all required labels are present
-        set(required_labels).issubset(set(node.get('labels'))),
+        set(required_vcf_labels).issubset(set(vcf.get('labels'))),
+        set(required_index_labels).issubset(set(index.get('labels'))),
+
+        # Check that samples are the same
+        vcf.get('sample') == index.get('sample')
     ]
 
     for condition in conditions:
@@ -206,68 +202,67 @@ def launch_view_gvcf_snps(event, context, test=False):
             context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    if test:
-        trellis = load_local_env()
-        FUNCTION_NAME = 'trellis-launch-gvcf-snps'
-        PUBLISHER = pubsub.PublisherClient()
+    #if test:
+    #    TRELLIS = load_local_env()
+    #    FUNCTION_NAME = 'trellis-launch-gvcf-snps'
+    #    PUBLISHER = pubsub.PublisherClient()
 
     # Parse message
     message = TrellisMessage(event, context)
-    node = message.node
+    vcf = message.vcf
+    index = message.index
 
     # Check that message includes node metadata
-    if not node:
-        logging.warning("> No node provided. Exiting.")
+    if not vcf:
+        logging.error("> No VCF provided. Exiting.")
         return(1)
-
-    #filetype = node['filetype'].upper()
+    if not index:
+        logging.error("> No index provided. Exiting.")
+        return(1)
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    task_id, trunc_nodes_hash = make_unique_task_id([node], datetime_stamp)
+    task_id, trunc_nodes_hash = make_unique_task_id([vcf, index], datetime_stamp)
 
     # Check whether node & message metadata meets function conditions
-    conditions_met = check_conditions(node)
+    conditions_met = check_conditions(vcf, index)
     if not conditions_met:
-        raise RuntimeError(f"> Input node does not match requirements. Node: {node}.")
+        raise RuntimeError(f"> Inputs do not match requirements. Vcf: {vcf['id']}, Index: {index['id']}.")
 
     # Database entry variables
-    bucket = node['bucket']
-    plate = node['plate']
-    path = node['path']
-    sample = node['sample']
-    basename = node['basename']
+    #bucket = vcf['bucket']
+    plate = vcf['plate']
+    #path = vcf['path']
+    sample = vcf['sample']
+    basename = vcf['basename']
 
     task_name = 'view-gvcf-snps'
     unique_task_label = 'ViewGvcfSnps'
     job_dict = {
         "provider": "google-v2",
-        "user": trellis.DSUB_USER,
-        "regions": trellis.DSUB_REGIONS,
-        "project": trellis.GOOGLE_CLOUD_PROJECT,
+        "user": TRELLIS.DSUB_USER,
+        "regions": TRELLIS.DSUB_REGIONS,
+        "project": TRELLIS.GOOGLE_CLOUD_PROJECT,
         "minCores": 1,
-        "image": f"gcr.io/{trellis.GOOGLE_CLOUD_PROJECT}/bschiffthaler/bcftools:1.11",
-        "logging": f"gs://{trellis.DSUB_LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-        # bcftools view <SAMPLE>.g.vcf.gz -R signatureSNPs.txt -Ou | 
-        # bcftools convert --gvcf2vcf --fasta-ref Homo_sapiens_assembly38.fasta -Ou | 
-        # bcftools view -T signatureSNPs.txt -Oz -o <SAMPLE>.signatureSNPs.vcf.gz
-
+        "image": f"gcr.io/{TRELLIS.GOOGLE_CLOUD_PROJECT}/bschiffthaler/bcftools:1.11",
+        "logging": f"gs://{TRELLIS.DSUB_LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
         "command": (
-                    "bcftools index --tbi ${INPUT} | " +
-                    "bcftools view ${INPUT} -R {$SNP_LIST} -Ou | " +
+                    #"bcftools index --tbi ${INPUT} | " +
+                    "bcftools view ${VCF} -R ${SNP_LIST} -Ou | " +
                     "bcftools convert --gvcf2vcf --fasta-ref ${REF_FASTA} -Ou | " +
                     "bcftools view -T ${SNP_LIST} -Oz -o ${OUTPUT}"),
         "envs": {
             "SAMPLE_ID": sample
         },
         "inputs": {
-            "INPUT": f"gs://{bucket}/{path}",
-            "SNP_LIST": trellis.SNP_LIST, 
-            "REF_FASTA": trellis.REF_FASTA,
-            "REF_FASTA_INDEX": trellis.REF_FASTA_INDEX
+            "VCF": f"gs://{vcf['bucket']}/{vcf['path']}",
+            "INDEX": f"gs://{index['bucket']}/{index['path']}",
+            "SNP_LIST": TRELLIS.SIGNATURE_SNPS, 
+            "REF_FASTA": TRELLIS.REF_FASTA,
+            "REF_FASTA_INDEX": TRELLIS.REF_FASTA_INDEX
         },
         "outputs": {
-            "OUTPUT": f"gs://{trellis.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.signatureSNPs.vcf.gz"
+            "OUTPUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.signatureSNPs.vcf.gz"
         },
         "trellisTaskId": task_id,
         "sample": sample,
@@ -275,9 +270,9 @@ def launch_view_gvcf_snps(event, context, test=False):
         "name": task_name,
         "inputHash": trunc_nodes_hash,
         "labels": ["Job", "Dsub", unique_task_label],
-        "inputIds": [node['id']],
-        "network": trellis.DSUB_NETWORK,
-        "subnetwork": trellis.DSUB_SUBNETWORK,       
+        "inputIds": [vcf['id'], index['id']],
+        "network": TRELLIS.DSUB_NETWORK,
+        "subnetwork": TRELLIS.DSUB_SUBNETWORK,       
     }
 
     dsub_args = [
@@ -295,7 +290,9 @@ def launch_view_gvcf_snps(event, context, test=False):
         "--min-cores", str(job_dict["minCores"]), 
         "--logging", job_dict["logging"],
         "--image", job_dict["image"],
-        #"--use-private-address",
+        "--use-private-address",
+        #"--block-external-network",
+        "--ssh",
         "--network", job_dict["network"],
         "--subnetwork", job_dict["subnetwork"],        
         "--command", job_dict["command"],
@@ -355,9 +352,9 @@ def launch_view_gvcf_snps(event, context, test=False):
         print(f"> Pubsub message: {message_to_publish}.")
         result = publish_to_topic(
                                   publisher = PUBLISHER,
-                                  project_id = trellis.GOOGLE_CLOUD_PROJECT,
-                                  topic = trellis.NEW_JOBS_TOPIC,
+                                  project_id = TRELLIS.GOOGLE_CLOUD_PROJECT,
+                                  topic = TRELLIS.NEW_JOBS_TOPIC,
                                   data = message_to_publish) 
-        print(f"> Published message to {trellis.NEW_JOBS_TOPIC} with result: {result}.")  
+        print(f"> Published message to {TRELLIS.NEW_JOBS_TOPIC} with result: {result}.")  
 
 
