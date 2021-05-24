@@ -12,30 +12,31 @@ from datetime import datetime
 from google.cloud import storage
 from google.cloud import pubsub
 
-# Get runtime variables from cloud storage bucket
-# https://www.sethvargo.com/secrets-in-serverless/
+class Struct:
+    # https://stackoverflow.com/questions/6866600/how-to-parse-read-a-yaml-file-into-a-python-object
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+if not ENVIRONMENT:
+    ENVIRONMENT == 'local'
+
 if ENVIRONMENT == 'google-cloud':
+
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     TRIGGER_OPERATION = os.environ['TRIGGER_OPERATION']
     GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
     GIT_VERSION_TAG = os.environ['GIT_VERSION_TAG']
-
+    
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
-
-    # Runtime variables
-    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
-    DB_QUERY_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
-    TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
-    DATA_GROUP = parsed_vars.get('DATA_GROUP')
-    FUNC_GROUP = parsed_vars.get('FUNC_GROUP')
+    TRELLIS = Struct(**parsed_vars)
 
     PUBLISHER = pubsub.PublisherClient()
-
 
 def format_pubsub_message(query, seed_id):
     message = {
@@ -44,7 +45,7 @@ def format_pubsub_message(query, seed_id):
                           "method": "POST",
                           "labels": ["Create", "Blob", "Node", "Cypher", "Query"],
                           "sentFrom": f"{FUNCTION_NAME}",
-                          "publishTo": f"{TOPIC_TRIGGERS}",
+                          "publishTo": f"{TRELLIS.TOPIC_TRIGGERS}",
                           "seedId": f"{seed_id}",
                           "previousEventId": f"{seed_id}"
                },
@@ -59,7 +60,7 @@ def format_pubsub_message(query, seed_id):
 
 
 def publish_to_topic(topic, data):
-    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
+    topic_path = PUBLISHER.topic_path(TRELLIS.GOOGLE_CLOUD_PROJECT, topic)
     message = json.dumps(data).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
@@ -185,7 +186,10 @@ def format_node_merge_query(db_dict, dry_run=False):
                   'id',
                   'crc32c',
                   'generation',
-                  'storageClass']
+                  'storageClass',
+                  # checksum specific
+                  'fastqCount',
+                  'microarrayCount']
 
     merge_strings = []
     for key in merge_keys:
@@ -229,12 +233,12 @@ def create_node_query(event, context):
     bucket_name = event['bucket']
 
     # Module name does not include project prefix
-    pattern = f"{PROJECT_ID}-(?P<suffix>\w+(?:-\w+)+)"
+    pattern = f"{TRELLIS.GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
     match = re.match(pattern, bucket_name)
     suffix = match['suffix']
 
     # Import the config modules that corresponds to event-trigger bucket
-    node_module_name = f"{DATA_GROUP}.{suffix}.create-node-config"
+    node_module_name = f"{TRELLIS.DATA_GROUP}.{suffix}.create-node-config"
     node_module = importlib.import_module(node_module_name)
 
     node_kinds = node_module.NodeKinds()
@@ -288,5 +292,5 @@ def create_node_query(event, context):
 
     message = format_pubsub_message(db_query, seed_id)
     print(f"> Pubsub message: {message}.")
-    result = publish_to_topic(DB_QUERY_TOPIC, message)
-    print(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+    result = publish_to_topic(TRELLIS.DB_QUERY_TOPIC, message)
+    print(f"> Published message to {TRELLIS.DB_QUERY_TOPIC} with result: {result}.")

@@ -4,6 +4,7 @@ import pdb
 import json
 import yaml
 import base64
+import logging
 import importlib
 
 from google.cloud import storage
@@ -51,7 +52,7 @@ def check_triggers(event, context, dry_run=False):
     # Trellis config data
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
     data = json.loads(pubsub_message)
-    print(f"> Received pubsub message: {data}.")
+    logging.info(f"> Received pubsub message: {data}.")
     header = data['header']
     body = data['body']
 
@@ -71,20 +72,20 @@ def check_triggers(event, context, dry_run=False):
     activated_triggers = []
     for trigger in ALL_TRIGGERS:
         #status = trigger.check_conditions(node)
-        print(f"> Checking trigger: {trigger}.")
+        logging.debug(f"> Checking trigger: {trigger}.")
         status = trigger.check_conditions(header, body, node)
         if status == True:
             activated_triggers.append(trigger)
-            print(f"> Trigger ACTIVATED: {trigger}.")
+            logging.info(f"> Trigger ACTIVATED: {trigger}.")
             #topic, message = trigger.compose_message(header, body, node)
             messages = trigger.compose_message(header, body, node, context)
             for message in messages:
                 topic = message[0]
                 data = message[1]
-                print(f"> Publishing message: {data}.")
+                logging.info(f"> Publishing message: {data}.")
                 if dry_run:
-                    print(f"> Dry run: Would have published message to {topic}.")
+                    logging.info(f"> Dry run: Would have published message to {topic}.")
                 else:
                     result = publish_to_topic(topic, data)
-                    print(f"> Published message to {topic} with result: {result}.")
+                    logging.info(f"> Published message to {topic} with result: {result}.")
     return(activated_triggers)
