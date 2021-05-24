@@ -2613,6 +2613,8 @@ class RelateGenomeToFastq:
         return query
 
 
+
+## Data archival triggers
 class ValidateGenomeRelationships:
 
     def __init__(self, function_name, env_vars):
@@ -2689,6 +2691,7 @@ class ValidateGenomeRelationships:
         return query
 
 
+# Triggered by results of ValidateGenomeRelationships
 class DeleteNonessentialSequencingData:
 
     def __init__(self, function_name, env_vars):
@@ -2764,6 +2767,7 @@ class DeleteNonessentialSequencingData:
                  "ORDER BY b.size DESC " +
                  "LIMIT 100")
         return query
+## END Data archival triggers
 
 
 class RelateVcfstatsToGenome:
@@ -3529,7 +3533,7 @@ class MoveFastqsToColdline:
                  "MATCH (s:Sample)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
                  f"WHERE s.sample =\"{sample_id}\" " +
                  "AND f.storageClass <> \"COLDLINE\" " +
-                 "RETURN f)")
+                 "RETURN f")
         return query
 
 
