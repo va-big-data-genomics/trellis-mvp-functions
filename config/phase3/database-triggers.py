@@ -79,6 +79,85 @@ class RequestFastqToUbamCovid19:
                  "RETURN f AS node")
         return query
 
+
+class RequestFastqToUbam:
+    """ Initiate variant calling for Covid19 genomes.
+
+    Initiate the first step in the variant calling workflow,
+    FastqToUbam, for genomes of people included in the Covid19
+    (:Study).
+
+    Cypher query finds Fastqs of Covid19 genomes that have not
+    been processed and sends the Fastq node metadata back to 
+    the check-triggers service so it will activate the
+    "LaunchFastqToUbam" trigger.
+    """
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'FastqToUbam', 'All']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        limit_count = body["limitCount"]
+
+        query = self._create_query(event_id, limit_count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Fastq", "All", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestFastqToUbam",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, limit_count):
+        query = (
+                 "MATCH (p:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                 "WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 f"WITH DISTINCT p LIMIT {limit_count} " +
+                 "MATCH (p)-[:GENERATED]->(f:Fastq) " +
+                 "WHERE f.matePair = 1 " +
+                 "AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 "RETURN f AS node")
+        return query
+
+
 ## DEPRECATED
 class AddFastqSetSize:
     """ DEPRECATED with v.1.2.3
@@ -4841,6 +4920,9 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
     triggers.append(RequestFastqToUbamCovid19(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestFastqToUbam(
                                     function_name,
                                     env_vars))
     
