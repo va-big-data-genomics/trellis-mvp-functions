@@ -824,7 +824,7 @@ class LaunchFastqToUbam:
             #node.get('setSize'),
             node.get('sample'),
             isinstance(node.get('readGroup'), int),
-            node.get('matePair') == 1,
+            #node.get('matePair') == 1,
             set(required_labels).issubset(set(node.get('labels'))),
             
             # On/off switch to control whether variant calling
@@ -872,6 +872,7 @@ class LaunchFastqToUbam:
 
     def _create_query(self, sample, read_group, event_id):
         query = (
+                 # Find Fastqs from the same sample & read group
                  "MATCH (n:Fastq { " +
                             f"sample:\"{sample}\", " +
                             f"readGroup:{read_group} }}) " +
@@ -880,8 +881,12 @@ class LaunchFastqToUbam:
                  "WITH n.sample AS sample, " +
                       "n.matePair AS matePair, " +
                       "COLLECT(n) AS matePairNodes " +
+                 # In the case of duplicate Fastqs, only use one from
+                 #  each sequencing mate pair.
                  "WITH sample, " +
                       "COLLECT(head(matePairNodes)) AS uniqueMatePairs " +
+                 # Check that there are a pair of Fastqs in the read group
+                 #  (Paired-end sequencing)
                  "WHERE size(uniqueMatePairs) = 2 " + 
                  "CREATE (j:JobRequest:FastqToUbam { " +
                             "sample:sample, " +
