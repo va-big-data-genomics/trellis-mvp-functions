@@ -993,7 +993,7 @@ class LaunchViewSignatureSnps:
             node.get('storageClass') == 'REGIONAL',
             set(required_labels).issubset(set(node.get('labels'))),
             # Only trigger once (:Vcf)-[:HAS_INDEX]->(:Tbi) relationship created
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            set(required_header_labels).issubset(set(header.get('labels'))),
         ]
 
         for condition in conditions:
