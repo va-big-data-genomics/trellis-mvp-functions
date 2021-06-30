@@ -2,6 +2,182 @@ import time
 
 MAX_RETRIES = 3
 
+class RequestUserPermissionsToDataset: 
+    """ Connect a (:ServiceAccount) node to a (:Dataset) node.
+
+    Connecting the service account to the dataset will grant the
+    service account the level of permission described by the 
+    relationships (e.g. "READ") to all objects in the dataset.
+
+    Permissions are conferred by the manageAccountPermissions function
+    which is controlled by this trigger.
+
+    Supported roles:
+        R: Read
+        W: Write
+        O: Owner
+
+    Trigger pattern: https://lucid.app/lucidchart/8120f1c2-b3d0-40b5-b5a7-5d0490c195fc/edit?page=0_0#
+    """
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'ServiceAccount', 'Permissions']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            
+            # Check that content of matches includes required fields/types
+            body.get("ch-role") in ["R", "W", "O"],
+            isInstance(body.get("user-email"), str),
+            isInstance(body.get("dataset-name"), str),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        ch_role = body.get("ch-role")
+        user_email = body.get("user-email")
+        dataset_name = body.get("dataset")
+
+        role_relationships = {
+            "R": "HAS_READ_PERMISSIONS",
+            "W": "HAS_WRITE_PERMISSIONS",
+            "O": "HAS_OWNER_PERMISSIONS"
+        }
+
+        query = self._create_query(ch_role, user_email, dataset_name)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Cypher", "Query", "Request", "User", "Permissions", "Dataset"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestUserPermissionsToDataset",
+                              "publishTo": self.env_vars['TOPIC_BLOB_UPDATE_USER_PERMISSIONS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, ch_role, user_email, dataset_name):
+        query = (
+                 "MATCH (u:User), (d:Dataset) " +
+                 f"WHERE u.email = {user_email} " +
+                 f"AND d.name = {dataset_name} " +
+                 "OPTIONAL MATCH (u)-[r:HAS_WRITE_PERMISSIONS|HAS_READ_PERMISSIONS|HAS_OWNER_PERMISSIONS]->(d) " +
+                 "DELETE r " +
+                 f"MERGE (u)-[r2:{rel_type} \{chRole: {ch_role}\}]->(d) " +
+                 "WITH u, r, r2 d " +
+                 "MATCH (d)-[:HAS]->(b:Blob) " +
+                 "RETURN u.email AS userEmail, r.chRole AS revoke_chRole, r2.chRole AS grant_chRole, b AS blob"
+                )
+        return query
+
+
+class RequestFastqToUbam:
+    """ Initiate variant calling for all genomes.
+
+    Initiate the first step in the variant calling workflow,
+    FastqToUbam, for any genome in the database.
+
+    Cypher query finds Fastqs ofgenomes that have not
+    been processed and sends the Fastq node metadata back to 
+    the check-triggers service so it will activate the
+    "LaunchFastqToUbam" trigger.
+    """
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'FastqToUbam', 'All']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        limit_count = body["limitCount"]
+
+        query = self._create_query(event_id, limit_count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Cypher", "Query", "Fastq", "Nodes"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestFastqToUbam",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, limit_count):
+        query = (
+                 "MATCH (p:PersonalisSequencing)-[]->(f:Fastq) " +
+                 "WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 f"WITH DISTINCT p LIMIT {limit_count} " +
+                 "MATCH (p)-[:GENERATED]->(f:Fastq) " +
+                 "WHERE f.matePair = 1 " +
+                 "AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 "RETURN f AS node")
+        return query
+
+
 class RequestFastqToUbamCovid19:
     """ Initiate variant calling for Covid19 genomes.
 
@@ -78,147 +254,6 @@ class RequestFastqToUbamCovid19:
                  "AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
                  "RETURN f AS node")
         return query
-
-## DEPRECATED
-class AddFastqSetSize:
-    """ DEPRECATED with v.1.2.3
-
-    Add (:Fastq) setSize property once (:PersonalisSequencing) exists.
-
-    The (:PersonalisSequencing) node is created based on metadata in
-    the JSON that Personalis uploads once all the Fastqs have been 
-    uploaded.
-    """
-
-    def __init__(self, function_name, env_vars):
-        self.function_name = function_name
-        self.env_vars = env_vars
-
-
-    def check_conditions(self, header, body, node):
-
-        required_labels = [
-                           'Json',
-                           'PersonalisSequencing']
-
-        if not node:
-            return False
-
-        conditions = [
-            set(required_labels).issubset(set(node.get('labels'))),
-            node.get('id'),
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True
-
-
-    def compose_message(self, header, body, node, context):
-        topic = self.env_vars['DB_QUERY_TOPIC']
-
-        node_id = node['id']
-
-        query = self._create_query(node_id)
-
-        message = {
-                   "header": {
-                              "resource": "query",
-                              "method": "UPDATE",
-                              "labels": ["Cypher", "Query", "Set", "Fastq" "SetSize"], 
-                              "sentFrom": self.function_name,
-                              "trigger": "AddFastqSetSize",
-                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
-                   },
-                   "body": {
-                          "cypher": query,
-                          "result-mode": "data",
-                          "result-structure": "list",
-                          "result-split": "True",
-                   }
-        }
-        return([(topic, message)])
-
-    def _create_query(self, node_id):
-        query = (
-                 "MATCH (p:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
-                f"WHERE p.id=\"{node_id}\" " +
-                 "COLLECT(f) AS nodes " +
-                 "UNWIND nodes AS node " +
-                 "SET node.setSize = size(nodes) " +
-                 "RETURN node")
-        return query
-
-## DEPRECATED
-class OLDAddFastqSetSize:
-    """ DEPRECATED
-    Add setSize property to Fastqs and send them back to 
-    triggers to launch fastq-to-ubam.
-    """
-
-    def __init__(self, function_name, env_vars):
-        self.function_name = function_name
-        self.env_vars = env_vars
-
-
-    def check_conditions(self, header, body, node):
-
-        required_labels = [
-                           'Json',
-                           'FromPersonalis',
-                           'Marker']
-
-        if not node:
-            return False
-
-        conditions = [
-            set(required_labels).issubset(set(node.get('labels'))),
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True
-
-
-    def compose_message(self, header, body, node, context):
-        topic = self.env_vars['DB_QUERY_TOPIC']
-
-        sample = node['sample']
-
-        message = {
-                   "header": {
-                              "resource": "query",
-                              "method": "UPDATE",
-                              "labels": ["Cypher", "Query", "Set", "Properties"], 
-                              "sentFrom": self.function_name,
-                              "trigger": "AddFastqSetSize",
-                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
-                   },
-                   "body": {
-                          "cypher": (
-                                     "MATCH (n:Fastq) " +
-                                    f"WHERE n.sample=\"{sample}\" " +
-                                     "WITH n.sample AS sample, " +
-                                     "COLLECT(n) AS nodes " +
-                                     "UNWIND nodes AS node " +
-                                     "SET node.setSize = size(nodes) " +
-                                     "RETURN node"),
-                          "result-mode": "data",
-                          "result-structure": "list",
-                          "result-split": "True",
-                   }
-        }
-        return([(topic, message)])
 
 
 class RequestLaunchGatk5Dollar:
@@ -548,123 +583,6 @@ class RequestGatk5DollarNoJob:
                             "eventId: eventId}) " +
                  "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +
                  "RETURN DISTINCT(sampleNodes) AS nodes")
-        return query
-
-# DEPRECATED replaced by RequestLaunchGatkDollar
-class RequestGatk5DollarNoRequest:
-    """Trigger re-launching $5 GATK workflows that have failed.
-
-    Check whether all ubams for a sample are present, and
-    that they haven't already been input to a $5 workflow.
-    If so, send all ubam nodes metadata to the gatk-5-dollar
-    pub/sub topic.
-    """
-
-    def __init__(self, function_name, env_vars):
-        self.function_name = function_name
-        self.env_vars = env_vars
-
-
-    def check_conditions(self, header, body, node):
-        reqd_header_labels = ['Request', 'LaunchFailedGatk5Dollar', 'All']
-
-        conditions = [
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True
-
-
-    def compose_message(self, header, body, node, context):
-        """Send full set of ubams to GATK task"""
-        topic = self.env_vars['DB_QUERY_TOPIC']
-
-        #sample = node['sample']
-        event_id = context.event_id
-        seed_id = context.event_id
-
-        query = self._create_query(event_id)
-
-        message = {
-                   "header": {
-                              "resource": "query",
-                              "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Ubam", "Failed", "GATK", "Nodes"],
-                              "sentFrom": self.function_name,
-                              "trigger": "RequestGatk5DollarNoRequest",
-                              "publishTo": self.env_vars['TOPIC_GATK_5_DOLLAR'],
-                              "seedId": seed_id,
-                              "previousEventId": event_id,
-                   },
-                   "body": {
-                            "cypher": query,
-                            "result-mode": "data", 
-                            "result-structure": "list",
-                            "result-split": "True",
-                   }
-        }
-        return([(topic, message)])
-
-
-    def _create_query(self, event_id):
-        """Check if all ubams for a sample are in the database & send to GATK $5 function.
-
-        Description of query, by line:
-            (1-2)   Find all ubams associated with this ubams sample.
-            (3,8)   Check that there is not an existing GATK $5 workflow for this sample.
-            (4-7)   Collect all ubams by sample/read group.
-            (9-10)  In case there are duplicate ubams, only get the first node of each 
-                    group of unique sample/read group ubams.
-            (11-13) Group all the ubams with the same sample and setSize, where setSize
-                    indicates how many ubams should be present for this sample.
-            (14)    Check that the count of bams with unique read groups matches the 
-                    expected number of bams.
-            (15)    Return number of ubam nodes.
-
-        Update notes:
-            v0.5.5: To reduce duplicate GATK $5 jobs caused by duplicate ubam objects,
-                    check that sample is not related to an existing GATK $5 workflow. 
-        """
-        query = (
-                 f"MATCH (s:PersonalisSequencing)" +      #1
-                    "-[:GENERATED]->(:Fastq)" +                           #2
-                    "-[:WAS_USED_BY]->(:Job)" +                        #3
-                    "-[:GENERATED]->(n:Ubam) " +                      #4
-                 # Find samples with ubams but no $5 GATK job request
-                 "WHERE NOT (n)-[:WAS_USED_BY]->(:JobRequest:Gatk5Dollar) " +
-                 # Create JobRequest node
-                 "WITH s.sample AS sample, " +                      #6
-                       "n.readGroup AS readGroup, " +               #8
-                       "COLLECT(DISTINCT n) AS allNodes " +
-                 "WITH head(allNodes) AS heads " +                  #9
-                 "UNWIND [heads] AS uniqueNodes " +                 #10
-                 "WITH uniqueNodes.sample AS sample, " +            #11
-                      "uniqueNodes.setSize AS setSize, " +          #12
-                      "COLLECT(uniqueNodes) AS sampleNodes " +      #13
-                 "WHERE size(sampleNodes) = setSize " +             #14
-                 "CREATE (j:JobRequest:Gatk5Dollar {" +             #15
-                            "sample: sample, " +                    #16
-                            "nodeCreated: datetime(), " +           #17
-                            "nodeCreatedEpoch: " +                  #18
-                                "datetime().epochSeconds, " +
-                            "name: \"gatk-5-dollar\", " +
-                            f"eventId: {event_id} }}) " +           #19
-                 # Send nodes to launch-gatk-5-dollar
-                 "WITH sampleNodes, " +                             #20
-                      "sample, " +
-                      "j.eventId AS eventId, " +                     #21
-                      "j.nodeCreatedEpoch AS epochTime " +          #22
-                 "UNWIND sampleNodes AS sampleNode " +              #23
-                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +         #24
-                            "sample: sample, " +                    #25
-                            "eventId: eventId}) " +                 #26
-                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +      #27
-                 "RETURN DISTINCT(sampleNodes) AS nodes")           #28                                                 #13
         return query
 
 
@@ -1060,11 +978,8 @@ class LaunchViewSignatureSnps:
 
     def check_conditions(self, header, body, node):
 
-        required_labels = [
-                           'Blob', 
-                           'Merged', 
-                           'Vcf', 
-                           'WGS35']
+        required_header_labels = ['Relate', 'Merged', 'Vcf', 'Tbi', 'Database', 'Result']
+        required_labels = ['Blob', 'Merged', 'Vcf', 'WGS35']
 
         if not node:
             return False
@@ -1077,6 +992,8 @@ class LaunchViewSignatureSnps:
             # Don't run on objects in pay-to-access storage classes (e.g. Nearline, Coldline)
             node.get('storageClass') == 'REGIONAL',
             set(required_labels).issubset(set(node.get('labels'))),
+            # Only trigger once (:Vcf)-[:HAS_INDEX]->(:Tbi) relationship created
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
         ]
 
         for condition in conditions:
@@ -1100,7 +1017,7 @@ class LaunchViewSignatureSnps:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Cypher", "Query", "Vcf", "Tbi", "Nodes"],
+                              "labels": ["Cypher", "Query", "SignatureSnps", "Vcf", "Tbi", "Nodes"],
                               "sentFrom": self.function_name,
                               "trigger": "LaunchViewSignatureSnps",
                               "publishTo": self.env_vars['TOPIC_VIEW_GVCF_SNPS'],
@@ -2629,11 +2546,9 @@ class ValidateGenomeRelationships:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Update', 'Sample', 'Node']
-        required_labels = [
-                           'Sample',
-                           'WgsPhase3',
-        ]
+        # Triggered by (:Merged:Vcf)-[:HAS_INDEX]->(:Tbi) relationship creation query
+        required_header_labels = ['Relate', 'Merged', 'Vcf', 'Tbi', 'Database', 'Result']
+        required_labels = ['Blob', 'Merged', 'Vcf', 'WGS35']
 
         if not node:
             return False
@@ -2642,8 +2557,6 @@ class ValidateGenomeRelationships:
             # Check that node matches metadata criteria:
             set(required_labels).issubset(set(node.get('labels'))),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            # Metadata required for populating trigger query:
-            node.get("trellis_snvQa") == True,
         ]
 
         for condition in conditions:
@@ -2687,7 +2600,6 @@ class ValidateGenomeRelationships:
                  "WITH s, o " +
                  "MATCH (o)-[:HAS_QC_DATA]->(:Fastqc), " +
                  "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
-                 "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
                  "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:HAS_INDEX]->(:Crai), " +
                  "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi) " +
                  "SET s.trellis_optimizeStorage = true " +
@@ -2706,7 +2618,7 @@ class DeleteNonessentialSequencingData:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Validate', 'Genome', 'Relationships']
+        reqd_header_labels = ['Validate', 'Genome', 'Relationships', 'Database', 'Result']
         required_labels = ['Sample']
 
         if not node:
@@ -2771,6 +2683,155 @@ class DeleteNonessentialSequencingData:
                  "RETURN b.bucket AS bucket, b.path AS path " +
                  "ORDER BY b.size DESC " +
                  "LIMIT 100")
+        return query
+
+
+# Triggered by results of ValidateGenomeRelationships
+class MoveFastqsToColdline:
+    """ Should be triggered by positive result of 
+        ValidateGenomeRelationships trigger.
+    """
+    
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Validate', 'Genome', 'Relationships', 'Database', 'Result']
+        required_labels = ['Sample']
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("trellis_optimizeStorage") == True,
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        sample_id = node['sample']
+
+        query = self._create_query(sample_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Fastq", "Coldline", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "MoveFastqsToColdline",
+                              "publishTo": self.env_vars['TOPIC_BLOB_UPDATE_STORAGE'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, sample_id):
+        query = (
+                 "MATCH (s:Sample)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                 f"WHERE s.sample =\"{sample_id}\" " +
+                 "AND s.trellis_optimizeStorage = True " +
+                 "AND f.storageClass <> \"COLDLINE\" " +
+                 "RETURN f")
+        return query
+
+
+class RequestChangeFastqStorage:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'Change', 'Fastq', 'Storage']
+
+        request = body.get("request")
+        if not request:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            request.get("count"),
+            request.get("storage_class")
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+
+        request = body["request"]
+
+        count = request["count"]
+        storage_class = request["storage_class"]
+
+        query = self._create_query(count, storage_class)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "POST",
+                              "labels": ["Trigger", "Fastq", "Coldline", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestMoveFastqsToColdline",
+                              "publishTo": self.env_vars['TOPIC_BLOB_UPDATE_STORAGE'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+    def _create_query(self, count, storage_class):
+        query = (
+                 "MATCH (s:Sample) " +
+                 "WHERE s.trellis_snvQa=true " +
+                 "AND NOT EXISTS(s.trellis_coldlineFastqs) " +
+                 "WITH s " +
+                 f"LIMIT {count} " +
+                 "MATCH (s)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
+                 f"WHERE f.storageClass <> \"{storage_class}\" " +
+                 "AND NOT f.storageClass IN [\"COLDLINE\", \"ARCHIVE\"] " +
+                 "SET s.trellis_coldlineFastqs = localdatetime() " +
+                 f"RETURN f.bucket AS bucket, f.path AS path, f.extension AS extension, f.storageClass AS current_class, \"{storage_class}\" AS requested_class")
         return query
 ## END Data archival triggers
 
@@ -3345,7 +3406,7 @@ class RelateMergedVcfToTbi:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        reqd_header_labels = ['Relationship', 'Database', 'Result', 'Generated']
         required_labels = [
                            'Merged',
                            'Vcf',
@@ -3384,7 +3445,7 @@ class RelateMergedVcfToTbi:
                               "labels": ["Trigger", "Relate", "Merged", "Vcf", "Tbi", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateMergedVcfToTbi",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -3401,7 +3462,8 @@ class RelateMergedVcfToTbi:
         query = (
                  "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
                  f"WHERE vcf.id =\"{blob_id}\" " +
-                 "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi)")
+                 "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi) " +
+                 "RETURN vcf AS node")
         return query
 
 
@@ -3414,13 +3476,8 @@ class RelateTbiToMergedVcf:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Relationship', 'Database', 'Result']
-        required_labels = [
-                           'Tbi',
-                           'Gatk',
-                           'Blob',
-                           'WGS35'
-        ]
+        reqd_header_labels = ['Relationship', 'Database', 'Result', 'Generated']
+        required_labels = ['Tbi', 'Gatk', 'Blob', 'WGS35']
 
         if not node:
             return False
@@ -3452,7 +3509,7 @@ class RelateTbiToMergedVcf:
                               "labels": ["Trigger", "Relate", "Merged", "Vcf", "Tbi", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateMergedVcfToTbi",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -3469,154 +3526,8 @@ class RelateTbiToMergedVcf:
         query = (
                  "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
                  f"WHERE tbi.id =\"{blob_id}\" " +
-                 "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi)")
-        return query
-
-
-class MoveFastqsToColdline:
-    """ Should be triggered by positive result of 
-        ValidateGenomeRelationships trigger.
-    """
-    
-    def __init__(self, function_name, env_vars):
-
-        self.function_name = function_name
-        self.env_vars = env_vars
-
-    def check_conditions(self, header, body, node):
-
-        reqd_header_labels = ['Validate', 'Genome', 'Relationships']
-        required_labels = ['Sample']
-
-        if not node:
-            return False
-
-        conditions = [
-            # Check that node matches metadata criteria:
-            set(required_labels).issubset(set(node.get('labels'))),
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
-            # Metadata required for populating trigger query:
-            node.get("trellis_optimizeStorage") == True,
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True
-
-    def compose_message(self, header, body, node, context):
-        topic = self.env_vars['DB_QUERY_TOPIC']
-
-        sample_id = node['sample']
-
-        query = self._create_query(sample_id)
-
-        message = {
-                   "header": {
-                              "resource": "query",
-                              "method": "POST",
-                              "labels": ["Trigger", "Fastq", "Coldline", "Cypher", "Query"],
-                              "sentFrom": self.function_name,
-                              "trigger": "MoveFastqsToColdline",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
-                              "seedId": header["seedId"],
-                              "previousEventId": context.event_id,
-                   },
-                   "body": {
-                            "cypher": query,
-                            "result-mode": "data",
-                            "result-structure": "list",
-                            "result-split": "True"
-                   }
-        }
-        return([(topic, message)])
-
-    def _create_query(self, sample_id):
-        query = (
-                 "MATCH (s:Sample)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
-                 f"WHERE s.sample =\"{sample_id}\" " +
-                 "AND f.storageClass <> \"COLDLINE\" " +
-                 "RETURN f")
-        return query
-
-
-class RequestChangeFastqStorage:
-
-    def __init__(self, function_name, env_vars):
-
-        self.function_name = function_name
-        self.env_vars = env_vars
-
-    def check_conditions(self, header, body, node):
-
-        reqd_header_labels = ['Request', 'Change', 'Fastq', 'Storage']
-
-        request = body.get("request")
-        if not request:
-            return False
-
-        conditions = [
-            # Check that node matches metadata criteria:
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
-            # Metadata required for populating trigger query:
-            request.get("count"),
-            request.get("storage_class")
-        ]
-
-        for condition in conditions:
-            if condition:
-                continue
-            else:
-                return False
-        return True
-
-    def compose_message(self, header, body, node, context):
-        topic = self.env_vars['DB_QUERY_TOPIC']
-
-        event_id = context.event_id
-        seed_id = context.event_id
-
-        request = body["request"]
-
-        count = request["count"]
-        storage_class = request["storage_class"]
-
-        query = self._create_query(count, storage_class)
-
-        message = {
-                   "header": {
-                              "resource": "query",
-                              "method": "POST",
-                              "labels": ["Trigger", "Fastq", "Coldline", "Cypher", "Query"],
-                              "sentFrom": self.function_name,
-                              "trigger": "RequestMoveFastqsToColdline",
-                              "publishTo": self.env_vars['TOPIC_BLOB_UPDATE_STORAGE'],
-                              "seedId": seed_id,
-                              "previousEventId": event_id,
-                   },
-                   "body": {
-                            "cypher": query,
-                            "result-mode": "data",
-                            "result-structure": "list",
-                            "result-split": "True"
-                   }
-        }
-        return([(topic, message)])
-
-    def _create_query(self, count, storage_class):
-        query = (
-                 "MATCH (s:Sample) " +
-                 "WHERE s.trellis_snvQa=true " +
-                 "AND NOT EXISTS(s.trellis_coldlineFastqs) " +
-                 "WITH s " +
-                 f"LIMIT {count} " +
-                 "MATCH (s)-[:WAS_USED_BY]->(:PersonalisSequencing)-[:GENERATED]->(f:Fastq) " +
-                 f"WHERE f.storageClass <> \"{storage_class}\" " +
-                 "AND NOT f.storageClass IN [\"COLDLINE\", \"ARCHIVE\"] " +
-                 "SET s.trellis_coldlineFastqs = localdatetime() " +
-                 f"RETURN f.bucket AS bucket, f.path AS path, f.extension AS extension, f.storageClass AS current_class, \"{storage_class}\" AS requested_class")
+                 "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi) " +
+                 "RETURN vcf AS node")
         return query
 
 
@@ -3662,7 +3573,7 @@ class RelateTrellisOutputToJob:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Create", "Relationship", "Trellis", "Output", "Cypher", "Query"],
+                              "labels": ["Create", "Relationship", "Trellis", "Generated", "Output", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateTrellisOutputToJob",
                               "publishTo": self.env_vars['TOPIC_TRIGGERS'],
@@ -4845,6 +4756,9 @@ def get_triggers(function_name, env_vars):
     triggers.append(LaunchFastqToUbam(
                                     function_name,
                                     env_vars))
+    triggers.append(RequestFastqToUbam(
+                                    function_name,
+                                    env_vars))
     triggers.append(RequestFastqToUbamCovid19(
                                     function_name,
                                     env_vars))
@@ -4901,10 +4815,6 @@ def get_triggers(function_name, env_vars):
 
     ### Other
     
-    ## DEPRECATED in v1.2.3
-    #triggers.append(AddFastqSetSize(
-    #                                function_name,
-    #                                env_vars))
     triggers.append(KillDuplicateJobs(
                                     function_name,
                                     env_vars))
