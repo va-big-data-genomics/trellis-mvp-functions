@@ -2711,6 +2711,8 @@ class MoveFastqsToColdline:
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
             node.get("trellis_optimizeStorage") == True,
+            # Only move Fastqs to coldline in production
+            self.env_vars['GOOGLE_CLOUD_PROJECT'] == 'gbsc-gcp-project-mvp',
         ]
 
         for condition in conditions:
