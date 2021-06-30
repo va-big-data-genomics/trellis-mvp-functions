@@ -2535,7 +2535,6 @@ class RelateGenomeToFastq:
         return query
 
 
-
 ## Data archival triggers
 class ValidateGenomeRelationships:
 
@@ -2556,7 +2555,7 @@ class ValidateGenomeRelationships:
         conditions = [
             # Check that node matches metadata criteria:
             set(required_labels).issubset(set(node.get('labels'))),
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            set(required_header_labels).issubset(set(header.get('labels'))),
         ]
 
         for condition in conditions:
@@ -2618,7 +2617,7 @@ class DeleteNonessentialSequencingData:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Validate', 'Genome', 'Relationships', 'Database', 'Result']
+        required_header_labels = ['Validate', 'Genome', 'Relationships', 'Database', 'Result']
         required_labels = ['Sample']
 
         if not node:
@@ -2627,7 +2626,7 @@ class DeleteNonessentialSequencingData:
         conditions = [
             # Check that node matches metadata criteria:
             set(required_labels).issubset(set(node.get('labels'))),
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            set(required_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
             node.get("trellis_optimizeStorage") == True,
         ]
@@ -2699,7 +2698,7 @@ class MoveFastqsToColdline:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Validate', 'Genome', 'Relationships', 'Database', 'Result']
+        required_header_labels = ['Validate', 'Genome', 'Relationships', 'Database', 'Result']
         required_labels = ['Sample']
 
         if not node:
@@ -2708,7 +2707,7 @@ class MoveFastqsToColdline:
         conditions = [
             # Check that node matches metadata criteria:
             set(required_labels).issubset(set(node.get('labels'))),
-            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            set(required_header_labels).issubset(set(header.get('labels'))),
             # Metadata required for populating trigger query:
             node.get("trellis_optimizeStorage") == True,
             # Only move Fastqs to coldline in production
