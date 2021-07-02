@@ -2,6 +2,87 @@ import time
 
 MAX_RETRIES = 3
 
+class DatabaseTrigger:
+
+    def __init__(
+                 self, 
+                 name,
+                 conditions,
+                 required_header_labels = [],
+                 required_node_labels = [],
+                 delivery_topics = [],
+                 publish_to_topic = [],
+                 db_query,
+                 message_labels,
+                 resource_type = "query",
+                 rest_method = "VIEW",
+                 db_result_mode = "data",
+                 db_result_structure = "list",
+                 db_result_split = "True",
+                 ):
+
+
+        self.conditions = [
+            set(required_header_labels).issubset(set(header.hget('labels'))),
+            set(required_node_labels).issubset(set(node.get('labels'))),
+        ]
+        self.conditions.extend(conditions)
+
+    def check_conditions(self, header, body, node):
+        
+        for condition in self.conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        messages = []
+        for topic in self.delivery_topics:
+
+            event_id = context.event_id
+            seed_id = context.event_id
+
+            query = self._create_query(event_id, header, body, node)
+
+            message = {
+                       "header": {
+                                  "resource": self.resource_type,
+                                  "method": self.rest_method,
+                                  "labels": self.message_labels,
+                                  "sentFrom": self.function_name,
+                                  "trigger": self.name,
+                                  "publishTo": self.trellis_vars[topic],
+                                  "seedId": seed_id,
+                                  "previousEventId": event_id,
+                       },
+                       "body": {
+                                "cypher": query,
+                                "result-mode": self.result_mode,
+                                "result-structure": self.db_result_structure,
+                                "result-split": self.db_result_split
+                       }
+            }
+            messages.append((topic, message))
+        return(messages)
+
+    def _create_query(self, header, body, node):
+        query = (
+                 "MATCH (:Study {name:'Covid19'})-[*2]->(:Person)-[:GENERATED]->(:Sample)-[]->(p:PersonalisSequencing)-[]->(f:Fastq) " +
+                 "WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 f"WITH DISTINCT p LIMIT {body['limit_count']} " +
+                 "MATCH (p)-[:GENERATED]->(f:Fastq) " +
+                 "WHERE f.matePair = 1 " +
+                 "AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) " +
+                 "RETURN f AS node")
+        return query
+
+    def define_trellis_config(self, function_name, trellis_vars):
+        self.function_name = function_name
+        self.trellis_vars = trellis_vars
+
+
 class RequestFastqToUbamCovid19:
     """ Initiate variant calling for Covid19 genomes.
 
