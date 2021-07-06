@@ -3992,7 +3992,7 @@ class RelateCromwellOutputToStep:
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            node.get("nodeIteration") == "initial",
+            #node.get("nodeIteration") == "initial",
             node.get("trellisTaskId"),
             node.get("id"),
             node.get("wdlCallAlias")
