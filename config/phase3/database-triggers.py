@@ -1616,8 +1616,8 @@ class LaunchVcfstats:
 
     def check_conditions(self, header, body, node):
 
-        # Don't need to wait until
-        reqd_header_labels = ['Relationship', 'Database', 'Result']
+        # Activate after creating (:Vcf)-[:INDEX]->(:Tbi) relationship
+        reqd_header_labels = ['Database', 'Result', 'Relate', 'Tbi', 'Merged', 'Vcf']
         required_labels = [
                            'Blob', 
                            'Vcf',
@@ -1656,7 +1656,7 @@ class LaunchVcfstats:
                    "header": {
                               "resource": "query",
                               "method": "VIEW",
-                              "labels": ["Trigger", "Flagstat", "Bam", "Cypher", "Query"],
+                              "labels": ["Trigger", "Launch", "Vcfstats", "Vcf", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "LaunchVcfstats",
                               "publishTo": self.env_vars['TOPIC_VCFSTATS'],
@@ -2546,8 +2546,8 @@ class ValidateGenomeRelationships:
     def check_conditions(self, header, body, node):
 
         # Triggered by (:Merged:Vcf)-[:HAS_INDEX]->(:Tbi) relationship creation query
-        required_header_labels = ['Relate', 'Merged', 'Vcf', 'Tbi', 'Database', 'Result']
-        required_labels = ['Blob', 'Merged', 'Vcf', 'WGS35']
+        required_header_labels = ['Database', 'Result', 'Relate', 'Genome', 'EssentialWgs']
+        required_labels = ['Genome']
 
         if not node:
             return False
@@ -2599,6 +2599,7 @@ class ValidateGenomeRelationships:
                  "WITH s, o " +
                  "MATCH (o)-[:HAS_QC_DATA]->(:Fastqc), " +
                  "(o)-[:HAS_QC_DATA]->(:Flagstat), " +
+                 "(o)-[:HAS_QC_DATA]->(:Vcfstats), " +
                  "(o)-[:HAS_SEQUENCING_READS]->(:Cram)-[:HAS_INDEX]->(:Crai), " +
                  "(o)-[:HAS_VARIANT_CALLS]->(:Merged:Vcf)-[:HAS_INDEX]->(:Tbi) " +
                  "SET s.trellis_optimizeStorage = true " +
@@ -2881,10 +2882,10 @@ class RelateVcfstatsToGenome:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Trigger", "Relate", "Vcfstats", "Genome", "Cypher", "Query"],
+                              "labels": ["Trigger", "Relate", "Vcfstats", "Genome", "EssentialWgs", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateVcfstatsToGenome",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2903,7 +2904,8 @@ class RelateVcfstatsToGenome:
                     "(blob:Blob:Vcfstats:Text:Data) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob) " +
+                 "RETURN ome")
         return query
 
 
@@ -2952,10 +2954,10 @@ class RelateFlagstatToGenome:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Trigger", "Relate", "Flagstat", "Genome", "Cypher", "Query"],
+                              "labels": ["Trigger", "Relate", "Flagstat", "Genome", "EssentialWgs", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateFlagstatToGenome",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -2974,7 +2976,8 @@ class RelateFlagstatToGenome:
                     "(blob:Blob:Flagstat:Text:Data:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob) " +
+                 "RETURN ome")
         return query
 
 
@@ -3023,10 +3026,10 @@ class RelateFastqcToGenome:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Trigger", "Relate", "Fastqc", "Genome", "Cypher", "Query"],
+                              "labels": ["Trigger", "Relate", "Fastqc", "Genome", "EssentialWgs", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateFastqcToGenome",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -3045,7 +3048,8 @@ class RelateFastqcToGenome:
                     "(blob:Blob:Fastqc:Text:Data:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob)")
+                 "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob) " +
+                 "RETURN ome")
         return query
 
 # gVCF triggers
@@ -3058,7 +3062,7 @@ class RelateMergedVcfToGenome:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        reqd_header_labels = ['Database', 'Result', 'Relate', 'Merged', 'Vcf', 'Tbi']
         required_labels = [
                            'Vcf',
                            'Merged',
@@ -3094,10 +3098,10 @@ class RelateMergedVcfToGenome:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Trigger", "Relate", "Vcf", "Genome", "Cypher", "Query"],
+                              "labels": ["Trigger", "Relate", "Merged", "Vcf", "Genome", "EssentialWgs", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateMergedVcfToGenome",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -3116,7 +3120,8 @@ class RelateMergedVcfToGenome:
                  "(blob:Blob:Merged:Vcf:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_VARIANT_CALLS {ontology: \"bioinformatics\"}]->(blob)")
+                 "MERGE (ome)-[:HAS_VARIANT_CALLS {ontology: \"bioinformatics\"}]->(blob) " +
+                 "RETURN ome")
         return query
 
 
@@ -3231,7 +3236,7 @@ class RelateTbiToMergedVcf:
                               "method": "POST",
                               "labels": ["Trigger", "Relate", "Merged", "Vcf", "Tbi", "Cypher", "Query"],
                               "sentFrom": self.function_name,
-                              "trigger": "RelateMergedVcfToTbi",
+                              "trigger": "RelateTbiToMergedVcf",
                               "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
@@ -3336,7 +3341,7 @@ class RelateCramToGenome:
 
     def check_conditions(self, header, body, node):
 
-        reqd_header_labels = ['Create', 'Blob', 'Node', 'Database', 'Result']
+        reqd_header_labels = ['Relate', 'Cram', 'Crai', 'Database', 'Result']
         required_labels = [
                            'Cram',
                            'Gatk',
@@ -3372,10 +3377,10 @@ class RelateCramToGenome:
                    "header": {
                               "resource": "query",
                               "method": "POST",
-                              "labels": ["Trigger", "Relate", "Cram", "Genome", "Cypher", "Query"],
+                              "labels": ["Trigger", "Relate", "Cram", "Genome", "EssentialWgs", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCramToGenome",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -3391,10 +3396,11 @@ class RelateCramToGenome:
     def _create_query(self, blob_id, sample):
         query = (
                  "MATCH (s:Sample)<-[:GENERATED]-(:Person)-[:HAS_BIOLOGICAL_OME]->(ome:Genome:BiologicalOme), " +
-                 "(blob:Blob:Cram:Gatk:WGS35) " +
+                 "(cram:Blob:Cram:Gatk:WGS35) " +
                  f"WHERE s.sample = \"{sample}\" " +
-                 f"AND blob.id = \"{blob_id}\" " +
-                 "MERGE (ome)-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]->(blob)")
+                 f"AND cram.id = \"{blob_id}\" " +
+                 "MERGE (ome)-[:HAS_SEQUENCING_READS {ontology: \"bioinformatics\"}]->(cram) " +
+                 "RETURN ome AS node")
         return query
 
 
@@ -3445,7 +3451,7 @@ class RelateCramToCrai:
                               "labels": ["Trigger", "Relate", "Cram", "Crai", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCramToCrai",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -3462,7 +3468,8 @@ class RelateCramToCrai:
         query = (
                  "MATCH (cram:Blob:Cram)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(crai:Crai) " +
                  f"WHERE cram.id =\"{blob_id}\" " +
-                 "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai)")
+                 "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai) " +
+                 "RETURN cram AS node")
         return query
 
 
@@ -3513,7 +3520,7 @@ class RelateCraiToCram:
                               "labels": ["Trigger", "Relate", "Crai", "Cram", "Cypher", "Query"],
                               "sentFrom": self.function_name,
                               "trigger": "RelateCraiToCram",
-                              #"publishTo": self.env_vars['DB_QUERY_TOPIC'],
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
                               "seedId": header["seedId"],
                               "previousEventId": context.event_id,
                    },
@@ -3530,7 +3537,8 @@ class RelateCraiToCram:
         query = (
                  "MATCH (crai:Blob:Crai)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(cram:Cram) " +
                  f"WHERE crai.id =\"{blob_id}\" " +
-                 "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai)")
+                 "MERGE (cram)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(crai) " + 
+                 "RETURN cram AS node")
         return query
 # END CRAM triggers
 
