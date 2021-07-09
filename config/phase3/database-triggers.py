@@ -2905,7 +2905,7 @@ class RelateVcfstatsToGenome:
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
                  "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob) " +
-                 "RETURN ome")
+                 "RETURN ome AS node")
         return query
 
 
@@ -2977,7 +2977,7 @@ class RelateFlagstatToGenome:
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
                  "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob) " +
-                 "RETURN ome")
+                 "RETURN ome AS node")
         return query
 
 
@@ -3049,7 +3049,7 @@ class RelateFastqcToGenome:
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
                  "MERGE (ome)-[:HAS_QC_DATA {ontology: \"bioinformatics\"}]->(blob) " +
-                 "RETURN ome")
+                 "RETURN ome AS node")
         return query
 
 # gVCF triggers
@@ -3121,7 +3121,7 @@ class RelateMergedVcfToGenome:
                  f"WHERE s.sample = \"{sample}\" " +
                  f"AND blob.id = \"{blob_id}\" " +
                  "MERGE (ome)-[:HAS_VARIANT_CALLS {ontology: \"bioinformatics\"}]->(blob) " +
-                 "RETURN ome")
+                 "RETURN ome AS node")
         return query
 
 
