@@ -739,7 +739,6 @@ class LaunchFastqToUbam:
             return False
 
         conditions = [
-            #node.get('setSize'),
             node.get('sample'),
             isinstance(node.get('readGroup'), int),
             #node.get('matePair') == 1,
