@@ -60,7 +60,10 @@ QUERY_ELAPSED_MAX = 0.300
 PUBSUB_ELAPSED_MAX = 10
 
 def format_pubsub_message(method, labels, query, results, seed_id, event_id, retry_count=None):
+    # Labels from the incoming message are perpetuated in the outgoing message with
+    # these additional labels
     labels.extend(["Database", "Result"])
+    
     message = {
                "header": {
                           "method": method,
