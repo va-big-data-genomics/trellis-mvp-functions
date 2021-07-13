@@ -86,7 +86,7 @@ def main(event, context):
     else:
         dry_run = False
 
-    node = body['results']
+    node = body['results']['node']
     if not node:
         print("> No node metadata found; exiting.")
         return  
