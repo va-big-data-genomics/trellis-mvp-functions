@@ -91,7 +91,8 @@ def main(event, context):
     blob_path = node['path']
     extension = node['extension']
     current_class = node['storageClass']
-    requested_class = node['requested_class']
+    
+    requested_class = body['results']['requested_class']
 
     valid_storage = check_storage_class_request(extension, current_class, requested_class)
     if not valid_storage:
