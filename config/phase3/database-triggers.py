@@ -2832,7 +2832,7 @@ class RequestChangeFastqStorage:
                  f"WHERE f.storageClass <> \"{storage_class}\" " +
                  "AND NOT f.storageClass IN [\"COLDLINE\", \"ARCHIVE\"] " +
                  "SET s.trellis_coldlineFastqs = localdatetime() " +
-                 f"RETURN f.bucket AS bucket, f.path AS path, f.extension AS extension, f.storageClass AS current_class, \"{storage_class}\" AS requested_class")
+                 f"RETURN f AS node, \"{storage_class}\" AS requested_class")
         return query
 ## END Data archival triggers
 
