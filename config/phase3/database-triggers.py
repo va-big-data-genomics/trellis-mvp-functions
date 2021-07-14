@@ -2754,7 +2754,7 @@ class MoveFastqsToColdline:
                  f"WHERE s.sample =\"{sample_id}\" " +
                  "AND s.trellis_optimizeStorage = True " +
                  "AND f.storageClass <> \"COLDLINE\" " +
-                 "RETURN f AS node")
+                 "RETURN f AS node, \"COLDLINE\" AS requested_class")
         return query
 
 
