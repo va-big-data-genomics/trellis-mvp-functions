@@ -16,13 +16,6 @@ if ENVIRONMENT == 'google-cloud':
 
 
 def check_storage_class_request(extension, current_class, requested_class):
-
-    #supported_classes = {
-    #                     "NEARLINE": "NEARLINE_STORAGE_CLASS",
-    #                     "COLDLINE": "COLDLINE_STORAGE_CLASS",
-    #                     "STANDARD": "STANDARD_STORAGE_CLASS",
-    #                     "ARCHIVE" : "ARCHIVE_STORAGE_CLASS"
-    #}
     
     supported_classes = [
                          "NEARLINE",
@@ -97,7 +90,7 @@ def main(event, context):
     bucket_name = node['bucket']
     blob_path = node['path']
     extension = node['extension']
-    current_class = node['current_class']
+    current_class = node['storageClass']
     requested_class = node['requested_class']
 
     valid_storage = check_storage_class_request(extension, current_class, requested_class)
