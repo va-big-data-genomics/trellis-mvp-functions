@@ -14,8 +14,10 @@ These should all be inputs that are represented as nodes in the database, for ea
 
 ## Add your job to the UML sequence diagram(s)
 
+We generate UML sequence diagrams for principal objects (gVcf, Fastq, Cram) objects used in downstream analyses, and use the diagrams to understand when and how jobs are triggered. In addition to adding your job events to the object diagrams, you may want to create a separate diagram just to describe the events required to trigger your job. 
+
 ### Background
-For each principle data object that triggers bioinformatics jobs (e.g. Fastq, Cram, gVcf) we generate a UML sequence diagram representing how the creation of that node object initiates a sequence of database triggers to launch downstream jobs. The diagram is useful for understanding
+For each cardinal data object that triggers bioinformatics jobs (e.g. Fastq, Cram, gVcf) we generate a UML sequence diagram representing how the creation of that node object initiates a sequence of database triggers to launch downstream jobs. The diagram is useful for understanding
 
 1. Which jobs are triggered by an object node?
 2. Which prerequisites are necessary for meeting the conditions of launching a job?
@@ -23,17 +25,17 @@ For each principle data object that triggers bioinformatics jobs (e.g. Fastq, Cr
     2. Which kinds of relationships need to be present in the database?
 3. Where race conditions can occur?
 
+In addition to adding your job events to the object diagrams, you may want to create a separate diagram just to describe the events required to trigger your job. 
+
 Open up your diagramming tool of choice. I used Lucid (paid) or draw.io (free). If you are not familiar with UML sequence diagrams you can check out this video or find your own.
 
     How to Make a UML Sequence Diagram: https://www.youtube.com/watch?v=pCK6prSq8aw)
 
+Example Trellis sequence diagram:
 
-
-1. Create objects to represent your inputs
-
-2. Create objects to represent Trellis functions
-
-3. Create an object to represent the Neo4j metadata store
+    ```
+    /template/trellis-cram-sequence.pdf
+    ```
 
 ## Create a database trigger
 
