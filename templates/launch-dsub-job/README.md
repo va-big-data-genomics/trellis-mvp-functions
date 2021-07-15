@@ -14,8 +14,6 @@ These should all be inputs that are represented as nodes in the database, for ea
 
 ## Add your job to the UML sequence diagram(s)
 
-We generate UML sequence diagrams for principal objects (gVcf, Fastq, Cram) objects used in downstream analyses, and use the diagrams to understand when and how jobs are triggered. In addition to adding your job events to the object diagrams, you may want to create a separate diagram just to describe the events required to trigger your job. 
-
 ### Background
 For each cardinal data object that triggers bioinformatics jobs (e.g. Fastq, Cram, gVcf) we generate a UML sequence diagram representing how the creation of that node object initiates a sequence of database triggers to launch downstream jobs. The diagram is useful for understanding
 
