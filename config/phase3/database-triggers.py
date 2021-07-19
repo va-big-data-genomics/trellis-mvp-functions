@@ -1436,6 +1436,7 @@ class RecheckDstat:
 
         return([(topic, message)])   
 
+
 # Launch QC tasks
 class LaunchBamFastqc:
 
@@ -2383,6 +2384,243 @@ class RequestPostgresInsertTextToTable:
                  "RETURN node " +
                  "LIMIT 100")
         return query
+# END Launch QC tasks
+
+
+# Launch SV tasks
+class RequestCnvnatorAll:
+    """ Initiate variant calling for all genomes.
+
+    Initiate the first step in the variant calling workflow,
+    FastqToUbam, for any genome in the database.
+
+    Cypher query finds Fastqs ofgenomes that have not
+    been processed and sends the Fastq node metadata back to 
+    the check-triggers service so it will activate the
+    "LaunchFastqToUbam" trigger.
+    """
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'Cnvnator', 'All']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        limit_count = body["limitCount"]
+
+        query = self._create_query(event_id, limit_count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              # ["Relate", "Cram", "Genome"] labels necessary to match LaunchCnvnator() header conditions
+                              "labels": ["Trigger", "Request", "Cnvnator", "Relate", "Cram", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestCnvnatorAll",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, limit_count):
+        query = (
+                 "MATCH (:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
+                 "WHERE NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
+                 "RETURN DISTINCT cram " +
+                 f"LIMIT {limit_count}")
+        return query
+
+
+class RequestCnvnatorCovid19Summer21:
+    """ Initiate variant calling for Covid19 genomes.
+
+    Initiate the first step in the variant calling workflow,
+    FastqToUbam, for genomes of people included in the Covid19
+    (:Study).
+
+    Cypher query finds Fastqs of Covid19 genomes that have not
+    been processed and sends the Fastq node metadata back to 
+    the check-triggers service so it will activate the
+    "LaunchFastqToUbam" trigger.
+    """
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+
+    def check_conditions(self, header, body, node):
+
+        reqd_header_labels = ['Request', 'Cnvnator', 'Covid19']
+
+        conditions = [
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            body.get("limitCount"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        event_id = context.event_id
+        seed_id = context.event_id
+        limit_count = body["limitCount"]
+
+        query = self._create_query(event_id, limit_count)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              # ["Relate", "Cram", "Genome"] labels necessary to match LaunchCnvnator() header conditions
+                              "labels": ["Trigger", "Request", "Cnvnator", "Covid19", "Relate", "Cram", "Genome", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "RequestCnvnatorCovid19",
+                              "publishTo": self.env_vars['TOPIC_TRIGGERS'],
+                              "seedId": seed_id,
+                              "previousEventId": event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, event_id, limit_count):
+        query = (
+                 "MATCH (:Study {name:'Covid19Summer21Pilot'})-[*2]->(:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
+                 "WHERE NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
+                 "RETURN DISTINCT cram " +
+                 f"LIMIT {limit_count}")
+        return query
+
+
+
+class LaunchCnvnator:
+
+    def __init__(self, function_name, env_vars):
+
+        self.function_name = function_name
+        self.env_vars = env_vars
+
+    def check_conditions(self, header, body, node):
+
+        # Don't need to wai
+        reqd_header_labels = ['Relate', 'Cram', 'Genome', 'Database', 'Result']
+        required_labels = [
+                           'Cram',
+                           'Gatk',
+                           'Blob',
+                           'WGS35'
+        ]
+
+        if not node:
+            return False
+
+        conditions = [
+            # Check that node matches metadata criteria:
+            set(required_labels).issubset(set(node.get('labels'))),
+            set(reqd_header_labels).issubset(set(header.get('labels'))),
+            # Metadata required for populating trigger query:
+            node.get("id"),
+        ]
+
+        for condition in conditions:
+            if condition:
+                continue
+            else:
+                return False
+        return True
+
+    def compose_message(self, header, body, node, context):
+        topic = self.env_vars['DB_QUERY_TOPIC']
+
+        blob_id = node['id']
+        event_id = context.event_id
+
+        query = self._create_query(blob_id, event_id)
+
+        message = {
+                   "header": {
+                              "resource": "query",
+                              "method": "VIEW",
+                              "labels": ["Trigger", "Launch", "Cnvnator", "Cram", "Cypher", "Query"],
+                              "sentFrom": self.function_name,
+                              "trigger": "LaunchCnvnator",
+                              "publishTo": self.env_vars['TOPIC_CNVNATOR'],
+                              "seedId": header["seedId"],
+                              "previousEventId": context.event_id,
+                   },
+                   "body": {
+                            "cypher": query,
+                            "result-mode": "data",
+                            "result-structure": "list",
+                            "result-split": "True"
+                   }
+        }
+        return([(topic, message)])
+
+
+    def _create_query(self, blob_id, event_id):
+        query = (
+                 f"MATCH (cram:Blob:Cram) " +
+                 f"WHERE cram.id =\"{blob_id}\" " +
+                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
+                 "CREATE (jr:JobRequest:Cnvnator { " +
+                            "sample: node.sample, " +
+                            "nodeCreated: datetime(), " +
+                            "nodeCreatedEpoch: datetime().epochSeconds, " +
+                            "name: \"cnvnator\", " +
+                            f"eventId: {event_id} }}) " +
+                 "MERGE (cram)-[:WAS_USED_BY]->(jr) " +
+                 "RETURN cram " +
+                 "LIMIT 1")
+        return query
+
 
 # Trellis v1.2 Data optimization triggers
 class MergeBiologicalNodesFromSequencing:
@@ -4820,9 +5058,18 @@ def get_triggers(function_name, env_vars):
                                     function_name,
                                     env_vars))
 
+    ### Launch SV/CNV jobs
+    triggers.append(RequestCnvnatorAll(
+                                    function_name,
+                                    env_vars))
+    triggers.append(RequestCnvnatorCovid19Summer21(
+                                    function_name,
+                                    env_vars))
+    triggers.append(LaunchCnvnator(
+                                    function_name,
+                                    env_vars))
 
     ### Other
-    
     triggers.append(KillDuplicateJobs(
                                     function_name,
                                     env_vars))
