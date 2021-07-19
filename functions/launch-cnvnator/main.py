@@ -209,7 +209,7 @@ def launch_cnvnator(event, context, test=False):
         "inputs": {
             "CRAM": f"gs://{cram['bucket']}/{cram['path']}",
         },
-        "inputRecursive": "DIR=\"gs://genomics-public-data/references/GRCh38\"",
+        "inputRecursive": "DIR=gs://genomics-public-data/references/GRCh38",
         "outputs": {
             "ROOT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.root",
             "CALL_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.{sample}.out",
