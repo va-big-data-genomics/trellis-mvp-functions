@@ -2458,7 +2458,7 @@ class RequestCnvnatorAll:
         query = (
                  "MATCH (:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
                  "WHERE NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
-                 "RETURN DISTINCT cram " +
+                 "RETURN DISTINCT cram AS node " +
                  f"LIMIT {limit_count}")
         return query
 
@@ -2534,10 +2534,9 @@ class RequestCnvnatorCovid19Summer21:
         query = (
                  "MATCH (:Study {name:'Covid19Summer21Pilot'})-[*2]->(:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
                  "WHERE NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
-                 "RETURN DISTINCT cram " +
+                 "RETURN DISTINCT cram AS node " +
                  f"LIMIT {limit_count}")
         return query
-
 
 
 class LaunchCnvnator:
