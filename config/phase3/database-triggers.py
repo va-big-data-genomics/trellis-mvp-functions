@@ -2463,7 +2463,7 @@ class RequestCnvnatorAll:
         return query
 
 
-class RequestCnvnatorCovid19Summer21:
+class RequestCnvnatorCovid19:
     """ Initiate variant calling for Covid19 genomes.
 
     Initiate the first step in the variant calling workflow,
@@ -2608,7 +2608,7 @@ class LaunchCnvnator:
         query = (
                  f"MATCH (cram:Blob:Cram) " +
                  f"WHERE cram.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
+                 "AND NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
                  "CREATE (jr:JobRequest:Cnvnator { " +
                             "sample: node.sample, " +
                             "nodeCreated: datetime(), " +
@@ -5061,7 +5061,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RequestCnvnatorAll(
                                     function_name,
                                     env_vars))
-    triggers.append(RequestCnvnatorCovid19Summer21(
+    triggers.append(RequestCnvnatorCovid19(
                                     function_name,
                                     env_vars))
     triggers.append(LaunchCnvnator(
