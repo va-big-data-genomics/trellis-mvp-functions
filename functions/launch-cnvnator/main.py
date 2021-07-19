@@ -90,12 +90,12 @@ class TrellisMessage:
             self.results = body.get('results')
 
 
-def format_pubsub_message(job_dict, seed_id, event_id, function_name):
+def format_pubsub_message(job_dict, seed_id, event_id, function_name, unique_task_label):
     message = {
         "header": {
             "resource": "job-metadata",
             "method": "POST",
-            "labels": ["Create", "Job", "ViewGvcfSnps", "Node"],
+            "labels": ["Create", "Job", unique_task_label, "Node"],
             "sentFrom": function_name,
             "seedId": seed_id,
             "previousEventId": event_id
@@ -174,11 +174,6 @@ def launch_cnvnator(event, context, test=False):
             context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    #if test:
-    #    TRELLIS = load_local_env()
-    #    FUNCTION_NAME = 'trellis-launch-gvcf-snps'
-    #    PUBLISHER = pubsub.PublisherClient()
-
     # Parse message
     message = TrellisMessage(event, context)
     cram = message.results['cram']
@@ -190,7 +185,7 @@ def launch_cnvnator(event, context, test=False):
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
-    task_id, trunc_nodes_hash = make_unique_task_id([vcf, index], datetime_stamp)
+    task_id, trunc_nodes_hash = make_unique_task_id([cram], datetime_stamp)
 
     # Database entry variables
     plate = cram['plate']
@@ -307,7 +302,8 @@ def launch_cnvnator(event, context, test=False):
                                         job_dict = job_dict,
                                         seed_id = message.seed_id,
                                         event_id = message.event_id,
-                                        function_name = FUNCTION_NAME)
+                                        function_name = FUNCTION_NAME,
+                                        unique_task_label = unique_task_label)
         print(f"> Pubsub message: {message_to_publish}.")
         result = publish_to_topic(
                                   publisher = PUBLISHER,
