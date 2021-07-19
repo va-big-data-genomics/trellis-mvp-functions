@@ -2610,7 +2610,7 @@ class LaunchCnvnator:
                  f"WHERE cram.id =\"{blob_id}\" " +
                  "AND NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
                  "CREATE (jr:JobRequest:Cnvnator { " +
-                            "sample: node.sample, " +
+                            "sample: cram.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"cnvnator\", " +
