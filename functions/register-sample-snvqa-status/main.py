@@ -38,7 +38,7 @@ def format_pubsub_message(query, seed_id):
     message = {
                "header": {
                           "resource": "query",
-                          "method": "POST",
+                          "method": "PUT",
                           "labels": ["Update", "Sample", "Node", "Cypher", "Query"],
                           "sentFrom": f"{FUNCTION_NAME}",
                           "publishTo": f"{TOPIC_TRIGGERS}",
