@@ -207,7 +207,7 @@ def launch_cnvnator(event, context, test=False):
             "SAMPLE_ID": sample,
         },
         "inputs": {
-            "CRAM": f"gs://{cram['bucket']}/{cram['path']}",
+            "BAM": f"gs://{cram['bucket']}/{cram['path']}",
         },
         "inputRecursive": f"DIR=gs://{TRELLIS.GOOGLE_CLOUD_PROJECT}-genomics-public-data/references/GRCh38/unzipped",
         "outputs": {
