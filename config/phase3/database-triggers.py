@@ -2548,7 +2548,8 @@ class LaunchCnvnator:
 
     def check_conditions(self, header, body, node):
 
-        # Don't need to wai
+        # Need to wait until Cram has been related to the genome, because
+        # query needs to get alignment coverage from (:PersonalisSequencing)
         reqd_header_labels = ['Relate', 'Cram', 'Genome', 'Database', 'Result']
         required_labels = [
                            'Cram',
@@ -2606,7 +2607,7 @@ class LaunchCnvnator:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (cram:Blob:Cram) " +
+                 f"MATCH (cram:Blob:Cram)<-[:HAS_SEQUENCING_READS]-(:Genome)<-[:HAS_BIOLOGICAL_OME]-(:Person)-[*2]->(p:PersonalisSequencing) " +
                  f"WHERE cram.id =\"{blob_id}\" " +
                  "AND NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
                  "CREATE (jr:JobRequest:Cnvnator { " +
@@ -2616,7 +2617,7 @@ class LaunchCnvnator:
                             "name: \"cnvnator\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (cram)-[:WAS_USED_BY]->(jr) " +
-                 "RETURN cram " +
+                 "RETURN cram, p.AlignmentCoverage AS alignmentCoverage " +
                  "LIMIT 1")
         return query
 
