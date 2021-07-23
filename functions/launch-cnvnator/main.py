@@ -188,7 +188,8 @@ def launch_cnvnator(event, context, test=False):
     # read depth/standard deviation ratio between 4 & 5.
     # This equation calculated by pvembu based on limited
     # sample of MVP genomes.
-    bin_size = -1.778 * coverage + 182.39
+    bin_size = -1.778 * float(coverage) + 182.39
+    bin_size = int(bin_size)
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
