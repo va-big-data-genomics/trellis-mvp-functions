@@ -287,8 +287,15 @@ def launch_cnvnator(event, context, test=False):
     dsub_result = launch_dsub_task(dsub_args)
     print(f"> Dsub result: {dsub_result}.")
 
+    # Replicate dsub command
+    dsub_cmd_args = dsub_args.copy()
+    dsub_cmd_args.insert(0, "dsub")
+    for arg in dsub_cmd_args:
+        dsub_cmd = " ".join(dsub_cmd_args)
+
     if 'job-id' in dsub_result.keys():
         # Add dsub job ID to neo4j database node
+        job_dict['dsubCmd'] = dsub_cmd
         job_dict['dsubJobId'] = dsub_result['job-id']
         job_dict['dstatCmd'] = (
                                  "dstat " +
