@@ -1,4 +1,11 @@
 steps:
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: [
+         'gsutil',
+         'cp',
+         'functions/launch-cnvnator/CNVnator.sh',
+         '${_CREDENTIALS_BUCKET}/functions/launch-cnvnator/CNVnator.sh'
+  ]
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
          'beta', 'functions', 'deploy', 'trellis-launch-cnvnator',
