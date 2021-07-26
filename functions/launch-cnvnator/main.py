@@ -211,7 +211,7 @@ def launch_cnvnator(event, context, test=False):
         "bootDiskSize": 200,
         "image": f"gcr.io/{TRELLIS.GOOGLE_CLOUD_PROJECT}/clinicalgenomics/cnvnator:0.4.1",
         "logging": f"gs://{TRELLIS.DSUB_LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
-        "script": f"{TRELLIS.TRELLIS_BUCKET}/functions/{FUNCTION_NAME}/CNVnator.sh",
+        "script": f"gs://{TRELLIS.TRELLIS_BUCKET}/functions/{FUNCTION_NAME}/CNVnator.sh",
         "envs": {
             "SAMPLE_ID": sample,
             "BIN_SIZE": bin_size,
