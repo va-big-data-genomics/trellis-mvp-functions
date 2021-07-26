@@ -4,7 +4,7 @@ steps:
          'gsutil',
          'cp',
          'functions/launch-cnvnator/CNVnator.sh',
-         '${_CREDENTIALS_BUCKET}/functions/launch-cnvnator/CNVnator.sh'
+         'gs://${_CREDENTIALS_BUCKET}/functions/launch-cnvnator/CNVnator.sh'
   ]
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
