@@ -3,8 +3,8 @@ steps:
   args: [
          'gsutil',
          'cp',
-         'functions/trellis-launch-cnvnator/CNVnator.sh',
-         'gs://${_CREDENTIALS_BUCKET}/functions/launch-cnvnator/CNVnator.sh'
+         'functions/launch-cnvnator/CNVnator.sh',
+         'gs://${_CREDENTIALS_BUCKET}/functions/trellis-launch-cnvnator/CNVnator.sh'
   ]
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [
