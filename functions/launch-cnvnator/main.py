@@ -222,7 +222,7 @@ def launch_cnvnator(event, context, test=False):
         "inputRecursive": f"DIR=gs://{TRELLIS.GOOGLE_CLOUD_PROJECT}-genomics-public-data/references/GRCh38/unzipped",
         "outputs": {
             "ROOT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.root",
-            "CALL_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.{sample}.out",
+            "CALL_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.out",
             "EVAL_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.txt",
             "CALL_VCF": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.vcf",
             "GENOTYPE_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_genotype.out"
