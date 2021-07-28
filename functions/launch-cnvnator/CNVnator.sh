@@ -1,4 +1,3 @@
-#!/bin/bash 
 #CNVnator BASH Script
 
 # https://github.com/DecodeGenetics/graphtyper/issues/57
