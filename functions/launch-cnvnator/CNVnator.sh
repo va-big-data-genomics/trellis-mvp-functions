@@ -2,10 +2,14 @@
 #CNVnator BASH Script
 
 # https://github.com/DecodeGenetics/graphtyper/issues/57
+echo "Untarring reference cache source"
 tar xzf ${REF_CACHE_SOURCE}
-export REF_PATH="$(pwd)/ref/cache/%2s/%2s/%s:http://www.ebi.ac.uk/ena/cram/md5/%s"
-export REF_CACHE="$(pwd)/ref/cache/%2s/%2s/%s"
 
+echo "Specifying paths to reference caches"
+export REF_PATH="${REF_CACHE_SOURCE%/*}/ref/cache/%2s/%2s/%s:http://www.ebi.ac.uk/ena/cram/md5/%s"
+export REF_CACHE="${REF_CACHE_SOURCE%/*}/ref/cache/%2s/%2s/%s"
+
+echo "Running CNVnator"
 cnvnator -unique -root ${ROOT} -tree ${BAM} -chrom $(seq -f 'chr%g' 1 22) chrX chrY chrM 
 cnvnator -root ${ROOT} -his ${BIN_SIZE} -d ${DIR} 
 cnvnator -root ${ROOT} -stat ${BIN_SIZE} 
