@@ -218,6 +218,7 @@ def launch_cnvnator(event, context, test=False):
         },
         "inputs": {
             "BAM": f"gs://{cram['bucket']}/{cram['path']}",
+            # Trying to resolve an issue using CRAMs(?): https://github.com/DecodeGenetics/graphtyper/issues/57
             "REF_CACHE_SOURCE": "gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.ref_cache.tar.gz"
         },
         "inputRecursive": f"DIR=gs://{TRELLIS.GOOGLE_CLOUD_PROJECT}-genomics-public-data/references/GRCh38/unzipped",
