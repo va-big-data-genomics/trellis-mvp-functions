@@ -2458,12 +2458,12 @@ class RequestCnvnatorAll:
         query = (
                  "MATCH (:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
                  "WHERE NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
-                 "RETURN DISTINCT cram " +
+                 "RETURN DISTINCT cram AS node " +
                  f"LIMIT {limit_count}")
         return query
 
 
-class RequestCnvnatorCovid19Summer21:
+class RequestCnvnatorCovid19:
     """ Initiate variant calling for Covid19 genomes.
 
     Initiate the first step in the variant calling workflow,
@@ -2532,12 +2532,11 @@ class RequestCnvnatorCovid19Summer21:
 
     def _create_query(self, event_id, limit_count):
         query = (
-                 "MATCH (:Study {name:'Covid19Summer21Pilot'})-[*2]->(:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
+                 "MATCH (:Study {name:'Covid19-Summer2021Pilot'})-[:HAS_PARTICIPANT|IS*2]->(:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
                  "WHERE NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
-                 "RETURN DISTINCT cram " +
+                 "RETURN DISTINCT cram AS node " +
                  f"LIMIT {limit_count}")
         return query
-
 
 
 class LaunchCnvnator:
@@ -2549,7 +2548,8 @@ class LaunchCnvnator:
 
     def check_conditions(self, header, body, node):
 
-        # Don't need to wai
+        # Need to wait until Cram has been related to the genome, because
+        # query needs to get alignment coverage from (:PersonalisSequencing)
         reqd_header_labels = ['Relate', 'Cram', 'Genome', 'Database', 'Result']
         required_labels = [
                            'Cram',
@@ -2607,17 +2607,17 @@ class LaunchCnvnator:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (cram:Blob:Cram) " +
+                 f"MATCH (cram:Blob:Cram)<-[:HAS_SEQUENCING_READS]-(:Genome)<-[:HAS_BIOLOGICAL_OME]-(:Person)-[*2]->(p:PersonalisSequencing) " +
                  f"WHERE cram.id =\"{blob_id}\" " +
-                 "AND NOT (node)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
+                 "AND NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
                  "CREATE (jr:JobRequest:Cnvnator { " +
-                            "sample: node.sample, " +
+                            "sample: cram.sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: datetime().epochSeconds, " +
                             "name: \"cnvnator\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (cram)-[:WAS_USED_BY]->(jr) " +
-                 "RETURN cram " +
+                 "RETURN cram, p.AlignmentCoverage AS alignmentCoverage " +
                  "LIMIT 1")
         return query
 
@@ -5062,7 +5062,7 @@ def get_triggers(function_name, env_vars):
     triggers.append(RequestCnvnatorAll(
                                     function_name,
                                     env_vars))
-    triggers.append(RequestCnvnatorCovid19Summer21(
+    triggers.append(RequestCnvnatorCovid19(
                                     function_name,
                                     env_vars))
     triggers.append(LaunchCnvnator(
