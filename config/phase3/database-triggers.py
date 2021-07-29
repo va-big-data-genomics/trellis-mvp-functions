@@ -2532,7 +2532,7 @@ class RequestCnvnatorCovid19:
 
     def _create_query(self, event_id, limit_count):
         query = (
-                 "MATCH (:Study {name:'Covid19Summer21Pilot'})-[*2]->(:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
+                 "MATCH (:Study {name:'Covid19-Summer2021Pilot'})-[:HAS_PARTICIPANT|IS*2]->(:Person)-[:HAS_BIOLOGICAL_OME]->(:Genome)-[:HAS_SEQUENCING_READS]->(cram:Cram) " +
                  "WHERE NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
                  "RETURN DISTINCT cram AS node " +
                  f"LIMIT {limit_count}")
