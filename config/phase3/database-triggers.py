@@ -2619,7 +2619,7 @@ class LaunchCnvnator:
                             f"eventId: {event_id} }}) " +
                  "MERGE (cram)-[:WAS_USED_BY]->(jr) " +
                  "RETURN cram, p.AlignmentCoverage AS alignmentCoverage, " +
-                 "participant.study, AS study, " +
+                 "participant.study AS study, " +
                  "participant.hospitalized AS hospitalized, " +
                  "participant.recvdActureCare AS recvdActureCare, " +
                  "participant.stayedInIcu AS stayedInIcu " +
