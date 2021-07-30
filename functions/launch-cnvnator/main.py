@@ -179,6 +179,14 @@ def launch_cnvnator(event, context, test=False):
     cram = message.results['cram']
     coverage = message.results['alignmentCoverage']
 
+    # Optional
+    study = message.results.get('study')
+    hospitalized = message.results.get('hospitalized')
+    recvdActureCare = message.results.get('recvdActureCare')
+    stayedInIcu = message.results.get('stayedInIcu')
+
+
+
     # Check that message includes node metadata
     if not cram:
         logging.error("> No Cram provided. Exiting.")
@@ -200,6 +208,8 @@ def launch_cnvnator(event, context, test=False):
     sample = cram['sample']
     basename = cram['basename']
 
+    study_metadata_path = f"study{study}/hospitalized{hospitalized}/recvdActureCare{recvdActureCare}/stayedInIcu{stayedInIcu}"
+
     task_name = 'cnvnator'
     unique_task_label = 'Cnvnator'
     job_dict = {
@@ -214,7 +224,9 @@ def launch_cnvnator(event, context, test=False):
         "script": f"gs://{TRELLIS.TRELLIS_BUCKET}/functions/{FUNCTION_NAME}/CNVnator.sh",
         "envs": {
             "SAMPLE_ID": sample,
-            "BIN_SIZE": bin_size,
+            # NOTE: USING STATIC BIN SIZE
+            #"BIN_SIZE": bin_size,
+            "BIN_SIZE": 100,
         },
         "inputs": {
             "BAM": f"gs://{cram['bucket']}/{cram['path']}",
@@ -223,11 +235,11 @@ def launch_cnvnator(event, context, test=False):
         },
         "inputRecursive": f"DIR=gs://{TRELLIS.GOOGLE_CLOUD_PROJECT}-genomics-public-data/references/GRCh38/unzipped",
         "outputs": {
-            "ROOT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.root",
-            "CALL_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.out",
-            "EVAL_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.txt",
-            "CALL_VCF": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}.vcf",
-            "GENOTYPE_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_genotype.out"
+            "ROOT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{study_metadata_path}/{sample}.root",
+            "CALL_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{study_metadata_path}/{sample}.out",
+            "EVAL_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{study_metadata_path}/{sample}.txt",
+            "CALL_VCF": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{study_metadata_path}/{sample}.vcf",
+            "GENOTYPE_OUT": f"gs://{TRELLIS.DSUB_OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{study_metadata_path}/{sample}_genotype.out"
         },
         "trellisTaskId": task_id,
         "sample": sample,

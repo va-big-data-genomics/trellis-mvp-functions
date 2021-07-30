@@ -2607,9 +2607,10 @@ class LaunchCnvnator:
 
     def _create_query(self, blob_id, event_id):
         query = (
-                 f"MATCH (cram:Blob:Cram)<-[:HAS_SEQUENCING_READS]-(:Genome)<-[:HAS_BIOLOGICAL_OME]-(:Person)-[*2]->(p:PersonalisSequencing) " +
+                 f"MATCH (cram:Blob:Cram)<-[:HAS_SEQUENCING_READS]-(:Genome)<-[:HAS_BIOLOGICAL_OME]-(person:Person)-[*2]->(p:PersonalisSequencing) " +
                  f"WHERE cram.id =\"{blob_id}\" " +
                  "AND NOT (cram)-[:WAS_USED_BY]->(:JobRequest:Cnvnator) " +
+                 "OPTIONAL MATCH (person)<-[:IS]-(:Participant)<-[:HAS_PARTICIPANT]-(:Study {name:'Covid19-Summer2021Pilot'}) " +
                  "CREATE (jr:JobRequest:Cnvnator { " +
                             "sample: cram.sample, " +
                             "nodeCreated: datetime(), " +
@@ -2617,7 +2618,11 @@ class LaunchCnvnator:
                             "name: \"cnvnator\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (cram)-[:WAS_USED_BY]->(jr) " +
-                 "RETURN cram, p.AlignmentCoverage AS alignmentCoverage " +
+                 "RETURN cram, p.AlignmentCoverage AS alignmentCoverage, " +
+                 "person.study, AS study, " +
+                 "person.hospitalized AS hospitalized, " +
+                 "person.recvdActureCare AS recvdActureCare, " +
+                 "person.stayedInIcu AS stayedInIcu " +
                  "LIMIT 1")
         return query
 
