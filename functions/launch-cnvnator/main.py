@@ -179,14 +179,6 @@ def launch_cnvnator(event, context, test=False):
     cram = message.results['cram']
     coverage = message.results['alignmentCoverage']
 
-    # Optional
-    study = message.results.get('study')
-    hospitalized = message.results.get('hospitalized')
-    recvdActureCare = message.results.get('recvdActureCare')
-    stayedInIcu = message.results.get('stayedInIcu')
-
-
-
     # Check that message includes node metadata
     if not cram:
         logging.error("> No Cram provided. Exiting.")
@@ -224,9 +216,9 @@ def launch_cnvnator(event, context, test=False):
         "script": f"gs://{TRELLIS.TRELLIS_BUCKET}/functions/{FUNCTION_NAME}/CNVnator.sh",
         "envs": {
             "SAMPLE_ID": sample,
-            # NOTE: USING STATIC BIN SIZE
-            #"BIN_SIZE": bin_size,
+            # NOTE: Using static bin size
             "BIN_SIZE": 100,
+            #"BIN_SIZE": bin_size,
         },
         "inputs": {
             "BAM": f"gs://{cram['bucket']}/{cram['path']}",
