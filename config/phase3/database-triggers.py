@@ -2617,7 +2617,7 @@ class LaunchCnvnator:
                             "name: \"cnvnator\", " +
                             f"eventId: {event_id} }}) " +
                  "MERGE (cram)-[:WAS_USED_BY]->(jr) " +
-                 "RETURN cram, p.AlignmentCoverage AS alignmentCoverage, " +
+                 "RETURN cram, p.AlignmentCoverage AS alignmentCoverage " +
                  "LIMIT 1")
         return query
 

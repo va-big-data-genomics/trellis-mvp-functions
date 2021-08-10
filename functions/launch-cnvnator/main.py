@@ -177,19 +177,27 @@ def launch_cnvnator(event, context, test=False):
     # Parse message
     message = TrellisMessage(event, context)
     cram = message.results['cram']
-    coverage = message.results['alignmentCoverage']
+
+    # Optional results
+    coverage = message.results.get('alignmentCoverage')
+    bin_size = message.results.get('binSize')
 
     # Check that message includes node metadata
     if not cram:
         logging.error("> No Cram provided. Exiting.")
         return(1)
 
-    # Calculate bin size based on alignment coverage to get 
-    # read depth/standard deviation ratio between 4 & 5.
-    # This equation calculated by pvembu based on limited
-    # sample of MVP genomes.
-    bin_size = -1.778 * float(coverage) + 182.39
-    bin_size = int(bin_size)
+    # If bin size not provided, calculate based on alignment coverage
+    if not bin_size and coverage:
+        # Calculate bin size based on alignment coverage to get 
+        # read depth/standard deviation ratio between 4 & 5.
+        # This equation calculated by pvembu based on limited
+        # sample of MVP genomes.
+        bin_size = -1.778 * float(coverage) + 182.39
+        bin_size = int(bin_size)
+    # If coverage is not provided, default to bin size of 100
+    elif not bin_size and not coverage:
+        bin_size = 100
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
@@ -216,9 +224,7 @@ def launch_cnvnator(event, context, test=False):
         "script": f"gs://{TRELLIS.TRELLIS_BUCKET}/functions/{FUNCTION_NAME}/CNVnator.sh",
         "envs": {
             "SAMPLE_ID": sample,
-            # NOTE: Using static bin size
-            "BIN_SIZE": 100,
-            #"BIN_SIZE": bin_size,
+            "BIN_SIZE": bin_size,
         },
         "inputs": {
             "BAM": f"gs://{cram['bucket']}/{cram['path']}",
