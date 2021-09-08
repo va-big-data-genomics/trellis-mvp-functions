@@ -1,0 +1,511 @@
+Nodes:
+    Blob:
+        Category: Object
+        Props:
+            # Google Cloud Storage properties
+            - bucket
+            - crc32c
+            - id
+            - size
+            - storageClass
+            - contentType
+            - generation
+            - kind
+            - timeCreated
+            - updated
+            - timeStorageClassUpdated
+            - selfLink
+            - mediaLink
+            - etag
+            # Storage path properties
+            - path
+            - name
+            - basename
+            - dirname
+            - extension
+            - filetype
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+            - obj_timeDeleted
+            - obj_timeDeletedEpoch
+            - obj_exists
+    PersonalisSequencing:
+        Category: Experiment
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            # Personalis properties
+            - ProtocolId
+            - DataQcCode
+            - Gender
+            - SampleQcCode
+            - RequestId
+            - SampleConcordance
+            - PlateCoord
+            - PredictedGender
+            - CellId
+            - RunDate
+            - Volume
+            - OD260_280
+            - ReceiptCode
+            - BloodType
+            - ShippingId
+            - DataQcDate
+            - AlignmentCoverage
+            - SampleQcDate
+            - Ethnicity
+            - AssayType
+            - ReceiptDate
+            - Contamination
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+    Fastq:
+        Category: Object
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            - readGroup
+            - setSize
+            - matePair
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+    Ubam:
+        Category: Object
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            - readGroup
+            - setSize
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+            - trellisTask
+            - trellisTaskId
+            - obj_timeDeleted
+            - obj_timeDeletedEpoch
+            - obj_exists
+    Bam:
+        Category: Object
+        Props:
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+            - trellisTask
+            - trellisTaskId
+            - obj_timeDeleted
+            - obj_timeDeletedEpoch
+            - obj_exists
+    Cram:
+        Category: Object
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+            - trellisTask
+            - trellisTaskId
+    Vcf:
+        Category: Object
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+            - obj_timeDeleted
+            - obj_timeDeletedEpoch
+            - obj_exists
+    Index:
+        Category: Object
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+    Vcfstats:
+        Category: QualityAssessmentObject
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+            - trellisTask
+            - trellisTaskId
+    Fastqc:
+        Category: QualityAssessmentObject
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+            - trellisTask
+            - trellisTaskId
+    Flagstat:
+        Category: QualityAssessmentObject
+        Props:
+            # Experimental properties
+            - sample
+            - plate
+            # Node provenance properties
+            - labels
+            - timeCreatedEpoch
+            - timeUpdatedEpoch
+            - nodeIteration
+            - nodeCreated
+            - timeCreatedIso
+            - timeUpdatedIso
+            - triggerOperation
+            - trellisTask
+            - trellisTaskId
+    Genome:
+        Category: BiologicalEntity
+        Props:
+            - sample
+            - labels
+    Person:
+        Category: BiologicalEntity
+        Props:
+            - sample
+            - labels
+    Sample:
+        Category: BiologicalEntity
+        Props:
+            - sample
+            - labels
+            - trellis_snvQa
+            - trellis_optimizeStorage
+    Dsub:
+        # Job managed by the Dsub task manager
+        Category: Job
+        Props:
+            - labels
+            # Job specification properties
+            - inputHash
+            - inputIds
+            - dstatCmd
+            - dryRun
+            - regions
+            - project
+            - network
+            - diskSize
+            - provider
+            - minRam
+            - dsubJobId
+            - image
+            - minCores
+            - command
+            - preemptible
+            - subnetwork
+            - name
+            - user
+            - logging
+            # Job status properties
+            - startTime
+            - startTimeEpoch
+            - stopTime
+            - stopTimeEpoch
+            - durationMinutes
+            - stoppedBy
+            - status
+    Dstat:
+        # Reports the status of a Dsub job
+        Category: Job
+        Props:
+            - labels
+            - outputs
+            - regions
+            - instanceName
+            - use_private_address
+            - inputs
+            - envs
+            - statusDetail
+            - network
+            - internalId
+            - diskSize
+            - zone
+            - provider
+            - startTime
+            - bootDiskSize
+            - diskType
+            - enableStackdriverMonitoring
+            - events
+            - machineType
+            - jobName
+            - dsubVersion
+            - serviceAccount
+            - userId
+            - script
+            - command
+            - statusMessage
+            - jobId
+            - createTime
+            - subnetwork
+            - lastUpdate
+            - logging
+            - scriptName
+            - endTime
+            - status
+    CromwellWorkflow:
+        # Represents the virtual machine that manages a Cromwell workflow
+        # NOTE: In Trellis, the Cromwell workflow is launched by Dsub
+        Category: Job
+        Props:
+            - labels
+            # Cromwell workflow configuration properties
+            - env_BACKEND_PROVIDER
+            - env_ROOT
+            - input_INPUT
+            - input_OPTION
+            - input_WDL
+            - input_SUBWDL
+            # Dsub job specification properties
+            - inputHash
+            - inputIds
+            - dstatCmd
+            - dryRun
+            - regions
+            - project
+            - network
+            - diskSize
+            - provider
+            - minRam
+            - dsubJobId
+            - image
+            - minCores
+            - command
+            - preemptible
+            - subnetwork
+            - name
+            - user
+            - logging
+            - timeout
+            # Job status properties
+            - startTime
+            - startTimeEpoch
+            - stopTime
+            - stopTimeEpoch
+            - durationMinutes
+            - stoppedBy
+            - status
+    CromwellStep:
+        # Represents a step in a Cromwell workflow
+        Category: Job
+        Props:
+            - labels
+            # Cromwell workflow properties
+            - wdlCallAlias
+            - wdlTaskName
+            - cromwellWorkflowId
+            # Node provenance properties
+            - nodeIteration
+             # Job status properties
+            - startTimeEpoch
+    CromwellAttempt:
+        Category: Job
+        Props:
+            - labels
+            # Cromwell workflow properties
+            - wdlCallAlias
+            - wdlTaskName
+             # Job status properties
+            - startTime
+            - startTimeEpoch
+            - stopTime
+            - stopTimeEpoch
+            - durationMinutes
+            - stoppedBy
+            - status
+            - cpuCount
+            - cpuRuntimeMinutes
+            # Google Compute Engine properties
+            - attachedDiskSize
+            - bootDiskSize
+            - googPipelinesWorker
+            - instanceId
+            - instanceName
+            - machineType
+            # Node provenance properties
+            - nodeIteration
+Relationships:
+    WAS_USED_BY:
+        Mul: one_to_many
+        Ends:
+            - Src: Fastq
+              Dst: FastqToUbam
+            - Src: Fastq
+              Dst: JobRequest
+            - Src: Ubam
+              Dst: JobRequest
+            - Src: Vcf
+              Dst: Vcfstats
+            - Src: Vcf
+              Dst: JobRequest
+            - Src: Ubam
+              Dst: CromwellWorkflow
+            - Src: Bam
+              Dst: JobRequest
+            - Src: Bam
+              Dst: BamFastqc
+            - Src: Bam
+              Dst: Flagstat
+        Props: null
+    GENERATED:
+        Mul: one_to_many
+        Ends:
+            - Src: PersonalisSequencing
+              Dst: Fastq
+            - Src: PersonalisSequencing
+              Dst: Blob
+            - Src: Job
+              Dst: Ubam
+            - Src: CromwellStep
+              Dst: Cram
+            - Src: CromwellStep
+              Dst: Vcf
+            - Src: Sample
+              Dst: PersonalisSequencing
+            - Src: CromwellWorkflow
+              Dst: Blob
+            - Src: CromwellStep
+              Dst: Blob
+        Props: null
+    HAS_SEQUENCING_READS:
+        Mul: one_to_many
+        Ends:
+            - Src: Genome
+              Dst: Fastq
+            - Src: Genome
+              Dst: Cram
+        Props: null
+    HAS_INDEX:
+        Mul: one_to_one
+        Ends: 
+            - Src: Cram
+              Dst: Index
+            - Src: Vcf
+              Dst: Index
+        Props: null
+    HAS_VARIANT_CALLS:
+        Mul: one_to_many
+        Ends:
+            - Src: Genome
+              Dst: Vcf
+        Props: null
+    HAS_QC_DATA:
+        Mul: one_to_many
+        Ends:
+            - Src: Genome
+              Dst: Vcfstats
+            - Src: Genome
+              Dst: Fastqc
+            - Src: Genome
+              Dst: Flagstat
+        Props: null
+    HAS_BIOLOGICAL_OME:
+        Mul: one_to_many
+        Ends:
+            - Src: Person
+              Dst: Genome
+        Props: null
+    STATUS:
+        Mul: one_to_one
+        Ends:
+            - Src: Dsub
+              Dst: Dstat
+        Props: null
+    LED_TO:
+        Mul: one_to_one
+        Ends:
+            - Src: CromwellWorkflow
+              Dst: CromwellStep
+            - Src: CromwellStep
+              Dst: CromwellStep
+        Props: null
+    GENERATED_ATTEMPT:
+        Mul: one_to_one
+        Ends: 
+            - Src: CromwellStep
+              Dst: CromwellAttempt
+        Props: null
+    AFTER:
+        Mul: one_to_one
+        Ends:
+            - Src: CromwellAttempt
+              Dst: CromwellAttempt
+        Props: null
+

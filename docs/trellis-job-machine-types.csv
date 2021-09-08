@@ -1,0 +1,23 @@
+Bioinformatics task,Task manager,Description,Virtual machine configuration,Number of CPUs,Amount of memory (GiB)
+fastq-to-ubam,dsub,Convert Fastq object to unaligned BAM format.,custom-2-7680,2,7.5
+gatk-5-dollar,dsub,Use Cromwell to run the GATK best practices variant-calling pipeline.,custom-2-7680,2,7.5
+vcfstats,dsub,Run RTG Vcfstats on a VCF object.,custom-1-3840,1,3.75
+text-to-table,dsub,"Convert structured text data (FastQC, Flagstat, Vcfstats) into CSV format.",custom-1-3840,1,3.75
+flagstat,dsub,Run Samtools Flagstat on a BAM object.,custom-1-3840,1,3.75
+bam-fastqc,dsub,Run FastQC on a BAM object.,custom-1-3840,1,3.75
+scatterintervallist,Cromwell,Create interval lists for performing variant-calling.,custom-1-2048,1,2
+getbwaversion,Cromwell,Get the version of BWA.,custom-1-1024,1,1
+createsequencegroupingtsv,Cromwell,Create list of sequences for scatter-gather parallelization.,custom-1-1024,1,1
+samtofastqandbwamemandmba,Cromwell,Run BWA-MEM genome mapping.,custom-16-14848,16,14.5
+sumfloats,Cromwell,Calculate sum of a lists of floats.,custom-2-10240,2,10
+markduplicates,Cromwell,Mark duplicate sequencing reads.,custom-2-7168,2,7
+sortsamplebam,Cromwell,Sort BAM object.,custom-2-5120,2,5
+baserecalibrator,Cromwell,Perform Base Quality Score Recalibration (BQSR) on the sorted bam in parallel.,custom-1-6144,1,6
+gatherbqsrreports,Cromwell,Gather BQSR reports.,custom-1-3584,1,3.5
+applybqsr,Cromwell,Apply the recalibration model by interval.,custom-1-3584,1,3.5
+gatherbamfiles,Cromwell,Combine multiple sorted BAMs.,custom-1-3072,1,3
+converttocram,Cromwell,Convert BAM object to CRAM format.,custom-1-3072,1,3
+haplotypecaller4,Cromwell,Call variants.,custom-1-6656,1,6.5
+validatecram,Cromwell,Validate the CRAM object.,custom-2-8192,2,8
+mergevcfs,Cromwell,Combine by-interval VCFs into single VCF.,custom-1-3072,1,3
+checkcontamination,Cromwell,Estimate level of cross-sample contamination.,custom-1-2048,1,2
