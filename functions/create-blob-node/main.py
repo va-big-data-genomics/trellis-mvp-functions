@@ -175,7 +175,8 @@ def format_node_merge_query(db_dict, dry_run=False):
             create_strings.append(f'node.{key} = {value}')
     create_string = ', '.join(create_strings)
 
-    # Create database ON MATCH string
+    # If node already exists in the database, only update the following
+    # values of the node (SET command), if the values are provided
     merge_keys = [
                   'md5Hash',
                   'size',
@@ -187,7 +188,7 @@ def format_node_merge_query(db_dict, dry_run=False):
                   'crc32c',
                   'generation',
                   'storageClass',
-                  # checksum specific
+                  # Following are specific to Checksum objects
                   'fastqCount',
                   'microarrayCount']
 
@@ -203,8 +204,9 @@ def format_node_merge_query(db_dict, dry_run=False):
 
     query = (
         f"MERGE (node:Blob:{labels_str} {{ " +
-            f'bucket: "{db_dict["bucket"]}", ' +
-            f'path: "{db_dict["path"]}" }}) ' +
+            #f'bucket: "{db_dict["bucket"]}", ' +
+            #f'path: "{db_dict["path"]}" }}) ' +
+            f'id: "{db_dict["id"]}" }}) ' +
         "ON CREATE SET node.nodeCreated = timestamp(), " +
             'node.nodeIteration = "initial", ' +
             f"{create_string} " +
