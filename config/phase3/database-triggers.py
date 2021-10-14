@@ -1872,7 +1872,7 @@ class BigQueryImportCsv:
                  "LIMIT 1")
         return query
 
-
+""" Deprecated in favor of Postgres
 class BigQueryImportContamination:
     
     
@@ -1961,8 +1961,9 @@ class BigQueryImportContamination:
                  "RETURN node " +
                  "LIMIT 1")
         return query
+"""
 
-
+""" Deprecated in favor of Postgres
 class RequestBigQueryImportContamination:
 
 
@@ -2043,7 +2044,7 @@ class RequestBigQueryImportContamination:
                  "RETURN node " +
                  "LIMIT 1")
         return query
-
+"""
 
 class PostgresInsertCsv:
     
@@ -3494,8 +3495,9 @@ class RelateTbiToMergedVcf:
 
     def _create_query(self, blob_id):
         query = (
-                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) " +
+                 "MATCH (vcf:Blob:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Blob:Tbi) " +
                  f"WHERE tbi.id =\"{blob_id}\" " +
+                 "AND step.wdlCallAlias = \"mergevcfs\" " +
                  "MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi) " +
                  "RETURN vcf AS node")
         return query
