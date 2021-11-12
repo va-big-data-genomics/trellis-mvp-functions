@@ -9,15 +9,23 @@ import base64
 import logging
 import neobolt
 
+
 from datetime import datetime
 
-from py2neo import Graph
+from neo4j import GraphDatabase
+#from py2neo import Graph
 
 from urllib3.exceptions import ProtocolError
 from neobolt.exceptions import ServiceUnavailable
 
 from google.cloud import pubsub
 from google.cloud import storage
+
+# For testing local Trellis message classes
+import importlib
+
+trellis_module_path = "../../templates/trellis_classes"
+trellis = importlib.import_module(module_path)
 
 # Get runtime variables from cloud storage bucket
 # https://www.sethvargo.com/secrets-in-serverless/
@@ -32,9 +40,10 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     # Runtime variables
-    DATA_GROUP = parsed_vars['DATA_GROUP']
+    #DATA_GROUP = parsed_vars['DATA_GROUP']
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     DB_QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
+    DB_STORED_QUERIES_FILE = parsed_vars['DB_STORED_QUERIES_FILE']
 
     #NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
@@ -47,7 +56,8 @@ if ENVIRONMENT == 'google-cloud':
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
 
-    # Neo4j graph
+    # Old py2neo Neo4j graph driver object
+    """
     GRAPH = Graph(
                   scheme=NEO4J_SCHEME,
                   host=NEO4J_HOST,
@@ -55,10 +65,26 @@ if ENVIRONMENT == 'google-cloud':
                   user=NEO4J_USER,
                   password=NEO4J_PASSPHRASE)
                   #max_connections=NEO4J_MAX_CONN)
+    """
+
+# Retrieve stored database queries from JSON
+with open(DB_STORED_QUERIES_FILE, 'r') as file_handle:
+    DB_STORED_QUERIES = json.load(file_handle)
+
+# Use Neo4j driver object to establish connections to the Neo4j
+# database and manage connection pool used by neo4j.Session objects
+# https://neo4j.com/docs/api/python-driver/current/api.html#driver
+DRIVER = GraphDatabase.driver(
+    f"{NEO4J_SCHEME}://{NEO4J_HOST}:{NEO4J_PORT}",
+    auth=("neo4j", NEO4J_PASSPHRASE),
+    max_connection_pool_size=10)
+
+
 
 QUERY_ELAPSED_MAX = 0.300
 PUBSUB_ELAPSED_MAX = 10
 
+""" Now using TrellisMessage classes to do this.
 def format_pubsub_message(method, labels, query, results, seed_id, event_id, retry_count=None):
     # Labels from the incoming message are perpetuated in the outgoing message with
     # these additional labels
@@ -83,7 +109,7 @@ def format_pubsub_message(method, labels, query, results, seed_id, event_id, ret
         message['header']['retry-count'] = retry_count
 
     return message
-
+"""
 
 def publish_to_topic(topic, json_data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
@@ -92,13 +118,11 @@ def publish_to_topic(topic, json_data):
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
 
-
 def publish_str_to_topic(topic, str_data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     message = str_data.encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
-
 
 def republish_message(topic, data):
     """Wrapper for publish_to_topic which adds retry chunk.
@@ -117,8 +141,48 @@ def republish_message(topic, data):
     result = publish_to_topic(DB_QUERY_TOPIC, data)
     return result
 
+@staticmethod
+def convert_timestamp_to_rfc_3339(timestamp):
+    # Load time in RFC 3339 format
+    # Description of RFC 3339: http://henry.precheur.org/python/rfc3339.html
+    # Pub/Sub message example: https://cloud.google.com/functions/docs/writing/background#functions-writing-background-hello-pubsub-python
+    try:
+        rfc3339_time = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
+    except ValueError as exception:
+        try:
+            rfc3339_time = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ')
+        except:
+            return ValueError
+    except:
+        return ValueError
+    return rfc3339_time
 
-def query_db(event, context):
+@staticmethod
+def calculate_time_elapsed_exceeded(initial_rfc3339_time, elapsed_max):
+    # Time from message publication to reception
+    publish_elapsed = datetime.now() - initial_rfc3339_time
+    if publish_elapsed.total_seconds() > elapsed_max:
+        print(
+              f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
+              f"exceeded {elapsed_max} seconds after publication.")
+
+@staticmethod
+def query_database(write_transaction, driver, query, query_parameters):
+
+    with driver.session() as session:
+        if write_transaction:
+            graph, result_summary = session.write_transaction(_stored_procedure_transaction_function, query, query_parameters)
+        else:
+            graph, result_summary = session.read_transaction(_stored_procedure_transaction_function, query, query_parameters)
+    return graph, result_summary
+
+@staticmethod
+def _stored_procedure_transaction_function(tx, query, **query_inputs):
+    result = tx.run(query, query_inputs)
+    # Return graph data and ResultSummary object
+    return result.graph(), result.consume()
+
+def main(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
 
@@ -128,33 +192,32 @@ def query_db(event, context):
     """
 
     start = datetime.now()
+    query_request = trellis.QueryRequest(event, context)
+    
+    print(f"> Received message (context): {query_request.context}.")
+    print(f"> Message header: {query_request.header}.")
+    print(f"> Message body: {query_request.body}.")
 
-    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    data = json.loads(pubsub_message)
-    print(f"> Received pubsub message: {data}.")
-    print(f"> Context: {context}.")
+    #pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+    #data = json.loads(pubsub_message)
+    #print(f"> Received pubsub message: {data}.")
+    #print(f"> Context: {context}.")
     #print(f"> Data: {data}.")
 
-    # Load time in RFC 3339 format
-    # Description of RFC 3339: http://henry.precheur.org/python/rfc3339.html
-    # Pub/Sub message example: https://cloud.google.com/functions/docs/writing/background#functions-writing-background-hello-pubsub-python
-    try:
-        published_time = datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
-    except ValueError as exception:
-        try:
-            published_time = datetime.strptime(context.timestamp, '%Y-%m-%dT%H:%M:%SZ')
-        except:
-            raise
-    except:
-        raise
+    request_publication_time = convert_timestamp_to_rfc_3339(query_request.context.timestamp)
 
+    calculate_time_elapsed_exceeded(request_publication_time, PUBSUB_ELAPSED_MAX)
+    """
     # Time from message publication to reception
-    publish_elapsed = datetime.now() - published_time
+    publish_elapsed = datetime.now() - request_publication_time
     if publish_elapsed.total_seconds() > PUBSUB_ELAPSED_MAX:
         print(
               f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
               f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
+    """
 
+    # Moved this to trellis_classes
+    """
     if type(data) == str:
         logging.warn("Message data not correctly loaded as JSON. " +
                      "Used eval to convert from string.")
@@ -163,6 +226,7 @@ def query_db(event, context):
     header = data["header"]
     body = data["body"]
 
+
     # Get seed/event ID to track provenance of Trellis events
     event_id = context.event_id
     # If message comes from a CRON job there won't be a seedId
@@ -170,22 +234,48 @@ def query_db(event, context):
     if not seed_id:
         seed_id = event_id
 
+
     # Check that resource is query
-    if header['resource'] != 'query':
-        raise ValueError(f"Expected resource type 'query', " +
+    supported_message_types = ['queryRequest']
+    if not message.header['resource'] in supported_message_types:
+        raise ValueError(
+                         f"Error: Expected resource of types {supported_message_types}, " +
                          f"got '{header['resource']}.'")
 
-    method = header['method']
-    labels = header['labels']
-    topics = header.get('publishTo')
-    retry_count = header.get('retry-count')
 
-    query = body['cypher']
+    #method = header['method']
+    #labels = header['labels']
+    topics = header.get('publishTo')
+    #retry_count = header.get('retry-count')
+
+    #query = body['cypher']
     result_mode = body.get('result-mode')
-    result_structure = body.get('result-structure')
+    #result_structure = body.get('result-structure')
     result_split = body.get('result-split')
+    """
+
+    parameterized_query = DB_STORED_QUERIES[query_request.query_name]
+
+    # Run the database query
+    # Don't need to check "result_mode" because graph() and ResultSummary
+    # will be generated for all queries
+    graph, result_summary = query_database(
+        write_transaction = query_request.write_transaction,
+        driver = DRIVER,
+        query = parameterized_query,
+        query_inputs = query_request.query_inputs)
+
+    query_response = trellis.QueryResponse(
+        sender = FUNCTION_NAME,
+        seed_id = query_request.seed_id,
+        previous_event_id = query_request.event_id,
+        query_name = query_request.query_name,
+        graph = graph,
+        result_summary = result_summary)
+
 
     try:
+        """
         # Calculate elapsed time for each query & print
         query_start = time.time()
         if result_mode == 'stats':
@@ -198,10 +288,16 @@ def query_db(event, context):
             GRAPH.run(query)
             query_results = None
         query_elapsed = time.time() - query_start
-        print(f"> Query results: {query_results}.")
+        """
+        graph, result_summary = query_database(
+            write_transaction = query_request.write_transaction,
+            driver = DRIVER,
+            query = parameterized_query,
+            query_inputs = query_request.query_inputs)
+        #print(f"> Query results: {query_results}.")
         #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
-        if query_elapsed > QUERY_ELAPSED_MAX:
-            print(f"> Time to run query ({query_elapsed:.3f}) exceeded {QUERY_ELAPSED_MAX:.3f}. Query: {query}.")
+        #if query_elapsed > QUERY_ELAPSED_MAX:
+        #    print(f"> Time to run query ({query_elapsed:.3f}) exceeded {QUERY_ELAPSED_MAX:.3f}. Query: {query}.")
     # Neo4j http connector
     except ProtocolError as error:
         logging.warn(f"> Encountered Protocol Error: {error}.")
@@ -231,7 +327,7 @@ def query_db(event, context):
         return
 
     # Return if not pubsub topic
-    if not topics:
+    if not query_request.publish_results_to:
         print("No Pub/Sub topic specified; result not published.")
 
         # Execution time block
@@ -243,17 +339,23 @@ def query_db(event, context):
 
         return query_results
 
+    """ Now handled by QueryRequest class
     # Hack to convert single publishTo topics into lists
     if isinstance(topics, str):
         topics = [topics]
+    """
 
     # Track how many messages are published to each topic
     published_message_counts = {}
-    for topic in topics:
+    for topic in query_request.publish_results_to:
         published_message_counts[topic] = 0
 
-    for topic in topics:
-        if result_split == 'True':
+    for topic in query_request.publish_results_to:
+        if query_request.split_results == 'True':
+            """ I think we can always send a result because even if no
+                node or relationship is returned we may still want to
+                use the summary statistics.
+
             if not query_results:
                 # If no results; send one message so triggers can respond to null
                 query_result = {}
@@ -269,7 +371,14 @@ def query_db(event, context):
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
                 published_message_counts[topic] += 1
+            """
+            for message in query_response.format_json_message_iter():
+                print(f"> Pubsub message: {message}.")
+                publish_result = publish_to_topic(topic, message)
+                print(f"> Published message to {topic} with result: {publish_result}.")
+                published_message_counts[topic] += 1
 
+            """ Replaced with above
             for result in query_results:
                 message = format_pubsub_message(
                                                 method = method,
@@ -283,8 +392,10 @@ def query_db(event, context):
                 publish_result = publish_to_topic(topic, message)
                 print(f"> Published message to {topic} with result: {publish_result}.")
                 published_message_counts[topic] += 1
+            """
         else:
-            #message['body']['results'] = results
+            message = query_response.format_json_message()
+            """
             message = format_pubsub_message(
                                             method = method,
                                             labels = labels,
@@ -293,6 +404,7 @@ def query_db(event, context):
                                             seed_id = seed_id,
                                             event_id = event_id,
                                             retry_count=retry_count)
+            """
             print(f"> Pubsub message: {message}.")
             publish_result = publish_to_topic(topic, message)
             print(f"> Published message to {topic} with result: {publish_result}.")
