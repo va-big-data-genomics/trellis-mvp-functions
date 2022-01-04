@@ -1,4 +1,4 @@
-# Trellis for Management of VA Million Veteran Program Data & Tasks
+# Trellis for efficient data and task management in the VA Million Veteran Program
 
 
 This repository contains the source code for the microservices that run Trellis. We recently published a manuscript describing Trellis in detail, that can be found here: <INSERT LINK>
