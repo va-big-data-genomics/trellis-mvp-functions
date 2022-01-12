@@ -1,0 +1,115 @@
+{
+	{
+		"name": "RelateTbiToMergedVcf",
+		"conditions": {
+			"node_label": "Tbi",
+			"recipient_topic": "DB_QUERY_TOPIC",
+			"required_header_labels": ["Relationship", "Database", "Result", "Generated"],
+			"required_node_properties": {},
+			"required_body_properties": {},
+			"required_node_property_types": {},
+			"required_trellis_properties": {},
+			"banned_node_labels": ["Shard"],
+			"banned_node_properties": {"shard": true},
+			"node_required": true,
+		},
+		"activate_query": true,
+		"perpetuate_response_to_topics": [],
+		"database_query": {
+			"results_mode": "data",
+			"split_results": true,
+			"write_transaction": true,
+			"query_variables": {},
+			"publish_results_to": ["TOPIC_TRIGGERS"],
+		},
+	},
+	{
+		"name": "RunDstatWhenInstanceStopped",
+		"conditions": {
+			"node_label": "Job",
+			"required_header_labels": ["Update", "Job", "Node", "Database", "Result"],
+			"node_required": false,
+			"required_node_properties" : {
+				"status": "STOPPED",
+				"dstatCmd": ""
+			},
+		},
+		"activate_query": false,
+		"perpetuate_response_to_topics": ["TOPIC_DSTAT"]
+	},
+	{
+		"name": "LaunchGatk5Dollar",
+		"conditions": {
+			"node_label": "Ubam",
+			"required_header_labels": ["Relationship", "Database", "Result"],
+			"required_trellis_properties": {
+				"WGS_VARIANT_CALLING": true
+			},
+			"node_required": true
+		}
+	},
+	{
+		"name": "LaunchFastqToUbam",
+		"conditions": {
+			"node_label": "Fastq",
+			"required_node_properties": {
+				"sample": ""
+			},
+			"required_node_property_types": {
+				"readGroup": "int"
+			},
+			"required_trellis_properties": {
+				"WGS_VARIANT_CALLING": true
+			},
+			"node_required": true
+		}
+	},
+	{
+		"name": "RelateGenomeToFastq",
+		"conditions": {
+			"node_label": "Genome",
+			"required_header_labels": ["Trigger", "Create", "Biological", "Nodes", "Database", "Result"],
+			"required_node_properties": {
+				"sample": ""
+			},
+			"node_required": true
+		},
+
+	},
+	"relateGvcfToTbi": {
+		"conditions": {
+			"node_labels": ["CromwellStep", "Tbi"],
+			"relationship_type": "GENERATED",
+			"required_node_properties": {
+				"CromwellStep": {
+					"cromwellWorkflowId": "",
+					"wdlCallAlias": ""
+				}
+			}
+		},
+		"activate_query": true,
+		"database_query": {
+		}
+	},
+	"relateTbiToGvcf": {
+		"conditions": {
+			"node_labels": ["CromwellStep", "Tbi"],
+			"relationship_type": "GENERATED",
+			"required_node_properties": {
+				"CromwellStep": {
+					"cromwellWorkflowId": "",
+					"wdlCallAlias": ""
+				}
+			}
+		},
+		"activate_query": true,
+		"database_query": {
+			"query_parameters": {
+				"cromwellId": {
+							   "node": "CromwellStep",
+							   "key": "cromwellWorkflowId"
+				}	
+			}
+		}
+	}
+}

@@ -1,0 +1,39 @@
+{
+	"L0": [
+		{ "name": "Blob" },
+		{ "name": "Dstat" },
+		{ "name": "GcpInstance" },
+		{ "name": "JobRequest" },
+		{ "name": "Dstat" },
+		{ "name": "Person" },
+		{ "name": "Study" },
+		{ "name": "BiologicalOme" },
+		{ "name": "Sample" },
+		{ "name": "CromwellStep" },
+		{ "name": "Participant" }
+	],
+	"L1": [
+		{ "name": "Dsub", "parent": "GcpInstance" },
+		{ "name": "CromwellAttempt", "parent": "GcpInstance" },
+		{ "name": "Index", "parent": "Blob" },
+		{ "name": "Microarray", "parent": "Blob" },
+		{ "name": "Vcfstats", "parent": "Blob" },
+		{ "name": "Fastqc", "parent": "Blob" },
+		{ "name": "Flagstat", "parent": "Blob" },
+		{ "name": "Fastq", "parent": "Blob" },
+		{ "name": "Bam", "parent": "Blob" },
+		{ "name": "Vcf", "parent": "Blob" },
+		{ "name": "Checksum", "parent": "Blob" },
+		{ "name": "Log", "parent": "Blob" }, 
+		{ "name": "Script", "parent": "Blob" },
+		{ "name": "Json", "parent": "Blob" },
+		{ "name": "Genome", "parent": "BiologicalOme" }
+	],
+	"L2": [
+		{ "name": "CromwellWorkflow", "parent": "Dsub" },
+		{ "name": "Cram", "parent": "Bam" },
+		{ "name": "Ubam", "parent": "Bam" },
+		{ "name": "gVcf", "parent": "Vcf" },
+		{ "name": "PersonalisSequencing", "parent": "Json" }
+	]
+}

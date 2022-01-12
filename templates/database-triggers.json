@@ -1,0 +1,19 @@
+[
+	{
+		"name": "RelateTbiToMergedVcf",
+		"required_node_labels": ["Tbi", "Gatk", "Blob", "WGS35"],
+		"recipient_topic": "DB_QUERY_TOPIC",
+		"required_header_labels": ["Relationship", "Database", "Result", "Generated"],
+		"required_node_properties": {},
+		"required_body_properties": {},
+		"required_node_property_types": {},
+		"required_trellis_properties": {},
+		"banned_node_labels": ["Shard"],
+		"results_mode": "data",
+		"node_required": true,
+		"publish_results_to": "TOPIC_TRIGGERS",
+		"split_results": true,
+		"write_transaction": true,
+		"query_variables": {}
+	}
+]

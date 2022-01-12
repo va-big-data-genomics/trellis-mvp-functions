@@ -1,0 +1,42 @@
+{
+	"L0": [
+		{ "name": "root" }
+	],
+	"L1": [
+		{ "name": "Blob", "parent": "root" },
+		{ "name": "Dstat", "parent": "root" },
+		{ "name": "GcpInstance", "parent": "root" },
+		{ "name": "JobRequest", "parent": "root" },
+		{ "name": "Dstat", "parent": "root" },
+		{ "name": "Person", "parent": "root" },
+		{ "name": "Study", "parent": "root" },
+		{ "name": "BiologicalOme", "parent": "root" },
+		{ "name": "Sample", "parent": "root" },
+		{ "name": "CromwellStep", "parent": "root" },
+		{ "name": "Participant", "parent": "root" }
+	],
+	"L2": [
+		{ "name": "Dsub", "parent": "GcpInstance" },
+		{ "name": "CromwellAttempt", "parent": "GcpInstance" },
+		{ "name": "Index", "parent": "Blob" },
+		{ "name": "Microarray", "parent": "Blob" },
+		{ "name": "Vcfstats", "parent": "Blob" },
+		{ "name": "Fastqc", "parent": "Blob" },
+		{ "name": "Flagstat", "parent": "Blob" },
+		{ "name": "Fastq", "parent": "Blob" },
+		{ "name": "Bam", "parent": "Blob" },
+		{ "name": "Vcf", "parent": "Blob" },
+		{ "name": "Checksum", "parent": "Blob" },
+		{ "name": "Log", "parent": "Blob" }, 
+		{ "name": "Script", "parent": "Blob" },
+		{ "name": "Json", "parent": "Blob" },
+		{ "name": "Genome", "parent": "BiologicalOme" }
+	],
+	"L3": [
+		{ "name": "CromwellWorkflow", "parent": "Dsub" },
+		{ "name": "Cram", "parent": "Bam" },
+		{ "name": "Ubam", "parent": "Bam" },
+		{ "name": "Gvcf", "parent": "Vcf" },
+		{ "name": "PersonalisSequencing", "parent": "Json" }
+	]
+}

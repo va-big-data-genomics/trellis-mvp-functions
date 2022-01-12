@@ -1,0 +1,31 @@
+{
+	"requestFastqToUbam": {
+		"query": "MATCH (p:PersonalisSequencing)-[]->(f:Fastq) WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) WITH DISTINCT p LIMIT $limitCount MATCH (p)-[:GENERATED]->(f:Fastq) WHERE f.matePair = 1 AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) RETURN f AS node",
+		"parameters": {
+			"limitCount": "int"
+		},
+		"write_transaction": false
+	},
+	"requestFastqToUbam": {
+		"query":"MATCH (p:PersonalisSequencing)-[]->(f:Fastq) WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) WITH DISTINCT p LIMIT $limitCount MATCH (p)-[:GENERATED]->(f:Fastq) WHERE f.matePair = 1 AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) RETURN f AS node",
+		"parameters": {
+			"limitCount": "int"
+		},
+		"write_transaction": false
+	},
+	"requestFastqToUbamStudy": {
+		"query": "MATCH (:Study {name: $study})-[*2]->(:Person)-[:GENERATED]->(:Sample)-[]->(p:PersonalisSequencing)-[]->(f:Fastq) WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) WITH DISTINCT p LIMIT $limitCount MATCH (p)-[:GENERATED]->(f:Fastq) WHERE f.matePair = 1 AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) RETURN f AS node",
+		"parameters": {
+			"study": "str",
+			"limitCount": "int",
+		},
+		"write_transaction": false
+	},
+	"requestLaunchGatk5Dollar": {
+		"query": "MATCH (s:PersonalisSequencing)-[:GENERATED]->(:Fastq)-[:WAS_USED_BY]->(:Job)-[:GENERATED]->(n:Ubam {readGroup:1}) WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) RETURN DISTINCT n AS node LIMIT $limitCount",
+		"parameters": {
+			"limitCount" "int"
+		},
+		"write_transaction": false
+	}
+}

@@ -1,0 +1,44 @@
+{
+	"event-driven": {
+		"RelateTbiToMergedVcf": "MATCH (vcf:Merged:Vcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Blob:Tbi) WHERE tbi.id = $tbi_id AND step.wdlCallAlias = \"mergevcfs\" MERGE (vcf)-[:HAS_INDEX {ontology: \"bioinformatics\"}]->(tbi) RETURN vcf AS node",
+		"SetJobStopped": "MATCH (node:Job {instanceId: $instanceId, instanceName: $instanceName } ) SET node.stopTime = $stopTime, node.stopTimeEpoch = $stopTimeEpoch, node.stoppedBy = $stoppedBy, node.status = $status, node.durationMinutes = duration.inSeconds(datetime(node.startTime), datetime(node.stopTime)).minutes RETURN node",
+		"LaunchGatk5Dollar": "MATCH (s:PersonalisSequencing {sample: $sample})-[:GENERATED]->(:Fastq)-[:WAS_USED_BY]->(:Job)-[:GENERATED]->(n:Ubam), (s)-[:GENERATED]->(c:Checksum) WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) WITH s.sample AS sample, c.fastqCount AS fastqSetSize, n.readGroup AS readGroup, COLLECT(DISTINCT n) AS allNodes WITH fastqSetSize, head(allNodes) AS heads UNWIND [heads] AS uniqueNodes WITH uniqueNodes.sample AS sample, fastqSetSize, COLLECT(uniqueNodes) AS sampleNodes WHERE size(sampleNodes) = fastqSetSize/2 CREATE (j:JobRequest:Gatk5Dollar {sample: sample, nodeCreated: datetime(), nodeCreatedEpoch: datetime().epochSeconds, name: 'gatk-5-dollar', eventId: {event_id} }}) WITH sampleNodes, sample, j.eventId AS eventId, j.nodeCreatedEpoch AS epochTime UNWIND sampleNodes AS sampleNode MATCH (jobReq:JobRequest:Gatk5Dollar { sample: sample, eventId: eventId}) MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) RETURN DISTINCT(sampleNodes) AS nodes",
+		"LaunchFastqToUbam": "MATCH (n:Fastq { sample: $sample, readGroup: $readGroup} }}) WHERE NOT (n)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) WITH n.sample AS sample, n.matePair AS matePair, COLLECT(n) AS matePairNodes WITH sample, COLLECT(head(matePairNodes)) AS uniqueMatePairs WHERE size(uniqueMatePairs) = 2 CREATE (j:JobRequest:FastqToUbam { sample:sample, nodeCreated: datetime(), nodeCreatedEpoch: datetime().epochSeconds, name: 'fastq-to-ubam', eventId: $eventId }) WITH uniqueMatePairs, j, sample, j.eventId AS eventId UNWIND uniqueMatePairs AS uniqueMatePair MERGE (uniqueMatePair)-[:WAS_USED_BY]->(j) RETURN DISTINCT(uniqueMatePairs) AS nodes",
+		"RelateGvcfToTbi": "MATCH (gvcf:Gvcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) WHERE step.cromwellWorkflowId = $cromwell_id AND step.wdlCallAlias = “mergevcfs” MERGE (gvcf)-[r:HAS_INDEX {ontology: 'bioinformatics'}]->(tbi) RETURN gvcf, r, tbi"
+	},
+	"request-driven": [
+		{
+			"name": "requestFastqToUbam",
+			"query": "MATCH (p:PersonalisSequencing)-[]->(f:Fastq) WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) WITH DISTINCT p LIMIT $limitCount MATCH (p)-[:GENERATED]->(f:Fastq) WHERE f.matePair = 1 AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) RETURN f AS node",
+			"parameters": {
+				"limitCount": "int"
+			},
+			"write_transaction": false
+		},
+		{
+			"name": "requestFastqToUbam",
+			"query":"MATCH (p:PersonalisSequencing)-[]->(f:Fastq) WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) WITH DISTINCT p LIMIT $limitCount MATCH (p)-[:GENERATED]->(f:Fastq) WHERE f.matePair = 1 AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) RETURN f AS node",
+			"parameters": {
+				"limitCount": "int"
+			},
+			"write_transaction": false
+		},
+		{
+			"name": "requestFastqToUbamStudy",
+			"query": "MATCH (:Study {name: $study})-[*2]->(:Person)-[:GENERATED]->(:Sample)-[]->(p:PersonalisSequencing)-[]->(f:Fastq) WHERE NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) WITH DISTINCT p LIMIT $limitCount MATCH (p)-[:GENERATED]->(f:Fastq) WHERE f.matePair = 1 AND NOT (f)-[:WAS_USED_BY]->(:JobRequest:FastqToUbam) RETURN f AS node",
+			"parameters": {
+				"study": "str",
+				"limitCount": "int",
+			},
+			"write_transaction": false
+		},
+		{
+			"name": "requestLaunchGatk5Dollar",
+			"query": "MATCH (s:PersonalisSequencing)-[:GENERATED]->(:Fastq)-[:WAS_USED_BY]->(:Job)-[:GENERATED]->(n:Ubam {readGroup:1}) WHERE NOT (s)-[*4]->(:JobRequest:Gatk5Dollar) RETURN DISTINCT n AS node LIMIT $limitCount",
+			"parameters": {
+				"limitCount" "int"
+			},
+			"write_transaction": false
+		}
+	]
+}

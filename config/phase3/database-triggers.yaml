@@ -1,0 +1,114 @@
+- LaunchGatk5Dollar:
+    trigger: relationship
+    start: Job
+    end: Ubam
+    relationship_type: GENERATED
+    required_node_properties: {}
+- LaunchFastqToUbam:
+    trigger: relationship
+    start: PersonalisSequencing
+    end: Fastq
+    relationship_type: GENERATED
+    required_node_properties: {}
+- LaunchViewSignatureSnps:
+    trigger: relationship
+    start: Gvcf
+    end: Tbi
+    relationship_type: HAS_INDEX
+    required_node_properties: {}
+RunDstatWhenJobStopped
+- RunDstat(WhenJobStopped):
+    trigger: node
+    start: Job
+    required_node_properties: {}
+    # Whenever a job node is updated call dstat
+- LaunchBamFastqc:
+    trigger: relationship
+    start: CromwellStep
+    end: Bam
+    relationship_type: GENERATED
+    required_node_properties: {}
+- LaunchFlagstat:
+    trigger: relationship
+    start: CromwellStep
+    end: Bam
+    relationship_type: GENERATED
+    required_node_properties: {}
+- LaunchVcfstats:
+    trigger: relationship
+    start: Genome
+    end: Gvcf
+    relationship_type: HAS_VARIANT_CALLS
+    required_node_properties: {}
+- LaunchTextToTable:
+    trigger: relationship
+    start: Job
+    end: QualityAssessment
+    relationship_type: GENERATED
+    required_node_properties: {}
+- PostgresInsertCsv:
+    trigger: relationship
+    start: Job
+    end: QualityAssessmentTable
+    relationship_type: GENERATED
+    required_node_properties: {}
+- PostgresInsertContamination:
+    trigger: relationship
+    start: CromwellStep
+    end: QualityAssessmentTable
+    relationship_type: GENERATED
+    required_node_properties: {}
+- LaunchCnvnator:
+    trigger: relationship
+    start: Genome
+    end: Cram
+    relationship_type: HAS_SEQUENCING_READS
+    required_node_properties: {}
+- ValidateGenomeRelationships:
+    trigger: relationship
+    start: Genome
+    end: EssentialWgsData
+    relationship_type: ESSENTIAL_WGS_DATA
+    required_node_properties: {}
+RelateGenomeToFastq
+- DeleteNonessentialSequencingData:
+    trigger: node
+    start: Genome
+    required_node_properties: 
+        essentialWgsData: True
+- MoveFastqsToColdline:
+    trigger: node
+    start: Genome
+    required_node_properties:
+        essentialWgsData: True
+- RelateQualityAssessmentToGenome:
+    trigger: relationship
+    start: DsubJob
+    end: QualityAssessment
+- RelateGvcfToGenome:
+    trigger: relationship
+    start: Gvcf
+    end: Tbi
+    relationship_type: HAS_INDEX
+    required_node_properties: {}
+RelateMergedVcfToTbi
+RelateTbiToMergedVcf
+RelateFastqToGenome
+RelateCramToGenome
+RelateCramToCrai
+RelateCraiToCram
+RelateTrellisOutputToJob
+RelateTrellisInputToJob
+RelateJobToJobRequest
+RelateDstatToJob
+RelatePersonalisSequencingToFromPersonalis
+RelateFromPersonalisToPersonalisSequencing
+RelateCromwellOutputToStep
+AddWorkflowIdToCromwellWorkflow
+RelateCromwellWorkflowToStep
+RelateCromwellStepToPreviousStep
+CreateCromwellStepFromAttempt
+RelateCromwellStepToLatestAttempt
+RelateCromwellAttemptToPreviousAttempt
+RelateCromwellStepToAttempt
+DeleteRelationshipCromwellStepHasAttempt
