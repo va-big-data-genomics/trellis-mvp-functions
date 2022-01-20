@@ -323,11 +323,11 @@ class TrellisMessage(object):
 
 class QueryRequest(TrellisMessage):
 
-    def __init__(self, 
+    def __init__(self,
+                 * , # Begin keyword-only arguments
                  sender=None, 
                  seed_id=None, 
                  previous_event_id=None,
-                 * , # Begin keyword-only arguments
                  query_name=None,
                  query_parameters={}, 
                  write_transaction = False, 
@@ -356,7 +356,7 @@ class QueryRequest(TrellisMessage):
 
         # Required fields
         self.previous_event_id = int(self.header['previousEventId'])
-        self.trigger_name = self.body['triggerName']
+        self.query_name = self.body['queryName']
         self.write_transaction = self.body['writeTransaction']
         self.results_mode = self.body['resultsMode']
         self.split_results = self.body['splitResults']
@@ -625,3 +625,19 @@ def publish_to_pubsub_topic(publisher, project_id,  topic, message):
     json_message = json.dumps(message, indent=4, sort_keys=True, default=str).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=json_message).result()
     return result
+
+@staticmethod
+def convert_timestamp_to_rfc_3339(timestamp):
+    # Load time in RFC 3339 format
+    # Description of RFC 3339: http://henry.precheur.org/python/rfc3339.html
+    # Pub/Sub message example: https://cloud.google.com/functions/docs/writing/background#functions-writing-background-hello-pubsub-python
+    try:
+        rfc3339_time = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ')
+    except ValueError as exception:
+        try:
+            rfc3339_time = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%SZ')
+        except:
+            return ValueError
+    except:
+        return ValueError
+    return rfc3339_time

@@ -110,7 +110,7 @@ class TestQueryRequest:
 				'previousEventId': '3329816530980893', 
 			}, 
 			'body': {
-				'triggerName': 'UpdateJobNode',
+				'queryName': 'UpdateJobNode',
 				'queryParameters': {
 					"instanceId": "6433280663749256939",
 					"instanceName": "google-pipelines-worker-6c3d415be62e2ebf2774924ced0fd771",

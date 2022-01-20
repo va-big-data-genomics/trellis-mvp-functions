@@ -93,7 +93,7 @@ class TestTrellisMessage:
 
         message = main.TrellisMessage(event, mock_context)
 
-                # Check that everything asserts correctly
+        # Check that everything asserts correctly
         assert message.event_id == mock_context.event_id
         assert message.seed_id  == mock_context.event_id
 

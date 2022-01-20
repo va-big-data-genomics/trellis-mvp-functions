@@ -3,9 +3,14 @@ import re
 import pdb
 import json
 import pytz
+import uuid
 import yaml
 import iso8601
 import importlib
+import trellisdata
+
+from anytree import Node, RenderTree
+from anytree.search import find
 
 from datetime import datetime
 
@@ -16,6 +21,74 @@ class Struct:
     # https://stackoverflow.com/questions/6866600/how-to-parse-read-a-yaml-file-into-a-python-object
     def __init__(self, **entries):
         self.__dict__.update(entries)
+
+
+class TaxonomyParser:
+    """
+    This class is a wrapper on a Tree class from the anytree library to hold
+    different data hierarchies read from a JSON representation
+
+    Source: https://towardsdatascience.com/represent-hierarchical-data-in-python-cd36ada5c71a
+    """
+
+    def __init__(self, level_prefix = "L"):
+        self.prefix = level_prefix
+        self.nodes = {}
+        self.root_key = None
+
+    def find_by_name(self, name) -> Node:
+        """
+        Retrieve a node by its unique identifier name
+        """
+        root = self.nodes[self.root_key]
+        node = find(root, lambda node: node.name == name)
+        return node
+   
+    def read_from_json(self, fname):
+        """
+        Read the taxonomy from a JSON file given as input
+        """
+        
+        self.nodes = {}
+        try:
+            with open(fname, "r") as f:
+                data = json.load(f)
+                n_levels = len(list(data.keys()))
+
+                # read the root node
+                root = data[f"{self.prefix}0"][0]
+                name = root["name"]
+                _ = root.pop("name")
+                
+                self.nodes[name] = Node(name, **root)
+                self.root_key = name
+
+                # populate the tree
+                for k in range(1, n_levels):
+                    
+                    key = f"{self.prefix}{k}"
+                    nodes = data[key]
+
+                    for n in nodes:
+                        try:
+                            assert "name" in n
+                            name = n["name"]
+                            _ = n.pop("name")
+                            parent = n["parent"]
+                            _ = n.pop("parent")
+                            
+                            self.nodes[name] = Node(
+                                name,
+                                parent=self.nodes[parent],
+                                **n
+                            )
+                        except AssertionError:
+                            print(f"Malformed node representation: {n}")
+                        except KeyError:
+                            print(f"Detected a dangling node: {n['name']}")
+
+        except (FileNotFoundError, KeyError):
+            raise Exception("Not existent or malformed input JSON file")
 
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
@@ -37,33 +110,13 @@ if ENVIRONMENT == 'google-cloud':
     TRELLIS = Struct(**parsed_vars)
 
     PUBLISHER = pubsub.PublisherClient()
+    STORAGE_CLIENT = storage.Client()
 
-def format_pubsub_message(query, seed_id):
-    message = {
-               "header": {
-                          "resource": "query",
-                          "method": "POST",
-                          "labels": ["Create", "Blob", "Node", "Cypher", "Query"],
-                          "sentFrom": f"{FUNCTION_NAME}",
-                          "publishTo": f"{TRELLIS.TOPIC_TRIGGERS}",
-                          "seedId": f"{seed_id}",
-                          "previousEventId": f"{seed_id}"
-               },
-               "body": {
-                        "cypher": query,
-                        "result-mode": "data",
-                        "result-structure": "list",
-                        "result-split": "True",
-               },
-    }
-    return message
-
-
-def publish_to_topic(topic, data):
-    topic_path = PUBLISHER.topic_path(TRELLIS.GOOGLE_CLOUD_PROJECT, topic)
-    message = json.dumps(data).encode('utf-8')
-    result = PUBLISHER.publish(topic_path, data=message).result()
-    return result
+    TAXONOMY_PARSER = TaxonomyParser()
+    TAXONOMY_PARSER.read_from_json(TRELLIS.LABEL_TAXONOMY)
+else:
+    TAXONOMY_PARSER = TaxonomyParser()
+    TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
 
 
 def clean_metadata_dict(raw_dict):
@@ -112,8 +165,11 @@ def get_standard_time_fields(event):
     Return
         (dict): Times in iso (str) and from-epoch (int) formats
     """
-    datetime_created = get_datetime_iso8601(event['timeCreated'])
-    datetime_updated = get_datetime_iso8601(event['updated'])
+
+    # Google datetime format: https://tools.ietf.org/html/rfc3339
+    # ISO 8601 standard format: https://en.wikipedia.org/wiki/ISO_8601
+    datetime_created = iso8601.parse_date(event['timeCreated'])
+    datetime_updated = iso8601.parse_date(event['updated'])
 
 
     time_created_epoch = get_seconds_from_epoch(datetime_created)
@@ -145,21 +201,7 @@ def get_seconds_from_epoch(datetime_obj):
     from_epoch_seconds = from_epoch.total_seconds()
     return from_epoch_seconds
 
-
-def get_datetime_iso8601(date_string):
-    """ Convert ISO 86801 date strings to datetime objects.
-
-    Google datetime format: https://tools.ietf.org/html/rfc3339
-    ISO 8601 standard format: https://en.wikipedia.org/wiki/ISO_8601
-
-    Args:
-        date_string (str): Date in ISO 8601 format
-    Returns
-        (datetime.datetime): Datetime objects
-    """
-    return iso8601.parse_date(date_string)
-
-
+""" DEPRECATED with 1.3.0: Now use static parameterized queries
 def format_node_merge_query(db_dict, dry_run=False):
     # Create label string
     tmp_labels = list(db_dict['labels'])
@@ -215,6 +257,29 @@ def format_node_merge_query(db_dict, dry_run=False):
             f"{merge_string} " +
         "RETURN node")
     return query
+"""
+
+
+def add_uuid_to_blob(bucket, path):
+    """For a json object, get and return json data.
+
+    Args:
+        bucket (str): Name of Google Cloud Storage (GCS) bucket.
+        path (str): Path to GCS object.
+    Returns:
+        Blob.metadata (dict)
+    """
+    metadata = {'uuid': uuid.uuid4()}
+
+    storage_client = storage.Client()
+    bucket = STORAGE_CLIENT.get_bucket(bucket)
+    blob = bucket.get_blob(path)
+    blob.metadata = metadata
+    blob.patch()
+
+    return blob.metadata
+
+    print("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
 
 
 def create_node_query(event, context):
@@ -234,12 +299,14 @@ def create_node_query(event, context):
     name = event['name']
     bucket_name = event['bucket']
 
-    # Module name does not include project prefix
+    # Use bucket name to determine which config file should be used
+    # to parse object metadata.
+    # (Module name does not include project prefix)
     pattern = f"{TRELLIS.GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
     match = re.match(pattern, bucket_name)
     suffix = match['suffix']
 
-    # Import the config modules that corresponds to event-trigger bucket
+    # Import the config module that corresponds to event-trigger bucket
     node_module_name = f"{TRELLIS.DATA_GROUP}.{suffix}.create-node-config"
     node_module = importlib.import_module(node_module_name)
 
@@ -260,6 +327,7 @@ def create_node_query(event, context):
     # Add trigger operation as metadata property
     db_dict['triggerOperation'] = TRIGGER_OPERATION
 
+
     # Check db_dict with metadata about object
     db_dict['labels'] = []
     for label, patterns in label_patterns.items():
@@ -275,12 +343,39 @@ def create_node_query(event, context):
                 # Break after a single pattern per label has been matched
                 break
 
+    # Get the shallowest labels of a branch of the taxonomy that should be applied 
+    # to the node
+    common_parents = []
+    for label in db_dict['labels']:
+        node = parser.find_by_name(label)
+        parents = deque(node.path)
+
+        parents.popleft() # Remove the arbitrary root node
+        parents.pop()     # Remove the current label
+        common_parents.extend(parents)
+    common_parents = set(common_parents) # Only keep unique nodes
+    
+    # If a label is a parent of another label, exclude it
+    for label in db_dict['labels']
+        if label in [parent.name for parent in common_parents]:
+            db_dict['labels'].remove(label)
+
+    # Max (1) label per node to choose parameterized query
+    if len(db_dict['labels']) > 1:
+        raise ValueError
+
     # Ignore log files
-    log_labels = set(['Log', 'Stderr', 'Stdout'])
-    log_intersection = log_labels.intersection(db_dict['labels'])
-    if log_intersection:
-        print(f"> This is a log file; ignoring. {db_dict['labels']}")
+    #log_labels = set(['Log', 'Stderr', 'Stdout'])
+    #log_intersection = log_labels.intersection(db_dict['labels'])
+    if db_dict['labels'][0] == 'Log':
+        print(f"> This is a log file; ignoring.")
         return
+
+    # Generate UUID
+    if not db_dict['uuid']:
+        uuid = add_uuid_to_blob(bucket, path)
+        print("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
+        db_dict['uuid'] = blob.metadata['uuid']
 
     # Key, value pairs unique to db_dict are trellis metadata
     trellis_metadata = {}
@@ -288,9 +383,9 @@ def create_node_query(event, context):
         if not key in gcp_metadata.keys():
             trellis_metadata[key] = value
 
-    print(f"> Generating database query for node: {db_dict}.")
-    db_query = format_node_merge_query(db_dict)
-    print(f"> Database query: \"{db_query}\".")
+    #print(f"> Generating database query for node: {db_dict}.")
+    #db_query = format_node_merge_query(db_dict)
+    #print(f"> Database query: \"{db_query}\".")
 
     message = format_pubsub_message(db_query, seed_id)
     print(f"> Pubsub message: {message}.")

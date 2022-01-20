@@ -1,6 +1,7 @@
 import re
 import json
 import pytz
+import uuid
 import iso8601
 
 from datetime import datetime
@@ -27,7 +28,7 @@ def clean_metadata_dict(raw_dict):
     return clean_dict
 
 
-def get_seconds_from_epoch(datetime_obj):
+def _get_seconds_from_epoch(datetime_obj):
     """Get datetime as total seconds from epoch.
 
     Provides datetime in easily sortable format
@@ -42,7 +43,7 @@ def get_seconds_from_epoch(datetime_obj):
     return from_epoch_seconds
 
 
-def search_string(string, pattern, group, req_type):
+def _search_string(string, pattern, group, req_type):
     # kwargs: [pattern, string, group, req_type]
     """Calls regex search function using specified values. 
 
@@ -69,7 +70,7 @@ def search_string(string, pattern, group, req_type):
 
     return(typed_value)
 
-
+"""
 def split_string(string, delimiter, index, req_type):
     """Calls split function on string.
 
@@ -88,7 +89,7 @@ def split_string(string, delimiter, index, req_type):
     typed_value = req_type(value)
 
     return(typed_value)
-
+"""
 
 def get_datetime_iso8601(date_string):
     """ Convert ISO 86801 date strings to datetime objects.
@@ -128,10 +129,10 @@ def get_standard_time_fields(event):
     datetime_updated = get_datetime_iso8601(event['updated'])
 
 
-    time_created_epoch = get_seconds_from_epoch(datetime_created)
+    time_created_epoch = _get_seconds_from_epoch(datetime_created)
     time_created_iso = datetime_created.isoformat()
 
-    time_updated_epoch = get_seconds_from_epoch(datetime_updated)
+    time_updated_epoch = _get_seconds_from_epoch(datetime_updated)
     time_updated_iso = datetime_updated.isoformat()
 
     time_fields = {
@@ -152,7 +153,7 @@ def trellis_metadata_groupdict(db_dict, groupdict):
 
 
 def mate_pair_name_0(db_dict, groupdict):
-    mate_pair = search_string(
+    mate_pair = _search_string(
                           string = db_dict['name'], 
                           pattern = "_R(\\d)$", 
                           group = 1, 
@@ -298,23 +299,29 @@ class NodeKinds:
         """
 
         self.match_patterns = {
-                               "Blob": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*"],
-                               "Fastq": ["va_mvp_phase2/.*/.*/FASTQ/.*\\.fastq.gz$"], 
-                               "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
-                               "PersonalisSequencing": ["^va_mvp_phase2/.*\\.json$"],
-                               "Json": ["^va_mvp_phase2/.*\\.json$"],
-                               "Checksum": ["^va_mvp_phase2/.*checksum.txt"], 
-                               "WGS35": ["^va_mvp_phase2/.*"],
-                               "FromPersonalis": ["^va_mvp_phase2/.*"],
+                               #"Blob": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*"],
+                               "Fastq": [r"va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/FASTQ/.*\\.fastq.gz$"], 
+                               "Microarray": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/Microarray/.*"], 
+                               "PersonalisSequencing": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*\\.json$"],
+                               #"Json": ["^va_mvp_phase2/.*\\.json$"],
+                               "Checksum": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*checksum.txt"], 
+                               #"WGS35": ["^va_mvp_phase2/.*"],
+                               #"FromPersonalis": ["^va_mvp_phase2/.*"],
         }
 
         self.label_functions = {
-                                "Blob": [trellis_metadata_groupdict],
+                                #"Blob": [trellis_metadata_groupdict],
                                 "Fastq": [
+                                          trellis_metadata_groupdict,
                                           mate_pair_name_0, 
                                           read_group_name_1],
-                                "PersonalisSequencing": [read_json],
-                                "Checksum": [read_checksum],
+                                "Microarray": [trellis_metadata_groupdict]
+                                "PersonalisSequencing": [
+                                                         trellis_metadata_groupdict,
+                                                         read_json],
+                                "Checksum": [
+                                             trellis_metadata_groupdict,
+                                             read_checksum],
         }
 
     def get_label_functions(self, labels):

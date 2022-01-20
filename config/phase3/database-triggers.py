@@ -729,11 +729,7 @@ class LaunchFastqToUbam:
     def check_conditions(self, header, body, node):
 
         # Don't need to wait until
-        required_labels = [
-                           'Blob', 
-                           'Fastq', 
-                           'WGS35', 
-                           'FromPersonalis']
+        required_labels = ['Blob', 'Fastq', 'WGS35', 'FromPersonalis']
 
         if not node:
             return False
@@ -1214,8 +1210,7 @@ class RequeueJobQuery:
 
         conditions = [
             header.get('method') == "UPDATE",
-            (not header.get('retry-count') 
-             or header.get('retry-count') < MAX_RETRIES),
+            (not header.get('retry-count') or header.get('retry-count') < MAX_RETRIES),
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             not node
         ]
@@ -1392,8 +1387,7 @@ class RecheckDstat:
 
         conditions = [
             set(reqd_header_labels).issubset(set(header.get('labels'))),
-            (not header.get('retry-count') 
-             or header.get('retry-count') < MAX_RETRIES),
+            (not header.get('retry-count') or header.get('retry-count') < MAX_RETRIES),
             node.get("status") == "RUNNING",
             node.get("command")
         ]
@@ -1450,11 +1444,7 @@ class LaunchBamFastqc:
 
         # Don't need to wait until
         reqd_header_labels = ['Relationship', 'Database', 'Result']
-        required_labels = [
-                           'Blob', 
-                           'Bam',
-                           'WGS35', 
-                           'Gatk']
+        required_labels = ['Blob', 'Bam', 'WGS35', 'Gatk']
 
         if not node:
             return False
@@ -1534,11 +1524,7 @@ class LaunchFlagstat:
 
         # Don't need to wait until
         reqd_header_labels = ['Relationship', 'Database', 'Result']
-        required_labels = [
-                           'Blob', 
-                           'Bam',
-                           'WGS35', 
-                           'Gatk']
+        required_labels = ['Blob', 'Bam', 'WGS35', 'Gatk']
 
         if not node:
             return False
