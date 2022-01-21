@@ -665,7 +665,7 @@ class LaunchGatk5Dollar:
         """
         query = (
                  # Find all ubams associated with this sample, and checksum object
-                 f"MATCH (s:PersonalisSequencing {{sample:\"{sample}\"}})" +
+                 f"MATCH (s:Blob:PersonalisSequencing {{sample:\"{sample}\"}})" +
                     "-[:GENERATED]->(:Fastq)" +
                     "-[:WAS_USED_BY]->(:Job)" +
                     "-[:GENERATED]->(n:Ubam), " +
