@@ -698,7 +698,7 @@ class LaunchGatk5Dollar:
                  # Create a job request, link the input nodes to the 
                  # request node, and return the input nodes so they 
                  # can be passed to the job launching function
-                 "CREATE (j:JobRequest:Gatk5Dollar {" +
+                 "CREATE (jobRequest:JobRequest:Gatk5Dollar {" +
                             "sample: sample, " +
                             "nodeCreated: datetime(), " +
                             "nodeCreatedEpoch: " +
@@ -707,13 +707,9 @@ class LaunchGatk5Dollar:
                             f"eventId: {event_id} }}) " +
                  "WITH sampleNodes, " +
                       "sample, " +
-                      "j.eventId AS eventId, " +
-                      "j.nodeCreatedEpoch AS epochTime " +
+                      "jobRequest " +
                  "UNWIND sampleNodes AS sampleNode " +
-                 "MATCH (jobReq:JobRequest:Gatk5Dollar {" +
-                            "sample: sample, " +
-                            "eventId: eventId}) " +
-                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobReq) " +
+                 "MERGE (sampleNode)-[:WAS_USED_BY]->(jobRequest) " +
                  "RETURN DISTINCT(sampleNodes) AS nodes")
         return query
 
