@@ -616,6 +616,10 @@ class LaunchGatk5Dollar:
             set(reqd_header_labels).issubset(set(header.get('labels'))),
             set(required_labels).issubset(set(node.get('labels'))),
             #node.get('setSize'),
+
+            # On/off switch to control whether variant calling
+            #   should proceed in event-driven fashion.
+            self.env_vars['WGS_VARIANT_CALLING'] == True,
         ]
 
         for condition in conditions:
