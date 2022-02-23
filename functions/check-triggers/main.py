@@ -27,6 +27,7 @@ if ENVIRONMENT == 'google-cloud':
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
     DB_QUERY_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
+    DB_TRIGGERS = parsed_vars['DB_TRIGGERS']
 
     PUBLISHER = pubsub.PublisherClient()
 
@@ -36,16 +37,20 @@ if ENVIRONMENT == 'google-cloud':
     #ALL_TRIGGERS = triggers.get_triggers(FUNCTION_NAME, parsed_vars)
 
     # Need to pull this from GCS
-    with open("database-triggers.json", 'r') as fh:
-        triggers_config = json.load(fh)
+    trigger_document = storage.Client() \
+                        .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                        .get_blob(os.environ[DB_TRIGGERS]) \
+                        .download_as_string()
+    #with open("database-triggers.yaml", 'r') as trigger_document:
+    TRIGGER_CONTROLLER = trellis.TriggerController(trigger_document)
 
-    ALL_TRIGGERS = []
-    for config in triggers_config:
-        config["function_name"] = FUNCTION_NAME
-        config["env_vars"] = parsed_vars
+    #ALL_TRIGGERS = []
+    #for config in triggers_config:
+    #    config["function_name"] = FUNCTION_NAME
+    #    config["env_vars"] = parsed_vars
 
-        trigger = trellis.DatabaseTrigger(**config)
-        ALL_TRIGGERS.append(trigger)
+    #    trigger = trellis.DatabaseTrigger(**config)
+    #    ALL_TRIGGERS.append(trigger)
 
 """ DEPRECATED in 1.3.0: use trellisdata.utils.publish_to_pubsub_topic
 def publish_to_topic(topic, data):
@@ -62,45 +67,30 @@ def check_triggers(event, context, dry_run=False):
         context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    query_response = trellis.QueryResponse()
-    query_response.parse_pubsub_message(event, context)
+    query_response = trellis.QueryResponseReader(event, context)
 
     print(f"> Received message (context): {query_response.context}.")
     print(f"> Message header: {query_response.header}.")
     print(f"> Message body: {query_response.body}.")
 
-    """
-    # Check that resource is query
-    if not resource in ['queryResult', 'request']:
-    #if resource != 'queryResult':
-        raise ValueError(
-                         f"Error: Expected resource type 'queryResult', " +
-                         f"got '{header['resource']}.'")
-    """
 
-    #node = body['results'].get('node')
+    activated_triggers = TRIGGER_CONTROLLER.evaluate_trigger_conditions(query_response)
+    for trigger, parameters in activated_triggers:
+        logging.info(f"> Trigger activated: {trigger.name}.")
 
-    activated_triggers = []
-    for trigger in ALL_TRIGGERS:
-        #status = trigger.check_conditions(node)
-        logging.debug(f"> Checking trigger: {trigger.name}.")
-        status = trigger.check_conditions(header, body, node)
-        if status == True:
-            activated_triggers.append(trigger)
-            logging.info(f"> Trigger ACTIVATED: {trigger.name}.")
-            # Should I support one trigger activating multiple database queries?
-            ## I could just have separate triggers activated by the same factors
-            #topic, message = trigger.compose_message(header, body, node)
-            #messages = trigger.compose_message(header, body, node, context)
-            request = trigger.create_query_request(header, context)
-            data = request.format_json_message()
-            #for message in messages:
-            #    topic = message[0]
-            #    data = message[1]
-            logging.info(f"> Publishing message: {data}.")
-            if dry_run:
-                logging.info(f"> Dry run: Would have published message to {DB_QUERY_TOPIC}.")
-            else:
-                result = trellis.publish_to_pubsub_topic(PUBLISHER, PROJECT_ID, DB_QUERY_TOPIC, data)
-                logging.info(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+        # Create query request
+        query_request = trellis.QueryRequestWriter(
+            sender = FUNCTION_NAME,
+            seed_id = query_response.seed_id,
+            previous_event_id = query_response.event_id,
+            query_name = trigger.query,
+            query_parameters = parameters)
+        
+        pubsub_message = query_request.format_json_message()
+        logging.info(f"> Publishing query request: {pubsub_message}.")
+        if dry_run:
+            logging.info(f"> Dry run: Would have published message to {DB_QUERY_TOPIC}.")
+        else:
+            result = trellis.publish_to_pubsub_topic(PUBLISHER, PROJECT_ID, DB_QUERY_TOPIC, pubsub_message)
+            logging.info(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
     return(activated_triggers)
