@@ -199,22 +199,6 @@ def get_standard_time_fields(event):
     return time_fields
 
 
-""" Now included in trellisdata.utils
-def get_seconds_from_epoch(datetime_obj):
-    """Get datetime as total seconds from epoch.
-
-    Provides datetime in easily sortable format
-
-    Args:
-        datetime_obj (datetime): Datetime.
-    Returns:
-        (float): Seconds from epoch
-    """
-    from_epoch = datetime_obj - datetime(1970, 1, 1, tzinfo=pytz.UTC)
-    from_epoch_seconds = from_epoch.total_seconds()
-    return from_epoch_seconds
-"""
-
 """ DEPRECATED with 1.3.0: Now use static parameterized queries
 def format_node_merge_query(db_dict, dry_run=False):
     # Create label string
