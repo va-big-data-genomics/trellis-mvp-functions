@@ -7,6 +7,7 @@ import uuid
 import yaml
 import iso8601
 import importlib
+
 import trellisdata
 
 from anytree import Node, RenderTree
@@ -97,6 +98,15 @@ if not ENVIRONMENT:
 
 if ENVIRONMENT == 'google-cloud':
 
+    # set up the Google Cloud Logging python client library
+    # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
+    import google.cloud.logging
+    client = google.cloud.logging.Client()
+    client.setup_logging()
+
+    # use Python's standard logging library to send logs to GCP
+    import logging
+
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     TRIGGER_OPERATION = os.environ['TRIGGER_OPERATION']
     GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
@@ -115,6 +125,8 @@ if ENVIRONMENT == 'google-cloud':
     TAXONOMY_PARSER = TaxonomyParser()
     TAXONOMY_PARSER.read_from_json(TRELLIS.LABEL_TAXONOMY)
 else:
+    import logging
+
     TAXONOMY_PARSER = TaxonomyParser()
     TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
 
@@ -187,6 +199,7 @@ def get_standard_time_fields(event):
     return time_fields
 
 
+""" Now included in trellisdata.utils
 def get_seconds_from_epoch(datetime_obj):
     """Get datetime as total seconds from epoch.
 
@@ -200,6 +213,7 @@ def get_seconds_from_epoch(datetime_obj):
     from_epoch = datetime_obj - datetime(1970, 1, 1, tzinfo=pytz.UTC)
     from_epoch_seconds = from_epoch.total_seconds()
     return from_epoch_seconds
+"""
 
 """ DEPRECATED with 1.3.0: Now use static parameterized queries
 def format_node_merge_query(db_dict, dry_run=False):
@@ -368,7 +382,7 @@ def create_node_query(event, context):
     #log_labels = set(['Log', 'Stderr', 'Stdout'])
     #log_intersection = log_labels.intersection(db_dict['labels'])
     if db_dict['labels'][0] == 'Log':
-        print(f"> This is a log file; ignoring.")
+        logging.info(f"> This is a log file; ignoring.")
         return
 
     # Generate UUID
