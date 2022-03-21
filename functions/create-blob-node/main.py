@@ -2,18 +2,17 @@ import os
 import re
 import pdb
 import json
-import pytz
 import uuid
 import yaml
 import iso8601
+import logging
 import importlib
 
-import trellisdata
+import trellisdata as trellis
 
 from anytree import Node, RenderTree
 from anytree.search import find
-
-from datetime import datetime
+from collections import deque
 
 from google.cloud import storage
 from google.cloud import pubsub
@@ -93,9 +92,6 @@ class TaxonomyParser:
 
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
-if not ENVIRONMENT:
-    ENVIRONMENT == 'local'
-
 if ENVIRONMENT == 'google-cloud':
 
     # set up the Google Cloud Logging python client library
@@ -124,35 +120,56 @@ if ENVIRONMENT == 'google-cloud':
 
     TAXONOMY_PARSER = TaxonomyParser()
     TAXONOMY_PARSER.read_from_json(TRELLIS.LABEL_TAXONOMY)
-else:
-    import logging
+#else:
+    #import logging
 
-    TAXONOMY_PARSER = TaxonomyParser()
-    TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
+    #TAXONOMY_PARSER = TaxonomyParser()
+    #TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
 
 
 def clean_metadata_dict(raw_dict):
     """Remove dict entries where the value is of type dict"""
     clean_dict = dict(raw_dict)
 
+    uuid = clean_dict['metadata'].get('trellis-uuid')
+    clean_dict['trellis-uuid'] = uuid
+
+    # What if I just convert to strings
     # Remove values that are dicts
     delete_keys = []
     for key, value in clean_dict.items():
         if isinstance(value, dict):
             #del clean_dict[key]
-            delete_keys.append(key)
+            #delete_keys.append(key)
+            clean_dict[key] = str(value)
 
-    for key in delete_keys:
-        del clean_dict[key]
+    #for key in delete_keys:
+    #    del clean_dict[key]
 
     # Convert size field from str to int
     clean_dict['size'] = int(clean_dict['size'])
 
     return clean_dict
 
-
-def get_standard_name_fields(event_name, event_bucket):
+def get_name_fields(
+                    event_name, 
+                    event_bucket, 
+                    commit_hash, 
+                    version_tag):
     """(pbilling 200226): This should probably be moved to config file.
+
+    Example input:
+        event_name: va_mvp_phase2/PLATE0/SAMPLE0/FASTQ/SAMPLE0_0_R1.fastq.gz
+        event_bucket: gcp-bucket-mvp-test-from-personalis
+    
+    Example output:
+        path: va_mvp_phase2/PLATE0/SAMPLE0/FASTQ/SAMPLE0_0_R1.fastq.gz
+        dirname: va_mvp_phase2/PLATE0/SAMPLE0/FASTQ
+        basename: SAMPLE0_0_R1.fastq.gz
+        name: SAMPLE0_0_R1
+        extension: fastq.gz
+        filetype: gz
+        uri: gs://gcp-bucket-mvp-test-from-personalis/va_mvp_phase2/PLATE0/SAMPLE0/FASTQ/SAMPLE0_0_R1.fastq.gz
     """
     path_elements = event_name.split('/')
     name_elements = path_elements[-1].split('.')
@@ -163,14 +180,13 @@ def get_standard_name_fields(event_name, event_bucket):
                    "name": name_elements[0],
                    "extension": '.'.join(name_elements[1:]),
                    "filetype": name_elements[-1],
-                   "gitCommitHash": GIT_COMMIT_HASH,
-                   "gitVersionTag": GIT_VERSION_TAG,
+                   "gitCommitHash": commit_hash,
+                   "gitVersionTag": version_tag,
                    "uri" : "gs://" + event_bucket + "/" + event_name,
     }
     return name_fields
 
-
-def get_standard_time_fields(event):
+def get_time_fields(event):
     """
     Args:
         event (dict): Metadata properties stored as strings
@@ -184,10 +200,10 @@ def get_standard_time_fields(event):
     datetime_updated = iso8601.parse_date(event['updated'])
 
 
-    time_created_epoch = get_seconds_from_epoch(datetime_created)
+    time_created_epoch = trellis.utils.get_seconds_from_epoch(datetime_created)
     time_created_iso = datetime_created.isoformat()
 
-    time_updated_epoch = get_seconds_from_epoch(datetime_updated)
+    time_updated_epoch = trellis.utils.get_seconds_from_epoch(datetime_updated)
     time_updated_iso = datetime_updated.isoformat()
 
     time_fields = {
@@ -198,8 +214,7 @@ def get_standard_time_fields(event):
     }
     return time_fields
 
-
-""" DEPRECATED with 1.3.0: Now use static parameterized queries
+""" DEPRECATED with 1.3.0: Now use dynamicparameterized queries
 def format_node_merge_query(db_dict, dry_run=False):
     # Create label string
     tmp_labels = list(db_dict['labels'])
@@ -257,6 +272,89 @@ def format_node_merge_query(db_dict, dry_run=False):
     return query
 """
 
+def create_parameterized_merge_query(label, query_parameters):
+    # Create label string
+    #tmp_labels = list(db_dict['labels'])
+    #tmp_labels.remove('Blob')
+    #labels_str = ':'.join(tmp_labels)
+    #label = query_parameters['labels'][0]
+
+    """
+    # Create database ON CREATE string
+    create_strings = []
+    for key, value in db_dict.items():
+        if isinstance(value, str):
+            create_strings.append(f'node.{key} = "{value}"')
+        else:
+            create_strings.append(f'node.{key} = {value}')
+    create_string = ', '.join(create_strings)
+    """
+
+    create_strings = []
+    for key in query_parameters.keys():
+        create_strings.append(f'node.{key} = ${key}')
+    create_string = ', '.join(create_strings)
+
+    # If node already exists in the database, only update the following
+    # values of the node (SET command), if the values are provided
+    merge_keys = [
+                  'md5Hash',
+                  'size',
+                  'timeUpdatedEpoch',
+                  'timeUpdatedIso',
+                  'timeStorageClassUpdated',
+                  'updated',
+                  'id',
+                  'crc32c',
+                  'generation',
+                  'storageClass',
+                  # Following are specific to Checksum objects
+                  'fastqCount',
+                  'microarrayCount']
+
+    #merge_strings = []
+    #for key in merge_keys:
+    #    value = db_dict.get(key)
+    #    if value:
+    #        if isinstance(value, str):
+    #            merge_strings.append(f'node.{key} = "{value}"')
+    #        else:
+    #            merge_strings.append(f'node.{key} = {value}')
+    #merge_string = ', '.join(merge_strings)
+
+    merge_strings = []
+    for key in merge_keys:
+        value = query_parameters.get(key)
+        if value:
+            merge_strings.append(f'node.{key} = ${key}')
+    merge_string = ', '.join(merge_strings)
+
+    """
+    parameterized_query = (
+        f"MERGE (node:Blob:{label} {{ " +
+            #f'bucket: "{db_dict["bucket"]}", ' +
+            #f'path: "{db_dict["path"]}" }}) ' +
+            f'id: "{db_dict["id"]}" }}) ' +
+        "ON CREATE SET node.nodeCreated = timestamp(), " +
+            'node.nodeIteration = "initial", ' +
+            f"{create_string} " +
+        f"ON MATCH SET " +
+            'node.nodeIteration = "merged", ' +
+            f"{merge_string} " +
+        "RETURN node")
+    return query
+    """
+
+    parameterized_query = (
+        f"MERGE (node:{label} {{ uri: $uri, crc32c: $crc32c }}) " +
+        "ON CREATE SET node.nodeCreated = timestamp(), " +
+            "node.nodeIteration = 'initial', " +
+            f"{create_string} " +
+        "ON MATCH SET " +
+            "node.nodeIteration = 'merged', " + 
+            f"{merge_string} " +
+        "RETURN node")
+    return parameterized_query
 
 def add_uuid_to_blob(bucket, path):
     """For a json object, get and return json data.
@@ -267,7 +365,7 @@ def add_uuid_to_blob(bucket, path):
     Returns:
         Blob.metadata (dict)
     """
-    metadata = {'uuid': uuid.uuid4()}
+    metadata = {'trellis-uuid': uuid.uuid4()}
 
     storage_client = storage.Client()
     bucket = STORAGE_CLIENT.get_bucket(bucket)
@@ -277,19 +375,82 @@ def add_uuid_to_blob(bucket, path):
 
     return blob.metadata
 
-    print("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
+    logging.info("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
 
+def assign_labels(path, label_match_patterns):
+    """Used for testing"""
+    labels = []
+    for label, patterns in label_match_patterns.items():
+        for pattern in patterns:
+            match = re.fullmatch(pattern, path)
+            if match:
+                labels.append(label)
+    return labels
 
-def create_node_query(event, context):
+def assign_label_and_metadata(query_parameters, label_patterns, label_functions):
+    #query_parameters['labels'] = []
+    labels = []
+    for label, patterns in label_patterns.items():
+        for pattern in patterns:
+            match = re.fullmatch(pattern, query_parameters['path'])
+            if match:
+                labels.append(label)
+                #query_parameters['labels'].append(label)
+                metadata_functions = label_functions.get(label)
+                if metadata_functions:
+                    for metadata_function in metadata_functions:
+                        custom_fields = metadata_function(query_parameters, match.groupdict())
+                        query_parameters.update(custom_fields)
+                # Break after a single pattern per label has been matched
+                # According to single-label mode, objects can't/shouldn't(?)
+                # match more than one label.
+                break
+    return query_parameters, labels
+
+def get_leaf_labels(labels, taxonomy_parser):
+    # Get only the shallowest labels of a branch of the taxonomy that should be applied 
+    # to the node. The point of the taxonomy is so that we can retain lineage information
+    # without applying multiple labels to a node.
+    common_parents = []
+    for label in labels:
+        node = taxonomy_parser.find_by_name(label)
+        # https://docs.python.org/3/library/collections.html#collections.deque
+        parents = deque(node.path)
+
+        parents.popleft() # Remove the arbitrary root node
+        parents.pop()     # Remove the current label
+        common_parents.extend(parents)
+    common_parents = set(common_parents) # Only keep unique nodes
+    
+    # If a label is a parent of another label, exclude it
+    for label in labels:
+        if label in [parent.name for parent in common_parents]:
+            labels.remove(label)
+    return labels
+
+def create_node_query(event, context, test=False):
     """When object created in bucket, add metadata to database.
     Args:
         event (dict): Event payload.
         context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    print(f"> Processing new object event: {event['name']}.")
-    print(f"> Event: {event}).")
-    print(f"> Context: {context}.")
+    # Define global variables for local testing
+    #type(ENVIRONMENT)
+    if test == True:
+        ENVIRONMENT = 'local'
+
+        GIT_COMMIT_HASH = "mock-hash"
+        GIT_VERSION_TAG = "v0.1"
+        TRIGGER_OPERATION = "local-test"
+        FUNCTION_NAME = "create-blob-node"
+
+        TAXONOMY_PARSER = TaxonomyParser()
+        TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
+
+    logging.info(f"> Processing new object event: {event['name']}.")
+    logging.info(f"> Event: {event}.")
+    logging.info(f"> Context: {context}.")
 
     seed_id = context.event_id
 
@@ -297,54 +458,71 @@ def create_node_query(event, context):
     name = event['name']
     bucket_name = event['bucket']
 
-    # Use bucket name to determine which config file should be used
-    # to parse object metadata.
-    # (Module name does not include project prefix)
-    pattern = f"{TRELLIS.GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
-    match = re.match(pattern, bucket_name)
-    suffix = match['suffix']
+    if ENVIRONMENT == 'google-cloud':
+        # Use bucket name to determine which config file should be used
+        # to parse object metadata.
+        # (Module name does not include project prefix)
+        pattern = f"{TRELLIS.GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
+        match = re.match(pattern, bucket_name)
+        suffix = match['suffix']
 
-    # Import the config module that corresponds to event-trigger bucket
-    node_module_name = f"{TRELLIS.DATA_GROUP}.{suffix}.create-node-config"
-    node_module = importlib.import_module(node_module_name)
+        # TODO: Create a separate instance of create-blob-node for each bucket
+        #   and include the module in the function deployment parameters,
+        #   controlled by Terraform.
+        # Import the config module that corresponds to event-trigger bucket
+        node_module_name = f"{TRELLIS.DATA_GROUP}.{suffix}.create-node-config"
+        node_module = importlib.import_module(node_module_name)
+    else:
+        import test_create_node_config as node_module
 
     node_kinds = node_module.NodeKinds()
     label_patterns = node_kinds.match_patterns
+    label_functions = node_kinds.label_functions
 
     # Create dict of metadata to add to database node
     gcp_metadata = event
-    db_dict = clean_metadata_dict(event)
+    query_parameters = clean_metadata_dict(event)
 
     # Add standard fields
-    name_fields = get_standard_name_fields(event['name'], event['bucket'])
-    time_fields = get_standard_time_fields(event)
+    name_fields = get_name_fields(
+                    event_name = event['name'], 
+                    event_bucket = event['bucket'],
+                    commit_hash = GIT_COMMIT_HASH,
+                    version_tag = GIT_VERSION_TAG)
+    time_fields = get_time_fields(event)
 
-    db_dict.update(name_fields)
-    db_dict.update(time_fields)
+    query_parameters.update(name_fields)
+    query_parameters.update(time_fields)
 
     # Add trigger operation as metadata property
-    db_dict['triggerOperation'] = TRIGGER_OPERATION
+    query_parameters['triggerOperation'] = TRIGGER_OPERATION
 
-
-    # Check db_dict with metadata about object
-    db_dict['labels'] = []
+    # Populate query_parameters with metadata about object
+    query_parameters, labels = assign_labels_and_metadata(query_parameters, label_patterns, label_functions)
+    """
+    query_parameters['labels'] = []
     for label, patterns in label_patterns.items():
         for pattern in patterns:
             match = re.fullmatch(pattern, name)
             if match:
-                db_dict['labels'].append(label)
+                query_parameters['labels'].append(label)
                 label_functions = node_kinds.label_functions.get(label)
                 if label_functions:
                     for function in label_functions:
-                        custom_fields = function(db_dict, match.groupdict())
-                        db_dict.update(custom_fields)
+                        custom_fields = function(query_parameters, match.groupdict())
+                        query_parameters.update(custom_fields)
                 # Break after a single pattern per label has been matched
+                # Why?
                 break
+    """
 
-    # Get the shallowest labels of a branch of the taxonomy that should be applied 
-    # to the node
+    labels = get_leaf_labels(labels, TAXONOMY_PARSER)
+    """
+    # Get only the shallowest labels of a branch of the taxonomy that should be applied 
+    # to the node. The point of the taxonomy is so that we can retain lineage information
+    # without applying multiple labels to a node.
     common_parents = []
-    for label in db_dict['labels']:
+    for label in query_parameters['labels']:
         node = parser.find_by_name(label)
         parents = deque(node.path)
 
@@ -354,38 +532,68 @@ def create_node_query(event, context):
     common_parents = set(common_parents) # Only keep unique nodes
     
     # If a label is a parent of another label, exclude it
-    for label in db_dict['labels']
+    for label in query_parameters['labels']:
         if label in [parent.name for parent in common_parents]:
-            db_dict['labels'].remove(label)
+            query_parameters['labels'].remove(label)
+    """
 
     # Max (1) label per node to choose parameterized query
-    if len(db_dict['labels']) > 1:
+    if len(labels) > 1:
         raise ValueError
+    else:
+        label = labels[0]
 
+    # TODO: Implement new logic for ignore log files
     # Ignore log files
     #log_labels = set(['Log', 'Stderr', 'Stdout'])
     #log_intersection = log_labels.intersection(db_dict['labels'])
-    if db_dict['labels'][0] == 'Log':
+    if label == 'Log':
+    #if query_parameters['filetype'] in ['log', 'stderr', 'stdout']:
         logging.info(f"> This is a log file; ignoring.")
         return
 
-    # Generate UUID
-    if not db_dict['uuid']:
-        uuid = add_uuid_to_blob(bucket, path)
-        print("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
-        db_dict['uuid'] = blob.metadata['uuid']
+    # TODO: Support passing label query generator
 
+    # Generate UUID
+    if not query_parameters['trellisUuid'] and ENVIRONMENT == 'google-cloud':
+        uuid = add_uuid_to_blob(
+                                query_parameters['bucket'], 
+                                query_parameters['path'])
+        logging.info("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
+        query_parameters['trellisUuid'] = blob.metadata['uuid']
+
+
+    # Dynamically create parameterized query
+    parameterized_query = create_parameterized_merge_query(label, query_parameters)
+
+    """ TODO: Move to categorize-blob-node
     # Key, value pairs unique to db_dict are trellis metadata
     trellis_metadata = {}
     for key, value in db_dict.items():
         if not key in gcp_metadata.keys():
             trellis_metadata[key] = value
+    """
 
     #print(f"> Generating database query for node: {db_dict}.")
     #db_query = format_node_merge_query(db_dict)
     #print(f"> Database query: \"{db_query}\".")
 
-    message = format_pubsub_message(db_query, seed_id)
-    print(f"> Pubsub message: {message}.")
-    result = publish_to_topic(TRELLIS.DB_QUERY_TOPIC, message)
-    print(f"> Published message to {TRELLIS.DB_QUERY_TOPIC} with result: {result}.")
+    query_request = trellis.QueryRequestWriter(
+        sender = FUNCTION_NAME,
+        seed_id = seed_id,
+        previous_event_id = seed_id,
+        query_name = f"merge{label}Node",
+        query_parameters = query_parameters,
+        custom = True,
+        query = parameterized_query,
+        write_transaction = True,
+        publish_to = TRELLIS.TOPIC_TRIGGERS,
+        returns = {"node": "node"})
+    message = query_request.format_json_message()
+    logging.info(f"> Pubsub message: {message}.")
+    if ENVIRONMENT == 'google-cloud':
+        result = trellis.publish_to_pubsub_topic(TRELLIS.DB_QUERY_TOPIC, message)
+        logging.info(f"> Published message to {TRELLIS.DB_QUERY_TOPIC} with result: {result}.")
+    else:
+        logging.warning("Could not determine environment. Message was not published.")
+        return(message)
