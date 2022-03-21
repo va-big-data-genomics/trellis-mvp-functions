@@ -6,7 +6,6 @@ import math
 import time
 import yaml
 import base64
-import logging
 import neobolt
 
 from datetime import datetime
@@ -21,11 +20,22 @@ from google.cloud import pubsub
 from google.cloud import storage
 
 import trellisdata as trellis
+from trellisdata import DatabaseQuery
 
 # Get runtime variables from cloud storage bucket
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
+
+    # set up the Google Cloud Logging python client library
+    # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
+    import google.cloud.logging
+    client = google.cloud.logging.Client()
+    client.setup_logging()
+
+    # use Python's standard logging library to send logs to GCP
+    import logging
+
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
 
     vars_blob = storage.Client() \
@@ -62,6 +72,16 @@ if ENVIRONMENT == 'google-cloud':
                   #max_connections=NEO4J_MAX_CONN)
     """
 
+    # Need to pull this from GCS
+    queries_document = storage.Client() \
+                        .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                        .get_blob(os.environ[DB_STORED_QUERIES]) \
+                        .download_as_string()
+    queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
+    QUERY_DICT = {}
+    for query in queries:
+        QUERY_DICT[query.name] = query
+
     # Use Neo4j driver object to establish connections to the Neo4j
     # database and manage connection pool used by neo4j.Session objects
     # https://neo4j.com/docs/api/python-driver/current/api.html#driver
@@ -71,11 +91,18 @@ if ENVIRONMENT == 'google-cloud':
         max_connection_pool_size=10)
 else:
     FUNCTION_NAME = 'db-query-local'
-    DB_STORED_QUERIES_FILE = "trellis-queries.json"
+    local_queries = "sample-queries.yaml"
+
+    # Load database queries into a dictionary
+    with open(local_queries, "r") as file_handle:
+        queries = yaml.load_all(file_handle, Loader=yaml.FullLoader)
+        QUERY_DICT = {}
+        for query in queries:
+            QUERY_DICT[query.name] = query
 
 # Retrieve stored database queries from JSON
-with open(DB_STORED_QUERIES_FILE, 'r') as file_handle:
-    DB_STORED_QUERIES = json.load(file_handle)
+#with open(DB_STORED_QUERIES_FILE, 'r') as file_handle:
+#    DB_STORED_QUERIES = json.load(file_handle)
 
 QUERY_ELAPSED_MAX = 0.300
 PUBSUB_ELAPSED_MAX = 10
@@ -133,8 +160,10 @@ def db_query(event, context, local_driver=None):
     """
 
     start = datetime.now()
-    query_request = trellis.QueryRequest()
-    query_request.parse_pubsub_message(event, context)
+    query_request = trellis.QueryRequestReader(
+                                               event=event, 
+                                               context=context)
+    #query_request.parse_pubsub_message(event, context)
     
     print(f"> Received message (context): {query_request.context}.")
     print(f"> Message header: {query_request.header}.")
@@ -151,13 +180,28 @@ def db_query(event, context, local_driver=None):
     elif local_driver:
         DRIVER = local_driver
 
-    parameterized_query = DB_STORED_QUERIES[query_request.query_name]
+    # TODO: maybe I should store custom queries after they've been
+    # created and give them unique IDs based on content so I can 
+    # lookup already used queries
+    if query_request.custom == True:
+        # If custom query has been provided, create a new
+        # instance of the DatabaseQuery class
+        parameterized_query = DatabaseQuery(
+            name=query_request.query_name,
+            query=query_request.query,
+            parameters={},
+            write_transaction=query_request.write_transaction,
+            publish_to=query_request.publish_to)
+    else:
+        parameterized_query = QUERY_DICT[query_request.query_name]
+
     try:
         query_start = time.time()
         graph, result_summary = query_database(
-            write_transaction = query_request.write_transaction,
+            #write_transaction = query_request.write_transaction,
+            write_transaction = parameterized_query.write_transaction,
             driver = DRIVER,
-            query = parameterized_query,
+            query = parameterized_query.query,
             query_parameters = query_request.query_parameters)
         query_elapsed = time.time() - query_start
         print(f"> Query elapsed walltime: {query_elapsed:.3f} seconds. " +
@@ -194,7 +238,7 @@ def db_query(event, context, local_driver=None):
         #logging.warn(f"> Requeued message: {pubsub_message}.")
         return
 
-    query_response = trellis.QueryResponse(
+    query_response = trellis.QueryResponseWriter(
         sender = FUNCTION_NAME,
         seed_id = query_request.seed_id,
         previous_event_id = query_request.event_id,
@@ -203,7 +247,7 @@ def db_query(event, context, local_driver=None):
         result_summary = result_summary)
 
     # Return if no pubsub topic or not running on GCP
-    if not query_request.publish_results_to or not ENVIRONMENT == 'google-cloud':
+    if not parameterized_query.publish_to or not ENVIRONMENT == 'google-cloud':
         print("No Pub/Sub topic specified; result not published.")
 
         # Execution time block
