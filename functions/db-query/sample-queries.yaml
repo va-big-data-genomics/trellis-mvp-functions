@@ -1,0 +1,23 @@
+--- !DatabaseQuery
+name: relateTbiToGvcf
+query: "MATCH (gvcf:Gvcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:Tbi) WHERE tbi.id = $tbi_id AND step.wdlCallAlias = 'mergevcfs' MERGE (gvcf)-[:HAS_INDEX {ontology: 'bioinformatics'}]->(tbi) RETURN gvcf"
+parameters:
+  tbi_id: str
+write_transaction: true
+publish_to: test-function
+returns:
+  gvcf: node
+--- !DatabaseQuery
+name: setJobStopped
+query: "MATCH (job:Job {instanceId: $instanceId, instanceName: $instanceName } ) SET job.stopTime = $stopTime, job.stopTimeEpoch = $stopTimeEpoch, job.stoppedBy = $stoppedBy, job.status = $status, job.durationMinutes = duration.inSeconds(datetime(job.startTime), datetime(job.stopTime)).minutes RETURN job"
+parameters:
+  instanceId: int
+  instanceName: str
+  stopTime: iso8601
+  stopTimeEpoch: float
+  stoppedBy: str
+  status: str
+write_transaction: true
+publish_to: check-triggers
+returns:
+  job: node
