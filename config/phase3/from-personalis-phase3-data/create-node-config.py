@@ -71,7 +71,7 @@ class NodeKinds:
             "Gvcf": [
                     ".*\\.g.vcf.gz$",
                     ".*\\.g.vcf$",
-            ]
+            ],
             #"Tbi": [".*\\.tbi$"],
             #"Gzipped": [".*\\.gz$"],
             #"Shard": [".*\\/shard-(?P<shard_index>\d+)\\/.*"],
@@ -104,7 +104,7 @@ class NodeKinds:
             "Log": [
                     ".*\\.log$",
                     ".*\\/stderr$",
-                    ".*\\/stdout$"]
+                    ".*\\/stdout$"],
             #"Script": [".*\\/script$"],
             "Index": [
                       ".*\\.bai$",

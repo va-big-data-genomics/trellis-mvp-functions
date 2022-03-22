@@ -314,7 +314,7 @@ class NodeKinds:
                                           trellis_metadata_groupdict,
                                           mate_pair_name_0, 
                                           read_group_name_1],
-                                "Microarray": [trellis_metadata_groupdict]
+                                "Microarray": [trellis_metadata_groupdict],
                                 "PersonalisSequencing": [
                                                          trellis_metadata_groupdict,
                                                          read_json],
