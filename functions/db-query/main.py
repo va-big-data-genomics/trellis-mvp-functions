@@ -61,23 +61,13 @@ if ENVIRONMENT == 'google-cloud':
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
 
-    # Old py2neo Neo4j graph driver object
-    """
-    GRAPH = Graph(
-                  scheme=NEO4J_SCHEME,
-                  host=NEO4J_HOST,
-                  port=NEO4J_PORT,
-                  user=NEO4J_USER,
-                  password=NEO4J_PASSPHRASE)
-                  #max_connections=NEO4J_MAX_CONN)
-    """
-
     # Need to pull this from GCS
     queries_document = storage.Client() \
                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                         .get_blob(os.environ[DB_STORED_QUERIES]) \
                         .download_as_string()
     queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
+    
     QUERY_DICT = {}
     for query in queries:
         QUERY_DICT[query.name] = query
