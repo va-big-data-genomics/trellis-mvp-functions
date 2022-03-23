@@ -120,11 +120,11 @@ if ENVIRONMENT == 'google-cloud':
 
     TAXONOMY_PARSER = TaxonomyParser()
     TAXONOMY_PARSER.read_from_json(TRELLIS.LABEL_TAXONOMY)
-#else:
-    #import logging
+else:
+    import logging
 
-    #TAXONOMY_PARSER = TaxonomyParser()
-    #TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
+    TAXONOMY_PARSER = TaxonomyParser()
+    TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
 
 
 def clean_metadata_dict(raw_dict):
@@ -151,11 +151,7 @@ def clean_metadata_dict(raw_dict):
 
     return clean_dict
 
-def get_name_fields(
-                    event_name, 
-                    event_bucket, 
-                    commit_hash, 
-                    version_tag):
+def get_name_fields(event_name, event_bucket, commit_hash, version_tag):
     """(pbilling 200226): This should probably be moved to config file.
 
     Example input:
