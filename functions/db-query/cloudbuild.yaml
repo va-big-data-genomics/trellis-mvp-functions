@@ -9,7 +9,7 @@ steps:
          '--source=functions/db-query',
          '--memory=256MB',
          '--max-instances=20',
-         '--entry-point=query_db',
+         '--entry-point=main',
          '--runtime=python37',
          '--vpc-connector=trellis',
          '--trigger-topic=${_TRIGGER_TOPIC}',

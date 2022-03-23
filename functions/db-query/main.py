@@ -134,7 +134,7 @@ def _stored_procedure_transaction_function(tx, query, **query_parameters):
     # Return graph data and ResultSummary object
     return result.graph(), result.consume()
 
-def db_query(event, context, local_driver=None):
+def main(event, context, local_driver=None):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
 
