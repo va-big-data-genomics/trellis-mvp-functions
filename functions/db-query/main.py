@@ -10,7 +10,7 @@ import neobolt
 
 from datetime import datetime
 
-import neo4j
+#import neo4j
 from neo4j import GraphDatabase
 
 from urllib3.exceptions import ProtocolError
@@ -45,10 +45,9 @@ if ENVIRONMENT == 'google-cloud':
     parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
 
     # Runtime variables
-    #DATA_GROUP = parsed_vars['DATA_GROUP']
     PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    DB_QUERY_TOPIC = parsed_vars['DB_QUERY_TOPIC']
-    DB_STORED_QUERIES_FILE = parsed_vars['DB_STORED_QUERIES_FILE']
+    TOPIC_DB_QUERY = parsed_vars['TOPIC_DB_QUERY']
+    DB_STORED_QUERIES = parsed_vars['DB_STORED_QUERIES']
 
     #NEO4J_URL = parsed_vars['NEO4J_URL']
     NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
@@ -56,7 +55,6 @@ if ENVIRONMENT == 'google-cloud':
     NEO4J_PORT = parsed_vars['NEO4J_PORT']
     NEO4J_USER = parsed_vars['NEO4J_USER']
     NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
-    #NEO4J_MAX_CONN = parsed_vars['NEO4J_MAX_CONN']
 
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
@@ -64,7 +62,7 @@ if ENVIRONMENT == 'google-cloud':
     # Need to pull this from GCS
     queries_document = storage.Client() \
                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                        .get_blob(os.environ[DB_STORED_QUERIES]) \
+                        .get_blob(DB_STORED_QUERIES) \
                         .download_as_string()
     queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
     
@@ -89,10 +87,6 @@ else:
         QUERY_DICT = {}
         for query in queries:
             QUERY_DICT[query.name] = query
-
-# Retrieve stored database queries from JSON
-#with open(DB_STORED_QUERIES_FILE, 'r') as file_handle:
-#    DB_STORED_QUERIES = json.load(file_handle)
 
 QUERY_ELAPSED_MAX = 0.300
 PUBSUB_ELAPSED_MAX = 10
@@ -250,11 +244,12 @@ def db_query(event, context, local_driver=None):
     else:
         # Track how many messages are published to each topic
         published_message_counts = {}
-        for topic in query_request.publish_results_to:
+        for topic in parameterized_query.publish_to:
+            # TODO: map the name in the query definition to the real topic
+
             published_message_counts[topic] = 0
 
-        for topic in query_request.publish_results_to:
-            if query_request.split_results == 'True':
+            if parameterized_query.split_results == 'True':
                 """ I think we can always send a result because even if no
                     node or relationship is returned we may still want to
                     use the summary statistics.
