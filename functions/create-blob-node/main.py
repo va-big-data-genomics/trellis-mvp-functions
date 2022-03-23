@@ -5,7 +5,6 @@ import json
 import uuid
 import yaml
 import iso8601
-import logging
 import importlib
 
 import trellisdata as trellis
@@ -90,6 +89,51 @@ class TaxonomyParser:
         except (FileNotFoundError, KeyError):
             raise Exception("Not existent or malformed input JSON file")
 
+    def read_from_string(self, data_str):
+        """
+        Read the taxonomy from a JSON file given as input
+        """
+        
+        self.nodes = {}
+        try:
+            data = json.loads(data_str)
+            n_levels = len(list(data.keys()))
+
+            # read the root node
+            root = data[f"{self.prefix}0"][0]
+            name = root["name"]
+            _ = root.pop("name")
+            
+            self.nodes[name] = Node(name, **root)
+            self.root_key = name
+
+            # populate the tree
+            for k in range(1, n_levels):
+                
+                key = f"{self.prefix}{k}"
+                nodes = data[key]
+
+                for n in nodes:
+                    try:
+                        assert "name" in n
+                        name = n["name"]
+                        _ = n.pop("name")
+                        parent = n["parent"]
+                        _ = n.pop("parent")
+                        
+                        self.nodes[name] = Node(
+                            name,
+                            parent=self.nodes[parent],
+                            **n
+                        )
+                    except AssertionError:
+                        print(f"Malformed node representation: {n}")
+                    except KeyError:
+                        print(f"Detected a dangling node: {n['name']}")
+
+        except (KeyError):
+            raise Exception("Malformed input JSON string")
+
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
@@ -118,8 +162,14 @@ if ENVIRONMENT == 'google-cloud':
     PUBLISHER = pubsub.PublisherClient()
     STORAGE_CLIENT = storage.Client()
 
+    # Need to pull this from GCS
+    label_taxonomy = storage.Client() \
+                        .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                        .get_blob(TRELLIS.LABEL_TAXONOMY) \
+                        .download_as_string()
+
     TAXONOMY_PARSER = TaxonomyParser()
-    TAXONOMY_PARSER.read_from_json(TRELLIS.LABEL_TAXONOMY)
+    TAXONOMY_PARSER.read_from_string(label_taxonomy)
 else:
     import logging
 
