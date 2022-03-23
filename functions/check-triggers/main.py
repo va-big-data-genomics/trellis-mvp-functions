@@ -25,40 +25,18 @@ if ENVIRONMENT == 'google-cloud':
 
     # Runtime variables
     PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
-    DB_QUERY_TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    TOPIC_DB_QUERY = parsed_vars.get('TOPIC_DB_QUERY')
     DATA_GROUP = parsed_vars.get('DATA_GROUP')
     DB_TRIGGERS = parsed_vars['DB_TRIGGERS']
 
     PUBLISHER = pubsub.PublisherClient()
 
-    # Load trigger module
-    #trigger_module_name = f"database-triggers"
-    #triggers = importlib.import_module(trigger_module_name)
-    #ALL_TRIGGERS = triggers.get_triggers(FUNCTION_NAME, parsed_vars)
-
     # Need to pull this from GCS
     trigger_document = storage.Client() \
                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                        .get_blob(os.environ[DB_TRIGGERS]) \
+                        .get_blob(DB_TRIGGERS) \
                         .download_as_string()
-    #with open("database-triggers.yaml", 'r') as trigger_document:
     TRIGGER_CONTROLLER = trellis.TriggerController(trigger_document)
-
-    #ALL_TRIGGERS = []
-    #for config in triggers_config:
-    #    config["function_name"] = FUNCTION_NAME
-    #    config["env_vars"] = parsed_vars
-
-    #    trigger = trellis.DatabaseTrigger(**config)
-    #    ALL_TRIGGERS.append(trigger)
-
-""" DEPRECATED in 1.3.0: use trellisdata.utils.publish_to_pubsub_topic
-def publish_to_topic(topic, data):
-    topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
-    message = json.dumps(data).encode('utf-8')
-    result = PUBLISHER.publish(topic_path, data=message).result()
-    return result
-"""
 
 def check_triggers(event, context, dry_run=False):
     """When object created in bucket, add metadata to database.
@@ -89,7 +67,7 @@ def check_triggers(event, context, dry_run=False):
         pubsub_message = query_request.format_json_message()
         logging.info(f"> Publishing query request: {pubsub_message}.")
         if dry_run:
-            logging.info(f"> Dry run: Would have published message to {DB_QUERY_TOPIC}.")
+            logging.info(f"> Dry run: Would have published message to {TOPIC_DB_QUERY}.")
         else:
             result = trellis.publish_to_pubsub_topic(PUBLISHER, PROJECT_ID, DB_QUERY_TOPIC, pubsub_message)
             logging.info(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
