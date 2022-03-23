@@ -3,6 +3,7 @@ steps:
   args: ['cp', '-r', 'config/${_DATA_GROUP}', 'functions/create-blob-node/']
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   args: [
+         'gcloud',
          'beta',
          'functions',
          'deploy',
