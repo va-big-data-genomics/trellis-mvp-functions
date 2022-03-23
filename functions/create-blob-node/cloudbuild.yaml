@@ -1,7 +1,7 @@
 steps:
 - name: 'ubuntu'
   args: ['cp', '-r', 'config/${_DATA_GROUP}', 'functions/create-blob-node/']
-- name: 'gcr.io/cloud-builders/gcloud'
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   args: [
          'beta',
          'functions',
