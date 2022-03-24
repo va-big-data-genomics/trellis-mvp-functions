@@ -15,26 +15,30 @@ from google.cloud import pubsub
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
+    # set up the Google Cloud Logging python client library
+    # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
+    import google.cloud.logging
+    client = google.cloud.logging.Client()
+    client.setup_logging()
+
+    # use Python's standard logging library to send logs to GCP
+    import logging
+
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
 
-    vars_blob = storage.Client() \
+    config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
-    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
-
-    # Runtime variables
-    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
-    TOPIC_DB_QUERY = parsed_vars.get('TOPIC_DB_QUERY')
-    DATA_GROUP = parsed_vars.get('DATA_GROUP')
-    DB_TRIGGERS = parsed_vars['DB_TRIGGERS']
+    # https://stackoverflow.com/questions/6866600/how-to-parse-read-a-yaml-file-into-a-python-object
+    TRELLIS = yaml.safe_load(config_doc)
 
     PUBLISHER = pubsub.PublisherClient()
 
     # Need to pull this from GCS
     trigger_document = storage.Client() \
                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                        .get_blob(DB_TRIGGERS) \
+                        .get_blob(TRELLIS['DB_TRIGGERS']) \
                         .download_as_string()
     TRIGGER_CONTROLLER = trellis.TriggerController(trigger_document)
 
@@ -67,8 +71,8 @@ def check_triggers(event, context, dry_run=False):
         pubsub_message = query_request.format_json_message()
         logging.info(f"> Publishing query request: {pubsub_message}.")
         if dry_run:
-            logging.info(f"> Dry run: Would have published message to {TOPIC_DB_QUERY}.")
+            logging.info(f"> Dry run: Would have published message to {TRELLIS['TOPIC_DB_QUERY']}.")
         else:
-            result = trellis.publish_to_pubsub_topic(PUBLISHER, PROJECT_ID, DB_QUERY_TOPIC, pubsub_message)
-            logging.info(f"> Published message to {DB_QUERY_TOPIC} with result: {result}.")
+            result = trellis.publish_to_pubsub_topic(PUBLISHER, TRELLIS['PROJECT_ID'], TRELLIS['TOPIC_DB_QUERY'], pubsub_message)
+            logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
     return(activated_triggers)
