@@ -3,12 +3,15 @@
 import pdb
 import json
 import mock
+import yaml
 import neo4j
 import base64
 import pytest
 
 from unittest import TestCase
 
+import trellisdata as trellis
+#from trellisdata import DatabaseQuery
 import main
 
 mock_context = mock.Mock()
@@ -118,7 +121,7 @@ class TestDbQuery(TestCase):
 		with cls.driver.session() as session:
 			result = session.run(create_query)
 
-		main.db_query(event, cls.mock_context, cls.driver)
+		main.main(event, cls.mock_context, cls.driver)
 
 		# Delete job node
 		del_query = f"MATCH (node:Job {{instanceId: \"{query_params['instanceId']}\", instanceName: \"{query_params['instanceName']}\" }}) DELETE node"
@@ -192,7 +195,7 @@ class TestDbQuery(TestCase):
 			result = session.run(delete_query, uri=data['body']['queryParameters']['uri'])
 			result_summary = result.consume()
 		
-		main.db_query(event, cls.mock_context, cls.driver)
+		main.main(event, cls.mock_context, cls.driver)
 
 		# Check that Fastq node has been created
 		match_query = f"MATCH (node:Fastq) WHERE node.uri = $uri RETURN node"
@@ -206,3 +209,40 @@ class TestDbQuery(TestCase):
 		node_properties = dict(node.items())
 		
 		assert node_properties['basename'] =='SAMPLE0_0_R1.fastq.gz'
+
+
+class TestLoadConfig(TestCase):
+	config_file = "sample-config.yaml"
+	queries_file = "sample-queries.yaml"
+
+	def test_load_trellis_variables(cls):
+		with open(cls.config_file, 'r') as config_document:
+			config_map = yaml.safe_load(config_document)
+		#TRELLIS = trellis.utils.Struct(**parsed_vars)
+
+	def test_get_trellis_topic(cls):
+		with open(cls.config_file, 'r') as config_document:
+			config_map = yaml.safe_load(config_document)
+		#TRELLIS = trellis.utils.Struct(**parsed_vars)
+
+		db_query_topic = config_map["TOPIC_DB_QUERY"]
+		assert db_query_topic == 'db-query'
+
+	def test_get_trellis_topic_using_variable_(cls):
+		with open(cls.config_file, 'r') as config_document:
+			config_map = yaml.safe_load(config_document)
+		#TRELLIS = trellis.utils.Struct(**parsed_vars)
+
+		topic_reference = "TOPIC_DB_QUERY"
+
+		db_query_topic = config_map[topic_reference]
+		assert db_query_topic == 'db-query'
+
+
+	def test_load_queries_from_file(cls):
+		with open(cls.queries_file, 'r') as queries_document:
+			queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
+			queries = list(queries)
+
+		for query in queries:
+			assert isinstance(query, trellis.DatabaseQuery) == True
