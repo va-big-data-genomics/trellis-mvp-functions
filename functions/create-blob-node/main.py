@@ -152,12 +152,14 @@ if ENVIRONMENT == 'google-cloud':
     GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
     GIT_VERSION_TAG = os.environ['GIT_VERSION_TAG']
     
-    vars_blob = storage.Client() \
+    config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
-    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
-    TRELLIS = Struct(**parsed_vars)
+    #parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+    # https://stackoverflow.com/questions/6866600/how-to-parse-read-a-yaml-file-into-a-python-object
+    TRELLIS = yaml.safe_load(config_doc)
+    #TRELLIS = Struct(**parsed_vars)
 
     PUBLISHER = pubsub.PublisherClient()
     STORAGE_CLIENT = storage.Client()
@@ -165,7 +167,7 @@ if ENVIRONMENT == 'google-cloud':
     # Need to pull this from GCS
     label_taxonomy = storage.Client() \
                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                        .get_blob(TRELLIS.LABEL_TAXONOMY) \
+                        .get_blob(TRELLIS['LABEL_TAXONOMY']) \
                         .download_as_string()
 
     TAXONOMY_PARSER = TaxonomyParser()
@@ -508,7 +510,7 @@ def create_node_query(event, context, test=False):
         # Use bucket name to determine which config file should be used
         # to parse object metadata.
         # (Module name does not include project prefix)
-        pattern = f"{TRELLIS.GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
+        pattern = f"{TRELLIS['GOOGLE_CLOUD_PROJECT']}-(?P<suffix>\w+(?:-\w+)+)"
         match = re.match(pattern, bucket_name)
         suffix = match['suffix']
 
@@ -516,7 +518,7 @@ def create_node_query(event, context, test=False):
         #   and include the module in the function deployment parameters,
         #   controlled by Terraform.
         # Import the config module that corresponds to event-trigger bucket
-        node_module_name = f"{TRELLIS.DATA_GROUP}.{suffix}.create-node-config"
+        node_module_name = f"{TRELLIS['DATA_GROUP']}.{suffix}.create-node-config"
         node_module = importlib.import_module(node_module_name)
     else:
         import test_create_node_config as node_module
@@ -633,13 +635,13 @@ def create_node_query(event, context, test=False):
         custom = True,
         query = parameterized_query,
         write_transaction = True,
-        publish_to = TRELLIS.TOPIC_TRIGGERS,
+        publish_to = TRELLIS['TOPIC_TRIGGERS'],
         returns = {"node": "node"})
     message = query_request.format_json_message()
     logging.info(f"> Pubsub message: {message}.")
     if ENVIRONMENT == 'google-cloud':
-        result = trellis.publish_to_pubsub_topic(TRELLIS.DB_QUERY_TOPIC, message)
-        logging.info(f"> Published message to {TRELLIS.DB_QUERY_TOPIC} with result: {result}.")
+        result = trellis.publish_to_pubsub_topic(TRELLIS['TOPIC_DB_QUERY'], message)
+        logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
     else:
         logging.warning("Could not determine environment. Message was not published.")
         return(message)
