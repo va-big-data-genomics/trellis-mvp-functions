@@ -20,7 +20,6 @@ from google.cloud import pubsub
 from google.cloud import storage
 
 import trellisdata as trellis
-from trellisdata import DatabaseQuery
 
 # Get runtime variables from cloud storage bucket
 # https://www.sethvargo.com/secrets-in-serverless/
@@ -38,23 +37,24 @@ if ENVIRONMENT == 'google-cloud':
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
 
-    vars_blob = storage.Client() \
+    config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
-    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+    # https://stackoverflow.com/questions/6866600/how-to-parse-read-a-yaml-file-into-a-python-object
+    TRELLIS = yaml.safe_load(config_doc)
 
     # Runtime variables
-    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    TOPIC_DB_QUERY = parsed_vars['TOPIC_DB_QUERY']
-    DB_STORED_QUERIES = parsed_vars['DB_STORED_QUERIES']
+    #PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    #TOPIC_DB_QUERY = parsed_vars['TOPIC_DB_QUERY']
+    #DB_STORED_QUERIES = parsed_vars['DB_STORED_QUERIES']
 
     #NEO4J_URL = parsed_vars['NEO4J_URL']
-    NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
-    NEO4J_HOST = parsed_vars['NEO4J_HOST']
-    NEO4J_PORT = parsed_vars['NEO4J_PORT']
-    NEO4J_USER = parsed_vars['NEO4J_USER']
-    NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
+    #NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
+    #NEO4J_HOST = parsed_vars['NEO4J_HOST']
+    #NEO4J_PORT = parsed_vars['NEO4J_PORT']
+    #NEO4J_USER = parsed_vars['NEO4J_USER']
+    #NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
 
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
@@ -62,7 +62,7 @@ if ENVIRONMENT == 'google-cloud':
     # Need to pull this from GCS
     queries_document = storage.Client() \
                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                        .get_blob(DB_STORED_QUERIES) \
+                        .get_blob(TRELLIS["DB_STORED_QUERIES"]) \
                         .download_as_string()
     queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
     
@@ -74,8 +74,8 @@ if ENVIRONMENT == 'google-cloud':
     # database and manage connection pool used by neo4j.Session objects
     # https://neo4j.com/docs/api/python-driver/current/api.html#driver
     DRIVER = GraphDatabase.driver(
-        f"{NEO4J_SCHEME}://{NEO4J_HOST}:{NEO4J_PORT}",
-        auth=("neo4j", NEO4J_PASSPHRASE),
+        f"{TRELLIS['NEO4J_SCHEME']}://{TRELLIS['NEO4J_HOST']}:{TRELLIS['NEO4J_PORT']}",
+        auth=("neo4j", TRELLIS["NEO4J_PASSPHRASE"]),
         max_connection_pool_size=10)
 else:
     FUNCTION_NAME = 'db-query-local'
@@ -170,7 +170,7 @@ def main(event, context, local_driver=None):
     if query_request.custom == True:
         # If custom query has been provided, create a new
         # instance of the DatabaseQuery class
-        parameterized_query = DatabaseQuery(
+        parameterized_query = trellis.DatabaseQuery(
             name=query_request.query_name,
             query=query_request.query,
             parameters={},
@@ -244,7 +244,8 @@ def main(event, context, local_driver=None):
     else:
         # Track how many messages are published to each topic
         published_message_counts = {}
-        for topic in parameterized_query.publish_to:
+        for topic_name in parameterized_query.publish_to:
+            topic = TRELLIS[topic_name]
             # TODO: map the name in the query definition to the real topic
 
             published_message_counts[topic] = 0
