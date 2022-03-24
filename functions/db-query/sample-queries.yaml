@@ -4,7 +4,7 @@ query: "MATCH (gvcf:Gvcf)<-[:GENERATED]-(step:CromwellStep)-[:GENERATED]->(tbi:T
 parameters:
   tbi_id: str
 write_transaction: true
-publish_to: test-function
+publish_to: TOPIC_TRIGGERS
 returns:
   gvcf: node
 --- !DatabaseQuery
@@ -18,6 +18,6 @@ parameters:
   stoppedBy: str
   status: str
 write_transaction: true
-publish_to: check-triggers
+publish_to: TOPIC_TRIGGERS
 returns:
   job: node
