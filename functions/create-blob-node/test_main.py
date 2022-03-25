@@ -10,7 +10,7 @@ import pytest
 from unittest import TestCase
 
 import main
-import test_create_node_config as node_module
+import example_create_node_config as node_module
 
 mock_context = mock.Mock()
 mock_context.event_id = '617187464135194'
@@ -167,7 +167,7 @@ class TestPopulateNodeMetadata(TestCase):
 	# external config file. Create a local config file
 	# that just addresses a few use cases.
 
-	import test_create_node_config as node_module
+	import example_create_node_config as node_module
 
 	node_kinds = node_module.NodeKinds()
 	label_patterns = node_kinds.match_patterns
