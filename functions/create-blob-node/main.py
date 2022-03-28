@@ -49,12 +49,12 @@ if ENVIRONMENT == 'google-cloud':
                         .get_blob(TRELLIS['LABEL_TAXONOMY']) \
                         .download_as_string()
 
-    TAXONOMY_PARSER = trellis.TaxonomyParser()
+    TAXONOMY_PARSER = trellis.utils.TaxonomyParser()
     TAXONOMY_PARSER.read_from_string(label_taxonomy)
 else:
     import logging
 
-    TAXONOMY_PARSER = trellis.TaxonomyParser()
+    TAXONOMY_PARSER = trellis.utils.TaxonomyParser()
     TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
 
 
@@ -372,7 +372,7 @@ def create_node_query(event, context, test=False):
         TRIGGER_OPERATION = "local-test"
         FUNCTION_NAME = "create-blob-node"
 
-        TAXONOMY_PARSER = TaxonomyParser()
+        TAXONOMY_PARSER = trellis.utils.TaxonomyParser()
         TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
 
     logging.info(f"> Processing new object event: {event['name']}.")
