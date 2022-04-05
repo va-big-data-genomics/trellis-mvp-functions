@@ -526,7 +526,7 @@ def create_node_query(event, context, test=False):
             publisher = PUBLISHER,
             project_id = GCP_PROJECT,
             topic = TRELLIS['TOPIC_DB_QUERY'],
-            str_data = message)
+            message = message)
         logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
     else:
         logging.warning("> Could not determine environment. Message was not published.")
