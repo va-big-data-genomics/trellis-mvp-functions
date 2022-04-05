@@ -1,0 +1,76 @@
+--- !DatabaseQuery
+name: relateGenomeToFastq
+query: "MATCH (fastq:Fastq)<-[]-(:PersonalisSequencing)<-[]-(s:Sample)<-[]-(:Person)-[]->(genome:Genome) WHERE s.sample = $sample AND NOT (g)-[:HAS_SEQUENCING_READS]->(f) MERGE (genome)-[rel:HAS_SEQUENCING_READS]->(fastq) RETURN genome, rel, fastq" 
+parameters:
+  sample: str
+write_transaction: true
+publish_to: 
+  - TOPIC_TRIGGERS
+indexes:
+  Sample: 
+    - sample
+returns:
+  genome: node
+  rel: relationship
+  fastq: node
+--- !DatabaseQuery
+name: mergeBiologicalNodes
+query: "MATCH (s:PersonalisSequencing) WHERE s.sample = $sample MERGE (s)<-[:WAS_USED_BY {ontology: 'provenance'}]-(:Sample {sample: s.sample})<-[:GENERATED {ontology:'provenance'}]-(:Person {sample: s.sample})-[:HAS_BIOLOGICAL_OME {ontology:'bioinformatics'}]->(genome:Genome {sample: s.sample}) RETURN genome"
+parameters:
+  sample: str
+write_transaction: true
+publish_to: 
+  - TOPIC_TRIGGERS
+indexes:
+  Sample:
+    - sample
+returns:
+  genome: node
+--- !DatabaseQuery
+name: relateFastqToPersonalisSequencing
+query: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (fastq:Fastq) WHERE fastq.uri=$uri MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
+parameters:
+  sample: str
+  uri: str
+write_transaction: true
+publish_to: 
+  - TOPIC_TRIGGERS
+indexes:
+  Fastq:
+    - uri
+  PersonalisSequencing:
+    - sample
+returns:
+  seq: node
+  rel: relationship
+  fastq: node
+--- !DatabaseQuery
+name: relateMicroarrayToPersonalisSequencing
+query: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (microarray:Microarray) WHERE microarray.uri=$uri MERGE (seq)-[rel:GENERATED]->(micro) RETURN seq, rel, microarray"
+parameters:
+  Microarray:
+    - uri
+  PersonalisSequencing:
+    - sample
+write_transaction: true
+publish_to: 
+  - TOPIC_TRIGGERS
+returns:
+  seq: node
+  rel: relationship
+  microarray: node
+--- !DatabaseQuery
+name: relateChecksumToPersonalisSequencing
+query: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (checksum:Checksum) WHERE checksum.uri=$uri MERGE (seq)-[rel:GENERATED]->(checksum) RETURN seq, rel, checksum"
+parameters:
+  Checksum:
+    - uri
+  PersonalisSequencing:
+    - sample
+write_transaction: true
+publish_to: 
+  - TOPIC_TRIGGERS
+returns:
+  seq: node
+  rel: relationship
+  checksum: node
