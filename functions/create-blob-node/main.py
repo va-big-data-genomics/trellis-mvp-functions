@@ -410,6 +410,7 @@ def create_node_query(event, context, test=False):
 
     # Populate query_parameters with metadata about object
     query_parameters, labels = assign_labels_and_metadata(query_parameters, label_patterns, label_functions)
+    logging.info(f"Labels assigned to node: {labels}.")
     """
     query_parameters['labels'] = []
     for label, patterns in label_patterns.items():
@@ -428,6 +429,7 @@ def create_node_query(event, context, test=False):
     """
 
     labels = get_leaf_labels(labels, TAXONOMY_PARSER)
+    logging.info(f"Leaf labels (expect one): {labels}.")
     """
     # Get only the shallowest labels of a branch of the taxonomy that should be applied 
     # to the node. The point of the taxonomy is so that we can retain lineage information
@@ -450,7 +452,9 @@ def create_node_query(event, context, test=False):
 
     # Max (1) label per node to choose parameterized query
     if len(labels) > 1:
-        raise ValueError
+        logging.error(f"More than one label applied to node: [{labels}].")
+    elif not labels:
+        logging.error("No labels applied to node.")
     else:
         label = labels[0]
 
