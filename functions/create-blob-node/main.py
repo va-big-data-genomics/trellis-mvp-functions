@@ -411,7 +411,7 @@ def create_node_query(event, context, test=False):
     query_parameters['triggerOperation'] = TRIGGER_OPERATION
 
     # Populate query_parameters with metadata about object
-    logging.info(f"Query parameter 'path': {query_parameters["path"]}.")
+    logging.info(f"Query parameter 'path': {query_parameters['path']}.")
     query_parameters, labels = assign_labels_and_metadata(query_parameters, label_patterns, label_functions)
     logging.info(f"Labels assigned to node: {labels}.")
     """
