@@ -473,7 +473,7 @@ def create_node_query(event, context, test=False):
     # TODO: Support passing label query generator
 
     # Generate UUID
-    if not query_parameters['trellisUuid'] and ENVIRONMENT == 'google-cloud':
+    if not query_parameters.get('trellisUuid') and ENVIRONMENT == 'google-cloud':
         uuid = add_uuid_to_blob(
                                 query_parameters['bucket'], 
                                 query_parameters['path'])
