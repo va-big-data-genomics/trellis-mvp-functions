@@ -521,7 +521,7 @@ def create_node_query(event, context, test=False):
     message = query_request.format_json_message()
     logging.info(f"> Pubsub message: {message}.")
     if ENVIRONMENT == 'google-cloud':
-        result = trellis.publish_to_pubsub_topic(TRELLIS['TOPIC_DB_QUERY'], message)
+        result = trellis.utils.publish_to_pubsub_topic(TRELLIS['TOPIC_DB_QUERY'], message)
         logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
     else:
         logging.warning("Could not determine environment. Message was not published.")
