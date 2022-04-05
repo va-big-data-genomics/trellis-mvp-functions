@@ -312,7 +312,7 @@ def assign_labels(path, label_match_patterns):
                 labels.append(label)
     return labels
 
-def assign_label_and_metadata(query_parameters, label_patterns, label_functions):
+def assign_labels_and_metadata(query_parameters, label_patterns, label_functions):
     #query_parameters['labels'] = []
     labels = []
     for label, patterns in label_patterns.items():
