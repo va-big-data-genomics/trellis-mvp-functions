@@ -30,7 +30,8 @@ if ENVIRONMENT == 'google-cloud':
     TRIGGER_OPERATION = os.environ['TRIGGER_OPERATION']
     GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
     GIT_VERSION_TAG = os.environ['GIT_VERSION_TAG']
-    
+    PROJECT_ID = os.environt['GOOGLE_CLOUD_PROJECT']
+
     config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
@@ -372,7 +373,7 @@ def create_node_query(event, context, test=False):
         # Use bucket name to determine which config file should be used
         # to parse object metadata.
         # (Module name does not include project prefix)
-        pattern = f"{TRELLIS['GOOGLE_CLOUD_PROJECT']}-(?P<suffix>\w+(?:-\w+)+)"
+        pattern = f"{GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
         match = re.match(pattern, bucket_name)
         suffix = match['suffix']
 
@@ -388,12 +389,12 @@ def create_node_query(event, context, test=False):
     node_kinds = node_module.NodeKinds()
     label_patterns = node_kinds.match_patterns
     label_functions = node_kinds.label_functions
-    logging.info(f"Label patterns: {len(label_patterns)}, label functions: {len(label_functions)}.")
+    logging.info(f"> Label patterns: {len(label_patterns)}, label functions: {len(label_functions)}.")
 
     # Create dict of metadata to add to database node
     gcp_metadata = event
     query_parameters = clean_metadata_dict(event)
-    logging.info(f"Cleaned object metadata: {query_parameters}.")
+    logging.info(f"> Cleaned object metadata: {query_parameters}.")
 
     # Generate UUID
     # NOTE: This reactivates the function and creates an infinte loop 
@@ -402,7 +403,7 @@ def create_node_query(event, context, test=False):
         uuid = add_uuid_to_blob(
                                 query_parameters['bucket'], 
                                 query_parameters['path'])
-        logging.info(f"Object UUID added: {uuid}. Exiting.")
+        logging.info(f"O> bject UUID added: {uuid}. Exiting.")
         return # Updating metadata will trigger this function again
 
     # Add standard fields
@@ -420,9 +421,9 @@ def create_node_query(event, context, test=False):
     query_parameters['triggerOperation'] = TRIGGER_OPERATION
 
     # Populate query_parameters with metadata about object
-    logging.info(f"Query parameter 'path': {query_parameters['path']}.")
+    logging.info(f"> Query parameter 'path': {query_parameters['path']}.")
     query_parameters, labels = assign_labels_and_metadata(query_parameters, label_patterns, label_functions)
-    logging.info(f"Labels assigned to node: {labels}.")
+    logging.info(f"> Labels assigned to node: {labels}.")
     """
     query_parameters['labels'] = []
     for label, patterns in label_patterns.items():
@@ -441,7 +442,7 @@ def create_node_query(event, context, test=False):
     """
 
     labels = get_leaf_labels(labels, TAXONOMY_PARSER)
-    logging.info(f"Leaf labels (expect one): {labels}.")
+    logging.info(f"> Leaf labels (expect one): {labels}.")
     """
     # Get only the shallowest labels of a branch of the taxonomy that should be applied 
     # to the node. The point of the taxonomy is so that we can retain lineage information
@@ -464,9 +465,9 @@ def create_node_query(event, context, test=False):
 
     # Max (1) label per node to choose parameterized query
     if len(labels) > 1:
-        logging.error(f"More than one label applied to node: [{labels}].")
+        logging.error(f"> More than one label applied to node: [{labels}].")
     elif not labels:
-        logging.error("No labels applied to node.")
+        logging.error("> No labels applied to node.")
     else:
         label = labels[0]
 
@@ -488,7 +489,7 @@ def create_node_query(event, context, test=False):
         uuid = add_uuid_to_blob(
                                 query_parameters['bucket'], 
                                 query_parameters['path'])
-        logging.info("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
+        logging.info("> The metadata for the blob {} is {}".format(blob.name, blob.metadata))
         query_parameters['trellisUuid'] = blob.metadata['uuid']
 
 
@@ -519,10 +520,14 @@ def create_node_query(event, context, test=False):
         publish_to = TRELLIS['TOPIC_TRIGGERS'],
         returns = {"node": "node"})
     message = query_request.format_json_message()
-    logging.info(f"> Pubsub message: {message}.")
+    logging.info(f"> Topic: {TRELLIS['TOPIC_DB_QUERY']}, message: {message}.")
     if ENVIRONMENT == 'google-cloud':
-        result = trellis.utils.publish_to_pubsub_topic(TRELLIS['TOPIC_DB_QUERY'], message)
+        result = trellis.utils.publish_to_pubsub_topic(
+            publisher = PUBLISHER,
+            project_id = GOOGLE_CLOUD_PROJECT,
+            topic = TRELLIS['TOPIC_DB_QUERY'],
+            str_data = message)
         logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
     else:
-        logging.warning("Could not determine environment. Message was not published.")
+        logging.warning("> Could not determine environment. Message was not published.")
         return(message)
