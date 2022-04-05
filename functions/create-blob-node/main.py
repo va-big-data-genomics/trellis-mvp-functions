@@ -517,7 +517,7 @@ def create_node_query(event, context, test=False):
         custom = True,
         query = parameterized_query,
         write_transaction = True,
-        publish_to = [TRELLIS['TOPIC_TRIGGERS']],
+        publish_to = ["TOPIC_TRIGGERS"],
         returns = {"node": "node"})
     message = query_request.format_json_message()
     logging.info(f"> Topic: {TRELLIS['TOPIC_DB_QUERY']}, message: {message}.")
