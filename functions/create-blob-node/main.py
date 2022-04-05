@@ -30,7 +30,7 @@ if ENVIRONMENT == 'google-cloud':
     TRIGGER_OPERATION = os.environ['TRIGGER_OPERATION']
     GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
     GIT_VERSION_TAG = os.environ['GIT_VERSION_TAG']
-    GOOGLE_CLOUD_PROJECT = os.environ['GOOGLE_CLOUD_PROJECT']
+    GCP_PROJECT = os.environ['GCP_PROJECT']
 
     config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -373,7 +373,7 @@ def create_node_query(event, context, test=False):
         # Use bucket name to determine which config file should be used
         # to parse object metadata.
         # (Module name does not include project prefix)
-        pattern = f"{GOOGLE_CLOUD_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
+        pattern = f"{GCP_PROJECT}-(?P<suffix>\w+(?:-\w+)+)"
         match = re.match(pattern, bucket_name)
         suffix = match['suffix']
 
@@ -524,7 +524,7 @@ def create_node_query(event, context, test=False):
     if ENVIRONMENT == 'google-cloud':
         result = trellis.utils.publish_to_pubsub_topic(
             publisher = PUBLISHER,
-            project_id = GOOGLE_CLOUD_PROJECT,
+            project_id = GCP_PROJECT,
             topic = TRELLIS['TOPIC_DB_QUERY'],
             str_data = message)
         logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
