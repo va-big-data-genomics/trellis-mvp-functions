@@ -517,6 +517,7 @@ def create_node_query(event, context, test=False):
         custom = True,
         query = parameterized_query,
         write_transaction = True,
+        split_results = False,
         publish_to = ["TOPIC_TRIGGERS"],
         returns = {"node": "node"})
     message = query_request.format_json_message()
