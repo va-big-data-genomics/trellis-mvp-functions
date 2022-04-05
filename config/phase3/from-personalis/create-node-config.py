@@ -298,12 +298,12 @@ class NodeKinds:
         """
 
         self.match_patterns = {
-                               #"Blob": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*"],
-                               "Fastq": [r"va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/FASTQ/.*\\.fastq.gz$"], 
-                               "Microarray": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/Microarray/.*"], 
-                               "PersonalisSequencing": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*\\.json$"],
+                               "Blob": [r"^va_mvp_phase2\/(?P<plate>\w+)\/(?P<sample>\w+)\/.*"],
+                               "Fastq": [r"^va_mvp_phase2\/(?P<plate>\w+)\/(?P<sample>\w+)\/FASTQ\/.*\.fastq\.gz$"], 
+                               "Microarray": [r"^va_mvp_phase2\/(?P<plate>\w+)\/(?P<sample>\w+)\/Microarray\/.*"], 
+                               "PersonalisSequencing": [r"^va_mvp_phase2\/(?P<plate>\w+)\/(?P<sample>\w+)\/.*\.json$"],
                                #"Json": ["^va_mvp_phase2/.*\\.json$"],
-                               "Checksum": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*checksum.txt"], 
+                               "Checksum": [r"^va_mvp_phase2\/(?P<plate>\w+)\/(?P<sample>\w+)\/.*checksum\.txt$"], 
                                #"WGS35": ["^va_mvp_phase2/.*"],
                                #"FromPersonalis": ["^va_mvp_phase2/.*"],
         }
