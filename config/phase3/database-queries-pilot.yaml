@@ -4,6 +4,7 @@ query: "MATCH (fastq:Fastq)<-[]-(:PersonalisSequencing)<-[]-(s:Sample)<-[]-(:Per
 parameters:
   sample: str
 write_transaction: true
+split_results: false
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -19,6 +20,7 @@ query: "MATCH (s:PersonalisSequencing) WHERE s.sample = $sample MERGE (s)<-[:WAS
 parameters:
   sample: str
 write_transaction: true
+split_results: false
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -33,6 +35,7 @@ parameters:
   sample: str
   uri: str
 write_transaction: true
+split_results: false
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -53,6 +56,7 @@ parameters:
   PersonalisSequencing:
     - sample
 write_transaction: true
+split_results: false
 publish_to: 
   - TOPIC_TRIGGERS
 returns:
@@ -68,6 +72,7 @@ parameters:
   PersonalisSequencing:
     - sample
 write_transaction: true
+split_results: false
 publish_to: 
   - TOPIC_TRIGGERS
 returns:
