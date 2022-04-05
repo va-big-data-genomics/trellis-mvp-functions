@@ -61,7 +61,7 @@ def clean_metadata_dict(raw_dict):
     clean_dict = dict(raw_dict)
 
     uuid = clean_dict['metadata'].get('trellis-uuid')
-    clean_dict['trellis-uuid'] = uuid
+    clean_dict['trellisUuid'] = uuid
 
     # What if I just convert to strings
     # Remove values that are dicts
@@ -300,8 +300,6 @@ def add_uuid_to_blob(bucket, path):
 
     return blob.metadata
 
-    logging.info("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
-
 def assign_labels(path, label_match_patterns):
     """Used for testing"""
     labels = []
@@ -395,6 +393,17 @@ def create_node_query(event, context, test=False):
     # Create dict of metadata to add to database node
     gcp_metadata = event
     query_parameters = clean_metadata_dict(event)
+    logging.info(f"Cleaned object metadata: {query_parameters}.")
+
+    # Generate UUID
+    # NOTE: This reactivates the function and creates an infinte loop 
+    # because also it's activating every time
+    if not query_parameters.get('trellisUuid') and ENVIRONMENT == 'google-cloud':
+        uuid = add_uuid_to_blob(
+                                query_parameters['bucket'], 
+                                query_parameters['path'])
+        logging.info(f"Object UUID added: {uuid}. Exiting.")
+        return # Updating metadata will trigger this function again
 
     # Add standard fields
     name_fields = get_name_fields(
@@ -473,6 +482,8 @@ def create_node_query(event, context, test=False):
     # TODO: Support passing label query generator
 
     # Generate UUID
+    # NOTE: This reactivates the function and creates an infinte loop 
+    # because also it's activating every time
     if not query_parameters.get('trellisUuid') and ENVIRONMENT == 'google-cloud':
         uuid = add_uuid_to_blob(
                                 query_parameters['bucket'], 
