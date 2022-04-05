@@ -369,6 +369,7 @@ def create_node_query(event, context, test=False):
     name = event['name']
     bucket_name = event['bucket']
 
+    logging.info(f"Environment: {ENVIRONMENT}.")
     if ENVIRONMENT == 'google-cloud':
         # Use bucket name to determine which config file should be used
         # to parse object metadata.
@@ -389,6 +390,7 @@ def create_node_query(event, context, test=False):
     node_kinds = node_module.NodeKinds()
     label_patterns = node_kinds.match_patterns
     label_functions = node_kinds.label_functions
+    logging.info(f"Label patterns: {len(label_patterns)}, label functions: {len(label_functions)}.")
 
     # Create dict of metadata to add to database node
     gcp_metadata = event
@@ -409,6 +411,7 @@ def create_node_query(event, context, test=False):
     query_parameters['triggerOperation'] = TRIGGER_OPERATION
 
     # Populate query_parameters with metadata about object
+    logging.info(f"Query parameter 'path': {query_parameters["path"]}.")
     query_parameters, labels = assign_labels_and_metadata(query_parameters, label_patterns, label_functions)
     logging.info(f"Labels assigned to node: {labels}.")
     """
