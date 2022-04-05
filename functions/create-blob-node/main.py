@@ -9,14 +9,12 @@ import importlib
 
 import trellisdata as trellis
 
-from anytree import Node, RenderTree
-from anytree.search import find
 from collections import deque
 
 from google.cloud import storage
 from google.cloud import pubsub
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'Environment variable not set')
 if ENVIRONMENT == 'google-cloud':
 
     # set up the Google Cloud Logging python client library
@@ -361,20 +359,6 @@ def create_node_query(event, context, test=False):
         event (dict): Event payload.
         context (google.cloud.functions.Context): Metadata for the event.
     """
-
-    # Define global variables for local testing
-    #type(ENVIRONMENT)
-    if test == True:
-        ENVIRONMENT = 'local'
-
-        GIT_COMMIT_HASH = "mock-hash"
-        GIT_VERSION_TAG = "v0.1"
-        TRIGGER_OPERATION = "local-test"
-        FUNCTION_NAME = "create-blob-node"
-
-        TAXONOMY_PARSER = trellis.utils.TaxonomyParser()
-        TAXONOMY_PARSER.read_from_json('label-taxonomy.json')
-
     logging.info(f"> Processing new object event: {event['name']}.")
     logging.info(f"> Event: {event}.")
     logging.info(f"> Context: {context}.")
