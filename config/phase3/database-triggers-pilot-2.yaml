@@ -1,0 +1,72 @@
+--- !DatabaseTrigger
+name: LaunchGatk5Dollar
+type: relationship
+start:
+    label: Job
+end: 
+    label: Ubam
+    properties:
+        sample: sample
+relationship: 
+    type: GENERATED
+query: launchGatk5Dollar
+--- !DatabaseTrigger
+name: LaunchFastqToUbam
+type: relationship
+start: 
+    label: PersonalisSequencing
+end: 
+    label: Fastq
+    properties:
+        sample: sample
+        readGroup: read_group
+relationship: 
+    type: GENERATED
+query: launchFastqToUbam
+--- !DatabaseTrigger
+name: RelateGenomeToFastq
+type: relationship
+start: 
+    label: Person
+end: 
+    label: Genome
+    properties:
+        sample: sample
+relationship: 
+    type: HAS_BIOLOGICAL_OME
+query: relateGenomeToFastq
+--- !DatabaseTrigger
+name: MergeBiologicalNodes
+type: node
+start: 
+    label: PersonalisSequencing
+    properties:
+        sample: sample
+query: mergeBiologicalNodes
+--- !DatabaseTrigger
+name: relateFastqToPersonalisSequencing
+type: node
+start: 
+    label: Fastq
+    properties:
+        sample: sample
+        uri: uri
+query: relateFastqToPersonalisSequencing
+--- !DatabaseTrigger
+name: relateMicroarrayToPersonalisSequencing
+type: node
+start: 
+    label: Microarray
+    properties:
+        sample: sample
+        uri: uri
+query: relateMicroarrayToPersonalisSequencing
+--- !DatabaseTrigger
+name: RelateChecksumToPersonalisSequencing
+type: node
+start: 
+    label: Checksum
+    properties:
+        sample: sample
+        uri: uri
+query: relateChecksumToPersonalisSequencing
