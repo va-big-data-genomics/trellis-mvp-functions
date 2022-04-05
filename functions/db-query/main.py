@@ -161,8 +161,8 @@ def main(event, context, local_driver=None):
             print(
                   f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
                   f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
-    elif local_driver:
-        DRIVER = local_driver
+    #elif local_driver:
+    #    DRIVER = local_driver
 
     # TODO: maybe I should store custom queries after they've been
     # created and give them unique IDs based on content so I can 
