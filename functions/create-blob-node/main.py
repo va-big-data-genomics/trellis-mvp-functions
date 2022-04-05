@@ -30,7 +30,7 @@ if ENVIRONMENT == 'google-cloud':
     TRIGGER_OPERATION = os.environ['TRIGGER_OPERATION']
     GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
     GIT_VERSION_TAG = os.environ['GIT_VERSION_TAG']
-    PROJECT_ID = os.environt['GOOGLE_CLOUD_PROJECT']
+    GOOGLE_CLOUD_PROJECT = os.environ['GOOGLE_CLOUD_PROJECT']
 
     config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
