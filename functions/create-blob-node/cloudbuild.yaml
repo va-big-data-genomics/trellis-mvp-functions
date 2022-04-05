@@ -10,7 +10,7 @@ steps:
          'trellis-create-blob-node-${_BUCKET_SHORT_NAME}-${_OPERATION_SHORT_NAME}',
          '--project=${PROJECT_ID}',
          '--source=functions/create-blob-node',
-         '--memory=128MB',
+         '--memory=256MB',
          '--max-instances=100',
          '--entry-point=create_node_query',
          '--runtime=python37',
