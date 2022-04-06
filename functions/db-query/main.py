@@ -89,7 +89,7 @@ else:
         for query in queries:
             QUERY_DICT[query.name] = query
 
-QUERY_ELAPSED_MAX = 0.300
+QUERY_ELAPSED_MAX = 300
 PUBSUB_ELAPSED_MAX = 10
 
 """
@@ -149,9 +149,9 @@ def main(event, context, local_driver=None):
                                                event=event, 
                                                context=context)
     
-    print(f"> Received message (context): {query_request.context}.")
-    print(f"> Message header: {query_request.header}.")
-    print(f"> Message body: {query_request.body}.")
+    print(f"> Received message context: {query_request.context}.")
+    print(f"> Received message header: {query_request.header}.")
+    print(f"> Received message body: {query_request.body}.")
 
     if ENVIRONMENT == 'google-cloud':
         # Time from message publication to reception
@@ -218,7 +218,7 @@ def main(event, context, local_driver=None):
     logging.info(f"> Result available after: {result_available_after} ms.")
     logging.info(f"> Result consumed after: {result_consumed_after} ms.")
         #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
-    if result_summary.result_available_after > QUERY_ELAPSED_MAX:
+    if int(result_available_after) > QUERY_ELAPSED_MAX:
         logging.warning(f"> Result available time ({result_available_after} ms) " +
                         f"exceeded {QUERY_ELAPSED_MAX:.3f}. " +
                         f"Query: {parameterized_query.name}.")
@@ -275,25 +275,29 @@ def main(event, context, local_driver=None):
                     published_message_counts[topic] += 1
                 """
                 for message in query_response.format_json_message_iter():
-                    print(f"> Pubsub message: {message}.")
+                    logging.info(f"> Publish topic: {topic}, message: {message}.")
                     publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
                         project_id = GCP_PROJECT,
                         topic = topic, 
                         message = message)
-                    print(f"> Published message to {topic} with result: {publish_result}.")
+                    logging.info(f"> Published message to {topic} with result: {publish_result}.")
                     published_message_counts[topic] += 1
             else:
                 message = query_response.format_json_message()
-                print(f"> Pubsub message: {message}.")
-                publish_result = trellis.utils.publish_to_pubsub_topic(topic, message)
-                print(f"> Published message to {topic} with result: {publish_result}.")
+                logging.info(f"> Publish topic: {topic}, message: {message}.")
+                publish_result = trellis.utils.publish_to_pubsub_topic(
+                        publisher = PUBLISHER,
+                        project_id = GCP_PROJECT,
+                        topic = topic, 
+                        message = message)
+                logging.info(f"> Published message to {topic} with result: {publish_result}.")
                 published_message_counts[topic] += 1
         logging.info(f"> Summary of published messages: {published_message_counts}")
 
-    # Execution time block
-    end = datetime.now()
-    execution_time = (end - start).seconds
-    time_threshold = int(execution_time/10) * 10
-    if time_threshold > 0:
-        print(f"> Execution time exceeded {time_threshold} seconds.")
+    ## Execution time block
+    #end = datetime.now()
+    #execution_time = (end - start).seconds
+    #time_threshold = int(execution_time/10) * 10
+    #if time_threshold > 0:
+    #    print(f"> Execution time exceeded {time_threshold} seconds.")
