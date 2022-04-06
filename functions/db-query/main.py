@@ -36,6 +36,7 @@ if ENVIRONMENT == 'google-cloud':
     import logging
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    GCP_PROJECT = os.environ['GCP_PROJECT']
 
     config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -147,7 +148,6 @@ def main(event, context, local_driver=None):
     query_request = trellis.QueryRequestReader(
                                                event=event, 
                                                context=context)
-    #query_request.parse_pubsub_message(event, context)
     
     print(f"> Received message (context): {query_request.context}.")
     print(f"> Message header: {query_request.header}.")
@@ -180,21 +180,12 @@ def main(event, context, local_driver=None):
         parameterized_query = QUERY_DICT[query_request.query_name]
 
     try:
-        query_start = time.time()
         graph, result_summary = query_database(
             #write_transaction = query_request.write_transaction,
             write_transaction = parameterized_query.write_transaction,
             driver = DRIVER,
             query = parameterized_query.query,
             query_parameters = query_request.query_parameters)
-        query_elapsed = time.time() - query_start
-        print(f"> Query elapsed walltime: {query_elapsed:.3f} seconds. " +
-              f"Available after: {result_summary.result_available_after} ms." +
-              f"Consumed after: {result_summary.result_consumed_after} ms.")
-        #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
-        if query_elapsed > QUERY_ELAPSED_MAX:
-            print(f"> Time to run query ({query_elapsed:.3f}) exceeded {QUERY_ELAPSED_MAX:.3f}. Query: {query}.")
-    # Neo4j http connector
     except ProtocolError as error:
         logging.error(f"> Encountered Protocol Error: {error}.")
         # Add message back to queue
@@ -222,6 +213,16 @@ def main(event, context, local_driver=None):
         #logging.warn(f"> Requeued message: {pubsub_message}.")
         return
 
+    result_available_after = result_summary.result_available_after
+    result_consumed_after = result_summary.result_consumed_after
+    logging.info(f"> Result available after: {result_available_after} ms.")
+    logging.info(f"> Result consumed after: {result_consumed_after} ms.")
+        #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
+    if result_summary.result_available_after > QUERY_ELAPSED_MAX:
+        logging.warning(f"> Result available time ({result_available_after} ms) " +
+                        f"exceeded {QUERY_ELAPSED_MAX:.3f}. " +
+                        f"Query: {parameterized_query.name}.")
+
     query_response = trellis.QueryResponseWriter(
         sender = FUNCTION_NAME,
         seed_id = query_request.seed_id,
@@ -230,17 +231,19 @@ def main(event, context, local_driver=None):
         graph = graph,
         result_summary = result_summary)
 
+
     # Return if no pubsub topic or not running on GCP
     if not parameterized_query.publish_to or not ENVIRONMENT == 'google-cloud':
         print("No Pub/Sub topic specified; result not published.")
 
+
         # Execution time block
-        end = datetime.now()
-        execution_time = (end - start).seconds
-        time_threshold = int(execution_time/10) * 10
-        if time_threshold > 0:
-            print(f"> Execution time exceeded {time_threshold} seconds.")
-        return query_response
+        #end = datetime.now()
+        #execution_time = (end - start).seconds
+        #time_threshold = int(execution_time/10) * 10
+        #if time_threshold > 0:
+        #    print(f"> Execution time exceeded {time_threshold} seconds.")
+        #return query_response
     else:
         # Track how many messages are published to each topic
         published_message_counts = {}
@@ -273,7 +276,11 @@ def main(event, context, local_driver=None):
                 """
                 for message in query_response.format_json_message_iter():
                     print(f"> Pubsub message: {message}.")
-                    publish_result = trellis.utils.publish_to_pubsub_topic(topic, message)
+                    publish_result = trellis.utils.publish_to_pubsub_topic(
+                        publisher = PUBLISHER,
+                        project_id = GCP_PROJECT,
+                        topic = topic, 
+                        message = message)
                     print(f"> Published message to {topic} with result: {publish_result}.")
                     published_message_counts[topic] += 1
             else:
