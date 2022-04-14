@@ -49,7 +49,9 @@ def check_triggers(event, context, dry_run=False):
         context (google.cloud.functions.Context): Metadata for the event.
     """
 
-    query_response = trellis.QueryResponseReader(event, context)
+    query_response = trellis.QueryResponseReader(
+                        context = context,
+                        event = event)
 
     print(f"> Received message (context): {query_response.context}.")
     print(f"> Message header: {query_response.header}.")
