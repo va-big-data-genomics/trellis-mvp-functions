@@ -50,6 +50,7 @@ class TestQueryDatabase(TestCase):
 
 		graph, result_summary = main.query_database(write_transaction, cls.driver, cls.update_query, cls.query_params)
 		
+
 		# Parse the results to make sure they return the correct things
 		nodes = [node for node in graph.nodes]
 		assert len(nodes) == 1
@@ -58,6 +59,9 @@ class TestQueryDatabase(TestCase):
 		assert node['instanceId'] == cls.query_params['instanceId']
 		assert node['stopTimeEpoch'] == cls.query_params['stopTimeEpoch']
 		assert list(node.labels) == ['Job']
+
+		assert result_summary.result_available_after
+		assert result_summary.result_consumed_after
 
 		# Delete job node
 		with cls.driver.session() as session:
@@ -195,6 +199,7 @@ class TestDbQuery(TestCase):
 			result = session.run(delete_query, uri=data['body']['queryParameters']['uri'])
 			result_summary = result.consume()
 		
+		# Run custom query
 		main.main(event, cls.mock_context, cls.driver)
 
 		# Check that Fastq node has been created
