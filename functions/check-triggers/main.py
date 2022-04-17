@@ -75,6 +75,10 @@ def check_triggers(event, context, dry_run=False):
         if dry_run:
             logging.info(f"> Dry run: Would have published message to {TRELLIS['TOPIC_DB_QUERY']}.")
         else:
-            result = trellis.publish_to_pubsub_topic(PUBLISHER, TRELLIS['PROJECT_ID'], TRELLIS['TOPIC_DB_QUERY'], pubsub_message)
+            result = trellis.utils.publish_to_pubsub_topic(
+                                                           PUBLISHER, 
+                                                           TRELLIS['PROJECT_ID'], 
+                                                           TRELLIS['TOPIC_DB_QUERY'], 
+                                                           pubsub_message)
             logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
     return(activated_triggers)
