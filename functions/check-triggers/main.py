@@ -25,6 +25,7 @@ if ENVIRONMENT == 'google-cloud':
     import logging
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    GCP_PROJECT = os.environ['GCP_PROJECT']
 
     config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -76,9 +77,9 @@ def check_triggers(event, context, dry_run=False):
             logging.info(f"> Dry run: Would have published message to {TRELLIS['TOPIC_DB_QUERY']}.")
         else:
             result = trellis.utils.publish_to_pubsub_topic(
-                                                           PUBLISHER, 
-                                                           TRELLIS['PROJECT_ID'], 
-                                                           TRELLIS['TOPIC_DB_QUERY'], 
-                                                           pubsub_message)
+                                                           publisher = PUBLISHER, 
+                                                           project_id = GCP_PROJECT, 
+                                                           topic = TRELLIS['TOPIC_DB_QUERY'], 
+                                                           message = pubsub_message)
             logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
     return(activated_triggers)
