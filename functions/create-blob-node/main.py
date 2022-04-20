@@ -296,16 +296,6 @@ def create_node_query(event, context, test=False):
     query_parameters = clean_metadata_dict(event)
     logging.info(f"> Cleaned object metadata: {query_parameters}.")
 
-    # Generate UUID
-    # NOTE: This reactivates the function and creates an infinte loop 
-    # because also it's activating every time
-    if not query_parameters.get('trellisUuid') and ENVIRONMENT == 'google-cloud':
-        uuid = add_uuid_to_blob(
-                                query_parameters['bucket'], 
-                                query_parameters['path'])
-        logging.info(f"O> bject UUID added: {uuid}. Exiting.")
-        return # Updating metadata will trigger this function again
-
     # Add standard fields
     name_fields = get_name_fields(
                     event_name = event['name'], 
