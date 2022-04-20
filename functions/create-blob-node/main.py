@@ -140,81 +140,7 @@ def get_time_fields(event):
     }
     return time_fields
 
-""" DEPRECATED with 1.3.0: Now use dynamicparameterized queries
-def format_node_merge_query(db_dict, dry_run=False):
-    # Create label string
-    tmp_labels = list(db_dict['labels'])
-    tmp_labels.remove('Blob')
-    labels_str = ':'.join(tmp_labels)
-
-    # Create database ON CREATE string
-    create_strings = []
-    for key, value in db_dict.items():
-        if isinstance(value, str):
-            create_strings.append(f'node.{key} = "{value}"')
-        else:
-            create_strings.append(f'node.{key} = {value}')
-    create_string = ', '.join(create_strings)
-
-    # If node already exists in the database, only update the following
-    # values of the node (SET command), if the values are provided
-    merge_keys = [
-                  'md5Hash',
-                  'size',
-                  'timeUpdatedEpoch',
-                  'timeUpdatedIso',
-                  'timeStorageClassUpdated',
-                  'updated',
-                  'id',
-                  'crc32c',
-                  'generation',
-                  'storageClass',
-                  # Following are specific to Checksum objects
-                  'fastqCount',
-                  'microarrayCount']
-
-    merge_strings = []
-    for key in merge_keys:
-        value = db_dict.get(key)
-        if value:
-            if isinstance(value, str):
-                merge_strings.append(f'node.{key} = "{value}"')
-            else:
-                merge_strings.append(f'node.{key} = {value}')
-    merge_string = ', '.join(merge_strings)
-
-    query = (
-        f"MERGE (node:Blob:{labels_str} {{ " +
-            #f'bucket: "{db_dict["bucket"]}", ' +
-            #f'path: "{db_dict["path"]}" }}) ' +
-            f'id: "{db_dict["id"]}" }}) ' +
-        "ON CREATE SET node.nodeCreated = timestamp(), " +
-            'node.nodeIteration = "initial", ' +
-            f"{create_string} " +
-        f"ON MATCH SET " +
-            'node.nodeIteration = "merged", ' +
-            f"{merge_string} " +
-        "RETURN node")
-    return query
-"""
-
 def create_parameterized_merge_query(label, query_parameters):
-    # Create label string
-    #tmp_labels = list(db_dict['labels'])
-    #tmp_labels.remove('Blob')
-    #labels_str = ':'.join(tmp_labels)
-    #label = query_parameters['labels'][0]
-
-    """
-    # Create database ON CREATE string
-    create_strings = []
-    for key, value in db_dict.items():
-        if isinstance(value, str):
-            create_strings.append(f'node.{key} = "{value}"')
-        else:
-            create_strings.append(f'node.{key} = {value}')
-    create_string = ', '.join(create_strings)
-    """
 
     create_strings = []
     for key in query_parameters.keys():
@@ -238,38 +164,12 @@ def create_parameterized_merge_query(label, query_parameters):
                   'fastqCount',
                   'microarrayCount']
 
-    #merge_strings = []
-    #for key in merge_keys:
-    #    value = db_dict.get(key)
-    #    if value:
-    #        if isinstance(value, str):
-    #            merge_strings.append(f'node.{key} = "{value}"')
-    #        else:
-    #            merge_strings.append(f'node.{key} = {value}')
-    #merge_string = ', '.join(merge_strings)
-
     merge_strings = []
     for key in merge_keys:
         value = query_parameters.get(key)
         if value:
             merge_strings.append(f'node.{key} = ${key}')
     merge_string = ', '.join(merge_strings)
-
-    """
-    parameterized_query = (
-        f"MERGE (node:Blob:{label} {{ " +
-            #f'bucket: "{db_dict["bucket"]}", ' +
-            #f'path: "{db_dict["path"]}" }}) ' +
-            f'id: "{db_dict["id"]}" }}) ' +
-        "ON CREATE SET node.nodeCreated = timestamp(), " +
-            'node.nodeIteration = "initial", ' +
-            f"{create_string} " +
-        f"ON MATCH SET " +
-            'node.nodeIteration = "merged", ' +
-            f"{merge_string} " +
-        "RETURN node")
-    return query
-    """
 
     parameterized_query = (
         f"MERGE (node:{label} {{ uri: $uri, crc32c: $crc32c }}) " +
@@ -368,7 +268,7 @@ def create_node_query(event, context, test=False):
     name = event['name']
     bucket_name = event['bucket']
 
-    logging.info(f"Environment: {ENVIRONMENT}.")
+    logging.info(f"> Environment: {ENVIRONMENT}.")
     if ENVIRONMENT == 'google-cloud':
         # Use bucket name to determine which config file should be used
         # to parse object metadata.
@@ -416,6 +316,7 @@ def create_node_query(event, context, test=False):
 
     query_parameters.update(name_fields)
     query_parameters.update(time_fields)
+    logging.info(f"> Query parameters: {query_parameters}.")
 
     # Add trigger operation as metadata property
     query_parameters['triggerOperation'] = TRIGGER_OPERATION
