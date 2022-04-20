@@ -318,6 +318,14 @@ def create_node_query(event, context, test=False):
     query_parameters.update(time_fields)
     logging.info(f"> Query parameters: {query_parameters}.")
 
+    # Generate UUID
+    if not query_parameters.get('trellisUuid') and ENVIRONMENT == 'google-cloud':
+        uuid = add_uuid_to_blob(
+                                query_parameters['bucket'], 
+                                query_parameters['path'])
+        logging.info(f"> Object UUID added: {uuid}. Exiting.")
+        return # Updating metadata will trigger this function again
+
     # Add trigger operation as metadata property
     query_parameters['triggerOperation'] = TRIGGER_OPERATION
 
