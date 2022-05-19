@@ -30,7 +30,7 @@ returns:
   genome: node
 --- !DatabaseQuery
 name: relateFastqToPersonalisSequencing
-query: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (fastq:Fastq) WHERE fastq.uri=$uri MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
+query: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE fastq.uri=$uri AND seq.sample=fastq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
 parameters:
   sample: str
   uri: str
@@ -44,9 +44,29 @@ indexes:
   PersonalisSequencing:
     - sample
 returns:
-  seq: node
-  rel: relationship
-  fastq: node
+  pattern: relationship
+  start: PersonalisSequencing
+  relationship: GENERATED
+  end: Fastq
+--- !DatabaseQuery
+name: relatePersonalisSequencingToFastqs
+query: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE seq.sample=$sample AND fastq.sample=seq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
+parameters:
+  sample: str
+write_transaction: true
+split_results: false
+publish_to: 
+  - TOPIC_TRIGGERS
+indexes:
+  Fastq:
+    - sample
+  PersonalisSequencing:
+    - sample
+returns:
+  pattern: relationship
+  start: PersonalisSequencing
+  relationship: GENERATED
+  end: Fastq
 --- !DatabaseQuery
 name: relateMicroarrayToPersonalisSequencing
 query: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (microarray:Microarray) WHERE microarray.uri=$uri MERGE (seq)-[rel:GENERATED]->(micro) RETURN seq, rel, microarray"
