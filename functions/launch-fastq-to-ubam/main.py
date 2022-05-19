@@ -19,6 +19,7 @@ from dsub.commands import dsub
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    ENABLE_JOB_LAUNCH = os.environ['ENABLE_JOB_LAUNCH']
 
     vars_blob = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -39,28 +40,23 @@ if ENVIRONMENT == 'google-cloud':
 
     PUBLISHER = pubsub.PublisherClient()
 
+"""
 def format_pubsub_message(job_dict, seed_id, event_id):
     message = {
                "header": {
-                          "resource": "job-metadata", 
-                          "method": "POST",
-                          "labels": ["Create", "Job", "Dsub", "Node"],
-                          "sentFrom": f"{FUNCTION_NAME}",
-                          "seedId": f"{seed_id}",
-                          "previousEventId": f"{event_id}"
+                          "resource": "job-metadata", # message_kind
+                          #"method": "POST",
+                          #"labels": ["Create", "Job", "Dsub", "Node"],
+                          "sentFrom": f"{FUNCTION_NAME}", # sender
+                          "seedId": f"{seed_id}", # seed_id
+                          "previousEventId": f"{event_id}" # previous_event_id
                },
                "body": {
                         "node": job_dict,
                }
     }
     return message
-
-
-def publish_to_topic(publisher, project_id, topic, data):
-    topic_path = publisher.topic_path(project_id, topic)
-    message = json.dumps(data).encode('utf-8')
-    result = publisher.publish(topic_path, data=message).result()
-    return result
+"""
 
 
 def launch_dsub_task(dsub_args):
@@ -115,20 +111,29 @@ def launch_fastq_to_ubam(event, context):
             event (dict): Event payload.
             context (google.cloud.functions.Context): Metadata for the event.
     """
-    pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    data = json.loads(pubsub_message)
-    print(f"> Context: {context}.")
-    print(f"> Data: {data}.")
-    header = data['header']
-    body = data['body']
+    
+    query_response = trellis.QueryResponseReader(
+                        context = context,
+                        event = event)
+
+    print(f"> Received message (context): {query_response.context}.")
+    print(f"> Message header: {query_response.header}.")
+    print(f"> Message body: {query_response.body}.")
+
+    #pubsub_message = base64.b64decode(event['data']).decode('utf-8')
+    #data = json.loads(pubsub_message)
+    #print(f"> Context: {context}.")
+    #print(f"> Data: {data}.")
+    #header = data['header']
+    #body = data['body']
 
     # Get seed/event ID to track provenance of Trellis events
-    seed_id = header['seedId']
-    event_id = context.event_id
+    #seed_id = header['seedId']
+    #event_id = context.event_id
 
-    dry_run = header.get('dryRun')
-    if not dry_run:
-        dry_run = False
+    #dry_run = header.get('dryRun')
+    #if not dry_run:
+    #    dry_run = False
 
     nodes = body['results'].get('nodes')
     if not nodes:
@@ -179,6 +184,7 @@ def launch_fastq_to_ubam(event, context):
     # Define logging & outputs after task_id
     task_name = 'fastq-to-ubam'
     unique_task_label = "FastqToUbam"
+    node_label = "DsubJob"
     job_dict = {
                 "provider": "google-v2",
                 "user": DSUB_USER,
@@ -220,7 +226,7 @@ def launch_fastq_to_ubam(event, context):
                 "readGroup": read_group,
                 "name": task_name,
                 "inputHash": trunc_nodes_hash,
-                "labels": ["Job", "Dsub", unique_task_label],
+                #"labels": ["Job", "Dsub", unique_task_label],
                 "inputIds": input_ids,
                 "network": NETWORK,
                 "subnetwork": SUBNETWORK,
@@ -271,34 +277,20 @@ def launch_fastq_to_ubam(event, context):
                           f"{key}={value}"])
 
     # Optional flags
-    if job_dict['dryRun']:
+    if not ENABLE_JOB_LAUNCH:
         dsub_args.append("--dry-run")
 
+    # TODO: Need to handle this issue with database logic
     # Wait a random time interval to reduce overlapping db queries
-    #   because of ubam objects created at same time
-    random_wait = random.randrange(0,10)
-    print(f"> Waiting for {random_wait} seconds to launch job.")
-    time.sleep(random_wait)
+    #   because of ubam objects created at same time.
+    #random_wait = random.randrange(0,10)
+    #print(f"> Waiting for {random_wait} seconds to launch job.")
+    #time.sleep(random_wait)
     
     # Launch dsub job
     print(f"> Launching dsub with args: {dsub_args}.")
     dsub_result = launch_dsub_task(dsub_args)
     print(f"> Dsub result: {dsub_result}.")
-
-    """ DEPRECATED IN VERSION 1.2.3
-    # Metadata to be perpetuated to ubams is written to file
-    # Try until success
-    metadata = {"setSize": set_size}
-    if 'job-id' in dsub_result.keys() and metadata and not dry_run:
-        print(f"> Metadata passed to output blobs: {metadata}.")
-        # Dump metadata into GCS blob
-        meta_blob_path = f"{plate}/{sample}/{task_name}/{task_id}/metadata/all-objects.json"
-        while True:
-            result = write_metadata_to_blob(meta_blob_path, metadata)
-            if result == True:
-                break
-        print(f"> Created metadata blob at gs://{OUT_BUCKET}/{meta_blob_path}.")
-    """
     
     if 'job-id' in dsub_result.keys():
         # Add dsub job ID to neo4j database node
@@ -328,9 +320,9 @@ def launch_fastq_to_ubam(event, context):
                                         seed_id = seed_id,
                                         event_id = event_id)
         print(f"> Pubsub message: {message}.")
-        result = publish_to_topic(
-                                  PUBLISHER,
-                                  PROJECT_ID,
-                                  NEW_JOB_TOPIC,
-                                  message) 
+        result = trellis.utils.publish_to_pubsub_topic(
+                    publisher = PUBLISHER,
+                    project_id = PROJECT_ID,
+                    topic = NEW_JOB_TOPIC,
+                    message = message) 
         print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")
