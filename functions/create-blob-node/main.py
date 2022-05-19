@@ -323,44 +323,13 @@ def create_node_query(event, context, test=False):
     logging.info(f"> Query parameter 'path': {query_parameters['path']}.")
     query_parameters, labels = assign_labels_and_metadata(query_parameters, label_patterns, label_functions)
     logging.info(f"> Labels assigned to node: {labels}.")
-    """
-    query_parameters['labels'] = []
-    for label, patterns in label_patterns.items():
-        for pattern in patterns:
-            match = re.fullmatch(pattern, name)
-            if match:
-                query_parameters['labels'].append(label)
-                label_functions = node_kinds.label_functions.get(label)
-                if label_functions:
-                    for function in label_functions:
-                        custom_fields = function(query_parameters, match.groupdict())
-                        query_parameters.update(custom_fields)
-                # Break after a single pattern per label has been matched
-                # Why?
-                break
-    """
 
     labels = get_leaf_labels(labels, TAXONOMY_PARSER)
     logging.info(f"> Leaf labels (expect one): {labels}.")
-    """
-    # Get only the shallowest labels of a branch of the taxonomy that should be applied 
-    # to the node. The point of the taxonomy is so that we can retain lineage information
-    # without applying multiple labels to a node.
-    common_parents = []
-    for label in query_parameters['labels']:
-        node = parser.find_by_name(label)
-        parents = deque(node.path)
 
-        parents.popleft() # Remove the arbitrary root node
-        parents.pop()     # Remove the current label
-        common_parents.extend(parents)
-    common_parents = set(common_parents) # Only keep unique nodes
-    
-    # If a label is a parent of another label, exclude it
-    for label in query_parameters['labels']:
-        if label in [parent.name for parent in common_parents]:
-            query_parameters['labels'].remove(label)
-    """
+    if 'Log' in labels:
+        logging.info(f"> This is a log file; ignoring.")
+        return
 
     # Max (1) label per node to choose parameterized query
     if len(labels) > 1:
@@ -369,17 +338,6 @@ def create_node_query(event, context, test=False):
         logging.error("> No labels applied to node.")
     else:
         label = labels[0]
-
-    # TODO: Implement new logic for ignore log files
-    # Ignore log files
-    #log_labels = set(['Log', 'Stderr', 'Stdout'])
-    #log_intersection = log_labels.intersection(db_dict['labels'])
-    if label == 'Log':
-    #if query_parameters['filetype'] in ['log', 'stderr', 'stdout']:
-        logging.info(f"> This is a log file; ignoring.")
-        return
-
-    # TODO: Support passing label query generator
 
     # Generate UUID
     # NOTE: This reactivates the function and creates an infinte loop 
@@ -395,14 +353,6 @@ def create_node_query(event, context, test=False):
     # Dynamically create parameterized query
     parameterized_query = create_parameterized_merge_query(label, query_parameters)
 
-    """ TODO: Move to categorize-blob-node
-    # Key, value pairs unique to db_dict are trellis metadata
-    trellis_metadata = {}
-    for key, value in db_dict.items():
-        if not key in gcp_metadata.keys():
-            trellis_metadata[key] = value
-    """
-
     #print(f"> Generating database query for node: {db_dict}.")
     #db_query = format_node_merge_query(db_dict)
     #print(f"> Database query: \"{db_query}\".")
@@ -411,14 +361,17 @@ def create_node_query(event, context, test=False):
         sender = FUNCTION_NAME,
         seed_id = seed_id,
         previous_event_id = seed_id,
-        query_name = f"merge{label}Node",
+        query_name = f"mergeBlob{label}",
         query_parameters = query_parameters,
         custom = True,
         query = parameterized_query,
         write_transaction = True,
         split_results = False,
         publish_to = ["TOPIC_TRIGGERS"],
-        returns = {"node": "node"})
+        returns = {
+                   "pattern": "node",
+                   "start": label
+        })
     message = query_request.format_json_message()
     logging.info(f"> Topic: {TRELLIS['TOPIC_DB_QUERY']}, message: {message}.")
     if ENVIRONMENT == 'google-cloud':
