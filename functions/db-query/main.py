@@ -222,7 +222,7 @@ def main(event, context, local_driver=None):
                 raise ValueError(f"Custom query {database_query.name} is already stored "
                                  f"but does not match new query: {database_query}.")
         # If query has NOT been stored and is a create-blob-node query
-        elif re.match(query_name, "^mergeBlob*"):
+        elif re.match(database_query.name, "^mergeBlob*"):
             # Reload create blob queries to make sure list is current
             # Read existing create-blob-queries
             create_blob_query_doc = storage.Client() \
@@ -256,7 +256,7 @@ def main(event, context, local_driver=None):
                                         .get_blob(TRELLIS["CREATE_BLOB_QUERIES"]) \
                                         .upload_from_string(create_blob_query_str)
         # Register new create-job-node queries
-        elif re.match(query_name, "^mergeJob*"):
+        elif re.match(database_query.name, "^mergeJob*"):
             # Reload create job queries to make sure list is current
             create_job_query_doc = storage.Client() \
                                     .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
