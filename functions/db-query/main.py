@@ -328,7 +328,7 @@ def main(event, context, local_driver=None):
     if int(result_available_after) > QUERY_ELAPSED_MAX:
         logging.warning(f"> Result available time ({result_available_after} ms) " +
                         f"exceeded {QUERY_ELAPSED_MAX:.3f}. " +
-                        f"Query: {parameterized_query.name}.")
+                        f"Query: {database_query.name}.")
     logging.info(f"> Query result counter: {result_summary.counters}.")
 
     query_response = trellis.QueryResponseWriter(
@@ -340,18 +340,18 @@ def main(event, context, local_driver=None):
         result_summary = result_summary)
 
     # Return if no pubsub topic or not running on GCP
-    if not parameterized_query.publish_to or not ENVIRONMENT == 'google-cloud':
+    if not database_query.publish_to or not ENVIRONMENT == 'google-cloud':
         print("No Pub/Sub topic specified; result not published.")
     else:
         # Track how many messages are published to each topic
         published_message_counts = {}
-        for topic_name in parameterized_query.publish_to:
+        for topic_name in database_query.publish_to:
             topic = TRELLIS[topic_name]
             # TODO: map the name in the query definition to the real topic
 
             published_message_counts[topic] = 0
 
-            if parameterized_query.split_results == 'True':
+            if database_query.split_results == 'True':
                 """ I think we can always send a result because even if no
                     node or relationship is returned we may still want to
                     use the summary statistics.
