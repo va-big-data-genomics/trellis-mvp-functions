@@ -205,7 +205,9 @@ def main(event, context, local_driver=None):
             required_parameters=required_parameters,
             write_transaction=query_request.write_transaction,
             returns = query_request.returns,
-            publish_to=query_request.publish_to)
+            publish_to = query_request.publish_to,
+            split_results = query_request.split_results,
+            active = True)
 
         register_new_query = True
         
@@ -287,10 +289,8 @@ def main(event, context, local_driver=None):
         # required query parameters
         logging.info(f"> Running query: {database_query.name}.")
         graph, result_summary = query_database(
-            #write_transaction = database_query.write_transaction,
             driver = DRIVER,
             query = database_query,
-            #query = database_query.query,
             parameters = query_request.query_parameters)
     except ProtocolError as error:
         logging.error(f"> Encountered Protocol Error: {error}.")
