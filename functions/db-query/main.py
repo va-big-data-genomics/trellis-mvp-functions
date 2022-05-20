@@ -200,7 +200,7 @@ def main(event, context, local_driver=None):
 
         database_query = trellis.DatabaseQuery(
             name=query_request.query_name,
-            cypher=query_request.query,
+            cypher=query_request.cypher,
             # Maybe I should populate this
             required_parameters=required_parameters,
             write_transaction=query_request.write_transaction,
