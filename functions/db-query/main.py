@@ -136,7 +136,7 @@ def query_database(driver, query, parameters):
     """
 
     # Check whether query parameters match the required keys and types
-    key_difference = query.required_parameters.keys().difference(parameters.keys())
+    key_difference = set(query.required_parameters.keys()).difference(set(parameters.keys()))
     if key_difference:
         #logging.error(f"Query parameters do not match requirements. Difference: {key_difference}.")
         raise ValueError(f"Query parameters do not match requirements. Difference: {key_difference}.")
