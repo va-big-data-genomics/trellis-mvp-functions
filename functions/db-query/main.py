@@ -171,18 +171,18 @@ def main(event, context, local_driver=None):
                                                event=event, 
                                                context=context)
     
-    print(f"> Received message context: {query_request.context}.")
-    print(f"> Received message header: {query_request.header}.")
-    print(f"> Received message body: {query_request.body}.")
+    logging.info(f"> Received message context: {query_request.context}.")
+    logging.info(f"> Received message header: {query_request.header}.")
+    logging.info(f"> Received message body: {query_request.body}.")
 
     if ENVIRONMENT == 'google-cloud':
         # Time from message publication to reception
         request_publication_time = trellis.utils.convert_timestamp_to_rfc_3339(query_request.context.timestamp)
         publish_elapsed = datetime.now() - request_publication_time
         if publish_elapsed.total_seconds() > PUBSUB_ELAPSED_MAX:
-            print(
-                  f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
-                  f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
+            logging.warning(
+                f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
+                f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
 
     # TODO: maybe I should store custom queries after they've been
     # created and give them unique IDs based on content so I can 
@@ -198,6 +198,7 @@ def main(event, context, local_driver=None):
         required_parameters = {}
         for key, value in query_request.query_parameters.items():
             required_parameters[key] = type(value).__name__
+        logging.info(f"Custom query requried parameters: {required_parameters}.")
 
         database_query = trellis.DatabaseQuery(
             name=query_request.query_name,

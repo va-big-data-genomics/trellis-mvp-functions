@@ -54,9 +54,9 @@ def check_triggers(event, context, dry_run=False):
                         context = context,
                         event = event)
 
-    print(f"> Received message (context): {query_response.context}.")
-    print(f"> Message header: {query_response.header}.")
-    print(f"> Message body: {query_response.body}.")
+    logging.info(f"> Received message (context): {query_response.context}.")
+    logging.info(f"> Message header: {query_response.header}.")
+    logging.info(f"> Message body: {query_response.body}.")
 
 
     activated_triggers = TRIGGER_CONTROLLER.evaluate_trigger_conditions(query_response)
