@@ -1,7 +1,7 @@
 --- !DatabaseQuery
 name: relateGenomeToFastq
-query: "MATCH (fastq:Fastq)<-[]-(:PersonalisSequencing)<-[]-(s:Sample)<-[]-(:Person)-[]->(genome:Genome) WHERE s.sample = $sample AND NOT (g)-[:HAS_SEQUENCING_READS]->(f) MERGE (genome)-[rel:HAS_SEQUENCING_READS]->(fastq) RETURN genome, rel, fastq" 
-parameters:
+cypher: "MATCH (fastq:Fastq)<-[]-(:PersonalisSequencing)<-[]-(s:Sample)<-[]-(:Person)-[]->(genome:Genome) WHERE s.sample = $sample AND NOT (g)-[:HAS_SEQUENCING_READS]->(f) MERGE (genome)-[rel:HAS_SEQUENCING_READS]->(fastq) RETURN genome, rel, fastq" 
+required_parameters:
   sample: str
 write_transaction: true
 split_results: false
@@ -16,8 +16,8 @@ returns:
   fastq: node
 --- !DatabaseQuery
 name: mergeBiologicalNodes
-query: "MATCH (s:PersonalisSequencing) WHERE s.sample = $sample MERGE (s)<-[:WAS_USED_BY {ontology: 'provenance'}]-(:Sample {sample: s.sample})<-[:GENERATED {ontology:'provenance'}]-(:Person {sample: s.sample})-[:HAS_BIOLOGICAL_OME {ontology:'bioinformatics'}]->(genome:Genome {sample: s.sample}) RETURN genome"
-parameters:
+cypher: "MATCH (s:PersonalisSequencing) WHERE s.sample = $sample MERGE (s)<-[:WAS_USED_BY {ontology: 'provenance'}]-(:Sample {sample: s.sample})<-[:GENERATED {ontology:'provenance'}]-(:Person {sample: s.sample})-[:HAS_BIOLOGICAL_OME {ontology:'bioinformatics'}]->(genome:Genome {sample: s.sample}) RETURN genome"
+required_parameters:
   sample: str
 write_transaction: true
 split_results: false
@@ -30,8 +30,8 @@ returns:
   genome: node
 --- !DatabaseQuery
 name: relateFastqToPersonalisSequencing
-query: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE fastq.uri=$uri AND seq.sample=fastq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
-parameters:
+cypher: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE fastq.uri=$uri AND seq.sample=fastq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
+required_parameters:
   sample: str
   uri: str
 write_transaction: true
@@ -50,8 +50,8 @@ returns:
   end: Fastq
 --- !DatabaseQuery
 name: relatePersonalisSequencingToFastqs
-query: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE seq.sample=$sample AND fastq.sample=seq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
-parameters:
+cypher: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE seq.sample=$sample AND fastq.sample=seq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
+required_parameters:
   sample: str
 write_transaction: true
 split_results: false
@@ -69,8 +69,8 @@ returns:
   end: Fastq
 --- !DatabaseQuery
 name: relateMicroarrayToPersonalisSequencing
-query: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (microarray:Microarray) WHERE microarray.uri=$uri MERGE (seq)-[rel:GENERATED]->(micro) RETURN seq, rel, microarray"
-parameters:
+cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (microarray:Microarray) WHERE microarray.uri=$uri MERGE (seq)-[rel:GENERATED]->(micro) RETURN seq, rel, microarray"
+required_parameters:
   Microarray:
     - uri
   PersonalisSequencing:
@@ -85,8 +85,8 @@ returns:
   microarray: node
 --- !DatabaseQuery
 name: relateChecksumToPersonalisSequencing
-query: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (checksum:Checksum) WHERE checksum.uri=$uri MERGE (seq)-[rel:GENERATED]->(checksum) RETURN seq, rel, checksum"
-parameters:
+cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (checksum:Checksum) WHERE checksum.uri=$uri MERGE (seq)-[rel:GENERATED]->(checksum) RETURN seq, rel, checksum"
+required_parameters:
   Checksum:
     - uri
   PersonalisSequencing:
