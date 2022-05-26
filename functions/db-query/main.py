@@ -171,9 +171,14 @@ def main(event, context, local_driver=None):
                                                event=event, 
                                                context=context)
     
-    logging.info(f"> Received message context: {query_request.context}.")
-    logging.info(f"> Received message header: {query_request.header}.")
-    logging.info(f"> Received message body: {query_request.body}.")
+    logging.info(f">> Received query request; " +
+                    f"event ID: {query_request.event_id}, " +
+                    f"previous event ID: {query_request.previous_event_id}, " +
+                    f"seed event ID: {query_request.seed_id}.")
+    logging.info(f"> Query request info; " +
+                    f"custom: {query_request.custom}, " +
+                    f"name: {query_request.name}.")
+    logging.debug(f"> Received message body: {query_request.body}.")
 
     if ENVIRONMENT == 'google-cloud':
         # Time from message publication to reception
@@ -184,22 +189,16 @@ def main(event, context, local_driver=None):
                 f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
                 f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
 
-    # TODO: maybe I should store custom queries after they've been
-    # created and give them unique IDs based on content so I can 
-    # lookup already used queries
     if query_request.custom == True:
-        # If it's a custom query, let's use it regardless. The only question is whether
-        # it's a new query, in which case we should add to a list of custom queries.
+        logging.info("> Processing custom query.")
 
-        # Instead of creating instance at the end of if/then logic block,
-        # create it at the beginning so we can use the __eq__ function.
-        # Regardless of whether or not it's novel, we are going to use this
-        # instance.
+        # Parse query parameters and data types from request
         required_parameters = {}
         for key, value in query_request.query_parameters.items():
             required_parameters[key] = type(value).__name__
-        logging.info(f"Custom query requried parameters: {required_parameters}.")
+        logging.info(f"> Custom query required parameters: {required_parameters}.")
 
+        # Create DatabaseQuery object
         database_query = trellis.DatabaseQuery(
             name=query_request.query_name,
             cypher=query_request.cypher,
@@ -211,43 +210,41 @@ def main(event, context, local_driver=None):
             split_results = query_request.split_results,
             active = True)
 
+        # If this query is found in an existing query catalogue this
+        # value will be changed to False 
         register_new_query = True
         
         # If query has already been stored, check that new version matches
         # stored version and use stored version.
         if database_query.name in QUERY_DICT.keys():
+            register_new_query = False
             if database_query == QUERY_DICT[database_query.name]:
-                logging.info(f"Query {database_query.name} alread stored.")
-                #register_new_query = False
+                logging.info(f"> Query {database_query.name} alread stored.")
             else:
-                raise ValueError(f"Custom query {database_query.name} is already stored "
+                raise ValueError(f"> Custom query {database_query.name} is already stored "
                                  f"but does not match new query: {database_query}.")
         # If query has NOT been stored and is a create-blob-node query
         elif re.match(database_query.name, "^mergeBlob*"):
+            logging.info("> Merge blob query not found in current catalogue; reloading latest version.")
             # Reload create blob queries to make sure list is current
-            # Read existing create-blob-queries
             create_blob_query_doc = storage.Client() \
                                     .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                                     .get_blob(TRELLIS["CREATE_BLOB_QUERIES"]) \
                                     .download_as_string()
             create_blob_queries = yaml.load_all(create_blob_query_doc, Loader=yaml.FullLoader)
-            # Now I've loaded ALL of the queries once
-            # and I'm loading all of these queries again
-            # Another way to do this would be to add the queries to a database
-            # ANOTHER way to do this would just be use memory.
-            # Or I can just purge the existing QUERY_DICT before loading these
 
-            # I don't want to load these into the QUERY_DICT because that has all queries
+
             for query in create_blob_queries:
                 if database_query.name == query.name:
                     if database_query == query:
-                        logging.info(f"Query {database_query.name} alread stored.")
+                        logging.info(f"> Query {database_query.name} alread stored.")
                         register_new_query = False
                     else:
-                        raise ValueError(f"Custom query {database_query.name} is already stored in " +
+                        raise ValueError(f"> Custom query {database_query.name} is already stored in " +
                                          f"{TRELLIS['CREATE_BLOB_QUERIES']} " +
                                          f"but does not match new query: {database_query}.")
             if register_new_query:
+                logging.info(f"> Custom query not found in existing catalogue; adding to {TRELLIS['CREATE_BLOB_QUERIES']}")
                 create_blob_query_str = "--- "
                 create_blob_query_str += yaml.dump_all(create_blob_queries)
                 create_blob_query_str += "--- "
@@ -258,6 +255,7 @@ def main(event, context, local_driver=None):
                                         .upload_from_string(create_blob_query_str)
         # Register new create-job-node queries
         elif re.match(database_query.name, "^mergeJob*"):
+            logging.info("> Merge job query not found in current catalogue; reloading latest version.")
             # Reload create job queries to make sure list is current
             create_job_query_doc = storage.Client() \
                                     .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -275,8 +273,9 @@ def main(event, context, local_driver=None):
                                          f"{TRELLIS['CREATE_BLOB_QUERIES']} " +
                                          f"but does not match new query: {database_query}.")
             if register_new_query:
+                logging.info(f"> Custom query not found in existing catalogue; adding to {TRELLIS['CREATE_JOB_QUERIES']}")
                 create_job_query_str = "--- "
-                create_job_query_str += yaml.dump_all(create_blob_queries)
+                create_job_query_str += yaml.dump_all(create_job_queries)
                 create_job_query_str += "--- "
                 create_job_query_str += yaml.dump(database_query)
             create_job_query_doc = storage.Client() \
@@ -324,7 +323,7 @@ def main(event, context, local_driver=None):
     result_available_after = result_summary.result_available_after
     result_consumed_after = result_summary.result_consumed_after
     logging.info(f"> Query result available after: {result_available_after} ms.")
-    logging.info(f"> Query Result consumed after: {result_consumed_after} ms.")
+    logging.info(f"> Query result consumed after: {result_consumed_after} ms.")
         #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
     if int(result_available_after) > QUERY_ELAPSED_MAX:
         logging.warning(f"> Result available time ({result_available_after} ms) " +
@@ -374,7 +373,8 @@ def main(event, context, local_driver=None):
                     published_message_counts[topic] += 1
                 """
                 for message in query_response.format_json_message_iter():
-                    logging.info(f"> Publish topic: {topic}, message: {message}.")
+                    logging.info(f"> Publishing message to topic: {topic}.")
+                    logging.debug(f"> Publishing message: {message}.")
                     publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
                         project_id = GCP_PROJECT,
@@ -384,7 +384,8 @@ def main(event, context, local_driver=None):
                     published_message_counts[topic] += 1
             else:
                 message = query_response.format_json_message()
-                logging.info(f"> Publish topic: {topic}, message: {message}.")
+                logging.info(f"> Publishing message to topic: {topic}.")
+                logging.debug(f"> Publising message: {message}.")
                 publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
                         project_id = GCP_PROJECT,
@@ -392,7 +393,7 @@ def main(event, context, local_driver=None):
                         message = message)
                 logging.info(f"> Published message to {topic} with result: {publish_result}.")
                 published_message_counts[topic] += 1
-        logging.info(f"> Summary of published messages: {published_message_counts}")
+        logging.info(f">> Summary of published messages: {published_message_counts}")
 
     ## Execution time block
     #end = datetime.now()
