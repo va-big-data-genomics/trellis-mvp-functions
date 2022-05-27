@@ -221,7 +221,7 @@ def main(event, context, local_driver=None):
             if database_query == QUERY_DICT[database_query.name]:
                 logging.info(f"> Query {database_query.name} alread stored.")
             else:
-                raise ValueError(f"> Custom query {database_query.name} is already stored "
+                logging.error(f"> Custom query {database_query.name} is already stored "
                                  f"but does not match new query: {database_query}.")
         # If query has NOT been stored and is a create-blob-node query
         elif re.match(database_query.name, "^mergeBlob*"):
@@ -240,7 +240,7 @@ def main(event, context, local_driver=None):
                         logging.info(f"> Query {database_query.name} alread stored.")
                         register_new_query = False
                     else:
-                        raise ValueError(f"> Custom query {database_query.name} is already stored in " +
+                        logging.error(f"> Custom query {database_query.name} is already stored in " +
                                          f"{TRELLIS['CREATE_BLOB_QUERIES']} " +
                                          f"but does not match new query: {database_query}.")
             if register_new_query:
@@ -269,7 +269,7 @@ def main(event, context, local_driver=None):
                         logging.info(f"Query {database_query.name} alread stored.")
                         register_new_query = False
                     else:
-                        raise ValueError(f"Custom query {database_query.name} is already stored in " +
+                        logging.error(f"Custom query {database_query.name} is already stored in " +
                                          f"{TRELLIS['CREATE_BLOB_QUERIES']} " +
                                          f"but does not match new query: {database_query}.")
             if register_new_query:
