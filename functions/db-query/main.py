@@ -177,7 +177,7 @@ def main(event, context, local_driver=None):
                     f"seed event ID: {query_request.seed_id}.")
     logging.info(f"> Query request info; " +
                     f"custom: {query_request.custom}, " +
-                    f"name: {query_request.name}.")
+                    f"name: {query_request.query_name}.")
     logging.debug(f"> Received message body: {query_request.body}.")
 
     if ENVIRONMENT == 'google-cloud':
