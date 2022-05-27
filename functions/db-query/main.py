@@ -196,7 +196,7 @@ def main(event, context, local_driver=None):
         required_parameters = {}
         for key, value in query_request.query_parameters.items():
             required_parameters[key] = type(value).__name__
-        logging.info(f"> Custom query required parameters: {required_parameters}.")
+        logging.debug(f"> Custom query required parameters: {required_parameters}.")
 
         # Create DatabaseQuery object
         database_query = trellis.DatabaseQuery(
@@ -373,7 +373,7 @@ def main(event, context, local_driver=None):
                     published_message_counts[topic] += 1
                 """
                 for message in query_response.format_json_message_iter():
-                    logging.info(f"> Publishing message to topic: {topic}.")
+                    logging.info(f"> Publishing query response to topic: {topic}.")
                     logging.debug(f"> Publishing message: {message}.")
                     publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
@@ -384,14 +384,14 @@ def main(event, context, local_driver=None):
                     published_message_counts[topic] += 1
             else:
                 message = query_response.format_json_message()
-                logging.info(f"> Publishing message to topic: {topic}.")
+                logging.info(f"> Publishing query response to topic: {topic}.")
                 logging.debug(f"> Publising message: {message}.")
                 publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
                         project_id = GCP_PROJECT,
                         topic = topic, 
                         message = message)
-                logging.info(f"> Published message to {topic} with result: {publish_result}.")
+                logging.info(f"> Published response to {topic} with result (event_id): {publish_result}.")
                 published_message_counts[topic] += 1
         logging.info(f">> Summary of published messages: {published_message_counts}")
 
