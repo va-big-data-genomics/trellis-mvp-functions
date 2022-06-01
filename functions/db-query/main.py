@@ -224,7 +224,9 @@ def main(event, context, local_driver=None):
                 logging.error(f"> Custom query {database_query.name} is already stored "
                                  f"but does not match new query: {database_query}.")
         # If query has NOT been stored and is a create-blob-node query
-        elif re.match(database_query.name, r"^mergeBlob.*"):
+        elif re.match(
+                      pattern = r"^mergeBlob.*",
+                      string = database_query.name):
             logging.info("> Merge blob query not found in current catalogue; reloading latest version.")
             # Reload create blob queries to make sure list is current
             create_blob_query_doc = storage.Client() \
@@ -254,7 +256,9 @@ def main(event, context, local_driver=None):
                                         .get_blob(TRELLIS["CREATE_BLOB_QUERIES"]) \
                                         .upload_from_string(create_blob_query_str)
         # Register new create-job-node queries
-        elif re.match(database_query.name, r"^mergeJob.*"):
+        elif re.match(
+                      pattern = r"^mergeJob.*",
+                      string = database_query.name):
             logging.info("> Merge job query not found in current catalogue; reloading latest version.")
             # Reload create job queries to make sure list is current
             create_job_query_doc = storage.Client() \
@@ -283,9 +287,9 @@ def main(event, context, local_driver=None):
                                         .get_blob(TRELLIS["CREATE_JOB_QUERIES"]) \
                                         .upload_from_string(create_job_query_str)
         else:
-            logging.info("Custom query did not match any catalogued query " +
-                            "and name \"{database_query.name}\" did not " +
-                            "match any recognized pattern.")
+            logging.warning(
+                "Custom query did not match any catalogued query " +
+                "or recognized pattern.")
     else:
         database_query = QUERY_DICT[query_request.query_name]
 
