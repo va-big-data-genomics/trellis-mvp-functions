@@ -148,6 +148,8 @@ def _stored_procedure_transaction_function(tx, query, **query_parameters):
 def new_query_found_in_catalogue(
                                  new_query: trellis.DatabaseQuery, 
                                  catalogued_queries: str) -> bool:
+    # Typing hints: https://docs.python.org/3/library/typing.html
+
     query_match_found = False
     query_name_found = False
     catalogued_queries = yaml.load_all(catalogued_queries, Loader=yaml.FullLoader)
@@ -180,13 +182,13 @@ def main(event, context, local_driver=None):
                                                event=event, 
                                                context=context)
     
-    logging.info(f"183 +> Received query request; " +
-                    f"event ID: {query_request.event_id}, " +
-                    f"previous event ID: {query_request.previous_event_id}, " +
-                    f"seed event ID: {query_request.seed_id}.")
-    logging.info(f"187 > Query request info; " +
-                    f"custom: {query_request.custom}, " +
-                    f"name: {query_request.query_name}.")
+    logging.info(f"183 +> Received query request: " +
+                    f"event ID = {query_request.event_id}, " +
+                    f"previous event ID = {query_request.previous_event_id}, " +
+                    f"seed event ID = {query_request.seed_id}.")
+    logging.info(f"187 > Query request info: " +
+                    f"custom = {query_request.custom}, " +
+                    f"name = {query_request.query_name}.")
     logging.debug(f"190 > Received message body: {query_request.body}.")
 
     if ENVIRONMENT == 'google-cloud':
@@ -313,8 +315,8 @@ def main(event, context, local_driver=None):
 
     result_available_after = result_summary.result_available_after
     result_consumed_after = result_summary.result_consumed_after
-    logging.info(f"316 > Query result available after: {result_available_after} ms.")
-    logging.info(f"317 > Query result consumed after: {result_consumed_after} ms.")
+    logging.info(f"316 > Query result available after: {result_available_after} ms, " +
+                 f"consumed after: {result_consumed_after} ms.")
         #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
     if int(result_available_after) > QUERY_ELAPSED_MAX:
         logging.warning(f"320 > Result available time ({result_available_after} ms) " +
@@ -385,10 +387,3 @@ def main(event, context, local_driver=None):
                 logging.info(f"385 > Published response to {topic} with result (event_id): {publish_result}.")
                 published_message_counts[topic] += 1
         logging.info(f"387 -> Summary of published messages: {published_message_counts}")
-
-    ## Execution time block
-    #end = datetime.now()
-    #execution_time = (end - start).seconds
-    #time_threshold = int(execution_time/10) * 10
-    #if time_threshold > 0:
-    #    print(f"> Execution time exceeded {time_threshold} seconds.")
