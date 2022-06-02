@@ -247,11 +247,11 @@ def main(event, context, local_driver=None):
                                          f"but does not match new query: {database_query}.")
             if register_new_query:
                 logging.info(f"> Custom query not found in existing catalogue; adding to {TRELLIS['CREATE_BLOB_QUERIES']}")
-                create_blob_query_str = ""
+                #create_blob_query_str = ""
                 # Only run if there are existing queries
-                if create_blob_queries:
-                    create_blob_query_str = "--- "
-                    create_blob_query_str += yaml.dump_all(create_blob_queries)
+                #if create_blob_queries:
+                    #create_blob_query_str = "--- "
+                create_blob_query_str = yaml.dump_all(create_blob_queries)
                 create_blob_query_str += "--- "
                 create_blob_query_str += yaml.dump(database_query)
             create_blob_query_doc = storage.Client() \
@@ -281,11 +281,11 @@ def main(event, context, local_driver=None):
                                          f"but does not match new query: {database_query}.")
             if register_new_query:
                 logging.info(f"> Custom query not found in existing catalogue; adding to {TRELLIS['CREATE_JOB_QUERIES']}")
-                create_job_query_str = ""
+                #create_job_query_str = ""
                 # Only run if there are existing queries
-                if create_job_queries:
-                    create_job_query_str = "--- "
-                    create_job_query_str += yaml.dump_all(create_job_queries)
+                #if create_job_queries:
+                    #create_job_query_str = "--- "
+                create_job_query_str = yaml.dump_all(create_job_queries)
                 create_job_query_str += "--- "
                 create_job_query_str += yaml.dump(database_query)
             create_job_query_doc = storage.Client() \
