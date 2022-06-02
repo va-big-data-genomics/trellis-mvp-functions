@@ -250,7 +250,7 @@ def main(event, context, local_driver=None):
                                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                                         .get_blob(TRELLIS["CREATE_BLOB_QUERIES"]) \
                                         .download_as_string()
-                if new_query_found_in_catalogue(database_query, create_blob_query_doc)
+                if new_query_found_in_catalogue(database_query, create_blob_query_doc):
                     register_new_query = False
                     logging.info("> Merge blob query already stored.")
             
