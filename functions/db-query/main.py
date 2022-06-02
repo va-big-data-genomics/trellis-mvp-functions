@@ -261,13 +261,14 @@ def main(event, context, local_driver=None):
                 #if create_blob_queries:
                     #create_blob_query_str = "--- "
                 #create_blob_query_str = yaml.dump_all(create_blob_queries)
-                create_blob_query_doc += "--- "
-                create_blob_query_doc += yaml.dump(database_query)
+                create_blob_query_str = create_blob_query_doc.decode("utf-8")
+                create_blob_query_str += "--- "
+                create_blob_query_str += yaml.dump(database_query)
             #create_blob_query_doc = storage.Client() \
                 storage.Client() \
                     .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                     .get_blob(TRELLIS["CREATE_BLOB_QUERIES"]) \
-                    .upload_from_string(create_blob_query_doc)
+                    .upload_from_string(create_blob_query_str)
         # Register new create-job-node queries
         elif re.match(
                       pattern = r"^mergeJob.*",
