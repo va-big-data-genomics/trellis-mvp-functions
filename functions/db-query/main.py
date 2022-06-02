@@ -168,7 +168,7 @@ def new_query_found_in_catalogue(
             if new_query == logged_query:
                 query_match_found = True
             else:
-                logging.warning(f"> CatalogueSearch: query with name {database_query.name} " +
+                logging.warning(f"> CatalogueSearch: query with name {new_query.name} " +
                                  "already stored, but does not match current query.")
     return(query_match_found)
     
