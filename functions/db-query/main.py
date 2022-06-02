@@ -155,7 +155,7 @@ def new_query_found_in_catalogue(
     for logged_query in catalogued_queries:
         if new_query.name == logged_query.name:
                 query_name_found = True
-            if new_query == logged_query:
+        if new_query == logged_query:
                 query_match_found = True
 
     if query_name_found and not query_match_found:
@@ -180,7 +180,7 @@ def main(event, context, local_driver=None):
                                                event=event, 
                                                context=context)
     
-    logging.info(f"183 => Received query request; " +
+    logging.info(f"183 +> Received query request; " +
                     f"event ID: {query_request.event_id}, " +
                     f"previous event ID: {query_request.previous_event_id}, " +
                     f"seed event ID: {query_request.seed_id}.")
@@ -313,14 +313,14 @@ def main(event, context, local_driver=None):
 
     result_available_after = result_summary.result_available_after
     result_consumed_after = result_summary.result_consumed_after
-    logging.info(f"> Query result available after: {result_available_after} ms.")
-    logging.info(f"> Query result consumed after: {result_consumed_after} ms.")
+    logging.info(f"316 > Query result available after: {result_available_after} ms.")
+    logging.info(f"317 > Query result consumed after: {result_consumed_after} ms.")
         #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
     if int(result_available_after) > QUERY_ELAPSED_MAX:
-        logging.warning(f"> Result available time ({result_available_after} ms) " +
+        logging.warning(f"320 > Result available time ({result_available_after} ms) " +
                         f"exceeded {QUERY_ELAPSED_MAX:.3f}. " +
                         f"Query: {database_query.name}.")
-    logging.info(f"> Query result counter: {result_summary.counters}.")
+    logging.info(f"323 > Query result counter: {result_summary.counters}.")
 
     query_response = trellis.QueryResponseWriter(
         sender = FUNCTION_NAME,
@@ -332,7 +332,7 @@ def main(event, context, local_driver=None):
 
     # Return if no pubsub topic or not running on GCP
     if not database_query.publish_to or not ENVIRONMENT == 'google-cloud':
-        print("No Pub/Sub topic specified; result not published.")
+        print("335 > No Pub/Sub topic specified; result not published.")
     else:
         # Track how many messages are published to each topic
         published_message_counts = {}
@@ -364,27 +364,27 @@ def main(event, context, local_driver=None):
                     published_message_counts[topic] += 1
                 """
                 for message in query_response.format_json_message_iter():
-                    logging.info(f"> Publishing query response to topic: {topic}.")
-                    logging.debug(f"> Publishing message: {message}.")
+                    logging.info(f"367 > Publishing query response to topic: {topic}.")
+                    logging.debug(f"368 > Publishing message: {message}.")
                     publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
                         project_id = GCP_PROJECT,
                         topic = topic, 
                         message = message)
-                    logging.info(f"> Published message to {topic} with result: {publish_result}.")
+                    logging.info(f"374 > Published message to {topic} with result: {publish_result}.")
                     published_message_counts[topic] += 1
             else:
                 message = query_response.format_json_message()
-                logging.info(f"> Publishing query response to topic: {topic}.")
-                logging.debug(f"> Publising message: {message}.")
+                logging.info(f"378 > Publishing query response to topic: {topic}.")
+                logging.debug(f"379 > Publising message: {message}.")
                 publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
                         project_id = GCP_PROJECT,
                         topic = topic, 
                         message = message)
-                logging.info(f"> Published response to {topic} with result (event_id): {publish_result}.")
+                logging.info(f"385 > Published response to {topic} with result (event_id): {publish_result}.")
                 published_message_counts[topic] += 1
-        logging.info(f"=> Summary of published messages: {published_message_counts}")
+        logging.info(f"387 -> Summary of published messages: {published_message_counts}")
 
     ## Execution time block
     #end = datetime.now()
