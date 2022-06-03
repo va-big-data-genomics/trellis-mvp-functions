@@ -32,6 +32,8 @@ if ENVIRONMENT == 'google-cloud':
     import google.cloud.logging
     client = google.cloud.logging.Client()
     # log_level=10 is equivalent to DEBUG; default is 20 == INFO
+    # Gcloud Python logging client: https://googleapis.dev/python/logging/latest/client.html?highlight=setup_logging#google.cloud.logging_v2.client.Client.setup_logging
+    # Logging levels: https://docs.python.org/3/library/logging.html#logging-levels
     client.setup_logging(log_level=10)
 
     # use Python's standard logging library to send logs to GCP
@@ -170,14 +172,14 @@ def main(event, context, local_driver=None):
                                                event=event, 
                                                context=context)
     
-    logging.info(f"183 +> Received query request: " +
+    logging.info(f"+> Received query request: " +
                     f"event ID = {query_request.event_id}, " +
                     f"previous event ID = {query_request.previous_event_id}, " +
                     f"seed event ID = {query_request.seed_id}.")
-    logging.info(f"187 > Query request info: " +
+    logging.info(f"> Query request info: " +
                     f"custom = {query_request.custom}, " +
                     f"name = {query_request.query_name}.")
-    logging.debug(f"190 > Received message body: {query_request.body}.")
+    logging.debug(f"> Received message body: {query_request.body}.")
 
     if ENVIRONMENT == 'google-cloud':
         # Time from message publication to reception
@@ -269,7 +271,7 @@ def main(event, context, local_driver=None):
     try:
         # TODO: Compare the provided query parameters against the 
         # required query parameters
-        logging.info(f"282 > Running query: {database_query.name}.")
+        logging.info(f"> Running query: {database_query.name}.")
         graph, result_summary = query_database(
             driver = DRIVER,
             query = database_query,
@@ -372,6 +374,6 @@ def main(event, context, local_driver=None):
                         project_id = GCP_PROJECT,
                         topic = topic, 
                         message = message)
-                logging.info(f"385 > Published response to {topic} with result (event_id): {publish_result}.")
+                logging.info(f"> Published response to {topic} with result (event_id): {publish_result}.")
                 published_message_counts[topic] += 1
-        logging.info(f"387 -> Summary of published messages: {published_message_counts}")
+        logging.info(f"-> Summary of published messages: {published_message_counts}")
