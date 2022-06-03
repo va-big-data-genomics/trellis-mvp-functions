@@ -78,7 +78,7 @@ def check_triggers(event, context, dry_run=False):
 
     activated_triggers = TRIGGER_CONTROLLER.evaluate_trigger_conditions(query_response)
     published_messages = {}
-    for trigger in activated_triggers:
+    for trigger, parameters in activated_triggers:
         published_messages[trigger.name] = 0
 
     for trigger, parameters in activated_triggers:
