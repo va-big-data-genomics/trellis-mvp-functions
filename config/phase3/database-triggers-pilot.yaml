@@ -4,7 +4,7 @@ pattern: relationship
 start:
     label: Job
 relationship: 
-    pattern: GENERATED
+    type: GENERATED
 end: 
     label: Ubam
     properties:
@@ -16,7 +16,7 @@ pattern: relationship
 start: 
     label: PersonalisSequencing
 relationship: 
-    pattern: GENERATED
+    type: GENERATED
 end: 
     label: Fastq
     properties:
@@ -33,7 +33,19 @@ end:
     properties:
         sample: sample
 relationship: 
-    pattern: HAS_BIOLOGICAL_OME
+    type: HAS_BIOLOGICAL_OME
+query: relateGenomeToFastq
+--- !DatabaseTrigger
+name: RelateFastqToGenome
+pattern: relationship
+start: 
+    label: PersonalisSequencing
+end: 
+    label: Fastq
+    properties:
+        sample: sample
+relationship: 
+    type: GENERATED
 query: relateGenomeToFastq
 --- !DatabaseTrigger
 name: MergeBiologicalNodes
