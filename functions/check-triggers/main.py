@@ -19,11 +19,12 @@ if ENVIRONMENT == 'google-cloud':
     # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
     import google.cloud.logging
     client = google.cloud.logging.Client()
-    client.setup_logging()
+    # log_level=10 is equivalent to DEBUG; default is 20 == INFO
+    client.setup_logging(log_level=10)
 
     # use Python's standard logging library to send logs to GCP
     import logging
-    logging.basicConfig(level=logging.DEBUG)
+    #logging.basicConfig()
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     GCP_PROJECT = os.environ['GCP_PROJECT']

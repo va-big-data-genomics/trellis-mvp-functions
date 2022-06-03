@@ -31,11 +31,12 @@ if ENVIRONMENT == 'google-cloud':
     # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
     import google.cloud.logging
     client = google.cloud.logging.Client()
-    client.setup_logging()
+    # log_level=10 is equivalent to DEBUG; default is 20 == INFO
+    client.setup_logging(log_level=10)
 
     # use Python's standard logging library to send logs to GCP
     import logging
-    logging.basicConfig(level=logging.DEBUG)
+    #logging.basicConfig()
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     GCP_PROJECT = os.environ['GCP_PROJECT']
@@ -302,14 +303,14 @@ def main(event, context, local_driver=None):
 
     result_available_after = result_summary.result_available_after
     result_consumed_after = result_summary.result_consumed_after
-    logging.info(f"316 > Query result available after: {result_available_after} ms, " +
+    logging.info(f"> Query result available after: {result_available_after} ms, " +
                  f"consumed after: {result_consumed_after} ms.")
         #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
     if int(result_available_after) > QUERY_ELAPSED_MAX:
-        logging.warning(f"320 > Result available time ({result_available_after} ms) " +
+        logging.warning(f"> Result available time ({result_available_after} ms) " +
                         f"exceeded {QUERY_ELAPSED_MAX:.3f}. " +
                         f"Query: {database_query.name}.")
-    logging.info(f"323 > Query result counter: {result_summary.counters}.")
+    logging.info(f"> Query result counter: {result_summary.counters}.")
 
     query_response = trellis.QueryResponseWriter(
         sender = FUNCTION_NAME,
@@ -321,7 +322,7 @@ def main(event, context, local_driver=None):
 
     # Return if no pubsub topic or not running on GCP
     if not database_query.publish_to or not ENVIRONMENT == 'google-cloud':
-        print("335 > No Pub/Sub topic specified; result not published.")
+        print("> No Pub/Sub topic specified; result not published.")
     else:
         # Track how many messages are published to each topic
         published_message_counts = {}
@@ -353,19 +354,19 @@ def main(event, context, local_driver=None):
                     published_message_counts[topic] += 1
                 """
                 for message in query_response.format_json_message_iter():
-                    logging.info(f"367 > Publishing query response to topic: {topic}.")
-                    logging.debug(f"368 > Publishing message: {message}.")
+                    logging.info(f"> Publishing query response to topic: {topic}.")
+                    logging.debug(f"> Publishing message: {message}.")
                     publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
                         project_id = GCP_PROJECT,
                         topic = topic, 
                         message = message)
-                    logging.info(f"374 > Published message to {topic} with result: {publish_result}.")
+                    logging.info(f"> Published message to {topic} with result: {publish_result}.")
                     published_message_counts[topic] += 1
             else:
                 message = query_response.format_json_message()
-                logging.info(f"378 > Publishing query response to topic: {topic}.")
-                logging.debug(f"379 > Publising message: {message}.")
+                logging.info(f"> Publishing query response to topic: {topic}.")
+                logging.debug(f"> Publising message: {message}.")
                 publish_result = trellis.utils.publish_to_pubsub_topic(
                         publisher = PUBLISHER,
                         project_id = GCP_PROJECT,
