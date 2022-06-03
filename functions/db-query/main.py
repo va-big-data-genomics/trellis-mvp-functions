@@ -47,18 +47,6 @@ if ENVIRONMENT == 'google-cloud':
     # https://stackoverflow.com/questions/6866600/how-to-parse-read-a-yaml-file-into-a-python-object
     TRELLIS = yaml.safe_load(config_doc)
 
-    # Runtime variables
-    #PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    #TOPIC_DB_QUERY = parsed_vars['TOPIC_DB_QUERY']
-    #DB_STORED_QUERIES = parsed_vars['DB_STORED_QUERIES']
-
-    #NEO4J_URL = parsed_vars['NEO4J_URL']
-    #NEO4J_SCHEME = parsed_vars['NEO4J_SCHEME']
-    #NEO4J_HOST = parsed_vars['NEO4J_HOST']
-    #NEO4J_PORT = parsed_vars['NEO4J_PORT']
-    #NEO4J_USER = parsed_vars['NEO4J_USER']
-    #NEO4J_PASSPHRASE = parsed_vars['NEO4J_PASSPHRASE']
-
     # Pubsub client
     PUBLISHER = pubsub.PublisherClient()
 
@@ -166,9 +154,7 @@ def new_query_found_in_catalogue(
                         f"163 >> Found catalogued query named {new_query.name} " +
                          "but does not match current query.")
     return query_match_found
-
-
-    
+  
 def main(event, context, local_driver=None):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
