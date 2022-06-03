@@ -1,6 +1,6 @@
 --- !DatabaseQuery
 name: relateGenomeToFastq
-cypher: "MATCH (fastq:Fastq)<-[]-(:PersonalisSequencing)<-[]-(s:Sample)<-[]-(:Person)-[]->(genome:Genome) WHERE s.sample = $sample AND NOT (genome)-[:HAS_SEQUENCING_READS]->(f) MERGE (genome)-[rel:HAS_SEQUENCING_READS]->(fastq) RETURN genome, rel, fastq" 
+cypher: "MATCH (fastq:Fastq)<-[]-(:PersonalisSequencing)<-[]-(s:Sample)<-[]-(:Person)-[]->(genome:Genome) WHERE s.sample = $sample AND NOT (genome)-[:HAS_SEQUENCING_READS]->(fastq) MERGE (genome)-[rel:HAS_SEQUENCING_READS]->(fastq) RETURN genome, rel, fastq" 
 required_parameters:
   sample: str
 write_transaction: true
