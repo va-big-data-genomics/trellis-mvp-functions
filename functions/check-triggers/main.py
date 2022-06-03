@@ -65,7 +65,8 @@ def check_triggers(event, context, dry_run=False):
     for node in query_response.nodes:
         logging.info(f">> {node['labels']}")
 
-    logging.info("> Query response relationships:")
+    if query_response.relationships:
+        logging.info("> Query response relationships:")
     for relationship in query_response.relationships:
         start_labels = relationship['start_node']['labels']
         relationship_type = relationship['type']
