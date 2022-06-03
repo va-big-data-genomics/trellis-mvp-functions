@@ -55,12 +55,28 @@ def check_triggers(event, context, dry_run=False):
                         context = context,
                         event = event)
 
-    logging.info(f"> Received message (context): {query_response.context}.")
-    logging.info(f"> Message header: {query_response.header}.")
-    logging.info(f"> Message body: {query_response.body}.")
+    logging.info(f"+> Received query response: " +
+                    "event ID = {query_response.event_id}, " +
+                    "previous event ID = {query_response.previous_event_id}, " +
+                    "seed event ID = {query_response.seed_id}.")
+    #logging.info(f"59 > Message header: {query_response.header}.")
+    logging.info("> Query response nodes:")
+    for node in query_response.nodes:
+        logging.info(f">> {node['labels']}")
+
+    logging.info("> Query response relationships:")
+    for relationship in query_response.relationships:
+        start_labels = relationship['start_node']['labels']
+        relationship_type = relationship['type']
+        end_labels = relationship['end_node']['labels']
+        logging.info(f">> ({start_labels})-[{relationship_type}]->({end_labels})")
+    logging.debug(f"> Message body: {query_response.body}.")
 
 
     activated_triggers = TRIGGER_CONTROLLER.evaluate_trigger_conditions(query_response)
+    for trigger in activated_triggers:
+        published_messages[trigger.name] = 0
+
     for trigger, parameters in activated_triggers:
         logging.info(f"> Trigger activated: {trigger.name}.")
 
@@ -73,7 +89,7 @@ def check_triggers(event, context, dry_run=False):
             query_parameters = parameters)
         
         pubsub_message = query_request.format_json_message()
-        logging.info(f"> Publishing query request: {pubsub_message}.")
+        logging.info(f"> Publishing query request; {pubsub_message['body']}.")
         if dry_run:
             logging.info(f"> Dry run: Would have published message to {TRELLIS['TOPIC_DB_QUERY']}.")
         else:
@@ -82,5 +98,7 @@ def check_triggers(event, context, dry_run=False):
                                                            project_id = GCP_PROJECT, 
                                                            topic = TRELLIS['TOPIC_DB_QUERY'], 
                                                            message = pubsub_message)
-            logging.info(f"> Published message to {TRELLIS['TOPIC_DB_QUERY']} with result: {result}.")
-    return(activated_triggers)
+
+            published_messages[trigger.name] += 1
+            logging.info(f"> Published request to {TRELLIS['TOPIC_DB_QUERY']} with result (event_id): {result}.")
+    logging.info(f"-> Summary of published messages: {published_messages}")
