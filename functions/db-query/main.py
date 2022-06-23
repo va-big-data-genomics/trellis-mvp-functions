@@ -32,6 +32,7 @@ if ENVIRONMENT == 'google-cloud':
     import google.cloud.logging
     client = google.cloud.logging.Client()
     # log_level=10 is equivalent to DEBUG; default is 20 == INFO
+    # NOTE: this debug setting doesn't work
     # Gcloud Python logging client: https://googleapis.dev/python/logging/latest/client.html?highlight=setup_logging#google.cloud.logging_v2.client.Client.setup_logging
     # Logging levels: https://docs.python.org/3/library/logging.html#logging-levels
     client.setup_logging(log_level=10)
@@ -172,13 +173,13 @@ def main(event, context, local_driver=None):
                                                event=event, 
                                                context=context)
     
-    logging.info(f"+> Received query request: " +
-                    f"event ID = {query_request.event_id}, " +
-                    f"previous event ID = {query_request.previous_event_id}, " +
-                    f"seed event ID = {query_request.seed_id}.")
+    logging.info(f"+> Received query request; " +
+                    f"event ID : {query_request.event_id}, " +
+                    f"previous event ID : {query_request.previous_event_id}, " +
+                    f"seed event ID : {query_request.seed_id}.")
     logging.info(f"> Query request info: " +
-                    f"custom = {query_request.custom}, " +
-                    f"name = {query_request.query_name}.")
+                    f"custom : {query_request.custom}, " +
+                    f"name : {query_request.query_name}.")
     logging.debug(f"> Received message body: {query_request.body}.")
 
     if ENVIRONMENT == 'google-cloud':
@@ -191,13 +192,13 @@ def main(event, context, local_driver=None):
                 f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
 
     if query_request.custom == True:
-        logging.info("202 >> Processing custom query.")
+        logging.info(">> Processing custom query.")
 
         # Parse query parameters and data types from request
         required_parameters = {}
         for key, value in query_request.query_parameters.items():
             required_parameters[key] = type(value).__name__
-        logging.info(f"208 >> Custom query required parameters: {required_parameters}.")
+        logging.info(f">> Custom query required parameters: {required_parameters}.")
 
         # Create DatabaseQuery object
         database_query = trellis.DatabaseQuery(
@@ -242,9 +243,9 @@ def main(event, context, local_driver=None):
         elif re.match(pattern = r"^mergeJob.*", string = database_query.name):
             if new_query_found_in_catalogue(database_query, CREATE_JOB_QUERY_DOC):
                 register_new_query = False
-                logging.info("253 >> Merge job query already stored.")
+                logging.info(">> Merge job query already stored.")
             else:
-                logging.info("255 >> Merge job query not found in current catalogue; reloading latest version.")
+                logging.info(">> Merge job query not found in current catalogue; reloading latest version.")
                 # Reload create job queries to make sure list is current
                 create_job_query_doc = storage.Client() \
                                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -252,10 +253,10 @@ def main(event, context, local_driver=None):
                                         .download_as_string()
                 if new_query_found_in_catalogue(database_query, create_job_query_doc):
                     register_new_query = False
-                    logging.info("263 >> Merge job query already stored.")
+                    logging.info(">> Merge job query already stored.")
 
             if register_new_query:
-                logging.info(f"266 >> Merge job query not found in existing catalogue; adding to {TRELLIS['CREATE_JOB_QUERIES']}")
+                logging.info(f">> Merge job query not found in existing catalogue; adding to {TRELLIS['CREATE_JOB_QUERIES']}")
                 create_job_query_str = create_job_query_doc.decode("utf-8")
                 create_job_query_str += "--- "
                 create_job_query_str += yaml.dump(database_query)
@@ -264,7 +265,7 @@ def main(event, context, local_driver=None):
                     .get_blob(TRELLIS["CREATE_JOB_QUERIES"]) \
                     .upload_from_string(create_job_query_str)
         else:
-            logging.warning("275 >> Custom query name did not match any recognized pattern.")
+            logging.warning(">> Custom query name did not match any recognized pattern.")
     else:
         database_query = QUERY_DICT[query_request.query_name]
 
@@ -305,11 +306,13 @@ def main(event, context, local_driver=None):
 
     result_available_after = result_summary.result_available_after
     result_consumed_after = result_summary.result_consumed_after
-    logging.info(f"> Query result available after: {result_available_after} ms, " +
+    logging.info(
+                 f"> Query result available after: {result_available_after} ms, " +
                  f"consumed after: {result_consumed_after} ms.")
         #print(f"> Elapsed time to run query: {query_elapsed:.3f}. Query: {query}.")
     if int(result_available_after) > QUERY_ELAPSED_MAX:
-        logging.warning(f"> Result available time ({result_available_after} ms) " +
+        logging.warning(
+                        f"> Result available time ({result_available_after} ms) " +
                         f"exceeded {QUERY_ELAPSED_MAX:.3f}. " +
                         f"Query: {database_query.name}.")
     logging.info(f"> Query result counter: {result_summary.counters}.")
@@ -320,41 +323,21 @@ def main(event, context, local_driver=None):
         previous_event_id = query_request.event_id,
         query_name = query_request.query_name,
         graph = graph,
-        result_summary = result_summary)
+        result_summary = result_summary,
+        pattern = database_query.pattern)
 
     # Return if no pubsub topic or not running on GCP
     if not database_query.publish_to or not ENVIRONMENT == 'google-cloud':
         print("> No Pub/Sub topic specified; result not published.")
-    else:
-        # Track how many messages are published to each topic
-        published_message_counts = {}
+        return
+
+    # Track how many messages are published to each topic
+    published_message_counts = {}
         for topic_name in database_query.publish_to:
             topic = TRELLIS[topic_name]
-            # TODO: map the name in the query definition to the real topic
-
             published_message_counts[topic] = 0
 
             if database_query.split_results == 'True':
-                """ I think we can always send a result because even if no
-                    node or relationship is returned we may still want to
-                    use the summary statistics.
-
-                if not query_results:
-                    # If no results; send one message so triggers can respond to null
-                    query_result = {}
-                    message = format_pubsub_message(
-                                                    method = method,
-                                                    labels = labels,
-                                                    query = query,
-                                                    results = query_result,
-                                                    seed_id = seed_id,
-                                                    event_id = event_id,
-                                                    retry_count=retry_count)
-                    print(f"> Pubsub message: {message}.")
-                    publish_result = publish_to_topic(topic, message)
-                    print(f"> Published message to {topic} with result: {publish_result}.")
-                    published_message_counts[topic] += 1
-                """
                 for message in query_response.format_json_message_iter():
                     logging.info(f"> Publishing query response to topic: {topic}.")
                     logging.debug(f"> Publishing message: {message}.")
@@ -376,4 +359,4 @@ def main(event, context, local_driver=None):
                         message = message)
                 logging.info(f"> Published response to {topic} with result (event_id): {publish_result}.")
                 published_message_counts[topic] += 1
-        logging.info(f"-> Summary of published messages: {published_message_counts}")
+    logging.info(f"-> Summary of published messages: {published_message_counts}")
