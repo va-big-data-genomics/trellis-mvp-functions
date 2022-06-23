@@ -20,6 +20,8 @@ if ENVIRONMENT == 'google-cloud':
     import google.cloud.logging
     client = google.cloud.logging.Client()
     # log_level=10 is equivalent to DEBUG; default is 20 == INFO
+    # Gcloud Python logging client: https://googleapis.dev/python/logging/latest/client.html?highlight=setup_logging#google.cloud.logging_v2.client.Client.setup_logging
+    # Logging levels: https://docs.python.org/3/library/logging.html#logging-levels
     client.setup_logging(log_level=10)
 
     # use Python's standard logging library to send logs to GCP
@@ -57,10 +59,10 @@ def check_triggers(event, context, dry_run=False):
                         event = event)
 
     logging.info(
-                 f"+> Received query response: " +
-                 f"event ID = {query_response.event_id}, " +
-                 f"previous event ID = {query_response.previous_event_id}, " +
-                 f"seed event ID = {query_response.seed_id}.")
+                 f"+> Received query response; " +
+                 f"event ID : {query_response.event_id}, " +
+                 f"previous event ID : {query_response.previous_event_id}, " +
+                 f"seed event ID : {query_response.seed_id}.")
     
     logging.info("> Query response nodes:")
     for node in query_response.nodes:
