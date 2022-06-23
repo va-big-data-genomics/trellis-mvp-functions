@@ -4,19 +4,23 @@ cypher: "MATCH (fastq:Fastq)<-[]-(:PersonalisSequencing)<-[]-(s:Sample)<-[]-(:Pe
 required_parameters:
   sample: str
 write_transaction: true
-split_results: false
+split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
   Sample: 
     - sample
+pattern: relationship
 returns:
-  genome: node
-  rel: relationship
-  fastq: node
+  -
+    start: Genome
+    relationship: HAS_SEQUENCING_READS
+    end: Fastq
+# Indicates that this query can return results from multiple operational threads
+redundant: true
 --- !DatabaseQuery
 name: mergeBiologicalNodes
-cypher: "MATCH (s:PersonalisSequencing) WHERE s.sample = $sample MERGE (s)<-[:WAS_USED_BY {ontology: 'provenance'}]-(:Sample {sample: s.sample})<-[:GENERATED {ontology:'provenance'}]-(:Person {sample: s.sample})-[:HAS_BIOLOGICAL_OME {ontology:'bioinformatics'}]->(genome:Genome {sample: s.sample}) RETURN genome"
+cypher: "MATCH (seq:PersonalisSequencing) WHERE seq.sample = $sample MERGE (seq)<-[:WAS_USED_BY {ontology: 'provenance'}]-(:Sample {sample: $sample})<-[:GENERATED {ontology:'provenance'}]-(:Person {sample: $sample})-[:HAS_BIOLOGICAL_OME {ontology:'bioinformatics'}]->(genome:Genome {sample: $sample}) RETURN genome"
 required_parameters:
   sample: str
 write_transaction: true
@@ -26,16 +30,20 @@ publish_to:
 indexes:
   Sample:
     - sample
+pattern: node
 returns:
-  genome: node
+  -
+    start: Genome
 --- !DatabaseQuery
+# I could make this a redundant query by looking up fastqs by sample instead of uri
+# Could I then also eliminate the fastq(uri) index?
 name: relateFastqToPersonalisSequencing
 cypher: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE fastq.uri=$uri AND seq.sample=fastq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
 required_parameters:
   sample: str
   uri: str
 write_transaction: true
-split_results: false
+split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -43,18 +51,19 @@ indexes:
     - uri
   PersonalisSequencing:
     - sample
+pattern: relationship
 returns:
-  pattern: relationship
-  start: PersonalisSequencing
-  relationship: GENERATED
-  end: Fastq
+  -
+    start: PersonalisSequencing
+    relationship: GENERATED
+    end: Fastq
 --- !DatabaseQuery
 name: relatePersonalisSequencingToFastqs
 cypher: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE seq.sample=$sample AND fastq.sample=seq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
 required_parameters:
   sample: str
 write_transaction: true
-split_results: false
+split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -76,13 +85,14 @@ required_parameters:
   PersonalisSequencing:
     - sample
 write_transaction: true
-split_results: false
+split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 returns:
-  seq: node
-  rel: relationship
-  microarray: node
+  pattern: relationship
+  start: PersonalisSequencing
+  relationship: GENERATED
+  end: Microarray
 --- !DatabaseQuery
 name: relateChecksumToPersonalisSequencing
 cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (checksum:Checksum) WHERE checksum.uri=$uri MERGE (seq)-[rel:GENERATED]->(checksum) RETURN seq, rel, checksum"
@@ -92,10 +102,11 @@ required_parameters:
   PersonalisSequencing:
     - sample
 write_transaction: true
-split_results: false
+split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 returns:
-  seq: node
-  rel: relationship
-  checksum: node
+  pattern: relationship
+  start: PersonalisSequencing
+  relationship: GENERATED
+  end: Checksum
