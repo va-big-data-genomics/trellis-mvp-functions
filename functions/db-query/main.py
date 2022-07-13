@@ -333,30 +333,30 @@ def main(event, context, local_driver=None):
 
     # Track how many messages are published to each topic
     published_message_counts = {}
-        for topic_name in database_query.publish_to:
-            topic = TRELLIS[topic_name]
-            published_message_counts[topic] = 0
+    for topic_name in database_query.publish_to:
+        topic = TRELLIS[topic_name]
+        published_message_counts[topic] = 0
 
-            if database_query.split_results == 'True':
-                for message in query_response.format_json_message_iter():
-                    logging.info(f"> Publishing query response to topic: {topic}.")
-                    logging.debug(f"> Publishing message: {message}.")
-                    publish_result = trellis.utils.publish_to_pubsub_topic(
-                        publisher = PUBLISHER,
-                        project_id = GCP_PROJECT,
-                        topic = topic, 
-                        message = message)
-                    logging.info(f"> Published message to {topic} with result: {publish_result}.")
-                    published_message_counts[topic] += 1
-            else:
-                message = query_response.format_json_message()
+        if database_query.split_results == 'True':
+            for message in query_response.format_json_message_iter():
                 logging.info(f"> Publishing query response to topic: {topic}.")
-                logging.debug(f"> Publising message: {message}.")
+                logging.debug(f"> Publishing message: {message}.")
                 publish_result = trellis.utils.publish_to_pubsub_topic(
-                        publisher = PUBLISHER,
-                        project_id = GCP_PROJECT,
-                        topic = topic, 
-                        message = message)
-                logging.info(f"> Published response to {topic} with result (event_id): {publish_result}.")
+                    publisher = PUBLISHER,
+                    project_id = GCP_PROJECT,
+                    topic = topic, 
+                    message = message)
+                logging.info(f"> Published message to {topic} with result: {publish_result}.")
                 published_message_counts[topic] += 1
+        else:
+            message = query_response.format_json_message()
+            logging.info(f"> Publishing query response to topic: {topic}.")
+            logging.debug(f"> Publising message: {message}.")
+            publish_result = trellis.utils.publish_to_pubsub_topic(
+                    publisher = PUBLISHER,
+                    project_id = GCP_PROJECT,
+                    topic = topic, 
+                    message = message)
+            logging.info(f"> Published response to {topic} with result (event_id): {publish_result}.")
+            published_message_counts[topic] += 1
     logging.info(f"-> Summary of published messages: {published_message_counts}")
