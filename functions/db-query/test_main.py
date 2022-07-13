@@ -18,7 +18,9 @@ mock_context = mock.Mock()
 mock_context.event_id = '617187464135194'
 mock_context.timestamp = '2019-07-15T22:09:03.761Z'
 
+""" 20220713: We are not testing with a live database anymore.
 class TestQueryDatabase(TestCase):
+
 	bolt_port = 7687
 	bolt_address = "localhost"
 	bolt_uri = f"bolt://{bolt_address}:{bolt_port}"
@@ -66,8 +68,9 @@ class TestQueryDatabase(TestCase):
 		# Delete job node
 		with cls.driver.session() as session:
 			result = session.run(cls.del_query)
+"""
 
-
+"""
 class TestDbQuery(TestCase):
 
 	bolt_port = 7687
@@ -214,7 +217,7 @@ class TestDbQuery(TestCase):
 		node_properties = dict(node.items())
 		
 		assert node_properties['basename'] =='SAMPLE0_0_R1.fastq.gz'
-
+"""
 
 class TestLoadConfig(TestCase):
 	config_file = "sample-config.yaml"
