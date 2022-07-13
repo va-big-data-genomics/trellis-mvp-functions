@@ -337,7 +337,7 @@ def main(event, context, local_driver=None):
         published_message_counts[topic] = 0
 
         if database_query.split_results == 'True':
-            for message in query_response.format_json_message_iter():
+            for message in query_response.generate_separate_entity_jsons():
                 logging.info(f"> Publishing query response to topic: {topic}.")
                 logging.debug(f"> Publishing message: {message}.")
                 publish_result = trellis.utils.publish_to_pubsub_topic(
@@ -348,7 +348,7 @@ def main(event, context, local_driver=None):
                 logging.info(f"> Published message to {topic} with result: {publish_result}.")
                 published_message_counts[topic] += 1
         else:
-            message = query_response.format_json_message()
+            message = query_response.return_json_with_all_nodes()
             logging.info(f"> Publishing query response to topic: {topic}.")
             logging.debug(f"> Publising message: {message}.")
             publish_result = trellis.utils.publish_to_pubsub_topic(
