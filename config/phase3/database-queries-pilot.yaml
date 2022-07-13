@@ -10,7 +10,6 @@ publish_to:
 indexes:
   Sample: 
     - sample
-pattern: relationship
 returns:
   -
     start: Genome
@@ -30,10 +29,19 @@ publish_to:
 indexes:
   Sample:
     - sample
-pattern: node
 returns:
   -
-    start: Genome
+    start: Sample
+    relationship: WAS_USED_BY
+    end: PersonalisSequencing
+  -
+    start: Person
+    relationship: GENERATED
+    end: Sample
+  -
+    start: Person
+    relationship: HAS_BIOLOGICAL_OME
+    end: Genome
 --- !DatabaseQuery
 # I could make this a redundant query by looking up fastqs by sample instead of uri
 # Could I then also eliminate the fastq(uri) index?
@@ -51,7 +59,6 @@ indexes:
     - uri
   PersonalisSequencing:
     - sample
-pattern: relationship
 returns:
   -
     start: PersonalisSequencing
@@ -72,10 +79,10 @@ indexes:
   PersonalisSequencing:
     - sample
 returns:
-  pattern: relationship
-  start: PersonalisSequencing
-  relationship: GENERATED
-  end: Fastq
+  -
+    start: PersonalisSequencing
+    relationship: GENERATED
+    end: Fastq
 --- !DatabaseQuery
 name: relateMicroarrayToPersonalisSequencing
 cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (microarray:Microarray) WHERE microarray.uri=$uri MERGE (seq)-[rel:GENERATED]->(micro) RETURN seq, rel, microarray"
@@ -89,10 +96,10 @@ split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 returns:
-  pattern: relationship
-  start: PersonalisSequencing
-  relationship: GENERATED
-  end: Microarray
+  -
+    start: PersonalisSequencing
+    relationship: GENERATED
+    end: Microarray
 --- !DatabaseQuery
 name: relateChecksumToPersonalisSequencing
 cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (checksum:Checksum) WHERE checksum.uri=$uri MERGE (seq)-[rel:GENERATED]->(checksum) RETURN seq, rel, checksum"
@@ -106,7 +113,7 @@ split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 returns:
-  pattern: relationship
-  start: PersonalisSequencing
-  relationship: GENERATED
-  end: Checksum
+  -
+    start: PersonalisSequencing
+    relationship: GENERATED
+    end: Checksum
