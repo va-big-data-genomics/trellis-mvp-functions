@@ -323,8 +323,7 @@ def main(event, context, local_driver=None):
         previous_event_id = query_request.event_id,
         query_name = query_request.query_name,
         graph = graph,
-        result_summary = result_summary,
-        pattern = database_query.pattern)
+        result_summary = result_summary)
 
     # Return if no pubsub topic or not running on GCP
     if not database_query.publish_to or not ENVIRONMENT == 'google-cloud':
