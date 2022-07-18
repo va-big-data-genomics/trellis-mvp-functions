@@ -4,7 +4,6 @@ cypher: "MATCH (fastq:Fastq)<-[]-(:PersonalisSequencing)<-[]-(s:Sample)<-[]-(:Pe
 required_parameters:
   sample: str
 write_transaction: true
-split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -23,7 +22,6 @@ cypher: "MATCH (seq:PersonalisSequencing) WHERE seq.sample = $sample MERGE (seq)
 required_parameters:
   sample: str
 write_transaction: true
-split_results: false
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -51,7 +49,6 @@ required_parameters:
   sample: str
   uri: str
 write_transaction: true
-split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -70,7 +67,6 @@ cypher: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE seq.sample=$sampl
 required_parameters:
   sample: str
 write_transaction: true
-split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 indexes:
@@ -92,7 +88,6 @@ required_parameters:
   PersonalisSequencing:
     - sample
 write_transaction: true
-split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 returns:
@@ -109,7 +104,6 @@ required_parameters:
   PersonalisSequencing:
     - sample
 write_transaction: true
-split_results: true
 publish_to: 
   - TOPIC_TRIGGERS
 returns:
