@@ -366,7 +366,7 @@ def create_node_query(event, context, test=False):
         custom = True,
         cypher = parameterized_query,
         write_transaction = True,
-        split_results = False,
+        aggregate_results = False,
         publish_to = ["TOPIC_TRIGGERS"],
         returns = {
                    "pattern": "node",

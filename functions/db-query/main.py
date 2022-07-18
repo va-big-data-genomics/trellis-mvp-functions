@@ -209,7 +209,7 @@ def main(event, context, local_driver=None):
             write_transaction=query_request.write_transaction,
             returns = query_request.returns,
             publish_to = query_request.publish_to,
-            split_results = query_request.split_results,
+            aggregate_results = query_request.aggregate_results,
             active = True)
 
         register_new_query = True
