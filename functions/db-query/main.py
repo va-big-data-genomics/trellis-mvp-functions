@@ -272,7 +272,7 @@ def main(event, context, local_driver=None):
         except KeyError:
             raise KeyError(f"Database query '{query_request.query_name}' " +
                            "is not available. Check that is has been " +
-                           f"added to {TRELLIS["USER_DEFINED_QUERIES"]}.")
+                           f"added to {TRELLIS['USER_DEFINED_QUERIES']}.")
 
     try:
         # TODO: Compare the provided query parameters against the 
