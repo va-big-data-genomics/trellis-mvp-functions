@@ -64,16 +64,17 @@ def check_triggers(event, context, dry_run=False):
                  f"previous event ID : {query_response.previous_event_id}, " +
                  f"seed event ID : {query_response.seed_id}.")
     
-    logging.info("> Query response nodes:")
-    for node in query_response.nodes:
-        logging.info(f">> {node['labels']}")
+    if query_response.nodes:
+        logging.info("> Query response nodes:")
+        for node in query_response.nodes:
+            logging.info(f">> {node['labels']}")
 
     if query_response.relationship:
-        logging.info("> Query response relationship:")
         start_labels = query_response.relationship['start_node']['labels']
         relationship_type = query_response.relationship['type']
         end_labels = query_response.relationship['end_node']['labels']
-        logging.info(f">> ({start_labels})-[{relationship_type}]->({end_labels})")
+        logging.info(f"> Query response relationship: " +
+                     f"({start_labels})-[{relationship_type}]->({end_labels})")
     logging.debug(f"> Message header: {query_response.header}.")
     logging.debug(f"> Message body: {query_response.body}.")
 
