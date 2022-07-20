@@ -267,7 +267,12 @@ def main(event, context, local_driver=None):
         else:
             logging.warning(">> Custom query name did not match any recognized pattern.")
     else:
-        database_query = QUERY_DICT[query_request.query_name]
+        try:
+            database_query = QUERY_DICT[query_request.query_name]
+        except KeyError:
+            raise KeyError(f"Database query '{query_request.query_name}' " +
+                           "is not available. Check that is has been " +
+                           f"added to {TRELLIS["USER_DEFINED_QUERIES"]}.")
 
     try:
         # TODO: Compare the provided query parameters against the 
