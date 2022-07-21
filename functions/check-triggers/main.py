@@ -4,9 +4,9 @@ import pdb
 import json
 import yaml
 import base64
-import logging
+#import logging
 import importlib
-import trellisdata as trellis
+#import trellisdata as trellis
 
 from google.cloud import storage
 from google.cloud import pubsub
@@ -26,6 +26,7 @@ if ENVIRONMENT == 'google-cloud':
 
     # use Python's standard logging library to send logs to GCP
     import logging
+    import trellisdata as trellis
     #logging.basicConfig()
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
