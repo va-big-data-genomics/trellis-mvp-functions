@@ -192,13 +192,13 @@ def main(event, context, local_driver=None):
                 f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
 
     if query_request.custom == True:
-        logging.info(">> Processing custom query.")
+        logging.info("> Processing custom query.")
 
         # Parse query parameters and data types from request
         required_parameters = {}
         for key, value in query_request.query_parameters.items():
             required_parameters[key] = type(value).__name__
-        logging.info(f">> Custom query required parameters: {required_parameters}.")
+        logging.info(f"> Custom query required parameters: {required_parameters}.")
 
         # Create DatabaseQuery object
         database_query = trellis.DatabaseQuery(
@@ -217,9 +217,9 @@ def main(event, context, local_driver=None):
         if re.match(pattern = r"^mergeBlob.*", string = database_query.name):
             if new_query_found_in_catalogue(database_query, CREATE_BLOB_QUERY_DOC):
                 register_new_query = False
-                logging.info("221 >> Merge blob query already stored.")
+                logging.info("> Merge blob query already stored.")
             else:
-                logging.info("223 >> Merge blob query not found in current catalogue; reloading latest version.")
+                logging.info("> Merge blob query not found in current catalogue; reloading latest version.")
                 # Reload create blob queries to make sure list is current
                 create_blob_query_doc = storage.Client() \
                                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
@@ -227,10 +227,10 @@ def main(event, context, local_driver=None):
                                         .download_as_string()
                 if new_query_found_in_catalogue(database_query, create_blob_query_doc):
                     register_new_query = False
-                    logging.info("231 >> Merge blob query already stored.")
+                    logging.info("> Merge blob query already stored.")
             
             if register_new_query:
-                logging.info(f"234 >> Merge blob query not found in existing catalogue; adding to {TRELLIS['CREATE_BLOB_QUERIES']}")
+                logging.info(f"> Merge blob query not found in existing catalogue; adding to {TRELLIS['CREATE_BLOB_QUERIES']}")
                 create_blob_query_str = create_blob_query_doc.decode("utf-8")
                 create_blob_query_str += "--- "
                 create_blob_query_str += yaml.dump(database_query)
@@ -265,12 +265,12 @@ def main(event, context, local_driver=None):
                     .get_blob(TRELLIS["CREATE_JOB_QUERIES"]) \
                     .upload_from_string(create_job_query_str)
         else:
-            logging.warning(">> Custom query name did not match any recognized pattern.")
+            logging.warning("> Custom query name did not match any recognized pattern.")
     else:
         try:
             database_query = QUERY_DICT[query_request.query_name]
         except KeyError:
-            raise KeyError(f"Database query '{query_request.query_name}' " +
+            raise KeyError(f"> Database query '{query_request.query_name}' " +
                            "is not available. Check that is has been " +
                            f"added to {TRELLIS['USER_DEFINED_QUERIES']}.")
 
