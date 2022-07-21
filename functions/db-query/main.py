@@ -331,10 +331,10 @@ def main(event, context, local_driver=None):
         graph = graph,
         result_summary = result_summary)
 
-    logging.info(f"> Query response nodes: {[node.labels for node in query_response.nodes]}")
+    logging.info(f"> Query response nodes: {[list(node.labels) for node in query_response.nodes]}")
     logging.info(f"> Query response relationships:")
     for relationship in query_response.relationships:
-        logging.info(f">> (:{relationship.start_node.labels})-[:{relationship.type}]->(:{relationship.end_node.labels})")
+        logging.info(f">> (:{list(relationship.start_node.labels)})-[:{relationship.type}]->(:{list(relationship.end_node.labels)})")
 
     # Return if no pubsub topic or not running on GCP
     if not database_query.publish_to or not ENVIRONMENT == 'google-cloud':
