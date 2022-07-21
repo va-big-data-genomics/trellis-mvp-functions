@@ -277,7 +277,8 @@ def main(event, context, local_driver=None):
     try:
         # TODO: Compare the provided query parameters against the 
         # required query parameters
-        logging.info(f"> Running query: {database_query.name}.")
+        logging.info(f"> Running query: {database_query.name} " +
+                     f"with parameters: {query_request.query_parameters}.")
         graph, result_summary = query_database(
             driver = DRIVER,
             query = database_query,
@@ -330,6 +331,11 @@ def main(event, context, local_driver=None):
         graph = graph,
         result_summary = result_summary)
 
+    logging.info(f"> Query response nodes: {[node.labels for node in query_response.nodes]}")
+    logging.info(f"> Query response relationships:")
+    for relationship in query_response.relationships:
+        logging.info(f">> (:{relationship.start_node.labels})-[:{relationship.type}]->(:{relationship.end_node.labels})")
+
     # Return if no pubsub topic or not running on GCP
     if not database_query.publish_to or not ENVIRONMENT == 'google-cloud':
         print("> No Pub/Sub topic specified; result not published.")
@@ -351,7 +357,7 @@ def main(event, context, local_driver=None):
                     project_id = GCP_PROJECT,
                     topic = topic, 
                     message = message)
-            logging.info(f"> Published response to {topic} with result (event_id): {publish_result}.")
+            logging.info(f"> Published message to {topic} with result (event_id): {publish_result}.")
             published_message_counts[topic] += 1
         else:
             for message in query_response.generate_separate_entity_jsons():
