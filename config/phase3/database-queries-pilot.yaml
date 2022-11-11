@@ -14,6 +14,7 @@ returns:
     start: Genome
     relationship: HAS_SEQUENCING_READS
     end: Fastq
+aggregate_results: false
 # Indicates that this query can return results from multiple operational threads
 redundant: true
 --- !DatabaseQuery
@@ -40,6 +41,7 @@ returns:
     start: Person
     relationship: HAS_BIOLOGICAL_OME
     end: Genome
+aggregate_results: false
 --- !DatabaseQuery
 # I could make this a redundant query by looking up fastqs by sample instead of uri
 # Could I then also eliminate the fastq(uri) index?
@@ -61,6 +63,7 @@ returns:
     start: PersonalisSequencing
     relationship: GENERATED
     end: Fastq
+aggregate_results: false
 --- !DatabaseQuery
 name: relatePersonalisSequencingToFastqs
 cypher: "MATCH (seq:PersonalisSequencing), (fastq:Fastq) WHERE seq.sample=$sample AND fastq.sample=seq.sample MERGE (seq)-[rel:GENERATED]->(fastq) RETURN seq, rel, fastq"
@@ -79,14 +82,13 @@ returns:
     start: PersonalisSequencing
     relationship: GENERATED
     end: Fastq
+aggregate_results: false
 --- !DatabaseQuery
 name: relateMicroarrayToPersonalisSequencing
-cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (microarray:Microarray) WHERE microarray.uri=$uri MERGE (seq)-[rel:GENERATED]->(micro) RETURN seq, rel, microarray"
+cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (micro:Microarray) WHERE micro.uri=$uri MERGE (seq)-[rel:GENERATED]->(micro) RETURN seq, rel, micro"
 required_parameters:
-  Microarray:
-    - uri
-  PersonalisSequencing:
-    - sample
+  uri: str
+  sample: str
 write_transaction: true
 publish_to: 
   - TOPIC_TRIGGERS
@@ -95,14 +97,13 @@ returns:
     start: PersonalisSequencing
     relationship: GENERATED
     end: Microarray
+aggregate_results: false
 --- !DatabaseQuery
 name: relateChecksumToPersonalisSequencing
 cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (checksum:Checksum) WHERE checksum.uri=$uri MERGE (seq)-[rel:GENERATED]->(checksum) RETURN seq, rel, checksum"
 required_parameters:
-  Checksum:
-    - uri
-  PersonalisSequencing:
-    - sample
+  uri: str
+  sample: str
 write_transaction: true
 publish_to: 
   - TOPIC_TRIGGERS
@@ -111,3 +112,21 @@ returns:
     start: PersonalisSequencing
     relationship: GENERATED
     end: Checksum
+aggregate_results: false
+--- !DatabaseQuery
+name: launchFastqToUbam
+cypher: "MATCH (:PersonalisSequencing {sample: $sample})-[:GENERATED]->(fastq_r1:Fastq $read_group)-[rel:HAS_MATE_PAIR]->(fastq_r2:Fastq) WHERE NOT (fastq_r1)-[:WAS_USED_BY]->(:JobRequest {name: 'fastq-to-ubam'}) AND NOT (fastq_r2)-[:WAS_USED_BY]->(:JobRequest {name: 'fastq-to-ubam'}) CREATE (job_request:JobRequest {name: 'fastq-to-ubam'}, sample: $sample, nodeCreated: datetime(), nodeCreatedEpoch: datetime().epochSeconds, eventId: $event_id) WITH r1, rel, r2, job_request LIMIT 1 MERGE (fastq_r1)-[:WAS_USED_BY]->(job_request) MERGE (fastq_r2)-[:WAS_USED_BY]->(job_request) RETURN fastq_r1, rel, fastq_r2"
+required_parameters:
+  sample: str
+  read_group: int
+  event_id: int
+# Create JobRequest node
+write_transaction: true
+publish_to:
+  - TOPIC_FASTQ_TO_UBAM
+returns:
+  -
+    start: Fastq
+    relationship: HAS_MATE_PAIR
+    end: Fastq
+aggregate_results: false
