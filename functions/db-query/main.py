@@ -102,7 +102,6 @@ else:
 QUERY_ELAPSED_MAX = 300
 PUBSUB_ELAPSED_MAX = 10
 
-#def query_database(write_transaction, driver, query, query_parameters):
 def query_database(driver, query, parameters):
     """Run a Cypher query against the Neo4j database.
 
@@ -134,8 +133,19 @@ def query_database(driver, query, parameters):
     return graph, result_summary
 
 def _stored_procedure_transaction_function(tx, query, **query_parameters):
+    """ Standard function for running parameterized cypher queries.
+
+    Args:
+        tx (neo4j.session.[read,write]_transaction): Method for running managed Neo4j transaction.
+        query (str): Cypher query.
+        query_parameters (dict): The query will be populated with these parameters.
+
+    Returns:
+        neo4j.graph.Graph: Graph object with returned nodes and relationships.
+        neo4j.ResultSummary: Summary statistics detailing changes made by the transaction.
+    """
+
     result = tx.run(query, query_parameters)
-    # Return graph data and ResultSummary object
     return result.graph(), result.consume()
 
 def new_query_found_in_catalogue(
