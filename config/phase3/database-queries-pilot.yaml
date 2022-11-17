@@ -83,6 +83,33 @@ returns:
     relationship: GENERATED
     end: Fastq
 aggregate_results: false
+redundant: true
+--- !DatabaseQuery
+name: relateFastqMatePair
+cypher: 'MATCH (r1:Fastq)<-[:GENERATED]-(seq:PersonalisSequencing)-[:GENERATED]->(r2:Fastq)
+  WHERE seq.sample = $sample
+  AND r1.readGroup = $read_group
+  AND r2.readGroup = $read_group
+  AND r1.matePair = 1
+  AND r2.matePair = 2
+  MERGE (r1)-[rel:HAS_MATE_PAIR]->(r2)
+  RETURN r1, rel, r2'
+required_parameters:
+  sample: str
+  read_group: int
+write_transaction: true
+publish_to:
+  - TOPIC_TRIGGERS
+indexes:
+  PersonalisSequencing:
+    - sample
+returns:
+  -
+    start: Fastq
+    relationship: HAS_MATE_PAIR
+    end: Fastq
+aggregate_results: false
+redundant: false
 --- !DatabaseQuery
 name: relateMicroarrayToPersonalisSequencing
 cypher: "MERGE (seq:PersonalisSequencing {sample: $sample}) WITH seq MATCH (micro:Microarray) WHERE micro.uri=$uri MERGE (seq)-[rel:GENERATED]->(micro) RETURN seq, rel, micro"
@@ -115,12 +142,26 @@ returns:
 aggregate_results: false
 --- !DatabaseQuery
 name: launchFastqToUbam
-cypher: "MATCH (:PersonalisSequencing {sample: $sample})-[:GENERATED]->(fastq_r1:Fastq $read_group)-[rel:HAS_MATE_PAIR]->(fastq_r2:Fastq) WHERE NOT (fastq_r1)-[:WAS_USED_BY]->(:JobRequest {name: 'fastq-to-ubam'}) AND NOT (fastq_r2)-[:WAS_USED_BY]->(:JobRequest {name: 'fastq-to-ubam'}) CREATE (job_request:JobRequest {name: 'fastq-to-ubam'}, sample: $sample, nodeCreated: datetime(), nodeCreatedEpoch: datetime().epochSeconds, eventId: $event_id) WITH r1, rel, r2, job_request LIMIT 1 MERGE (fastq_r1)-[:WAS_USED_BY]->(job_request) MERGE (fastq_r2)-[:WAS_USED_BY]->(job_request) RETURN fastq_r1, rel, fastq_r2"
+cypher: 'MATCH (seq:PersonalisSequencing)-[:GENERATED]->(r1:Fastq)-[rel:HAS_MATE_PAIR]->(r2:Fastq) 
+  WHERE seq.sample = $sample
+  AND r1.readGroup = $read_group
+  AND r2.readGroup = $read_group
+  AND r1.matePair = 1
+  AND r2.matePair = 2 
+  AND NOT (r1)-[:WAS_USED_BY]->(:JobRequest {name: ''fastq-to-ubam''})
+  AND NOT (r2)-[:WAS_USED_BY]->(:JobRequest {name: ''fastq-to-ubam''})
+  CREATE (job_request:JobRequest {name: ''fastq-to-ubam'',
+    sample: $sample,
+    nodeCreated: datetime(),
+    nodeCreatedEpoch: datetime().epochSeconds})
+  WITH r1, rel, r2, job_request 
+  LIMIT 1 
+  MERGE (r1)-[:WAS_USED_BY]->(job_request)
+  MERGE (r2)-[:WAS_USED_BY]->(job_request)
+  RETURN r1, rel, r2'
 required_parameters:
   sample: str
   read_group: int
-  event_id: int
-# Create JobRequest node
 write_transaction: true
 publish_to:
   - TOPIC_FASTQ_TO_UBAM

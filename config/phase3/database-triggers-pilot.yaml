@@ -14,9 +14,9 @@ query: launchGatk5Dollar
 name: LaunchFastqToUbam
 pattern: relationship
 start: 
-    label: PersonalisSequencing
+    label: Fastq
 relationship: 
-    type: GENERATED
+    type: HAS_MATE_PAIR
 end: 
     label: Fastq
     properties:
@@ -28,24 +28,24 @@ name: RelateGenomeToFastq
 pattern: relationship
 start: 
     label: Person
+relationship: 
+    type: HAS_BIOLOGICAL_OME
 end: 
     label: Genome
     properties:
         sample: sample
-relationship: 
-    type: HAS_BIOLOGICAL_OME
 query: relateGenomeToFastq
 --- !DatabaseTrigger
 name: RelateFastqToGenome
 pattern: relationship
 start: 
     label: PersonalisSequencing
+relationship: 
+    type: GENERATED
 end: 
     label: Fastq
     properties:
         sample: sample
-relationship: 
-    type: GENERATED
 query: relateGenomeToFastq
 --- !DatabaseTrigger
 name: MergeBiologicalNodes
@@ -56,7 +56,7 @@ start:
         sample: sample
 query: mergeBiologicalNodes
 --- !DatabaseTrigger
-name: relateFastqToPersonalisSequencing
+name: RelateFastqToPersonalisSequencing
 pattern: node
 start: 
     label: Fastq
@@ -65,7 +65,29 @@ start:
         uri: uri
 query: relateFastqToPersonalisSequencing
 --- !DatabaseTrigger
-name: relateMicroarrayToPersonalisSequencing
+name: RelateFastqMatePair
+pattern: relationship
+start:
+    label: PersonalisSequencing
+    properties:
+        sample: sample
+relationship:
+    type: GENERATED
+end:
+    label: Fastq
+    properties:
+        readGroup: read_group
+query: relateFastqMatePair
+--- !DatabaseTrigger
+name: RelatePersonalisSequencingToFastqs
+pattern: node
+start:
+    label: PersonalisSequencing
+    properties:
+        sample: sample
+query: relatePersonalisSequencingToFastqs
+--- !DatabaseTrigger
+name: RelateMicroarrayToPersonalisSequencing
 pattern: node
 start: 
     label: Microarray
