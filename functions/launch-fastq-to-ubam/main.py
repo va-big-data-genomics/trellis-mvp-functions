@@ -9,11 +9,11 @@ import base64
 import random
 import hashlib
 
+import trellisdata as trellis
+
 from google.cloud import storage
 from google.cloud import pubsub
-
 from datetime import datetime
-
 from dsub.commands import dsub
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
@@ -58,6 +58,44 @@ def format_pubsub_message(job_dict, seed_id, event_id):
     return message
 """
 
+def parse_inputs(query_response):
+    if not len(query_response.nodes) == 2:
+        raise ValueError(f"Expected (2) nodes as input, instead got {len(query_response.nodes)}.")
+
+    if not query_response.relationship:
+        raise ValueError("Query response does not have relationship. " +
+                         "Expected (Fastq)-[]->(Fastq).")
+    r1 = query_response.relationship['start_node']
+    rel = query_response.relationship['type']
+    r2 = query_response.relationship['end_node']
+
+    if not 'Fastq' in r1['labels'] and 'Fastq' in r2['labels']:
+        raise ValueError(
+                         "Both nodes do not have 'Fastq' labels." +
+                         f"Fastq R1 labels: {r1['labels']}." +
+                         f"Fastq R2 labels: {r2['labels']}.")
+
+    if not r1['properties']['readGroup'] == r2['properties']['readGroup']:
+        return ValueError(
+                          "Fastqs are not from the same read group. " +
+                          f"Fastq R1 read group: {r1['properties']['readGroup']}. " +
+                          f"Fastq R2 read group: {r2['properties']['readGroup']}.")
+    if not r1['properties']['matePair'] == 1 and r2['properties']['matePair'] == 2:
+        return ValueError(
+                          "Fastqs are not a correctly oriented mate pair. " +
+                          f"Fastq R1 mate pair value (expect 1): {r1['properties']['matePair']}. " +
+                          f"Fastq R2 mate pair value (expect 2): {r2['properties']['matePair']}.")
+    
+    fastq_fields = []
+    for fastq in query_response.nodes:
+        fastq_fields.extend([
+                             fastq['properties']['plate'], 
+                             fastq['properties']['sample'],
+                             fastq['properties']['read_group']])
+    if len(set(fastq_fields)) != 3:
+        raise ValueError(f"> Fastq fields are not in agreement: {fastq_fields}.")
+
+    return r1, r2
 
 def launch_dsub_task(dsub_args):
     try:
@@ -120,13 +158,6 @@ def launch_fastq_to_ubam(event, context):
     print(f"> Message header: {query_response.header}.")
     print(f"> Message body: {query_response.body}.")
 
-    #pubsub_message = base64.b64decode(event['data']).decode('utf-8')
-    #data = json.loads(pubsub_message)
-    #print(f"> Context: {context}.")
-    #print(f"> Data: {data}.")
-    #header = data['header']
-    #body = data['body']
-
     # Get seed/event ID to track provenance of Trellis events
     #seed_id = header['seedId']
     #event_id = context.event_id
@@ -135,51 +166,22 @@ def launch_fastq_to_ubam(event, context):
     #if not dry_run:
     #    dry_run = False
 
-    nodes = body['results'].get('nodes')
-    if not nodes:
-        print("> No nodes provided. Exiting.")
-        return
-
-    if len(nodes) != 2:
-        raise ValueError(f"> Error: Need 2 fastqs; {len(nodes)} provided.")
+    fastq_r1, fastq_r2 = parse_inputs(query_response)
 
     # Create unique task ID
     datetime_stamp = get_datetime_stamp()
     task_id, trunc_nodes_hash = make_unique_task_id(nodes, datetime_stamp)
-
-    # TODO: Implement QC checking to make sure fastqs match
-    #set_sizes = []
-    fastq_fields = []
-    fastqs = {}
     
     # inputIds used to create relationships via trigger
-    input_ids = []
-    for node in nodes:
-        plate = node['plate']
-        sample = node['sample']
-        read_group = node['readGroup']
-        mate_pair = node['matePair']
-        #set_size = int(node['setSize'])/2
-        input_id = node['id']
+    input_ids = [fastq_r1['id'], fastq_r2['id']]
+    #for node in nodes:
+    plate = fastq_r1['properties']['plate']
+    sample = fastq_r1['properties']['sample']
+    read_group = fastq_r1['properties']['readGroup']
+    mate_pair = fastq_r1['properties']['matePair']
 
-        bucket = node['bucket']
-        path = node['path']
-
-        fastq_name = f'FASTQ_{mate_pair}'
-        fastqs[fastq_name] = f"gs://{bucket}/{path}" 
-
-        fastq_fields.extend([plate, sample, read_group])
-        #set_sizes.append(set_size)
-        input_ids.append(input_id)
-
-    # Check that fastqs are from same sample/read group
-    if len(set(fastq_fields)) != 3:
-        raise ValueError(f"> Fastq fields are not in agreement: {fastq_fields}. Exiting.")
-
-    # Check to make sure that set sizes are in agreement
-    #if len(set(set_sizes)) != 1:
-    #    raise ValueError(f"> Set sizes of fastqs are not in agreement: {set_sizes}. Exiting.")
-
+    bucket = fastq_r1['properties']['bucket']
+    path = fastq_r1['properties']['path']
 
     # Define logging & outputs after task_id
     task_name = 'fastq-to-ubam'
@@ -201,8 +203,8 @@ def launch_fastq_to_ubam(event, context):
                             '--java-options ' +
                             '\'-Xmx8G -Djava.io.tmpdir=bla\' ' +
                             'FastqToSam ' +
-                            '-F1 ${FASTQ_1} ' +
-                            '-F2 ${FASTQ_2} ' +
+                            '-F1 ${FASTQ_R1} ' +
+                            '-F2 ${FASTQ_R2} ' +
                             '-O ${UBAM} ' +
                             '-RG ${RG} ' +
                             '-SM ${SM} ' +
@@ -212,7 +214,10 @@ def launch_fastq_to_ubam(event, context):
                          "SM": sample,
                          "PL": "illumina"
                 },
-                "inputs": fastqs,
+                "inputs": {
+                           "FASTQ_R1": f"gs://{fastq_r1['properties']['bucket']}/{fastq_r1['properties']['path']}",
+                           "FASTQ_R2": f"gs://{fastq_r2['properties']['bucket']}/{fastq_r2['properties']['path']}"
+                },
                 "outputs": {
                             "UBAM": f"gs://{OUT_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/output/{sample}_{read_group}.ubam"
                 },
@@ -314,11 +319,21 @@ def launch_fastq_to_ubam(event, context):
             job_dict[f"output_{key}"] = value
 
         # Send job metadata to create-job-node function
+        """
         message = format_pubsub_message(
                                         job_dict = job_dict, 
                                         #nodes = nodes,
                                         seed_id = seed_id,
                                         event_id = event_id)
+        """
+
+        # 1.3 update
+        message = trellis.JobCreatedWriter(
+            sender = FUNCTION_NAME,
+            seed_id = query_response.seed_id,
+            previous_event_id = query_response.event_id,
+            job_dict = job_dict)
+
         print(f"> Pubsub message: {message}.")
         result = trellis.utils.publish_to_pubsub_topic(
                     publisher = PUBLISHER,
