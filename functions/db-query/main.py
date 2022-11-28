@@ -125,7 +125,6 @@ def query_database(driver, query, parameters):
                         .download_as_string()
         queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
 
-
     # Check whether query parameters match the required keys and types
     key_difference = set(query.required_parameters.keys()).difference(set(parameters.keys()))
     if key_difference:
