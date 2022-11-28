@@ -18,24 +18,37 @@ from dsub.commands import dsub
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
+    # set up the Google Cloud Logging python client library
+    # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
+    import google.cloud.logging
+    client = google.cloud.logging.Client()
+    # log_level=10 is equivalent to DEBUG; default is 20 == INFO
+    # Gcloud Python logging client: https://googleapis.dev/python/logging/latest/client.html?highlight=setup_logging#google.cloud.logging_v2.client.Client.setup_logging
+    # Logging levels: https://docs.python.org/3/library/logging.html#logging-levels
+    client.setup_logging(log_level=10)
+
+    # use Python's standard logging library to send logs to GCP
+    import logging
+
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
+    GCP_PROJECT = os.environ['GCP_PROJECT']
     ENABLE_JOB_LAUNCH = os.environ['ENABLE_JOB_LAUNCH']
 
-    vars_blob = storage.Client() \
+    config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
-    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+    TRELLIS_CONFIG = yaml.load(config_doc)
 
-    PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
-    NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
+    #PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
+    #NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
 
-    REGIONS = parsed_vars['DSUB_REGIONS']
-    OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
-    LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
-    DSUB_USER = parsed_vars['DSUB_USER']
-    NETWORK = parsed_vars['DSUB_NETWORK']
-    SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
+    #REGIONS = parsed_vars['DSUB_REGIONS']
+    #OUT_BUCKET = parsed_vars['DSUB_OUT_BUCKET']
+    #LOG_BUCKET = parsed_vars['DSUB_LOG_BUCKET']
+    #DSUB_USER = parsed_vars['DSUB_USER']
+    #NETWORK = parsed_vars['DSUB_NETWORK']
+    #SUBNETWORK = parsed_vars['DSUB_SUBNETWORK']
 
 
     PUBLISHER = pubsub.PublisherClient()
@@ -111,13 +124,6 @@ def launch_dsub_task(dsub_args):
         #return(sys.exc_info())
     return(result)
 
-
-def get_datetime_stamp():
-    now = datetime.now()
-    datestamp = now.strftime("%y%m%d-%H%M%S-%f")[:-3]
-    return datestamp
-
-
 def write_metadata_to_blob(meta_blob_path, metadata):
     try:
         meta_blob = storage.Client(project=PROJECT_ID) \
@@ -127,19 +133,6 @@ def write_metadata_to_blob(meta_blob_path, metadata):
         return True
     except:
         return False
-
-
-def make_unique_task_id(nodes, datetime_stamp):
-    # Create pretty-unique hash value based on input nodes
-    # https://www.geeksforgeeks.org/ways-sort-list-dictionaries-values-python-using-lambda-function/
-    sorted_nodes = sorted(nodes, key = lambda i: i['id'])
-    nodes_str = json.dumps(sorted_nodes, sort_keys=True, ensure_ascii=True, default=str)
-    nodes_hash = hashlib.sha256(nodes_str.encode('utf-8')).hexdigest()
-    print(nodes_hash)
-    trunc_nodes_hash = str(nodes_hash)[:8]
-    task_id = f"{datetime_stamp}-{trunc_nodes_hash}"
-    return(task_id, trunc_nodes_hash)
-
 
 def launch_fastq_to_ubam(event, context):
     """When an object node is added to the database, launch any
@@ -168,13 +161,10 @@ def launch_fastq_to_ubam(event, context):
 
     fastq_r1, fastq_r2 = parse_inputs(query_response)
 
-    # Create unique task ID
-    datetime_stamp = get_datetime_stamp()
-    task_id, trunc_nodes_hash = make_unique_task_id(nodes, datetime_stamp)
+    task_id, trunc_nodes_hash = trellis.make_unique_task_id(nodes=[fastq_r1, fastq_r2])
     
     # inputIds used to create relationships via trigger
     input_ids = [fastq_r1['id'], fastq_r2['id']]
-    #for node in nodes:
     plate = fastq_r1['properties']['plate']
     sample = fastq_r1['properties']['sample']
     read_group = fastq_r1['properties']['readGroup']
@@ -189,13 +179,13 @@ def launch_fastq_to_ubam(event, context):
     node_label = "DsubJob"
     job_dict = {
                 "provider": "google-v2",
-                "user": DSUB_USER,
-                "regions": REGIONS,
-                "project": PROJECT_ID,
+                "user": TRELLIS_CONFIG['DSUB_USER'],
+                "regions": TRELLIS_CONFIG['REGIONS'],
+                "project": TRELLIS_CONFIG['PROJECT_ID'],
                 "minCores": 1,
                 "minRam": 7.5,
                 "bootDiskSize": 20,
-                "image": f"gcr.io/{PROJECT_ID}/broadinstitute/gatk:4.1.0.0",
+                "image": f"gcr.io/{TRELLIS_CONFIG['PROJECT_ID']}/broadinstitute/gatk:4.1.0.0",
                 "logging": f"gs://{LOG_BUCKET}/{plate}/{sample}/{task_name}/{task_id}/logs",
                 "diskSize": 500,
                 "command": (
