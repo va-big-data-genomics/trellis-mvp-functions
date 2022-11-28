@@ -115,6 +115,17 @@ def query_database(driver, query, parameters):
         neo4j.ResultSummary: https://neo4j.com/docs/api/python-driver/current/api.html#resultsummary
     """
 
+    # Reload predefined database queries every time a function instance
+    # is launched in development mode to make sure queries are current.
+    DEVELOPMENT = os.environ.get('DEVELOPMENT')
+    if DEVELOPMENT:
+        queries_document = storage.Client() \
+                        .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                        .get_blob(TRELLIS["USER_DEFINED_QUERIES"]) \
+                        .download_as_string()
+        queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
+
+
     # Check whether query parameters match the required keys and types
     key_difference = set(query.required_parameters.keys()).difference(set(parameters.keys()))
     if key_difference:
