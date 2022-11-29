@@ -98,7 +98,7 @@ def parse_inputs(query_response):
                           f"Fastq R2 mate pair value (expect 2): {r2['properties']['matePair']}.")
     
     fastq_fields = []
-    for fastq in query_response.nodes:
+    for fastq in [r1, r2]:
         fastq_fields.extend([
                              fastq['properties']['plate'], 
                              fastq['properties']['sample'],
