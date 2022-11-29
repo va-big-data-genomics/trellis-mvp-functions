@@ -73,9 +73,6 @@ def format_pubsub_message(job_dict, seed_id, event_id):
 """
 
 def parse_inputs(query_response):
-    if not len(query_response.nodes) == 2:
-        raise ValueError(f"Expected (2) nodes as input, instead got {len(query_response.nodes)}.")
-
     if not query_response.relationship:
         raise ValueError("Query response does not have relationship. " +
                          "Expected (Fastq)-[]->(Fastq).")
