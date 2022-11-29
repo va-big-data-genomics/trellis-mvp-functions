@@ -13,10 +13,11 @@ import trellisdata as trellis
 
 from google.cloud import storage
 from google.cloud import pubsub
+
 from datetime import datetime
 from dsub.commands import dsub
 
-ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
+ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
     # Set up the Google Cloud Logging python client library
     # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
@@ -32,7 +33,7 @@ if ENVIRONMENT == 'google-cloud':
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     GCP_PROJECT = os.environ['GCP_PROJECT']
-    ENABLE_JOB_LAUNCH = os.environ['ENABLE_JOB_LAUNCH']
+    ENABLE_JOB_LAUNCH = os.environ.get('ENABLE_JOB_LAUNCH')
 
     config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
