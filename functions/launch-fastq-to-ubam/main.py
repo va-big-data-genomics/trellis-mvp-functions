@@ -18,7 +18,7 @@ from dsub.commands import dsub
 
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
-    # set up the Google Cloud Logging python client library
+    # Set up the Google Cloud Logging python client library
     # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
     import google.cloud.logging
     client = google.cloud.logging.Client()
@@ -38,7 +38,7 @@ if ENVIRONMENT == 'google-cloud':
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
-    TRELLIS_CONFIG = yaml.load(config_doc)
+    TRELLIS_CONFIG = yaml.safe_load(config_doc)
 
     #PROJECT_ID = parsed_vars['GOOGLE_CLOUD_PROJECT']
     #NEW_JOB_TOPIC = parsed_vars['NEW_JOBS_TOPIC']
