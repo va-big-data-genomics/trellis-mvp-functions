@@ -102,7 +102,7 @@ def parse_inputs(query_response):
         fastq_fields.extend([
                              fastq['properties']['plate'], 
                              fastq['properties']['sample'],
-                             fastq['properties']['read_group']])
+                             fastq['properties']['readGroup']])
     if len(set(fastq_fields)) != 3:
         raise ValueError(f"> Fastq fields are not in agreement: {fastq_fields}.")
 
