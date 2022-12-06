@@ -1,5 +1,6 @@
 --- !JobLauncher
 name: fastq-to-ubam
+dsub_prefix: fq2u
 inputs:
   nodes:
   relationship:
@@ -21,10 +22,11 @@ dsub:
       FASTQ_R2: 
         template: "{uri}"
         source: end
-  environment_variables:
+  env_variables:
       RG: 
         template: "{readGroup}"
         source: start
+        value_type: int
       SM: 
         template: "{sample}"
         source: start
@@ -32,7 +34,7 @@ dsub:
         value: "illumina"
   outputs:
       UBAM: 
-        template: "{sample}_{readGroup}.ubam"
+        template: "{plate}/{sample}/{sample}_{readGroup}.ubam"
         source: start
   command: "/gatk/gatk --java-options
     \\'-Xmx8G -Djava.io.tmpdir=bla\\'

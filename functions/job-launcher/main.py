@@ -51,7 +51,20 @@ if ENVIRONMENT == 'google-cloud':
 
     PUBLISHER = pubsub.PublisherClient()
 
-def _create_job_inputs(task, start, end):
+def _get_job_values(task, start, end, params):
+    supported_value_types = {
+        "int": int,
+        "float": float
+    }
+    supported_params = [
+        'inputs', 
+        'env_variables'
+    ]
+    if not params in supported_params:
+        raise ValueError(f"{params} is not in supported fields: {supported_params}")
+    
+    task_fields = task.dsub[params]
+    
     sources = {
         "start": start['properties'],
         "end": end['properties']
@@ -62,22 +75,58 @@ def _create_job_inputs(task, start, end):
     # that will be used to generate value at runtime
     # from source [start,end] values.
     # Inspiration: https://stackoverflow.com/questions/54351740/how-can-i-use-f-string-with-a-variable-not-with-a-string-literal
-    inputs = {}
-    for key in task.dsub['inputs']:
-        if source = task.dsub['inputs'][key].get('value'):
-            inputs[key] = value
-        else:
-            source = task.dsub['inputs'][key]['source']
-            template = task.dsub['inputs'][key]['template']
+    job_values = {}
+    for key in task_fields:
+        value = task_fields[key].get('value')
+        if not value:
+            source = task_fields[key]['source']
+            template = task_fields[key]['template']
+            value_type = task_fields[key].get('value_type')
             value = template.format(**sources[source])
-            inputs[key] = value
-    return inputs
+            
+            if value_type:
+                if not value_type in supported_value_types.keys():
+                    raise ValueError(f"Type {value_type} not in supported types: {supported_value_types.keys()}")
+                else:
+                    value = supported_value_types[value_type](value)
+        job_values[key] = value
+    return job_values
 
-def _create_job_envs(tasks, start, end):
-    pass
+def _get_output_values(task, bucket, start, end, job_id):
+    sources = {
+        "start": start['properties'],
+        "end": end['properties']
+    }
+    task_outputs = task.dsub['outputs']
 
-def _create_job_outputs(task, start, end):
-    pass
+    output_values = {}
+    for key in task_outputs:
+        value = task_outputs[key].get('value')
+        if not value:
+            source = task_outputs[key]['source']
+            template = task_outputs[key]['template']
+            value = template.format(**sources[source])
+        value = f"gs://{bucket}/{task.name}/{job_id}/output/{value}"
+        output_values[key] = value
+    return output_values
+
+def _get_label_values(task, start, end):
+    sources = {
+        "start": start['properties'],
+        "end": end['properties']
+    }
+    task_labels = task.dsub['labels']
+
+    label_values = {}
+    for key in task_labels:
+        value = task_labels[key].get('value')
+        if not value:
+            source = task_labels[key]['source']
+            template = task_labels[key]['template']
+            value = template.format(**sources[source])
+        # Lowercase values required for GCP VM labels
+        label_values[key.lower()] = value.lower()
+    return label_values  
 
 def parse_inputs(query_response):
     if not query_response.relationship:
@@ -141,12 +190,16 @@ def write_metadata_to_blob(meta_blob_path, metadata):
 
 def create_job_dict(task, start_node, end_node, job_id, input_ids, trunc_nodes_hash):
 
-    env_variables = _create_job_envs(task, start_node, end_node)
-    inputs = _create_job_inputs(task, start_node, end_node)
-    outputs = _create_job_outputs(task, start_node, end_node)
+    env_variables = _get_job_values(task, start_node, end_node, "env_variables")
+    inputs = _get_job_values(task, start_node, end_node, "inputs")
+    outputs = _get_output_values(task, start_node, end_node)
+    dsub_labels = _get_label_values(task, start_node, end_node)
 
+    # Use camelcase keys for this dict because it will be added to Neo4j
+    # database where camelcase is the standard.
     job_dict = {
         "name": task.name,
+        "dsubName": f"{task.dsub_prefix}-{trunc_nodes_hash[0:5]}",
         "inputHash": trunc_nodes_hash,
         "inputIds": input_ids,
         "trellisTaskId": job_id,
@@ -170,6 +223,7 @@ def create_job_dict(task, start_node, end_node, job_id, input_ids, trunc_nodes_h
         "envs": env_variables,
         "inputs": inputs,
         "outputs": outputs,
+        "dsubLabels": dsub_labels
     }
     return job_dict
 
@@ -202,14 +256,6 @@ def launch_fastq_to_ubam(event, context):
     input_id = []
     for node in nodes:
         input_ids.append(node['id'])
-    #input_ids = [fastq_r1['id'], fastq_r2['id']]
-    #plate = fastq_r1['properties']['plate']
-    #sample = fastq_r1['properties']['sample']
-    #read_group = fastq_r1['properties']['readGroup']
-    #mate_pair = fastq_r1['properties']['matePair']
-
-    #bucket = fastq_r1['properties']['bucket']
-    #path = fastq_r1['properties']['path']
 
     # Define logging & outputs after task_id
     task_name = query_response.job_request
@@ -251,13 +297,12 @@ def launch_fastq_to_ubam(event, context):
     job_dict = create_job_dict(task, job_id, input_ids, trunc_nodes_hash)
 
     dsub_args = [
-        #"--name", job_dict["name"],
-        "--name", f"fq2u-{job_dict['inputHash'][0:5]}",
-        "--label", f"read-group={read_group}",
-        "--label", f"sample={sample.lower()}",
+        "--name", job_dict["dsubName"],
+        #"--label", f"read-group={read_group}",
+        #"--label", f"sample={sample.lower()}",
+        #"--label", f"plate={plate.lower()}",
         "--label", f"trellis-id={task_id}",
         "--label", f"trellis-name={job_dict['name']}",
-        "--label", f"plate={plate.lower()}",
         "--label", f"input-hash={trunc_nodes_hash}",
         "--label", f"wdl-call-alias={task_name}",
         "--provider", job_dict["provider"], 
@@ -292,6 +337,10 @@ def launch_fastq_to_ubam(event, context):
     for key, value in job_dict['outputs'].items():
         dsub_args.extend([
                           "--output",
+                          f"{key}={value}"])
+    for key, value in job_dict['dsubLabels'].items():
+        dsub_args.extend([
+                          "--label",
                           f"{key}={value}"])
 
     # Optional flags
