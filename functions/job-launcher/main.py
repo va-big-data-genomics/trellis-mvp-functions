@@ -227,7 +227,7 @@ def create_job_dict(task, start_node, end_node, job_id, input_ids, trunc_nodes_h
     }
     return job_dict
 
-def launch_fastq_to_ubam(event, context):
+def launch_job(event, context):
     """When an object node is added to the database, launch any
        jobs corresponding to that node label.
 
