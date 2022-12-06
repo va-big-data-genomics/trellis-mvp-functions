@@ -33,7 +33,6 @@ if ENVIRONMENT == 'google-cloud':
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     GCP_PROJECT = os.environ['GCP_PROJECT']
-    ENABLE_JOB_LAUNCH = os.environ.get('ENABLE_JOB_LAUNCH')
 
     # Load Trellis configuration
     config_doc = storage.Client() \
@@ -344,7 +343,7 @@ def launch_job(event, context):
                           f"{key}={value}"])
 
     # Optional flags
-    if not ENABLE_JOB_LAUNCH:
+    if not TRELLIS_CONFIG['ENABLE_JOB_LAUNCH']:
         dsub_args.append("--dry-run")
 
     # TODO: Need to handle this issue with database logic
