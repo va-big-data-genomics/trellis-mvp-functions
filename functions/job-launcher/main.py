@@ -44,7 +44,7 @@ if ENVIRONMENT == 'google-cloud':
     # Load launcher configuration
     launcher_document = storage.Client() \
                         .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                        .get_blob(TRELLIS["JOB_LAUNCHER_CONFIG"]) \
+                        .get_blob(TRELLIS_CONFIG["JOB_LAUNCHER_CONFIG"]) \
                         .download_as_string()
     TASKS = yaml.load_all(launcher_document, Loader=yaml.FullLoader)
 
