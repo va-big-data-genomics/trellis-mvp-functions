@@ -2,4 +2,4 @@ dsub>=0.4.1
 google-cloud-storage>=1.15.0
 google-cloud-pubsub>=0.40.0
 google-cloud-logging>=3.0.0
-trellisdata>=0.1.22
+trellisdata>=0.1.23
