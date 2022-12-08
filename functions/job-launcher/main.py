@@ -127,6 +127,27 @@ def _get_label_values(task, start, end):
         label_values[key.lower()] = value.lower()
     return label_values  
 
+def parse_node_inputs(query_response, task):
+    raise NotImplementedError
+
+def validate_relationship_inputs(query_response, task):
+    
+    start = query_response.relationship['start_node']
+    rel = query_response.relationship['type']
+    end = query_response.relationship['end_node']
+
+    start_label = task.inputs['relationship']['start']
+    rel_type = task.inputs['relationship']['type']
+    end_label = task.inputs['relationship']['end']
+
+    if not start_label in start['labels']:
+        raise ValueError(f"Start node is missing required label: {start_label}.")
+    if not end_label in end['labels']:
+        raise ValueError(f"End node is missing required label: {end_label}.")
+    if not rel_type == rel:
+        raise ValueError("Relationship is not of type: {rel_type}.")
+    return start, rel, end
+
 def parse_inputs(query_response):
     if not query_response.relationship:
         raise ValueError("Query response does not have relationship. " +
@@ -239,14 +260,17 @@ def launch_job(event, context):
                         context = context,
                         event = event)
 
-    print(f"> Received message (context): {query_response.context}.")
-    print(f"> Message header: {query_response.header}.")
-    print(f"> Message body: {query_response.body}.")
+    logging.info(f"+> Received message (context): {query_response.context}.")
+    logging.info(f"> Message header: {query_response.header}.")
+    logging.info(f"> Message body: {query_response.body}.")
+
+    task_name = query_response.job_request
+    task = TASKS[task_name]
 
     if query_response.nodes:
-        nodes = parse_node_inputs(query_response)
+        nodes = parse_node_inputs(query_response, task)
     elif query_response.relationship:
-        start, rel, end = parse_relationship_inputs(query_response)
+        start, rel, end = validate_relationship_inputs(query_response, task)
         nodes = [start, end]
 
     job_id, trunc_nodes_hash = trellis.make_unique_task_id(nodes=nodes)
