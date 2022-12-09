@@ -164,7 +164,8 @@ required_parameters:
   read_group: int
 write_transaction: true
 publish_to:
-  - TOPIC_FASTQ_TO_UBAM
+  - TOPIC_JOB_LAUNCHER
+job_request: fastq-to-ubam
 returns:
   -
     start: Fastq
