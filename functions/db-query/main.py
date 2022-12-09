@@ -26,8 +26,7 @@ import trellisdata as trellis
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 if ENVIRONMENT == 'google-cloud':
-
-    # set up the Google Cloud Logging python client library
+    # Set up the Google Cloud Logging python client library
     # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
     import google.cloud.logging
     client = google.cloud.logging.Client()
@@ -39,7 +38,6 @@ if ENVIRONMENT == 'google-cloud':
 
     # use Python's standard logging library to send logs to GCP
     import logging
-    #logging.basicConfig()
 
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     GCP_PROJECT = os.environ['GCP_PROJECT']
@@ -114,16 +112,6 @@ def query_database(driver, query, parameters):
         neo4j.graph.Graph: https://neo4j.com/docs/api/python-driver/current/api.html#neo4j.graph.Graph
         neo4j.ResultSummary: https://neo4j.com/docs/api/python-driver/current/api.html#resultsummary
     """
-
-    # Reload predefined database queries every time a function instance
-    # is launched in development mode to make sure queries are current.
-    DEVELOPMENT = os.environ.get('DEVELOPMENT')
-    if DEVELOPMENT:
-        queries_document = storage.Client() \
-                        .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
-                        .get_blob(TRELLIS["USER_DEFINED_QUERIES"]) \
-                        .download_as_string()
-        queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
 
     # Check whether query parameters match the required keys and types
     key_difference = set(query.required_parameters.keys()).difference(set(parameters.keys()))
@@ -210,6 +198,22 @@ def main(event, context, local_driver=None):
             logging.warning(
                 f"> Time to receive message ({int(publish_elapsed.total_seconds())}) " +
                 f"exceeded {PUBSUB_ELAPSED_MAX} seconds after publication.")
+
+    # Reload predefined database queries every time a function instance
+    # is launched in development mode to make sure queries are current.
+    DEVELOPMENT = os.environ.get('DEVELOPMENT')
+    if DEVELOPMENT:
+        queries_document = storage.Client() \
+                        .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
+                        .get_blob(TRELLIS["USER_DEFINED_QUERIES"]) \
+                        .download_as_string()
+        queries = yaml.load_all(queries_document, Loader=yaml.FullLoader)
+
+        QUERY_DICT = {}
+        for query in queries:
+            if query.name in QUERY_DICT.keys():
+                raise ValueError(f"Query {query.name} is defined in duplicate.")
+            QUERY_DICT[query.name] = query
 
     if query_request.custom == True:
         logging.info("> Processing custom query.")
@@ -349,6 +353,7 @@ def main(event, context, local_driver=None):
         previous_event_id = query_request.event_id,
         query_name = query_request.query_name,
         graph = graph,
+        job_request = database_query.
         result_summary = result_summary)
 
     logging.info(f"> Query response nodes: {[list(node.labels) for node in query_response.nodes]}")
