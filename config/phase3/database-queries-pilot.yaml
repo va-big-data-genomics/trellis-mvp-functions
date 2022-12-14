@@ -6,6 +6,7 @@ required_parameters:
 write_transaction: true
 publish_to: 
   - TOPIC_TRIGGERS
+job_request: null
 indexes:
   Sample: 
     - sample
@@ -25,6 +26,7 @@ required_parameters:
 write_transaction: true
 publish_to: 
   - TOPIC_TRIGGERS
+job_request: null
 indexes:
   Sample:
     - sample
@@ -53,6 +55,7 @@ required_parameters:
 write_transaction: true
 publish_to: 
   - TOPIC_TRIGGERS
+job_request: null
 indexes:
   Fastq:
     - uri
@@ -72,6 +75,7 @@ required_parameters:
 write_transaction: true
 publish_to: 
   - TOPIC_TRIGGERS
+job_request: null
 indexes:
   Fastq:
     - sample
@@ -100,6 +104,7 @@ required_parameters:
 write_transaction: true
 publish_to:
   - TOPIC_TRIGGERS
+job_request: null
 indexes:
   PersonalisSequencing:
     - sample
@@ -119,6 +124,7 @@ required_parameters:
 write_transaction: true
 publish_to: 
   - TOPIC_TRIGGERS
+job_request: null
 returns:
   -
     start: PersonalisSequencing
@@ -134,6 +140,7 @@ required_parameters:
 write_transaction: true
 publish_to: 
   - TOPIC_TRIGGERS
+job_request: null
 returns:
   -
     start: PersonalisSequencing
