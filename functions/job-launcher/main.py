@@ -320,7 +320,13 @@ def launch_job(event, context):
                 "subnetwork": TRELLIS_CONFIG['SUBNETWORK'],
     }
     """
-    job_dict = create_job_dict(task, job_id, input_ids, trunc_nodes_hash)
+    job_dict = create_job_dict(
+                               task = task,
+                               start_node = start,
+                               end_node = end,
+                               job_id = job_id,
+                               input_ids = input_ids,
+                               trunc_nodes_hash = trunc_nodes_hash)
 
     dsub_args = [
         "--name", job_dict["dsubName"],
