@@ -279,7 +279,7 @@ def launch_job(event, context):
     job_id, trunc_nodes_hash = trellis.utils.make_unique_task_id(nodes=nodes)
     
     # inputIds used to create relationships via trigger
-    input_id = []
+    input_ids = []
     for node in nodes:
         input_ids.append(node['id'])
 
