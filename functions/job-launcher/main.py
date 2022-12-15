@@ -213,10 +213,26 @@ def write_metadata_to_blob(meta_blob_path, metadata):
 
 def create_job_dict(task, start_node, end_node, job_id, input_ids, trunc_nodes_hash):
 
-    env_variables = _get_job_values(task, start_node, end_node, "env_variables")
-    inputs = _get_job_values(task, start_node, end_node, "inputs")
-    outputs = _get_output_values(task, start_node, end_node)
-    dsub_labels = _get_label_values(task, start_node, end_node)
+    env_variables = _get_job_values(
+                                    task = task,
+                                    start = start_node,
+                                    end = end_node, 
+                                    params = "env_variables")
+    inputs = _get_job_values(
+                             task = task,
+                             start = start_node,
+                             end = end_node, 
+                             params = "inputs")
+    outputs = _get_output_values(
+                                 task = task, 
+                                 bucket = bucket,
+                                 start = start_node,
+                                 end = end_node,
+                                 job_id = job_id)
+    dsub_labels = _get_label_values(
+                                    task = task, 
+                                    start = start_node,
+                                    end = end_node)
 
     # Use camelcase keys for this dict because it will be added to Neo4j
     # database where camelcase is the standard.
