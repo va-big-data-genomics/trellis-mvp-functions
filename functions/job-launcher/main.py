@@ -281,7 +281,7 @@ def create_neo4j_job_dict(task, project_id, trellis_config, start_node, end_node
     }
     return job_dict
 
-def create_dsub_job_args(neo4j_job_dict):
+def create_dsub_job_args(job_dict):
     """ Convert the job description dictionary into a list
         of dsub supported arguments.
 
@@ -312,9 +312,6 @@ def create_dsub_job_args(neo4j_job_dict):
         "--network", job_dict["network"],
         "--subnetwork", job_dict["subnetwork"],
         "--enable-stackdriver-monitoring",
-        # 4 total attempts; 3 preemptible, final 1 full-price
-        #"--preemptible", job_dict["preemptible"],
-        #"--retries", job_dict["retries"] 
     ]
 
     # Argument lists
