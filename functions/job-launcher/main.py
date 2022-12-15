@@ -211,7 +211,20 @@ def write_metadata_to_blob(meta_blob_path, metadata):
     except:
         return False
 
-def create_job_dict(task, start_node, end_node, job_id, input_ids, trunc_nodes_hash):
+def create_job_dict(task, trellis_config, start_node, end_node, job_id, input_ids, trunc_nodes_hash):
+    """ Create a dictionary with all the arguments required
+        to launch a dsub job for this task.
+
+        Args:
+            task (dict): Event payload.
+            start_node (dict): Dictionary with node id, labels, & properties (neo4j.Graph.Node)
+            end_node (dict): Dictionary with node id, labels, & properties (neo4j.Graph.Node)
+            job_id (str):
+            input_ids (list):
+            trunc_nodes_hash (str): 8 character alphanumeric truncated hash value
+        Returns:
+            dictionary: Dsub job arguments
+    """
 
     env_variables = _get_job_values(
                                     task = task,
@@ -225,7 +238,7 @@ def create_job_dict(task, start_node, end_node, job_id, input_ids, trunc_nodes_h
                              params = "inputs")
     outputs = _get_output_values(
                                  task = task, 
-                                 bucket = bucket,
+                                 bucket = trellis_config['DSUB_OUT_BUCKET'],
                                  start = start_node,
                                  end = end_node,
                                  job_id = job_id)
@@ -244,17 +257,17 @@ def create_job_dict(task, start_node, end_node, job_id, input_ids, trunc_nodes_h
         "trellisTaskId": job_id,
         # Standard dsub configuration
         "provider": "google-v2",
-        "user": TRELLIS_CONFIG['DSUB_USER'],
-        "regions": TRELLIS_CONFIG['REGIONS'],
-        "project": TRELLIS_CONFIG['PROJECT_ID'],
-        "network": TRELLIS_CONFIG['NETWORK'],
-        "subnetwork": TRELLIS_CONFIG['SUBNETWORK'],
+        "user": trellis_config['DSUB_USER'],
+        "regions": trellis_config['REGIONS'],
+        "project": trellis_config['PROJECT_ID'],
+        "network": trellis_config['NETWORK'],
+        "subnetwork": trellis_config['SUBNETWORK'],
         # Task specific dsub configuration
         "minCores": task.virtual_machine["min_cores"],
         "minRam": task.virtual_machine["min_ram"],
         "bootDiskSize": task.virtual_machine["boot_disk_size"],
-        "image": f"gcr.io/{TRELLIS_CONFIG['PROJECT_ID']}/{task.virtual_machine['image']}",
-        "logging": f"gs://{LOG_BUCKET}/{task.name}/{job_id}/logs",
+        "image": f"gcr.io/{trellis_config['PROJECT_ID']}/{task.virtual_machine['image']}",
+        "logging": f"gs://{trellis_config['DSUB_LOG_BUCKET']}/{task.name}/{job_id}/logs",
         "diskSize": task.virtual_machine['disk_size'],
         "preemptible": task.dsub['preemptible'],
         "command": task.dsub['command'],

@@ -26,31 +26,31 @@ fastq_to_ubam_body = {
 	  		'id': 650052, 
 	  		'labels': ['Fastq'], 
 	  		'properties': {
-	  			'basename': 'SHIP5142421_3_R2.fastq.gz', 
-	  			'bucket': 'gbsc-gcp-project-mvp-test-from-personalis', 
+	  			'basename': 'SHIP123_3_R2.fastq.gz', 
+	  			'bucket': 'va-big-data-genomics-project', 
 	  			'componentCount': 1, 
 	  			'crc32c': 'RLajXg==', 
-	  			'dirname': 'va_mvp_phase2/DVALABP000450/SHIP5142421/FASTQ', 
+	  			'dirname': 'va_mvp_phase2/DVALABP123/SHIP123/FASTQ', 
 	  			'etag': 'CNGA7Lv33/YCEAQ=', 
 	  			'extension': 'fastq.gz', 
 	  			'filetype': 'gz', 
 	  			'generation': '1648165639618641', 
 	  			'gitCommitHash': '80423e1', 
 	  			'gitVersionTag': '', 
-	  			'id': 'gbsc-gcp-project-mvp-test-from-personalis/va_mvp_phase2/DVALABP000450/SHIP5142421/FASTQ/SHIP5142421_3_R2.fastq.gz/1648165639618641', 
+	  			'id': 'va-big-data-genomics-project/va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R2.fastq.gz/1648165639618641', 
 	  			'kind': 'storage#object', 
 	  			'matePair': 2, 
-	  			'mediaLink': 'https://storage.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-test-from-personalis/o/va_mvp_phase2%2FDVALABP000450%2FSHIP5142421%2FFASTQ%2FSHIP5142421_3_R2.fastq.gz?generation=1648165639618641&alt=media', 
+	  			'mediaLink': 'https://storage.googleapis.com/download/storage/v1/b/va-big-data-genomics-project/o/va_mvp_phase2%2FDVALABP123%2FSHIP123%2FFASTQ%2FSHIP123_3_R2.fastq.gz?generation=1648165639618641&alt=media', 
 	  			'metadata': "{'pbilling': '2022-11-28-try0', 'trellis-uuid': '0d044882-733e-42d7-bcce-a19c80815d3b'}", 
 	  			'metageneration': '4', 
-	  			'name': 'SHIP5142421_3_R2', 
+	  			'name': 'SHIP123_3_R2', 
 	  			'nodeCreated': 1669686815117, 
 	  			'nodeIteration': 'initial', 
-	  			'path': 'va_mvp_phase2/DVALABP000450/SHIP5142421/FASTQ/SHIP5142421_3_R2.fastq.gz', 
-	  			'plate': 'DVALABP000450', 
+	  			'path': 'va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R2.fastq.gz', 
+	  			'plate': 'DVALABP123', 
 	  			'readGroup': 3, 
-	  			'sample': 'SHIP5142421', 
-	  			'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-test-from-personalis/o/va_mvp_phase2%2FDVALABP000450%2FSHIP5142421%2FFASTQ%2FSHIP5142421_3_R2.fastq.gz', 
+	  			'sample': 'SHIP123', 
+	  			'selfLink': 'https://www.googleapis.com/storage/v1/b/va-big-data-genomics-project/o/va_mvp_phase2%2FDVALABP123%2FSHIP123%2FFASTQ%2FSHIP123_3_R2.fastq.gz', 
 	  			'size': 6427873172, 
 	  			'storageClass': 'REGIONAL', 
 	  			'timeCreated': '2022-03-24T23:47:19.743Z', 
@@ -62,7 +62,7 @@ fastq_to_ubam_body = {
 	  			'trellisUuid': '0d044882-733e-42d7-bcce-a19c80815d3b', 
 	  			'triggerOperation': 'metadataUpdate', 
 	  			'updated': '2022-11-29T01:53:32.647Z', 
-	  			'uri': 'gs://gbsc-gcp-project-mvp-test-from-personalis/va_mvp_phase2/DVALABP000450/SHIP5142421/FASTQ/SHIP5142421_3_R2.fastq.gz'
+	  			'uri': 'gs://va-big-data-genomics-project/va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R2.fastq.gz'
 	  		}
 		}, 
 		'id': 286403, 
@@ -71,31 +71,31 @@ fastq_to_ubam_body = {
 			'id': 650051, 
 			'labels': ['Fastq'], 
 			'properties': {
-				'basename': 'SHIP5142421_3_R1.fastq.gz', 
-				'bucket': 'gbsc-gcp-project-mvp-test-from-personalis', 
+				'basename': 'SHIP123_3_R1.fastq.gz', 
+				'bucket': 'va-big-data-genomics-project', 
 				'componentCount': 1, 
 				'crc32c': '51pfIQ==', 
-				'dirname': 'va_mvp_phase2/DVALABP000450/SHIP5142421/FASTQ', 
+				'dirname': 'va_mvp_phase2/DVALABP123/SHIP123/FASTQ', 
 				'etag': 'CNOQ+pX33/YCEAQ=', 
 				'extension': 'fastq.gz', 
 				'filetype': 'gz', 
 				'generation': '1648165560158291', 
 				'gitCommitHash': '80423e1', 
 				'gitVersionTag': '', 
-				'id': 'gbsc-gcp-project-mvp-test-from-personalis/va_mvp_phase2/DVALABP000450/SHIP5142421/FASTQ/SHIP5142421_3_R1.fastq.gz/1648165560158291', 
+				'id': 'va-big-data-genomics-project/va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R1.fastq.gz/1648165560158291', 
 				'kind': 'storage#object', 
 				'matePair': 1, 
-				'mediaLink': 'https://storage.googleapis.com/download/storage/v1/b/gbsc-gcp-project-mvp-test-from-personalis/o/va_mvp_phase2%2FDVALABP000450%2FSHIP5142421%2FFASTQ%2FSHIP5142421_3_R1.fastq.gz?generation=1648165560158291&alt=media', 
+				'mediaLink': 'https://storage.googleapis.com/download/storage/v1/b/va-big-data-genomics-project/o/va_mvp_phase2%2FDVALABP123%2FSHIP123%2FFASTQ%2FSHIP123_3_R1.fastq.gz?generation=1648165560158291&alt=media', 
 				'metadata': "{'pbilling': '2022-11-28-try0', 'trellis-uuid': 'ab8286eb-a17d-422b-9ae4-52039e866cb8'}", 
 				'metageneration': '4', 
-				'name': 'SHIP5142421_3_R1', 
+				'name': 'SHIP123_3_R1', 
 				'nodeCreated': 1669686805613, 
 				'nodeIteration': 'initial', 
-				'path': 'va_mvp_phase2/DVALABP000450/SHIP5142421/FASTQ/SHIP5142421_3_R1.fastq.gz', 
-				'plate': 'DVALABP000450', 
+				'path': 'va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R1.fastq.gz', 
+				'plate': 'DVALABP123', 
 				'readGroup': 3, 
-				'sample': 'SHIP5142421', 
-				'selfLink': 'https://www.googleapis.com/storage/v1/b/gbsc-gcp-project-mvp-test-from-personalis/o/va_mvp_phase2%2FDVALABP000450%2FSHIP5142421%2FFASTQ%2FSHIP5142421_3_R1.fastq.gz', 
+				'sample': 'SHIP123', 
+				'selfLink': 'https://www.googleapis.com/storage/v1/b/va-big-data-genomics-project/o/va_mvp_phase2%2FDVALABP123%2FSHIP123%2FFASTQ%2FSHIP123_3_R1.fastq.gz', 
 				'size': 6204274820, 
 				'storageClass': 'REGIONAL', 
 				'timeCreated': '2022-03-24T23:46:00.369Z', 
@@ -107,7 +107,7 @@ fastq_to_ubam_body = {
 				'trellisUuid': 'ab8286eb-a17d-422b-9ae4-52039e866cb8', 
 				'triggerOperation': 'metadataUpdate', 
 				'updated': '2022-11-29T01:53:21.582Z', 
-				'uri': 'gs://gbsc-gcp-project-mvp-test-from-personalis/va_mvp_phase2/DVALABP000450/SHIP5142421/FASTQ/SHIP5142421_3_R1.fastq.gz'
+				'uri': 'gs://va-big-data-genomics-project/va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R1.fastq.gz'
 			}
 		}, 
 		'type': 'HAS_MATE_PAIR'
@@ -123,7 +123,7 @@ fastq_to_ubam_body = {
 		'notifications': None, 
 		'parameters': {
 			'read_group': 3, 
-			'sample': 'SHIP5142421'
+			'sample': 'SHIP123'
 		}, 
 		'plan': None, 
 		'profile': None, 
@@ -222,7 +222,7 @@ class TestGetOutputValues(TestCase):
 									  	 end = cls.end,
 									     job_id = "job-id-123")
 		assert len(values.keys()) == 1
-		assert values['UBAM'] == "gs://out-bucket/fastq-to-ubam/job-id-123/output/DVALABP000450/SHIP5142421/SHIP5142421_3.ubam"
+		assert values['UBAM'] == "gs://out-bucket/fastq-to-ubam/job-id-123/output/DVALABP123/SHIP123/SHIP123_3.ubam"
 
 
 class TestGetLabelValues(TestCase):
@@ -252,6 +252,29 @@ class TestGetLabelValues(TestCase):
 
 class TestCreateJobDict(TestCase):
 
+	start = fastq_to_ubam_body['relationship']['start_node']
+	end = fastq_to_ubam_body['relationship']['end_node']
+
+	trellis_config = {
+		'DSUB_USER': 'trellis',
+		'REGIONS': 'us-west1',
+		'PROJECT_ID': 'va-big-data-genomics-project',
+		'NETWORK': 'trellis',
+		'SUBNETWORK': 'trellis-subnet',
+		'DSUB_OUT_BUCKET': 'out-bucket',
+		'DSUB_LOG_BUCKET': 'log-bucket'
+	}
+
+	tasks = {}
+	launcher_doc = 'job-launcher-pilot.yaml'
+	with open(launcher_doc, 'r') as file_handle:
+		task_generator = yaml.load_all(
+							file_handle, 
+							Loader=yaml.FullLoader)
+		for task in task_generator:
+			tasks[task.name] = task
+	task = tasks['fastq-to-ubam']
+
 	def test_create_fastq_to_ubam_inputs(cls):
 		start = fastq_to_ubam_body['relationship']['start_node']
 		end = fastq_to_ubam_body['relationship']['end_node']
@@ -273,5 +296,47 @@ class TestCreateJobDict(TestCase):
 			                 		  params = "inputs")
 		assert inputs['FASTQ_R1'] == start['properties']['uri']
 		assert inputs['FASTQ_R2'] == end['properties']['uri']
+
+	def test_create_fastq_to_ubam_env_vars(cls):
+		env_vars = main._get_job_values(
+										task = cls.task,
+										start = cls.start,
+										end = cls.end,
+										params = 'env_variables')
+		assert env_vars == {'RG': 3, 'SM': 'SHIP123', 'PL': 'illumina'}
+
+	def test_create_fastq_to_ubam_outputs(cls):
+		outputs = main._get_output_values(
+										  task = cls.task,
+										  bucket = 'output-bucket',
+										  start = cls.start,
+										  end = cls.end,
+										  job_id = 'job123')
+		assert outputs == {'UBAM': 'gs://output-bucket/fastq-to-ubam/job123/output/DVALABP123/SHIP123/SHIP123_3.ubam'}
+
+	def test_create_fastq_to_ubam_labels(cls):
+		labels = main._get_label_values(
+										task = cls.task,
+										start = cls.start,
+										end = cls.end)
+		assert labels == {'read-group': '3', 'sample': 'ship123', 'plate': 'dvalabp123'}
+
+	def test_create_fastq_to_ubam_job_dict(cls):
+		input_ids = []
+		input_ids.append(cls.start['properties']['id'])
+		input_ids.append(cls.end['properties']['id'])
+
+
+		job_dict = main.create_job_dict(
+										task = cls.task,
+										trellis_config = cls.trellis_config,
+										start_node = cls.start,
+										end_node = cls.end,
+										job_id = 'job123',
+										input_ids = input_ids,
+										trunc_nodes_hash = '5d709493')
+		assert job_dict == {'name': 'fastq-to-ubam', 'dsubName': 'fq2u-5d709', 'inputHash': '5d709493', 'inputIds': ['va-big-data-genomics-project/va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R1.fastq.gz/1648165560158291', 'va-big-data-genomics-project/va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R2.fastq.gz/1648165639618641'], 'trellisTaskId': 'job123', 'provider': 'google-v2', 'user': 'trellis', 'regions': 'us-west1', 'project': 'va-big-data-genomics-project', 'network': 'trellis', 'subnetwork': 'trellis-subnet', 'minCores': 1, 'minRam': 7.5, 'bootDiskSize': 20, 'image': 'gcr.io/va-big-data-genomics-project/broadinstitute/gatk:4.1.0.0', 'logging': 'gs://log-bucket/fastq-to-ubam/job123/logs', 'diskSize': 500, 'preemptible': False, 'command': "/gatk/gatk --java-options \\'-Xmx8G -Djava.io.tmpdir=bla\\' FastqToSam -F1 ${FASTQ_R1} -F2 ${FASTQ_R2} -O ${UBAM} -RG ${RG} -SM ${SM} -PL ${PL}", 'envs': {'RG': 3, 'SM': 'SHIP123', 'PL': 'illumina'}, 'inputs': {'FASTQ_R1': 'gs://va-big-data-genomics-project/va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R1.fastq.gz', 'FASTQ_R2': 'gs://va-big-data-genomics-project/va_mvp_phase2/DVALABP123/SHIP123/FASTQ/SHIP123_3_R2.fastq.gz'}, 'outputs': {'UBAM': 'gs://out-bucket/fastq-to-ubam/job123/output/DVALABP123/SHIP123/SHIP123_3.ubam'}, 'dsubLabels': {'read-group': '3', 'sample': 'ship123', 'plate': 'dvalabp123'}}
+
+
 
 	
