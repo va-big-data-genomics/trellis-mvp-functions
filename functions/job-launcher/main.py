@@ -208,9 +208,14 @@ def write_metadata_to_blob(meta_blob_path, metadata):
     except:
         return False
 
-def create_job_dict(task, project_id, trellis_config, start_node, end_node, job_id, input_ids, trunc_nodes_hash):
-    """ Create a dictionary with all the arguments required
-        to launch a dsub job for this task.
+def create_neo4j_job_dict(task, project_id, trellis_config, start_node, end_node, job_id, input_ids, trunc_nodes_hash):
+    """ Create a dictionary with all the values required
+        to launch a dsub job for this task. This dictionary will
+        then be transformed into a dictionary with the actual
+        key-value dsub arguments. We generate this intermediate 
+        dictionary in a format that is amenable to adding to 
+        Neo4j to create a node representing this job.
+
 
         Args:
             task (dict): Event payload.
@@ -275,6 +280,62 @@ def create_job_dict(task, project_id, trellis_config, start_node, end_node, job_
         "dsubLabels": dsub_labels
     }
     return job_dict
+
+def create_dsub_job_args(neo4j_job_dict):
+    """ Convert the job description dictionary into a list
+        of dsub supported arguments.
+
+    Args:
+        neo4j_job_dict (dict): Event payload.
+    Returns:
+        list: List of "--arg", "value" pairs which will
+            be passed to dsub.
+    """
+
+    dsub_args = [
+        "--name", job_dict["dsubName"],
+        "--label", f"trellis-id={job_dict['trellisTaskId']}",
+        "--label", f"trellis-name={job_dict['name']}",
+        "--label", f"wdl-call-alias={job_dict['name']}",
+        "--provider", job_dict["provider"], 
+        "--user", job_dict["user"], 
+        "--regions", job_dict["regions"],
+        "--project", job_dict["project"],
+        "--min-cores", str(job_dict["minCores"]), 
+        "--min-ram", str(job_dict["minRam"]),
+        "--boot-disk-size", str(job_dict["bootDiskSize"]), 
+        "--image", job_dict["image"], 
+        "--logging", job_dict["logging"],
+        "--disk-size", str(job_dict["diskSize"]),
+        "--command", job_dict["command"],
+        "--use-private-address",
+        "--network", job_dict["network"],
+        "--subnetwork", job_dict["subnetwork"],
+        "--enable-stackdriver-monitoring",
+        # 4 total attempts; 3 preemptible, final 1 full-price
+        #"--preemptible", job_dict["preemptible"],
+        #"--retries", job_dict["retries"] 
+    ]
+
+    # Argument lists
+    for key, value in job_dict["inputs"].items():
+        dsub_args.extend([
+                          "--input", 
+                          f"{key}={value}"])
+    for key, value in job_dict['envs'].items():
+        dsub_args.extend([
+                          "--env",
+                          f"{key}={value}"])
+    for key, value in job_dict['outputs'].items():
+        dsub_args.extend([
+                          "--output",
+                          f"{key}={value}"])
+    for key, value in job_dict['dsubLabels'].items():
+        dsub_args.extend([
+                          "--label",
+                          f"{key}={value}"])
+
+    return dsub_args
 
 def launch_job(event, context):
     """When an object node is added to the database, launch any
@@ -346,7 +407,7 @@ def launch_job(event, context):
                 "subnetwork": TRELLIS_CONFIG['SUBNETWORK'],
     }
     """
-    job_dict = create_job_dict(
+    neo4j_job_dict = create_neo4j_job_dict(
                                task = task,
                                project_id = GCP_PROJECT,
                                trellis_config = TRELLIS_CONFIG,
@@ -356,52 +417,7 @@ def launch_job(event, context):
                                input_ids = input_ids,
                                trunc_nodes_hash = trunc_nodes_hash)
 
-    dsub_args = [
-        "--name", job_dict["dsubName"],
-        #"--label", f"read-group={read_group}",
-        #"--label", f"sample={sample.lower()}",
-        #"--label", f"plate={plate.lower()}",
-        "--label", f"trellis-id={task_id}",
-        "--label", f"trellis-name={job_dict['name']}",
-        "--label", f"input-hash={trunc_nodes_hash}",
-        "--label", f"wdl-call-alias={task_name}",
-        "--provider", job_dict["provider"], 
-        "--user", job_dict["user"], 
-        "--regions", job_dict["regions"],
-        "--project", job_dict["project"],
-        "--min-cores", str(job_dict["minCores"]), 
-        "--min-ram", str(job_dict["minRam"]),
-        "--boot-disk-size", str(job_dict["bootDiskSize"]), 
-        "--image", job_dict["image"], 
-        "--logging", job_dict["logging"],
-        "--disk-size", str(job_dict["diskSize"]),
-        "--command", job_dict["command"],
-        "--use-private-address",
-        "--network", job_dict["network"],
-        "--subnetwork", job_dict["subnetwork"],
-        "--enable-stackdriver-monitoring",
-        # 4 total attempts; 3 preemptible, final 1 full-price
-        #"--preemptible", job_dict["preemptible"],
-        #"--retries", job_dict["retries"] 
-    ]
-
-    # Argument lists
-    for key, value in job_dict["inputs"].items():
-        dsub_args.extend([
-                          "--input", 
-                          f"{key}={value}"])
-    for key, value in job_dict['envs'].items():
-        dsub_args.extend([
-                          "--env",
-                          f"{key}={value}"])
-    for key, value in job_dict['outputs'].items():
-        dsub_args.extend([
-                          "--output",
-                          f"{key}={value}"])
-    for key, value in job_dict['dsubLabels'].items():
-        dsub_args.extend([
-                          "--label",
-                          f"{key}={value}"])
+    dsub_args = create_dsub_job_args(neo4j_job_dict)
 
     # Optional flags
     if not TRELLIS_CONFIG['ENABLE_JOB_LAUNCH']:
