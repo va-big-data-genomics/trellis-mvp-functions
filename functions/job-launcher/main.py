@@ -351,6 +351,7 @@ def launch_job(event, context):
     """
     job_dict = create_job_dict(
                                task = task,
+                               trellis_config = TRELLIS_CONFIG,
                                start_node = start,
                                end_node = end,
                                job_id = job_id,
