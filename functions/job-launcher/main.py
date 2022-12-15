@@ -258,7 +258,7 @@ def create_job_dict(task, trellis_config, start_node, end_node, job_id, input_id
         # Standard dsub configuration
         "provider": "google-v2",
         "user": trellis_config['DSUB_USER'],
-        "regions": trellis_config['REGIONS'],
+        "regions": trellis_config['DSUB_REGIONS'],
         "project": trellis_config['PROJECT_ID'],
         "network": trellis_config['NETWORK'],
         "subnetwork": trellis_config['SUBNETWORK'],
