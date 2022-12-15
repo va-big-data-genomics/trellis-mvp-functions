@@ -257,8 +257,8 @@ def create_job_dict(task, project_id, trellis_config, start_node, end_node, job_
         "user": trellis_config['DSUB_USER'],
         "regions": trellis_config['DSUB_REGIONS'],
         "project": project_id,
-        "network": trellis_config['NETWORK'],
-        "subnetwork": trellis_config['SUBNETWORK'],
+        "network": trellis_config['DSUB_NETWORK'],
+        "subnetwork": trellis_config['DSUB_SUBNETWORK'],
         # Task specific dsub configuration
         "minCores": task.virtual_machine["min_cores"],
         "minRam": task.virtual_machine["min_ram"],
