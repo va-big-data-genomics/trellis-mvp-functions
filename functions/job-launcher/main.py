@@ -130,9 +130,6 @@ def _get_label_values(task, start, end):
         label_values[key.lower()] = value.lower()
     return label_values  
 
-def parse_node_inputs(query_response, task):
-    raise NotImplementedError
-
 def validate_relationship_inputs(query_response, task):
     
     start = query_response.relationship['start_node']
@@ -203,7 +200,7 @@ def launch_dsub_task(dsub_args):
 
 def write_metadata_to_blob(meta_blob_path, metadata):
     try:
-        meta_blob = storage.Client(project=PROJECT_ID) \
+        meta_blob = storage.Client(project=GCP_PROJECT) \
             .get_bucket(OUT_BUCKET) \
             .blob(meta_blob_path) \
             .upload_from_string(json.dumps(metadata))
@@ -211,7 +208,7 @@ def write_metadata_to_blob(meta_blob_path, metadata):
     except:
         return False
 
-def create_job_dict(task, trellis_config, start_node, end_node, job_id, input_ids, trunc_nodes_hash):
+def create_job_dict(task, project_id, trellis_config, start_node, end_node, job_id, input_ids, trunc_nodes_hash):
     """ Create a dictionary with all the arguments required
         to launch a dsub job for this task.
 
@@ -259,14 +256,14 @@ def create_job_dict(task, trellis_config, start_node, end_node, job_id, input_id
         "provider": "google-v2",
         "user": trellis_config['DSUB_USER'],
         "regions": trellis_config['DSUB_REGIONS'],
-        "project": trellis_config['PROJECT_ID'],
+        "project": project_id,
         "network": trellis_config['NETWORK'],
         "subnetwork": trellis_config['SUBNETWORK'],
         # Task specific dsub configuration
         "minCores": task.virtual_machine["min_cores"],
         "minRam": task.virtual_machine["min_ram"],
         "bootDiskSize": task.virtual_machine["boot_disk_size"],
-        "image": f"gcr.io/{trellis_config['PROJECT_ID']}/{task.virtual_machine['image']}",
+        "image": f"gcr.io/{project_id}/{task.virtual_machine['image']}",
         "logging": f"gs://{trellis_config['DSUB_LOG_BUCKET']}/{task.name}/{job_id}/logs",
         "diskSize": task.virtual_machine['disk_size'],
         "preemptible": task.dsub['preemptible'],
@@ -351,6 +348,7 @@ def launch_job(event, context):
     """
     job_dict = create_job_dict(
                                task = task,
+                               project_id = GCP_PROJECT,
                                trellis_config = TRELLIS_CONFIG,
                                start_node = start,
                                end_node = end,
@@ -461,7 +459,7 @@ def launch_job(event, context):
         print(f"> Pubsub message: {message}.")
         result = trellis.utils.publish_to_pubsub_topic(
                     publisher = PUBLISHER,
-                    project_id = PROJECT_ID,
+                    project_id = GCP_PROJECT,
                     topic = NEW_JOB_TOPIC,
                     message = message) 
         print(f"> Published message to {NEW_JOB_TOPIC} with result: {result}.")

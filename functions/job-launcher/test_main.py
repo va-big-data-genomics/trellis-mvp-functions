@@ -254,11 +254,11 @@ class TestCreateJobDict(TestCase):
 
 	start = fastq_to_ubam_body['relationship']['start_node']
 	end = fastq_to_ubam_body['relationship']['end_node']
+	project_id = 'va-big-data-genomics-project'
 
 	trellis_config = {
 		'DSUB_USER': 'trellis',
-		'REGIONS': 'us-west1',
-		'PROJECT_ID': 'va-big-data-genomics-project',
+		'DSUB_REGIONS': 'us-west1',
 		'NETWORK': 'trellis',
 		'SUBNETWORK': 'trellis-subnet',
 		'DSUB_OUT_BUCKET': 'out-bucket',
@@ -329,6 +329,7 @@ class TestCreateJobDict(TestCase):
 
 		job_dict = main.create_job_dict(
 										task = cls.task,
+										project_id = cls.project_id,
 										trellis_config = cls.trellis_config,
 										start_node = cls.start,
 										end_node = cls.end,
