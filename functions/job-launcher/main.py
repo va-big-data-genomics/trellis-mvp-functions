@@ -404,7 +404,7 @@ def launch_job(event, context):
                 "subnetwork": TRELLIS_CONFIG['SUBNETWORK'],
     }
     """
-    neo4j_job_dict = create_neo4j_job_dict(
+    job_dict = create_neo4j_job_dict(
                                task = task,
                                project_id = GCP_PROJECT,
                                trellis_config = TRELLIS_CONFIG,
@@ -414,7 +414,7 @@ def launch_job(event, context):
                                input_ids = input_ids,
                                trunc_nodes_hash = trunc_nodes_hash)
 
-    dsub_args = create_dsub_job_args(neo4j_job_dict)
+    dsub_args = create_dsub_job_args(job_dict)
 
     # Optional flags
     if not TRELLIS_CONFIG['ENABLE_JOB_LAUNCH']:
