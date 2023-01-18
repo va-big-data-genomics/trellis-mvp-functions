@@ -1,0 +1,22 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-launch-merge-bams-to-fastq',
+         '--project=${PROJECT_ID}',
+         '--source=functions/launch-merge-bams-to-fastq',
+         '--memory=128MB',
+         '--max-instances=20',
+         '--entry-point=launch_merge_bams_to_fastq',
+         '--runtime=python37',
+         '--trigger-topic=${_TRIGGER_TOPIC}',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         # Fix for logging issue: https://issuetracker.google.com/issues/155215191#comment112
+         '--update-env-vars=USE_WORKER_V2=true',
+         '--update-env-vars=PYTHON37_DRAIN_LOGS_ON_CRASH_WAIT_SEC=5',
+         '--update-labels=user=trellis',
+  ]
