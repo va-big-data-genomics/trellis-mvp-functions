@@ -1,0 +1,30 @@
+steps:
+- name: 'ubuntu'
+  args: ['cp', '-r', 'config/${_DATA_GROUP}', 'functions/create-blob-node/']
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: [
+         'beta',
+         'functions',
+         'deploy',
+         'trellis-create-blob-node-${_BUCKET_SHORT_NAME}-${_OPERATION_SHORT_NAME}',
+         '--project=${PROJECT_ID}',
+         '--source=functions/create-blob-node',
+         '--memory=128MB',
+         '--max-instances=100',
+         '--entry-point=create_node_query',
+         '--runtime=python37',
+         '--trigger-resource=${_TRIGGER_RESOURCE}',
+         '--trigger-event=google.storage.object.${_TRIGGER_OPERATION}',
+         '--update-env-vars=CREDENTIALS_BUCKET=${_CREDENTIALS_BUCKET}',
+         '--update-env-vars=CREDENTIALS_BLOB=${_CREDENTIALS_BLOB}',
+         '--update-env-vars=ENVIRONMENT=${_ENVIRONMENT}',
+         '--update-env-vars=TRIGGER_OPERATION=${_TRIGGER_OPERATION}',
+         '--update-env-vars=GIT_COMMIT_HASH=${SHORT_SHA}',
+         '--update-env-vars=GIT_VERSION_TAG=${TAG_NAME}',
+         '--update-labels=trigger-operation=${_OPERATION_SHORT_NAME}',
+         '--update-labels=trigger-resource=${_TRIGGER_RESOURCE}',
+         # Fix for logging issue: https://issuetracker.google.com/issues/155215191#comment112
+         '--update-env-vars=USE_WORKER_V2=true',
+         '--update-env-vars=PYTHON37_DRAIN_LOGS_ON_CRASH_WAIT_SEC=5',
+         '--update-labels=user=trellis',
+  ]

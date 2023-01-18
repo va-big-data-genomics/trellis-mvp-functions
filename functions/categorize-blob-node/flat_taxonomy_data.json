@@ -1,0 +1,14 @@
+{
+  "L0": [
+    { "name": "Device" }
+  ],
+  "L1": [
+    { "name": "Networking", "parent": "Device" },
+    { "name": "Computer", "parent": "Device" }
+  ],
+  "L2": [
+    { "name": "Router", "parent": "Networking" },
+    { "name": "Switch", "parent": "Networking" },
+    { "name": "Firewall", "parent": "Networking" }         
+  ] 
+}

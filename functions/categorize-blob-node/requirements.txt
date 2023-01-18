@@ -1,0 +1,5 @@
+pytz==2018.7
+iso8601==0.1.12
+google-cloud-storage==1.15.0
+google-cloud-pubsub==0.40.0
+trellisdata==0.1.0
