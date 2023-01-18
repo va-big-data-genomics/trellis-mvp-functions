@@ -221,8 +221,8 @@ def launch_fastq_to_ubam(event, context):
                 "inputHash": trunc_nodes_hash,
                 #"labels": ["Job", "Dsub", unique_task_label],
                 "inputIds": input_ids,
-                "network": NETWORK,
-                "subnetwork": SUBNETWORK,
+                "network": TRELLIS_CONFIG['NETWORK'],
+                "subnetwork": TRELLIS_CONFIG['SUBNETWORK'],
     }
 
     dsub_args = [
