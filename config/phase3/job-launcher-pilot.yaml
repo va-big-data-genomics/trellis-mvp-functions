@@ -1,0 +1,58 @@
+--- !JobLauncher
+name: fastq-to-ubam
+dsub_prefix: fq2u
+inputs:
+  nodes:
+  relationship:
+    start: Fastq
+    type: HAS_MATE_PAIR
+    end: Fastq
+virtual_machine:
+  min_cores: 1
+  min_ram: 7.5
+  boot_disk_size: 20
+  disk_size: 500
+  image: broadinstitute/gatk:4.1.0.0
+dsub:
+  preemptible: False
+  inputs:
+      FASTQ_R1: 
+        template: "{uri}"
+        source: start
+      FASTQ_R2: 
+        template: "{uri}"
+        source: end
+  env_variables:
+      RG: 
+        template: "{readGroup}"
+        source: start
+        value_type: int
+      SM: 
+        template: "{sample}"
+        source: start
+      PL: 
+        value: "illumina"
+  outputs:
+      UBAM: 
+        template: "{plate}/{sample}/{sample}_{readGroup}.ubam"
+        source: start
+  command: "/gatk/gatk --java-options
+    \\'-Xmx8G -Djava.io.tmpdir=bla\\'
+    FastqToSam
+    -F1 ${FASTQ_R1}
+    -F2 ${FASTQ_R2}
+    -O ${UBAM}
+    -RG ${RG}
+    -SM ${SM}
+    -PL ${PL}"
+  labels:
+    read-group: 
+      template: "{readGroup}"
+      source: start
+    sample: 
+      template: "{sample}"
+      source: start
+    plate: 
+      template: "{plate}"
+      source: start
+  
