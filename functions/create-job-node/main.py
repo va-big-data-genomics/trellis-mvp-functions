@@ -13,29 +13,43 @@ from datetime import datetime
 from google.cloud import storage
 from google.cloud import pubsub
 
+import trellisdata as trellis
+
 # Get runtime variables from cloud storage bucket
 # https://www.sethvargo.com/secrets-in-serverless/
 ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 if ENVIRONMENT == 'google-cloud':
+
+    # set up the Google Cloud Logging python client library
+    # source: https://cloud.google.com/blog/products/devops-sre/google-cloud-logging-python-client-library-v3-0-0-release
+    import google.cloud.logging
+    client = google.cloud.logging.Client()
+    # log_level=10 is equivalent to DEBUG; default is 20 == INFO
+    # NOTE: this debug setting doesn't work
+    # Gcloud Python logging client: https://googleapis.dev/python/logging/latest/client.html?highlight=setup_logging#google.cloud.logging_v2.client.Client.setup_logging
+    # Logging levels: https://docs.python.org/3/library/logging.html#logging-levels
+    client.setup_logging(log_level=10)
+    import logging
+    
     FUNCTION_NAME = os.environ['FUNCTION_NAME']
     GIT_COMMIT_HASH = os.environ['GIT_COMMIT_HASH']
     GIT_VERSION_TAG = os.environ['GIT_VERSION_TAG']
 
-    vars_blob = storage.Client() \
+    config_doc = storage.Client() \
                 .get_bucket(os.environ['CREDENTIALS_BUCKET']) \
                 .get_blob(os.environ['CREDENTIALS_BLOB']) \
                 .download_as_string()
-    parsed_vars = yaml.load(vars_blob, Loader=yaml.Loader)
+    TRELLIS = yaml.safe_load(config_doc)
 
     # Runtime variables
-    PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
-    TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
-    DATA_GROUP = parsed_vars.get('DATA_GROUP')
-    TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
+    #PROJECT_ID = parsed_vars.get('GOOGLE_CLOUD_PROJECT')
+    #TOPIC = parsed_vars.get('DB_QUERY_TOPIC')
+    #DATA_GROUP = parsed_vars.get('DATA_GROUP')
+    #TOPIC_TRIGGERS = parsed_vars.get('TOPIC_TRIGGERS')
 
     PUBLISHER = pubsub.PublisherClient()
 
-
+"""Deprecated with trellisdata message classes
 def format_pubsub_message(query, seed_id, event_id):
     message = {
                "header": {
@@ -55,14 +69,15 @@ def format_pubsub_message(query, seed_id, event_id):
                 },
     }
     return message
+"""
 
-
+"""
 def publish_to_topic(topic, data):
     topic_path = PUBLISHER.topic_path(PROJECT_ID, topic)
     message = json.dumps(data).encode('utf-8')
     result = PUBLISHER.publish(topic_path, data=message).result()
     return result
-
+"""
 
 def clean_metadata_dict(raw_dict):
     """Remove dict entries where the value is of type dict"""
@@ -83,54 +98,6 @@ def clean_metadata_dict(raw_dict):
         clead_dict['size'] = int(clean_dict['size'])
 
     return clean_dict
-
-
-def get_standard_time_fields(event):
-    """
-    Args:
-        event (dict): Metadata properties stored as strings
-    Return
-        (dict): Times in iso (str) and from-epoch (int) formats
-    """
-    datetime_created = datetime.now(pytz.UTC)
-
-    time_created_epoch = get_seconds_from_epoch(datetime_created)
-    time_created_iso = datetime_created.isoformat()
-
-    time_fields = {
-                   'timeCreatedEpoch': time_created_epoch,
-                   'timeCreatedIso': time_created_iso,
-    }
-    return time_fields
-
-
-def get_seconds_from_epoch(datetime_obj):
-    """Get datetime as total seconds from epoch.
-
-    Provides datetime in easily sortable format
-
-    Args:
-        datetime_obj (datetime): Datetime.
-    Returns:
-        (float): Seconds from epoch
-    """
-    from_epoch = datetime_obj - datetime(1970, 1, 1, tzinfo=pytz.UTC)
-    from_epoch_seconds = from_epoch.total_seconds()
-    return from_epoch_seconds
-
-
-def get_datetime_iso8601(date_string):
-    """ Convert ISO 86801 date strings to datetime objects.
-
-    Google datetime format: https://tools.ietf.org/html/rfc3339
-    ISO 8601 standard format: https://en.wikipedia.org/wiki/ISO_8601
-
-    Args:
-        date_string (str): Date in ISO 8601 format
-    Returns
-        (datetime.datetime): Datetime objects
-    """
-    return iso8601.parse_date(date_string)
 
 
 def format_query(db_entry, dry_run=False):
@@ -169,7 +136,7 @@ def format_query(db_entry, dry_run=False):
     return query
 
 
-def write_job_node_query(event, context):
+def publish_create_job_node_query(event, context):
     """When object created in bucket, add metadata to database.
     Args:
         event (dict): Event payload.
