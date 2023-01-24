@@ -62,7 +62,7 @@ def search_string(string, pattern, group, req_type):
     if not match:
         # Throw exception
         print("Error: no match found")
-        pdb.set_trace()
+        #pdb.set_trace()
     else:
         match_value = match.group(group)
 
@@ -151,8 +151,19 @@ def trellis_metadata_groupdict(db_dict, groupdict):
             'sample': groupdict['sample'],
     }
 
+def get_fastq_metadata(db_dict, groupdict):
+    return {
+            'machine': groupdict['machine'],
+            'primer1': groupdict['primer1'],
+            'primer2': groupdict['primer2'],
+            'lane': groupdict['lane'],
+            'matePair': groupdict['matepair'],
+            'unknown': groupdict['unknown']
+    }
 
+""" Deprecated by get_fastq_metadata()
 def mate_pair_name_0(db_dict, groupdict):
+    print("Searching for mate pair value")
     mate_pair = search_string(
                           string = db_dict['name'], 
                           pattern = "_R(\\d)$", 
@@ -162,11 +173,12 @@ def mate_pair_name_0(db_dict, groupdict):
 
 
 def read_group_name_1(db_dict, groupdict):
-    """Get 2nd element of db_dict['name'] property & return as readGroup.
-    """
+    #Get 2nd element of db_dict['name'] property & return as readGroup.
+    
+    print("Searching for read_group value")
     index = db_dict['name'].split('_')[1]
     return {'readGroup': int(index)}  
-
+"""
 
 def read_json(db_dict, groupdict):
     """For a json object, get and return json data.
@@ -314,9 +326,7 @@ class NodeKinds:
 
         self.label_functions = {
                                 "Blob": [trellis_metadata_groupdict],
-                                "Fastq": [
-                                          mate_pair_name_0, 
-                                          read_group_name_1],
+                                "Fastq": [get_fastq_metadata],
                                 "PersonalisSequencing": [read_json],
                                 "Checksum": [read_checksum],
         }
