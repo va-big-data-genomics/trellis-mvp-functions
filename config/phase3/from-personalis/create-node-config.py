@@ -1,4 +1,5 @@
 import re
+import pdb
 import json
 import pytz
 import iso8601
@@ -61,7 +62,7 @@ def search_string(string, pattern, group, req_type):
     if not match:
         # Throw exception
         print("Error: no match found")
-        pdb.set_trace()
+        #pdb.set_trace()
     else:
         match_value = match.group(group)
 
@@ -150,8 +151,20 @@ def trellis_metadata_groupdict(db_dict, groupdict):
             'sample': groupdict['sample'],
     }
 
+def get_fastq_metadata(db_dict, groupdict):
+    return {
+            'flowcellId': groupdict['flowcell_id'],
+            'shippingId': groupdict['shipping_id'],
+            'index1': groupdict['index_1'],
+            'index2': groupdict['index_2'],
+            'flowcellLane': int(groupdict['flowcell_lane']),
+            'matePair': groupdict['mate_pair'],
+            #'unknown': groupdict['unknown']
+    }
 
+""" Deprecated by get_fastq_metadata()
 def mate_pair_name_0(db_dict, groupdict):
+    print("Searching for mate pair value")
     mate_pair = search_string(
                           string = db_dict['name'], 
                           pattern = "_R(\\d)$", 
@@ -161,11 +174,12 @@ def mate_pair_name_0(db_dict, groupdict):
 
 
 def read_group_name_1(db_dict, groupdict):
-    """Get 2nd element of db_dict['name'] property & return as readGroup.
-    """
+    #Get 2nd element of db_dict['name'] property & return as readGroup.
+    
+    print("Searching for read_group value")
     index = db_dict['name'].split('_')[1]
     return {'readGroup': int(index)}  
-
+"""
 
 def read_json(db_dict, groupdict):
     """For a json object, get and return json data.
@@ -298,21 +312,23 @@ class NodeKinds:
         """
 
         self.match_patterns = {
-                               "Blob": [r"^va_mvp_phase2/(?P<plate>\w+)/(?P<sample>\w+)/.*"],
-                               "Fastq": ["va_mvp_phase2/.*/.*/FASTQ/.*\\.fastq.gz$"], 
-                               "Microarray": ["^va_mvp_phase2/.*/.*/Microarray/.*"], 
-                               "PersonalisSequencing": ["^va_mvp_phase2/.*\\.json$"],
-                               "Json": ["^va_mvp_phase2/.*\\.json$"],
-                               "Checksum": ["^va_mvp_phase2/.*checksum.txt"], 
-                               "WGS35": ["^va_mvp_phase2/.*"],
-                               "FromPersonalis": ["^va_mvp_phase2/.*"],
+                               "Blob": [r"^va_mvp_phase\d/(?P<plate>\w+)/(?P<sample>\w+)\/.*"],
+                               "Fastq": [
+                                         r"^va_mvp_phase2/.*/.*/FASTQ/.*\.fastq\.gz$",
+                                         # Source: https://github.com/va-big-data-genomics/mvp-wgs-snp-indel-release/blob/main/Sequencing/ddt_va_mvp_phase3_change_summary_v2.pdf
+                                         r"^va_mvp_phase3/\w+/\w+/(?P<flowcell_id>[a-zA-Z0-9]+)_(?P<shipping_id>[a-zA-Z0-9]+)_(?P<index_1>[ACGTU]+)-(?P<index_2>[ACGTU]+)_L(?P<flowcell_lane>[0-9]+)_R(?P<mate_pair>\d)_(?P<unknown>\d+)\.fastq\.gz"
+                               ], 
+                               "Microarray": [r"^va_mvp_phase2/.*/.*/Microarray/.*"], 
+                               "PersonalisSequencing": [r"^va_mvp_phase\d/.*\.json$"],
+                               "Json": [r"^va_mvp_phase\d/.*\.json$"],
+                               "Checksum": [r"^va_mvp_phase\d/.*checksum\.txt$"], 
+                               "WGS35": [r"^va_mvp_phase\d/.*"],
+                               "FromPersonalis": [r"^va_mvp_phase\d/.*"],
         }
 
         self.label_functions = {
                                 "Blob": [trellis_metadata_groupdict],
-                                "Fastq": [
-                                          mate_pair_name_0, 
-                                          read_group_name_1],
+                                "Fastq": [get_fastq_metadata],
                                 "PersonalisSequencing": [read_json],
                                 "Checksum": [read_checksum],
         }
