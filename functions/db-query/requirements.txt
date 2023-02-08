@@ -4,3 +4,4 @@ neo4j-driver>=1.6.2
 google-cloud-storage>=1.15.0
 google-cloud-pubsub>=0.40.0
 urllib3>=1.26.5
+neobolt>=1.7.17
