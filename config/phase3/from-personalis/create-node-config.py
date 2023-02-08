@@ -153,12 +153,12 @@ def trellis_metadata_groupdict(db_dict, groupdict):
 
 def get_fastq_metadata(db_dict, groupdict):
     return {
-            'flowcell_id': groupdict['flowcell_id'],
-            #'shipping_id': groupdict['shipping_id'],
-            'index_1': groupdict['index_1'],
-            'index_2': groupdict['index_2'],
-            'flowcell_lane': int(groupdict['flowcell_lane']),
-            'mate_pair': groupdict['mate_pair'],
+            'flowcellId': groupdict['flowcell_id'],
+            'shippingId': groupdict['shipping_id'],
+            'index1': groupdict['index_1'],
+            'index2': groupdict['index_2'],
+            'flowcellLane': int(groupdict['flowcell_lane']),
+            'matePair': groupdict['mate_pair'],
             #'unknown': groupdict['unknown']
     }
 
@@ -315,6 +315,7 @@ class NodeKinds:
                                "Blob": [r"^va_mvp_phase\d/(?P<plate>\w+)/(?P<sample>\w+)\/.*"],
                                "Fastq": [
                                          r"^va_mvp_phase2/.*/.*/FASTQ/.*\.fastq\.gz$",
+                                         # Source: https://github.com/va-big-data-genomics/mvp-wgs-snp-indel-release/blob/main/Sequencing/ddt_va_mvp_phase3_change_summary_v2.pdf
                                          r"^va_mvp_phase3/\w+/\w+/(?P<flowcell_id>[a-zA-Z0-9]+)_(?P<shipping_id>[a-zA-Z0-9]+)_(?P<index_1>[ACGTU]+)-(?P<index_2>[ACGTU]+)_L(?P<flowcell_lane>[0-9]+)_R(?P<mate_pair>\d)_(?P<unknown>\d+)\.fastq\.gz"
                                ], 
                                "Microarray": [r"^va_mvp_phase2/.*/.*/Microarray/.*"], 
