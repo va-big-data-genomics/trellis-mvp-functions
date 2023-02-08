@@ -153,12 +153,13 @@ def trellis_metadata_groupdict(db_dict, groupdict):
 
 def get_fastq_metadata(db_dict, groupdict):
     return {
-            'machine': groupdict['machine'],
-            'primer1': groupdict['primer1'],
-            'primer2': groupdict['primer2'],
-            'lane': groupdict['lane'],
-            'matePair': groupdict['matepair'],
-            'unknown': groupdict['unknown']
+            'flowcell_id': groupdict['flowcell_id'],
+            #'shipping_id': groupdict['shipping_id'],
+            'index_1': groupdict['index_1'],
+            'index_2': groupdict['index_2'],
+            'flowcell_lane': int(groupdict['flowcell_lane']),
+            'mate_pair': groupdict['mate_pair'],
+            #'unknown': groupdict['unknown']
     }
 
 """ Deprecated by get_fastq_metadata()
@@ -314,7 +315,7 @@ class NodeKinds:
                                "Blob": [r"^va_mvp_phase\d/(?P<plate>\w+)/(?P<sample>\w+)\/.*"],
                                "Fastq": [
                                          r"^va_mvp_phase2/.*/.*/FASTQ/.*\.fastq\.gz$",
-                                         r"^va_mvp_phase3/\w+/\w+/(?P<machine>[a-zA-Z0-9]+)_[a-zA-Z0-9]+_(?P<primer1>[ACGTU]+)-(?P<primer2>[ACGTU]+)_L(?P<lane>[0-9]+)_R(?P<matepair>\d)_(?P<unknown>\d+)\.fastq\.gz"
+                                         r"^va_mvp_phase3/\w+/\w+/(?P<flowcell_id>[a-zA-Z0-9]+)_(?P<shipping_id>[a-zA-Z0-9]+)_(?P<index_1>[ACGTU]+)-(?P<index_2>[ACGTU]+)_L(?P<flowcell_lane>[0-9]+)_R(?P<mate_pair>\d)_(?P<unknown>\d+)\.fastq\.gz"
                                ], 
                                "Microarray": [r"^va_mvp_phase2/.*/.*/Microarray/.*"], 
                                "PersonalisSequencing": [r"^va_mvp_phase\d/.*\.json$"],
