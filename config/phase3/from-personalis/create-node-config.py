@@ -152,34 +152,27 @@ def trellis_metadata_groupdict(db_dict, groupdict):
     }
 
 def get_fastq_metadata(db_dict, groupdict):
-    return {
+    # TODO: Update this function to handle phase2 and phase3 conventions
+    # and logic to determine which to use
+    if groupdict['delivery_phase'] == "2":
+        return {
+            'shippingId': groupdict['shipping_id'],
+            'readGroup': groupdict['read_group'],
+            'matePair': groupdict['mate_pair']
+        }
+    elif groupdict['delivery_phase'] == "3":
+        return {
             'flowcellId': groupdict['flowcell_id'],
             'shippingId': groupdict['shipping_id'],
             'index1': groupdict['index_1'],
             'index2': groupdict['index_2'],
             'flowcellLane': int(groupdict['flowcell_lane']),
             'matePair': groupdict['mate_pair'],
+            'readGroup': int(groupdict['flowcell_lane'])
             #'unknown': groupdict['unknown']
-    }
-
-""" Deprecated by get_fastq_metadata()
-def mate_pair_name_0(db_dict, groupdict):
-    print("Searching for mate pair value")
-    mate_pair = search_string(
-                          string = db_dict['name'], 
-                          pattern = "_R(\\d)$", 
-                          group = 1, 
-                          req_type = int)
-    return {'matePair': mate_pair}
-
-
-def read_group_name_1(db_dict, groupdict):
-    #Get 2nd element of db_dict['name'] property & return as readGroup.
-    
-    print("Searching for read_group value")
-    index = db_dict['name'].split('_')[1]
-    return {'readGroup': int(index)}  
-"""
+        }
+    else:
+        raise ValueError(f"Delivery phase {groupdict['delivery_phase']} is not valid. Supported phases: [2,3].")
 
 def read_json(db_dict, groupdict):
     """For a json object, get and return json data.
@@ -314,9 +307,10 @@ class NodeKinds:
         self.match_patterns = {
                                "Blob": [r"^va_mvp_phase\d/(?P<plate>\w+)/(?P<sample>\w+)\/.*"],
                                "Fastq": [
-                                         r"^va_mvp_phase2/.*/.*/FASTQ/.*\.fastq\.gz$",
+                                         r"^va_mvp_phase(?P<delivery_phase>\d)/\w+/\w+/FASTQ/(?P<shipping_id>[a-zA-Z0-9]+)_(?P<read_group>\d)_R(?P<mate_pair>\d)\.fastq\.gz$",
+                                         #r"^va_mvp_phase(?P<delivery_phase>\d)/.*/.*/FASTQ/.*\.fastq\.gz$",
                                          # Source: https://github.com/va-big-data-genomics/mvp-wgs-snp-indel-release/blob/main/Sequencing/ddt_va_mvp_phase3_change_summary_v2.pdf
-                                         r"^va_mvp_phase3/\w+/\w+/(?P<flowcell_id>[a-zA-Z0-9]+)_(?P<shipping_id>[a-zA-Z0-9]+)_(?P<index_1>[ACGTU]+)-(?P<index_2>[ACGTU]+)_L(?P<flowcell_lane>[0-9]+)_R(?P<mate_pair>\d)_(?P<unknown>\d+)\.fastq\.gz"
+                                         r"^va_mvp_phase(?P<delivery_phase>\d)/\w+/\w+/(?P<flowcell_id>[a-zA-Z0-9]+)_(?P<shipping_id>[a-zA-Z0-9]+)_(?P<index_1>[ACGTU]+)-(?P<index_2>[ACGTU]+)_L(?P<flowcell_lane>[0-9]+)_R(?P<mate_pair>\d)_(?P<unknown>\d+)\.fastq\.gz$"
                                ], 
                                "Microarray": [r"^va_mvp_phase2/.*/.*/Microarray/.*"], 
                                "PersonalisSequencing": [r"^va_mvp_phase\d/.*\.json$"],
