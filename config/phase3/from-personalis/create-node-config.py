@@ -154,13 +154,13 @@ def trellis_metadata_groupdict(db_dict, groupdict):
 def get_fastq_metadata(db_dict, groupdict):
     # TODO: Update this function to handle phase2 and phase3 conventions
     # and logic to determine which to use
-    if groupdict['delivery_phase'] == 2:
+    if groupdict['delivery_phase'] == "2":
         return {
             'shippingId': groupdict['shipping_id'],
             'readGroup': groupdict['read_group'],
             'matePair': groupdict['mate_pair']
         }
-    elif groupdict['delivery_phase'] == 3:
+    elif groupdict['delivery_phase'] == "3":
         return {
             'flowcellId': groupdict['flowcell_id'],
             'shippingId': groupdict['shipping_id'],
