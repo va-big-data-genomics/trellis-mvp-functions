@@ -239,7 +239,7 @@ def launch_view_gvcf_snps(event, context, test=False):
     task_name = 'view-gvcf-snps'
     unique_task_label = 'ViewGvcfSnps'
     job_dict = {
-        "provider": "google-v2",
+        "provider": "google-cls-v2",
         "user": TRELLIS.DSUB_USER,
         "regions": TRELLIS.DSUB_REGIONS,
         "project": TRELLIS.GOOGLE_CLOUD_PROJECT,

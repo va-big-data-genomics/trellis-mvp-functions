@@ -211,7 +211,7 @@ def launch_cnvnator(event, context, test=False):
     task_name = 'cnvnator'
     unique_task_label = 'Cnvnator'
     job_dict = {
-        "provider": "google-v2",
+        "provider": "google-cls-v2",
         "user": TRELLIS.DSUB_USER,
         "regions": TRELLIS.DSUB_REGIONS,
         "project": TRELLIS.GOOGLE_CLOUD_PROJECT,
