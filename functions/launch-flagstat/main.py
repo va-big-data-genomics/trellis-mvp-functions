@@ -138,7 +138,7 @@ def launch_flagstat(event, context):
     task_name = 'flagstat'
     unique_task_label = 'Flagstat'
     job_dict = {
-        "provider": "google-v2",
+        "provider": "google-cls-v2",
         "user": DSUB_USER,
         "regions": REGIONS,
         "project": PROJECT_ID,

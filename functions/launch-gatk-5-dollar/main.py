@@ -229,7 +229,7 @@ def launch_gatk_5_dollar(event, context):
     #workflow_inputs_path = "workflow-inputs/gatk-mvp/gatk-mvp-pipeline"
     unique_task_label = "Gatk5Dollar"
     job_dict = {
-                "provider": "google-v2",
+                "provider": "google-cls-v2",
                 "user": DSUB_USER,
                 "regions": REGIONS,
                 "project": PROJECT_ID,

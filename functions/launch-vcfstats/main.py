@@ -139,7 +139,7 @@ def launch_vcfstats(event, context):
     task_name = 'vcfstats'
     unique_task_label = 'Vcfstats'
     job_dict = {
-        "provider": "google-v2",
+        "provider": "google-cls-v2",
         "user": DSUB_USER,
         "regions": REGIONS,
         "project": PROJECT_ID,

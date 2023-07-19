@@ -217,7 +217,7 @@ def launch_text_to_table(event, context):
     task_name = "text-to-table"
     unique_task_label = "TextToTable"
     job_dict = {
-             "provider": "google-v2",
+             "provider": "google-cls-v2",
              "user": DSUB_USER,
              "regions": REGIONS,
              "project": PROJECT_ID,

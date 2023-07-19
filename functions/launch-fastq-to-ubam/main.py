@@ -180,7 +180,7 @@ def launch_fastq_to_ubam(event, context):
     task_name = 'fastq-to-ubam'
     unique_task_label = "FastqToUbam"
     job_dict = {
-                "provider": "google-v2",
+                "provider": "google-cls-v2",
                 "user": DSUB_USER,
                 "regions": REGIONS,
                 "project": PROJECT_ID,
